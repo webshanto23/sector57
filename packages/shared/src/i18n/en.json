@@ -120,5 +120,12 @@
     "backToGallery": "All albums",
     "photo": "{album}, photo {n}",
     "placeholderNote": "Real photos appear here once they are uploaded."
+  },
+  "Forms": {
+    "title": "Member services",
+    "sub": "Apply online. The society office reviews every request.",
+    "comingSoonTitle": "Online applications are coming soon",
+    "comingSoonBody": "Membership, renter registration and other requests will soon be available here. Until then, please apply at the society office.",
+    "office": "Society office"
   }
 }

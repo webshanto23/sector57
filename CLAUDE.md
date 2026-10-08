@@ -50,7 +50,8 @@
   - API: `GET /public/notices` (paged, `?category=`), `GET /public/notices/:id` and `GET /public/pages/:slug` (modules `notices`, `site-pages`; public, read-only, `@SkipThrottle` because every call comes from the Next server). Migration `1_notices_public_idx`.
   - Seed: the `home` and `site` pages are created only if missing, so later edits are never overwritten. Demo notices are seeded only outside production.
   - Web: `(site)` route group with header, nav and footer; pages are cached with `revalidate = 60`.
-- Step 2 (committee, developments, gallery) is built on `step/02-committee-gallery`, awaiting Codex review. It adds:
+- Step order changed: after Step 2 comes Step 4 (auth), then 5, 6, 7, 9, 10. Public forms (Step 3) and form review (Step 8) ship together last, once the real location tree exists. Until then `/forms` is a "coming soon" page showing the office contact details from the `site` page.
+- Step 2 (committee, developments, gallery) is committed on `step/02-committee-gallery`, awaiting Codex review. It adds:
   - API: `GET /public/committee` (today's members in Dhaka time; only name, position and photo leave the API), `GET /public/gallery` and `GET /public/gallery/:id`.
   - `MEDIA_BASE_URL` (optional) turns stored file keys into URLs. When it's unset they resolve to null, and the site draws `art()` placeholders (`components/site/art.tsx`, all mockup scenes).
   - `@s57/db` now also exports the `Prisma` namespace, for `satisfies Prisma.xSelect`.
