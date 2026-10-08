@@ -49,6 +49,10 @@ services:
     build:
       context: .
       target: web
+      args:
+        # Baked into the browser's /api proxy at build time (next.config.ts rewrites);
+        # the runtime API_URL below only reaches server-side fetches.
+        API_URL: http://api:4000
     environment:
       API_URL: http://api:4000
       NODE_ENV: production

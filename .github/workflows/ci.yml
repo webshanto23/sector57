@@ -62,6 +62,11 @@ jobs:
       - name: Run workspace checks
         run: pnpm check
 
+      - name: Run API e2e tests
+        run: pnpm test:e2e
+        env:
+          TEST_DATABASE_URL: postgresql://sector57:sector57@localhost:5432/sector57_test
+
       - name: Build Docker API image
         run: docker build --target api -t sector57-api:ci .
 
