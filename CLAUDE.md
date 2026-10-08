@@ -39,16 +39,19 @@
 
 ## Deployment
 
-- One DigitalOcean droplet runs everything: Next.js, NestJS and PostgreSQL, with PM2 and Nginx. No Vercel, no managed database, no Docker.
-- No CI yet. Run `pnpm check` before pushing; a `deploy.sh` script is planned. Real CI comes in milestone 2.
+- One DigitalOcean droplet runs everything: Next.js, NestJS and PostgreSQL, with PM2 and Nginx. No Vercel, no managed database.
+- Docker setup (Anis, 2026-10-08): `Dockerfile` (`api` and web targets), `docker-compose.yml` (Postgres 18, API on 4000, web on 3000) and `.dockerignore`. While the compose stack runs, it holds ports 3000 and 4000, so local `pnpm dev` servers fall back to other ports or fail to bind.
+- CI: `.github/workflows/ci.yml` is a draft that Anis owns and is finishing; don't change it unless asked. Until it works, run `pnpm check` before pushing; a `deploy.sh` script is planned.
 
 ## Current state (2026-10-08)
 
-- API: Nest skeleton with `PrismaModule` and a `GET /health` route that queries the database. Auth, RBAC and feature modules are not built yet. Installed but not wired up: CASL, argon2, helmet, throttler, nestjs-pino, nestjs-zod, swagger, cookie-parser.
-- Web: Next.js 16 with Tailwind 4 tokens and one preview page. `next-intl`, React Query, react-hook-form, TanStack Table and openapi-fetch are installed but not wired up.
-- `packages/shared`: empty placeholder (has a `typecheck` script, no tests yet).
+- Step 0 (Foundations) built on branch `step/00-foundations`, awaiting Codex review. The visual check at 375/820/1440 is deferred. Headless Chrome won't go below about 500 px wide, so use CDP viewport emulation, not `--window-size`.
+- API: helmet, nestjs-pino, nestjs-zod global pipe, throttler, cookie-parser and swagger (dev only, `/docs`, JSON at `/docs/json`) are wired up. The env is validated at startup (`src/config/env.ts`), there is a global exception filter, and a `SocietyContext` guard and decorator resolve the society from `DEFAULT_SOCIETY_SLUG`. Routes: `GET /health`, `GET /society`. Auth, RBAC and feature modules are not built yet; CASL and argon2 are installed but unused.
+- Web: `next-intl` routing (`bn` at `/`, `en` at `/en/`, via `src/proxy.ts`), local Noto Bengali fonts, a theme toggle (saved in `localStorage` key `s57-theme`, otherwise follows the system), a locale switch, mockup components in `src/components/kit`, a dev-only gallery at `/dev/components`, and a typed `openapi-fetch` client (`src/lib/api`). Regenerate its types with `pnpm --filter @s57/web api:types` while the API runs. React Query, react-hook-form and TanStack Table are not used yet.
+- `packages/shared`: `bn.json`/`en.json` messages, NFC helper, Bangla digits and `৳` formatting, `pick(bn, en)`, zod basics (phone, uuid, pagination) and the society contract, all with Vitest tests.
 - Setup gaps fixed on 2026-10-08: `.gitignore` (one pattern per line, `.env.example` kept), `migration_lock.toml`, an idempotent `prisma/seed.ts` (society, location levels, permission catalogue, starter roles; no users), `--config prisma7.config.ts` baked into the db scripts, `typecheck` scripts in every package, Bangla site metadata. `pnpm check` passes.
-- Still open: there is no git repository in this folder yet, and no first super-admin user (to be created by the auth slice, not the seed). On an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
+- Git initialised 2026-10-08 (no remote yet). `packages/db/generated` is git-ignored, so a fresh clone must run `pnpm --filter @s57/db generate` before building.
+- Still open: no first super-admin user (to be created by the auth slice, not the seed). On an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
 
 ## Reference material
 

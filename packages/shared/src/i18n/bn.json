@@ -1,0 +1,38 @@
+{
+  "Common": {
+    "societyName": "উত্তরা সেক্টর ৫৭ কল্যাণ সমিতি",
+    "societyShort": "উত্তরা সেক্টর ৫৭",
+    "siteDescription": "উত্তরা সেক্টর ৫৭ কল্যাণ সমিতির নোটিশ, সদস্য সেবা ও কমিটির তথ্য।",
+    "language": "ভাষা",
+    "switchToEnglish": "English",
+    "switchToBangla": "বাংলা",
+    "themeToggle": "ডার্ক মোড চালু বা বন্ধ করুন",
+    "search": "খুঁজুন",
+    "viewAll": "সব দেখুন",
+    "save": "সংরক্ষণ",
+    "cancel": "বাতিল",
+    "export": "এক্সপোর্ট",
+    "loading": "লোড হচ্ছে…",
+    "empty": "কিছু পাওয়া যায়নি",
+    "error": "কিছু একটা ভুল হয়েছে। আবার চেষ্টা করুন।"
+  },
+  "Status": {
+    "paid": "পরিশোধিত",
+    "unpaid": "অপরিশোধিত",
+    "overdue": "মেয়াদোত্তীর্ণ",
+    "active": "সক্রিয়",
+    "pending": "বাকি",
+    "verified": "যাচাইকৃত"
+  },
+  "Site": {
+    "nav": {
+      "home": "প্রথম পাতা",
+      "notices": "নোটিশ",
+      "committee": "কমিটি",
+      "developments": "উন্নয়ন",
+      "gallery": "গ্যালারি",
+      "forms": "সদস্য সেবা"
+    },
+    "comingSoon": "নতুন ওয়েবসাইট তৈরি হচ্ছে।"
+  }
+}

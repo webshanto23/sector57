@@ -1,0 +1,38 @@
+{
+  "Common": {
+    "societyName": "Uttara Sector 57 Welfare Society",
+    "societyShort": "Uttara Sector 57",
+    "siteDescription": "Notices, member services and committee information for the Uttara Sector 57 Welfare Society.",
+    "language": "Language",
+    "switchToEnglish": "English",
+    "switchToBangla": "বাংলা",
+    "themeToggle": "Toggle dark mode",
+    "search": "Search",
+    "viewAll": "View all",
+    "save": "Save",
+    "cancel": "Cancel",
+    "export": "Export",
+    "loading": "Loading…",
+    "empty": "Nothing found",
+    "error": "Something went wrong. Please try again."
+  },
+  "Status": {
+    "paid": "Paid",
+    "unpaid": "Unpaid",
+    "overdue": "Overdue",
+    "active": "Active",
+    "pending": "Pending",
+    "verified": "Verified"
+  },
+  "Site": {
+    "nav": {
+      "home": "Home",
+      "notices": "Notices",
+      "committee": "Committee",
+      "developments": "Developments",
+      "gallery": "Gallery",
+      "forms": "Member services"
+    },
+    "comingSoon": "The new website is being built."
+  }
+}
