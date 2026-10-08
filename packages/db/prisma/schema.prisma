@@ -1,0 +1,673 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../generated/prisma"
+  previewFeatures = ["partialIndexes"]
+  importFileExtension = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model audit_logs {
+  id          BigInt    @id @default(autoincrement())
+  society_id  String    @db.Uuid
+  user_id     String?   @db.Uuid
+  action      String
+  entity_type String
+  entity_id   String?   @db.Uuid
+  before_data Json?
+  after_data  Json?
+  ip_address  String?   @db.Inet
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  societies   societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users       users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([entity_type, entity_id], map: "audit_entity_idx")
+  @@index([society_id, created_at(sort: Desc)], map: "audit_time_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model budgets {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id      String        @db.Uuid
+  fiscal_year     String
+  expense_head_id String        @db.Uuid
+  amount          Decimal       @db.Decimal(14, 2)
+  expense_heads   expense_heads @relation(fields: [expense_head_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies       societies     @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([society_id, fiscal_year, expense_head_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model charge_schedules {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id        String          @db.Uuid
+  charge_type_id    String          @db.Uuid
+  amount            Decimal         @db.Decimal(14, 2)
+  frequency_months  Int?            @db.SmallInt
+  generation        String          @default("auto")
+  scope_location_id String?         @db.Uuid
+  unit_types        String[]
+  starts_on         DateTime        @db.Date
+  ends_on           DateTime?       @db.Date
+  next_run_on       DateTime?       @db.Date
+  status            String          @default("active")
+  created_by        String?         @db.Uuid
+  created_at        DateTime        @default(now()) @db.Timestamptz(6)
+  charge_types      charge_types    @relation(fields: [charge_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users             users?          @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  locations         locations?      @relation(fields: [scope_location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies         societies       @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  invoice_lines     invoice_lines[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model charge_types {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id       String             @db.Uuid
+  name_bn          String
+  name_en          String?
+  kind             String
+  fund_id          String             @db.Uuid
+  default_amount   Decimal?           @db.Decimal(14, 2)
+  charge_schedules charge_schedules[]
+  funds            funds              @relation(fields: [fund_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies        societies          @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  invoice_lines    invoice_lines[]
+
+  @@unique([society_id, name_bn])
+}
+
+model committee_members {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id String    @db.Uuid
+  person_id  String    @db.Uuid
+  position   String
+  sort_order Int       @default(0) @db.SmallInt
+  term_start DateTime  @db.Date
+  term_end   DateTime? @db.Date
+  persons    persons   @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies  societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model documents {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id  String       @db.Uuid
+  entity_type String
+  entity_id   String       @db.Uuid
+  doc_type    String
+  file_url    String
+  file_name   String
+  visibility  String       @default("office")
+  uploaded_by String?      @db.Uuid
+  uploaded_at DateTime     @default(now()) @db.Timestamptz(6)
+  societies   societies    @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users       users?       @relation(fields: [uploaded_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  ownerships  ownerships[]
+
+  @@index([entity_type, entity_id], map: "documents_entity_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model donations {
+  id                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id            String         @db.Uuid
+  donor_person_id       String?        @db.Uuid
+  donor_organisation_id String?        @db.Uuid
+  fund_id               String         @db.Uuid
+  purpose               String?
+  amount                Decimal        @db.Decimal(14, 2)
+  payment_id            String?        @db.Uuid
+  received_at           DateTime       @default(now()) @db.Timestamptz(6)
+  organisations         organisations? @relation(fields: [donor_organisation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  persons               persons?       @relation(fields: [donor_person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  funds                 funds          @relation(fields: [fund_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  payments              payments?      @relation(fields: [payment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies             societies      @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model expense_heads {
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id String     @db.Uuid
+  name_bn    String
+  name_en    String?
+  budgets    budgets[]
+  societies  societies  @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  expenses   expenses[]
+
+  @@unique([society_id, name_bn])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model expenses {
+  id                                 String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id                         String        @db.Uuid
+  expense_head_id                    String        @db.Uuid
+  fund_id                            String        @db.Uuid
+  vendor_id                          String?       @db.Uuid
+  description                        String
+  amount                             Decimal       @db.Decimal(14, 2)
+  spent_on                           DateTime      @db.Date
+  status                             String        @default("pending")
+  requested_by                       String?       @db.Uuid
+  approved_by                        String?       @db.Uuid
+  approved_at                        DateTime?     @db.Timestamptz(6)
+  users_expenses_approved_byTousers  users?        @relation("expenses_approved_byTousers", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  expense_heads                      expense_heads @relation(fields: [expense_head_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  funds                              funds         @relation(fields: [fund_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_expenses_requested_byTousers users?        @relation("expenses_requested_byTousers", fields: [requested_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies                          societies     @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  vendors                            vendors?      @relation(fields: [vendor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model form_submissions {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id   String    @db.Uuid
+  form_key     String
+  data         Json
+  status       String    @default("new")
+  reviewed_by  String?   @db.Uuid
+  submitted_at DateTime  @default(now()) @db.Timestamptz(6)
+  users        users?    @relation(fields: [reviewed_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies    societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model funds {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id     String           @db.Uuid
+  name_bn        String
+  name_en        String?
+  location_id    String?          @db.Uuid
+  is_default     Boolean          @default(false)
+  charge_types   charge_types[]
+  donations      donations[]
+  expenses       expenses[]
+  locations      locations?       @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies      societies        @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  ledger_entries ledger_entries[]
+
+  @@unique([society_id, name_bn])
+}
+
+model gallery_albums {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id     String           @db.Uuid
+  title_bn       String
+  title_en       String?
+  event_date     DateTime?        @db.Date
+  is_published   Boolean          @default(false)
+  societies      societies        @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  gallery_photos gallery_photos[]
+}
+
+model gallery_photos {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  album_id       String         @db.Uuid
+  file_url       String
+  caption_bn     String?
+  caption_en     String?
+  sort_order     Int            @default(0)
+  gallery_albums gallery_albums @relation(fields: [album_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model invoice_lines {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  invoice_id       String            @db.Uuid
+  charge_type_id   String            @db.Uuid
+  schedule_id      String?           @db.Uuid
+  unit_id          String?           @db.Uuid
+  period_start     DateTime?         @db.Date
+  description      String
+  amount           Decimal           @db.Decimal(14, 2)
+  charge_types     charge_types      @relation(fields: [charge_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  invoices         invoices          @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  charge_schedules charge_schedules? @relation(fields: [schedule_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  units            units?            @relation(fields: [unit_id], references: [location_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([schedule_id, unit_id, period_start], map: "invoice_lines_once_uq", where: raw("(schedule_id IS NOT NULL)"))
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model invoices {
+  id                      String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id              String                @db.Uuid
+  invoice_no              String
+  unit_id                 String?               @db.Uuid
+  bill_to_person_id       String?               @db.Uuid
+  bill_to_organisation_id String?               @db.Uuid
+  period_start            DateTime?             @db.Date
+  period_end              DateTime?             @db.Date
+  issue_date              DateTime              @default(dbgenerated("CURRENT_DATE")) @db.Date
+  due_date                DateTime              @db.Date
+  total                   Decimal               @default(0) @db.Decimal(14, 2)
+  paid                    Decimal               @default(0) @db.Decimal(14, 2)
+  status                  String                @default("unpaid")
+  created_by              String?               @db.Uuid
+  created_at              DateTime              @default(now()) @db.Timestamptz(6)
+  invoice_lines           invoice_lines[]
+  organisations           organisations?        @relation(fields: [bill_to_organisation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  persons                 persons?              @relation(fields: [bill_to_person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users                   users?                @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies               societies             @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  units                   units?                @relation(fields: [unit_id], references: [location_id], onDelete: NoAction, onUpdate: NoAction)
+  payment_allocations     payment_allocations[]
+
+  @@unique([society_id, invoice_no])
+  @@index([society_id, status, due_date], map: "invoices_status_idx")
+  @@index([unit_id, status], map: "invoices_unit_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model ledger_entries {
+  id          BigInt    @id @default(autoincrement())
+  society_id  String    @db.Uuid
+  fund_id     String    @db.Uuid
+  entry_date  DateTime  @db.Date
+  direction   String
+  amount      Decimal   @db.Decimal(14, 2)
+  source_type String
+  source_id   String    @db.Uuid
+  memo        String?
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  funds       funds     @relation(fields: [fund_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies   societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([fund_id, entry_date], map: "ledger_fund_date_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model location_levels {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id    String      @db.Uuid
+  depth         Int         @db.SmallInt
+  name_bn       String
+  name_en       String?
+  is_unit_level Boolean     @default(false)
+  societies     societies   @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  locations     locations[]
+
+  @@unique([society_id, depth])
+  @@unique([society_id, name_bn])
+}
+
+model locations {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id       String             @db.Uuid
+  parent_id        String?            @db.Uuid
+  level_id         String             @db.Uuid
+  name             String
+  code             String?
+  path             String
+  attributes       Json               @default("{}")
+  is_active        Boolean            @default(true)
+  created_at       DateTime           @default(now()) @db.Timestamptz(6)
+  charge_schedules charge_schedules[]
+  funds            funds[]
+  location_levels  location_levels    @relation(fields: [level_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  locations        locations?         @relation("locationsTolocations", fields: [parent_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  other_locations  locations[]        @relation("locationsTolocations")
+  societies        societies          @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  notices          notices[]
+  ownerships       ownerships[]
+  units            units?
+  user_roles       user_roles[]
+
+  @@unique([society_id, parent_id, name])
+  @@index([parent_id], map: "locations_parent_idx")
+  @@index([society_id, path], map: "locations_path_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model move_events {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id   String    @db.Uuid
+  tenancy_id   String    @db.Uuid
+  kind         String
+  planned_date DateTime? @db.Date
+  dues_cleared Boolean   @default(false)
+  checklist    Json      @default("{}")
+  completed_at DateTime? @db.Timestamptz(6)
+  created_by   String?   @db.Uuid
+  users        users?    @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies    societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tenancies    tenancies @relation(fields: [tenancy_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model notices {
+  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id           String     @db.Uuid
+  title_bn             String
+  title_en             String?
+  body_bn              String
+  body_en              String?
+  category             String?
+  audience_location_id String?    @db.Uuid
+  send_sms             Boolean    @default(false)
+  is_public            Boolean    @default(false)
+  publish_at           DateTime   @default(now()) @db.Timestamptz(6)
+  created_by           String?    @db.Uuid
+  locations            locations? @relation(fields: [audience_location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users                users?     @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies            societies  @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model occupants {
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id String     @db.Uuid
+  unit_id    String     @db.Uuid
+  person_id  String     @db.Uuid
+  tenancy_id String?    @db.Uuid
+  relation   String
+  start_date DateTime   @db.Date
+  end_date   DateTime?  @db.Date
+  persons    persons    @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies  societies  @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tenancies  tenancies? @relation(fields: [tenancy_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  units      units      @relation(fields: [unit_id], references: [location_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([unit_id], map: "occupants_unit_idx", where: raw("(end_date IS NULL)"))
+}
+
+model organisations {
+  id                String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id        String       @db.Uuid
+  name              String
+  trade_licence     String?
+  contact_person_id String?      @db.Uuid
+  created_at        DateTime     @default(now()) @db.Timestamptz(6)
+  donations         donations[]
+  invoices          invoices[]
+  persons           persons?     @relation(fields: [contact_person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies         societies    @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  ownerships        ownerships[]
+  payments          payments[]
+  tenancies         tenancies[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model ownerships {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id      String         @db.Uuid
+  location_id     String         @db.Uuid
+  person_id       String?        @db.Uuid
+  organisation_id String?        @db.Uuid
+  share_percent   Decimal        @default(100) @db.Decimal(5, 2)
+  start_date      DateTime       @db.Date
+  end_date        DateTime?      @db.Date
+  document_id     String?        @db.Uuid
+  documents       documents?     @relation(fields: [document_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ownerships_document_fk")
+  locations       locations      @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organisations   organisations? @relation(fields: [organisation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  persons         persons?       @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies       societies      @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([location_id], map: "ownerships_location_idx", where: raw("(end_date IS NULL)"))
+  @@index([person_id], map: "ownerships_person_idx", where: raw("(end_date IS NULL)"))
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model payment_allocations {
+  payment_id String   @db.Uuid
+  invoice_id String   @db.Uuid
+  amount     Decimal  @db.Decimal(14, 2)
+  invoices   invoices @relation(fields: [invoice_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  payments   payments @relation(fields: [payment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([payment_id, invoice_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model payments {
+  id                    String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id            String                @db.Uuid
+  receipt_no            String
+  payer_person_id       String?               @db.Uuid
+  payer_organisation_id String?               @db.Uuid
+  amount                Decimal               @db.Decimal(14, 2)
+  method                String                @default("cash")
+  received_by           String                @db.Uuid
+  received_at           DateTime              @default(now()) @db.Timestamptz(6)
+  handed_over_at        DateTime?             @db.Timestamptz(6)
+  void_reason           String?
+  donations             donations[]
+  payment_allocations   payment_allocations[]
+  organisations         organisations?        @relation(fields: [payer_organisation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  persons               persons?              @relation(fields: [payer_person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users                 users                 @relation(fields: [received_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies             societies             @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([society_id, receipt_no])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model permissions {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  module           String
+  action           String
+  role_permissions role_permissions[]
+
+  @@unique([module, action])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model persons {
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id        String              @db.Uuid
+  full_name         String
+  full_name_en      String?
+  phone             String?
+  email             String?             @db.Citext
+  nid               String?
+  date_of_birth     DateTime?           @db.Date
+  gender            String?
+  photo_url         String?
+  verified_at       DateTime?           @db.Timestamptz(6)
+  created_at        DateTime            @default(now()) @db.Timestamptz(6)
+  committee_members committee_members[]
+  donations         donations[]
+  invoices          invoices[]
+  occupants         occupants[]
+  organisations     organisations[]
+  ownerships        ownerships[]
+  payments          payments[]
+  societies         societies           @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tenancies         tenancies[]
+  users             users[]
+
+  @@unique([society_id, nid], map: "persons_nid_uq", where: raw("(nid IS NOT NULL)"))
+  @@unique([society_id, phone], map: "persons_phone_uq", where: raw("(phone IS NOT NULL)"))
+  @@index([full_name(ops: raw("gin_trgm_ops"))], map: "persons_name_trgm", type: Gin)
+}
+
+model role_permissions {
+  role_id       String      @db.Uuid
+  permission_id String      @db.Uuid
+  permissions   permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  roles         roles       @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([role_id, permission_id])
+}
+
+model roles {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id       String             @db.Uuid
+  name             String
+  description      String?
+  is_system        Boolean            @default(false)
+  created_at       DateTime           @default(now()) @db.Timestamptz(6)
+  role_permissions role_permissions[]
+  societies        societies          @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user_roles       user_roles[]
+
+  @@unique([society_id, name])
+}
+
+model site_pages {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id   String    @db.Uuid
+  slug         String
+  title_bn     String
+  title_en     String?
+  content      Json      @default("{}")
+  is_published Boolean   @default(false)
+  updated_at   DateTime  @default(now()) @db.Timestamptz(6)
+  societies    societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([society_id, slug])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model societies {
+  id                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name_bn                 String
+  name_en                 String?
+  slug                    String              @unique
+  logo_url                String?
+  address                 String?
+  phone                   String?
+  fiscal_year_start_month Int                 @default(7) @db.SmallInt
+  status                  String              @default("active")
+  created_at              DateTime            @default(now()) @db.Timestamptz(6)
+  audit_logs              audit_logs[]
+  budgets                 budgets[]
+  charge_schedules        charge_schedules[]
+  charge_types            charge_types[]
+  committee_members       committee_members[]
+  documents               documents[]
+  donations               donations[]
+  expense_heads           expense_heads[]
+  expenses                expenses[]
+  form_submissions        form_submissions[]
+  funds                   funds[]
+  gallery_albums          gallery_albums[]
+  invoices                invoices[]
+  ledger_entries          ledger_entries[]
+  location_levels         location_levels[]
+  locations               locations[]
+  move_events             move_events[]
+  notices                 notices[]
+  occupants               occupants[]
+  organisations           organisations[]
+  ownerships              ownerships[]
+  payments                payments[]
+  persons                 persons[]
+  roles                   roles[]
+  site_pages              site_pages[]
+  society_settings        society_settings[]
+  tenancies               tenancies[]
+  units                   units[]
+  users                   users[]
+  vendors                 vendors[]
+}
+
+model society_settings {
+  society_id String    @db.Uuid
+  key        String
+  value      Json
+  updated_by String?   @db.Uuid
+  updated_at DateTime  @default(now()) @db.Timestamptz(6)
+  societies  societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([society_id, key])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model tenancies {
+  id                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id            String         @db.Uuid
+  unit_id               String         @db.Uuid
+  renter_type           String
+  primary_person_id     String?        @db.Uuid
+  organisation_id       String?        @db.Uuid
+  start_date            DateTime       @db.Date
+  end_date              DateTime?      @db.Date
+  monthly_rent          Decimal?       @db.Decimal(14, 2)
+  police_form_submitted Boolean        @default(false)
+  owner_approved_at     DateTime?      @db.Timestamptz(6)
+  status                String         @default("pending")
+  created_at            DateTime       @default(now()) @db.Timestamptz(6)
+  move_events           move_events[]
+  occupants             occupants[]
+  organisations         organisations? @relation(fields: [organisation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  persons               persons?       @relation(fields: [primary_person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies             societies      @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  units                 units          @relation(fields: [unit_id], references: [location_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([unit_id], map: "tenancies_unit_idx", where: raw("(status = ANY (ARRAY['pending'::text, 'active'::text, 'moving_out'::text]))"))
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model units {
+  location_id   String          @id @db.Uuid
+  society_id    String          @db.Uuid
+  unit_type     String
+  size_sqft     Decimal?        @db.Decimal(10, 2)
+  bill_to       String          @default("owner")
+  occupancy     String          @default("vacant")
+  invoice_lines invoice_lines[]
+  invoices      invoices[]
+  occupants     occupants[]
+  tenancies     tenancies[]
+  locations     locations       @relation(fields: [location_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  societies     societies       @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model user_roles {
+  id                                 String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                            String     @db.Uuid
+  role_id                            String     @db.Uuid
+  scope_location_id                  String?    @db.Uuid
+  granted_by                         String?    @db.Uuid
+  granted_at                         DateTime   @default(now()) @db.Timestamptz(6)
+  users_user_roles_granted_byTousers users?     @relation("user_roles_granted_byTousers", fields: [granted_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  roles                              roles      @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  locations                          locations? @relation(fields: [scope_location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_user_roles_user_idTousers    users      @relation("user_roles_user_idTousers", fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, role_id, scope_location_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  id                                      String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id                              String             @db.Uuid
+  person_id                               String?            @db.Uuid
+  phone                                   String
+  email                                   String?            @db.Citext
+  password_hash                           String?
+  language                                String             @default("bn")
+  status                                  String             @default("invited")
+  last_login_at                           DateTime?          @db.Timestamptz(6)
+  created_at                              DateTime           @default(now()) @db.Timestamptz(6)
+  audit_logs                              audit_logs[]
+  charge_schedules                        charge_schedules[]
+  documents                               documents[]
+  expenses_expenses_approved_byTousers    expenses[]         @relation("expenses_approved_byTousers")
+  expenses_expenses_requested_byTousers   expenses[]         @relation("expenses_requested_byTousers")
+  form_submissions                        form_submissions[]
+  invoices                                invoices[]
+  move_events                             move_events[]
+  notices                                 notices[]
+  payments                                payments[]
+  user_roles_user_roles_granted_byTousers user_roles[]       @relation("user_roles_granted_byTousers")
+  user_roles_user_roles_user_idTousers    user_roles[]       @relation("user_roles_user_idTousers")
+  persons                                 persons?           @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies                               societies          @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([society_id, phone])
+}
+
+model vendors {
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id String     @db.Uuid
+  name       String
+  phone      String?
+  service    String?
+  expenses   expenses[]
+  societies  societies  @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}

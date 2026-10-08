@@ -1,0 +1,31 @@
+{
+  "name": "Sector57",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "check": "turbo lint typecheck test",
+    "db:migrate": "pnpm --filter @s57/db migrate:dev",
+    "db:seed": "pnpm --filter @s57/db seed",
+    "db:studio": "pnpm --filter @s57/db studio"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.9.1",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@12.9.1",
+  "type": "module",
+  "devDependencies": {
+    "prettier": "^3.9.9",
+    "turbo": "^2.11.7",
+    "typescript": "^7.0.2"
+  }
+}

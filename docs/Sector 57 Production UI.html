@@ -1,0 +1,618 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Sector 57 Production UI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@600;700&display=swap">
+<style>
+/* Layout: one app shell (design guide / public site / dashboard / resident app); cards on a muslin ground, bottle green as the single brand colour, sun red and kantha stitches used sparingly */
+:root{
+  --bg:#f4f5f1; --surface:#ffffff; --surface-2:#eef0ea; --line:#dde2d8; --fg:#18201c; --muted:#59635c;
+  --accent:#006a4e; --accent-strong:#00563f; --accent-soft:#e2efe8; --on-accent:#ffffff;
+  --sun:#c42136; --sun-soft:#fbe6e8;
+  --good:#1f7a4a; --good-soft:#e3f2e8; --warn:#9a6200; --warn-soft:#f8eed6; --bad:#c42136; --bad-soft:#fbe6e8; --info:#2c4a7c; --info-soft:#e5ebf5;
+  --terra:#a4532e;
+  --art-sky:#e4ece6; --art-b1:#cdd6cf; --art-b2:#b5c2b9; --art-win:#f7f8f4; --art-tree:#2f8a63; --art-water:#c6dbd9; --art-ground:#dde3d3; --art-ink:#3d4a42;
+  --shadow:0 1px 2px rgba(24,32,28,.06),0 4px 14px rgba(24,32,28,.05);
+  --font:"Noto Sans Bengali","Hind Siliguri",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --display:"Noto Serif Bengali","Noto Sans Bengali",Georgia,serif;
+  --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --r:12px; --r-sm:8px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1412; --surface:#161d1a; --surface-2:#1c2521; --line:#2a3530; --fg:#e7ece8; --muted:#9aa79f;
+  --accent:#4fbf8f; --accent-strong:#6fd3a6; --accent-soft:#153028; --on-accent:#06150f;
+  --sun:#ff6b7a; --sun-soft:#3a1a1f;
+  --good:#6fcf97; --good-soft:#163023; --warn:#e3b04b; --warn-soft:#2f2614; --bad:#ff7b86; --bad-soft:#3a1a1f; --info:#8fb0e6; --info-soft:#1a2438;
+  --terra:#e08a62;
+  --art-sky:#18231f; --art-b1:#26322d; --art-b2:#31403a; --art-win:#e3b04b; --art-tree:#2f7a58; --art-water:#1b2d2f; --art-ground:#1f2a24; --art-ink:#9aa79f;
+  --shadow:0 1px 2px rgba(0,0,0,.4); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1412; --surface:#161d1a; --surface-2:#1c2521; --line:#2a3530; --fg:#e7ece8; --muted:#9aa79f;
+  --accent:#4fbf8f; --accent-strong:#6fd3a6; --accent-soft:#153028; --on-accent:#06150f;
+  --sun:#ff6b7a; --sun-soft:#3a1a1f;
+  --good:#6fcf97; --good-soft:#163023; --warn:#e3b04b; --warn-soft:#2f2614; --bad:#ff7b86; --bad-soft:#3a1a1f; --info:#8fb0e6; --info-soft:#1a2438;
+  --terra:#e08a62;
+  --art-sky:#18231f; --art-b1:#26322d; --art-b2:#31403a; --art-win:#e3b04b; --art-tree:#2f7a58; --art-water:#1b2d2f; --art-ground:#1f2a24; --art-ink:#9aa79f;
+  --shadow:0 1px 2px rgba(0,0,0,.4); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14.5px;line-height:1.6;margin:0}
+h1,h2,h3,h4{margin:0;text-wrap:balance;line-height:1.3}
+h1{font-size:23px;font-weight:700} h2{font-size:17.5px;font-weight:650} h3{font-size:15.5px;font-weight:600} h4{font-size:14px;font-weight:600}
+p{margin:0}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)} .small{font-size:12.5px}
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic.sm{width:15px;height:15px} .ic.lg{width:22px;height:22px}
+button,.btn{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:var(--r-sm);padding:7px 13px;font-weight:500;display:inline-flex;align-items:center;gap:7px;line-height:1.4}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.primary:hover{background:var(--accent-strong);border-color:var(--accent-strong)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.danger{color:var(--bad);border-color:var(--bad-soft);background:var(--bad-soft)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:var(--accent);text-underline-offset:3px}
+
+/* motifs */
+.kantha{height:2px;background:repeating-linear-gradient(90deg,var(--sun) 0 9px,transparent 9px 15px);border:0;margin:0}
+.kantha.green{background:repeating-linear-gradient(90deg,var(--accent) 0 9px,transparent 9px 15px)}
+.jamdani{position:relative;isolation:isolate}
+.jamdani::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:currentColor;opacity:.09;-webkit-mask:var(--jam) 0 0/28px 28px repeat;mask:var(--jam) 0 0/28px 28px repeat;border-radius:inherit}
+:root{--jam:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cg fill='%23000'%3E%3Cpath d='M14 4 24 14 14 24 4 14Z M14 8 8 14 14 20 20 14Z' fill-rule='evenodd'/%3E%3Cpath d='M14 11.5 16.5 14 14 16.5 11.5 14Z'/%3E%3Ccircle cx='0' cy='0' r='1.6'/%3E%3Ccircle cx='28' cy='0' r='1.6'/%3E%3Ccircle cx='0' cy='28' r='1.6'/%3E%3Ccircle cx='28' cy='28' r='1.6'/%3E%3C/g%3E%3C/svg%3E")}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:9px 16px;max-width:1440px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;line-height:1.25}
+.logo{width:36px;height:36px;border-radius:10px;background:#006a4e;position:relative;overflow:hidden;flex:none}
+.logo::before{content:"";position:absolute;left:5px;top:5px;width:22px;height:22px;border-radius:50%;background:#c42136}
+.logo::after{content:"";position:absolute;left:5px;right:5px;bottom:5px;height:2px;background:repeating-linear-gradient(90deg,#fff 0 4px,transparent 4px 7px)}
+.logo b{position:absolute;left:5px;top:5px;width:22px;height:22px;display:grid;place-items:center;color:#fff;font-size:11.5px;z-index:1}
+.seg{display:flex;background:var(--surface-2);border-radius:10px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;padding:6px 11px;border-radius:8px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow)}
+.top .tools{margin-left:auto;display:flex;gap:6px;align-items:center}
+.pill{border-radius:999px;padding:5px 11px;font-size:12.5px}
+@media (max-width:980px){.seg button span{display:none}.seg button{padding:7px 10px}}
+@media (max-width:600px){.brand .small{display:none}.top-in{gap:8px}}
+/* screen-size preview: layouts respond to #frame width (container queries), so the preview switch shows true tablet and phone layouts */
+#frame{container:page/inline-size;margin:0 auto;transition:max-width .2s}
+#frame.tablet{max-width:820px;border-inline:1px solid var(--line);min-height:100vh}
+#frame.phone{max-width:390px;border-inline:1px solid var(--line);min-height:100vh}
+.sizes{display:flex;background:var(--surface-2);border-radius:999px;padding:2px}
+.sizes button{border:0;background:transparent;border-radius:999px;padding:4px 9px;color:var(--muted)}
+.sizes button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--shadow)}
+@media (max-width:1100px){.sizes{display:none}}
+
+/* generic */
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:22px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.card.flat{background:var(--surface-2);border-color:transparent}
+.card.lift{box-shadow:var(--shadow)}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+/* breakpoints: desktop >=1100 (office), tablet 600-1099 (owners), phone <600 (most residents) */
+@container page (max-width:1099px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(2,minmax(0,1fr))}.g3>:last-child:nth-child(odd){grid-column:1/-1}}
+@container page (max-width:700px){.g2{grid-template-columns:minmax(0,1fr)}}
+@container page (max-width:599px){.g3{grid-template-columns:minmax(0,1fr)}.stat .v{font-size:20px}.ph h1{font-size:20px}.card{padding:14px}}
+@container page (max-width:380px){.g4{grid-template-columns:minmax(0,1fr)}}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.nowrap{flex-wrap:nowrap}
+.between{justify-content:space-between}
+.stack{display:grid;gap:10px;align-content:start}
+.ph{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.ph .sub{color:var(--muted);margin-top:2px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.8}
+.chip.plain::before{display:none}
+.chip.good{background:var(--good-soft);color:var(--good)} .chip.warn{background:var(--warn-soft);color:var(--warn)} .chip.bad{background:var(--bad-soft);color:var(--bad)} .chip.acc{background:var(--accent-soft);color:var(--accent)} .chip.info{background:var(--info-soft);color:var(--info)}
+.icobox{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);flex:none}
+.icobox.sun{background:var(--sun-soft);color:var(--sun)} .icobox.warn{background:var(--warn-soft);color:var(--warn)} .icobox.info{background:var(--info-soft);color:var(--info)}
+.stat{display:grid;gap:4px}
+.stat .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.stat .v{font-size:25px;font-weight:700;line-height:1.2}
+.stat .l{font-size:13px;color:var(--muted);font-weight:500}
+.bar{height:7px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th{text-align:left;font-size:12.5px;color:var(--muted);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
+td{padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right}
+.av{width:38px;height:38px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:15px;flex:none}
+.av.lg{width:74px;height:74px;font-size:26px;box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--accent-soft)}
+.field{display:grid;gap:5px}
+.field label{font-size:13px;font-weight:600}
+input,select,textarea{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 11px;width:100%}
+.check{display:flex;gap:9px;align-items:center}
+.check input{width:auto;accent-color:var(--accent)}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.search{position:relative;flex:1;max-width:320px;min-width:200px}
+.search .ic{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.search input{padding-left:34px}
+.label{font-size:12.5px;color:var(--muted);font-weight:600;letter-spacing:.02em}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:13.5px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-weight:500}
+.mono{font-family:var(--mono);font-size:12.5px}
+.art{display:block;width:100%;height:auto;border-radius:var(--r-sm);background:var(--art-sky);max-width:100%}
+.link{display:inline-flex;align-items:center;gap:4px;font-weight:600;font-size:13.5px;text-decoration:none}
+.ttl{display:flex;align-items:center;gap:10px}
+
+/* public site */
+.site-nav{background:var(--surface);border-bottom:1px solid var(--line)}
+.site-nav .in{max-width:1180px;margin:0 auto;padding:0 16px;display:flex;gap:2px;overflow-x:auto}
+.site-nav button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;padding:12px 11px;color:var(--muted);white-space:nowrap}
+.site-nav button[aria-current="page"]{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.hero{display:grid;grid-template-columns:1.15fr 1fr;gap:0;overflow:hidden;padding:0}
+.hero .copy{padding:28px 28px 24px;display:grid;gap:14px;align-content:center}
+.hero h1{font-family:var(--display);font-size:clamp(25px,3.4vw,34px);line-height:1.35;letter-spacing:0}
+.hero .art{border-radius:0;height:100%;object-fit:cover}
+@container page (max-width:760px){.hero{grid-template-columns:1fr}.hero .copy{padding:20px}}
+.disp{font-family:var(--display)}
+.date-tile{border-radius:10px;background:var(--accent-soft);color:var(--accent);text-align:center;min-width:58px;padding:6px 8px;line-height:1.2}
+.date-tile b{font-size:19px;display:block}
+.site-foot{background:var(--accent);color:var(--on-accent);margin-top:32px}
+.site-foot .in{max-width:1180px;margin:0 auto;padding:22px 16px;display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));font-size:13.5px}
+.site-foot h4{margin-bottom:4px}
+.site-foot p{opacity:.88}
+
+/* dashboard */
+.dash{display:grid;grid-template-columns:248px 1fr;max-width:1440px;margin:0 auto;min-height:calc(100vh - 56px)}
+.side{border-right:1px solid var(--line);background:var(--surface);padding:12px 10px;position:sticky;top:56px;align-self:start;max-height:calc(100vh - 56px);overflow-y:auto}
+.side .grp{margin:14px 10px 4px;font-size:12px;color:var(--muted);font-weight:600}
+.side button{display:flex;width:100%;text-align:left;border:0;background:none;padding:7px 10px;border-radius:8px;color:var(--fg);font-weight:500;gap:10px}
+.side button .ic{color:var(--muted)}
+.side button:hover{background:var(--surface-2)}
+.side button[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.side button[aria-current="page"] .ic{color:var(--accent)}
+.main{padding:20px 16px 40px;min-width:0}
+@container page (max-width:1180px) and (min-width:861px){
+  .dash{grid-template-columns:68px 1fr}
+  .side{padding:10px 8px}.side .grp{display:none}.side button{justify-content:center;padding:10px}.side button span{display:none}.side button .ic{width:20px;height:20px}
+}
+@container page (max-width:860px){
+  .dash{grid-template-columns:1fr}
+  .side{position:static;max-height:none;display:flex;gap:4px;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:8px 16px}
+  .side .grp{display:none}
+  .side button{white-space:nowrap;width:auto}
+}
+.split{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px}
+@container page (max-width:860px){.split{grid-template-columns:minmax(0,1fr)}}
+.receipt{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.receipt .rh{padding:14px 16px;background:var(--accent-soft);color:var(--accent);text-align:center}
+.receipt .rb{padding:14px 16px;display:grid;gap:10px}
+.receipt .words{border-top:1px dashed var(--line);border-bottom:1px dashed var(--line);padding:8px 0;font-weight:600}
+.legend{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+/* resident app */
+.phones{display:flex;gap:22px;flex-wrap:wrap;justify-content:center}
+.phones>div{width:264px;max-width:100%}
+.phone{border:1px solid var(--line);border-radius:32px;background:var(--surface);padding:10px;box-shadow:var(--shadow)}
+.screen{border-radius:24px;background:var(--bg);min-height:560px;padding:14px;display:grid;gap:10px;align-content:start;overflow:hidden}
+.cap{text-align:center;font-size:13px;color:var(--muted);margin-top:10px;font-weight:600}
+.tabbar{display:flex;justify-content:space-around;font-size:11px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px;margin-top:4px}
+.tabbar span{display:grid;justify-items:center;gap:2px}
+.tabbar .on{color:var(--accent);font-weight:600}
+.app-head{border-radius:16px;padding:14px;background:var(--accent);color:var(--on-accent)}
+
+/* guide */
+.sw{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface);display:grid}
+.sw .c{height:74px;position:relative}
+.sw .c span{position:absolute;right:8px;bottom:6px;font-size:11.5px;font-weight:600;padding:1px 7px;border-radius:99px;background:var(--surface);color:var(--fg)}
+.sw .meta{padding:10px 12px;display:grid;gap:2px}
+.sw code{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.ratio{display:flex;height:34px;border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--line)}
+.ratio div{display:grid;place-items:center;font-size:12px;font-weight:600}
+pre.code{margin:0;background:var(--surface-2);border-radius:var(--r-sm);padding:14px;overflow-x:auto;font-family:var(--mono);font-size:12px;line-height:1.55;max-height:340px}
+.tile-ic{display:grid;justify-items:center;gap:6px;padding:12px 6px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:12px;color:var(--muted);text-align:center}
+.tile-ic .ic{color:var(--fg)}
+.do{border-top:3px solid var(--good)} .dont{border-top:3px solid var(--bad)}
+.section-h{display:grid;gap:4px;margin:30px 0 12px}
+.section-h:first-child{margin-top:0}
+.typo-row{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line)}
+.typo-row:last-child{border-bottom:0}
+@container page (max-width:600px){.typo-row{grid-template-columns:1fr;gap:2px}}
+@media (prefers-reduced-motion:no-preference){.view{animation:fade .18s ease-out}@keyframes fade{from{opacity:.5}to{opacity:1}}}
+</style>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><!-- Lucide icons v1.52.0, ISC licence --><defs><symbol id="i-house" viewBox="0 0 24 24"><svg class="lucide lucide-house" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/> <path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol><symbol id="i-megaphone" viewBox="0 0 24 24"><svg class="lucide lucide-megaphone" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/> <path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/> <path d="M8 6v8"/></symbol><symbol id="i-users" viewBox="0 0 24 24"><svg class="lucide lucide-users" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/> <path d="M16 3.128a4 4 0 0 1 0 7.744"/> <path d="M22 21v-2a4 4 0 0 0-3-3.87"/> <circle cx="9" cy="7" r="4"/></symbol><symbol id="i-landmark" viewBox="0 0 24 24"><svg class="lucide lucide-landmark" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M10 18v-7"/> <path d="M11.119 2.205a2 2 0 0 1 1.762 0l7.84 3.846A.5.5 0 0 1 20.5 7h-17a.5.5 0 0 1-.22-.949z"/> <path d="M14 18v-7"/> <path d="M18 18v-7"/> <path d="M3 22h18"/> <path d="M6 18v-7"/></symbol><symbol id="i-image" viewBox="0 0 24 24"><svg class="lucide lucide-image" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/> <circle cx="9" cy="9" r="2"/> <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></symbol><symbol id="i-file-pen" viewBox="0 0 24 24"><svg class="lucide lucide-file-pen" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M12.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v9.34"/> <path d="M14 2v5a1 1 0 0 0 1 1h5"/> <path d="M10.378 12.622a1 1 0 0 1 3 3.003L8.36 20.637a2 2 0 0 1-.854.506l-2.867.837a.5.5 0 0 1-.62-.62l.836-2.869a2 2 0 0 1 .506-.853z"/></symbol><symbol id="i-phone" viewBox="0 0 24 24"><svg class="lucide lucide-phone" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></symbol><symbol id="i-layout-dashboard" viewBox="0 0 24 24"><svg class="lucide lucide-layout-dashboard" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <rect width="7" height="9" x="3" y="3" rx="1"/> <rect width="7" height="5" x="14" y="3" rx="1"/> <rect width="7" height="9" x="14" y="12" rx="1"/> <rect width="7" height="5" x="3" y="16" rx="1"/></symbol><symbol id="i-map" viewBox="0 0 24 24"><svg class="lucide lucide-map" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/> <path d="M15 5.764v15"/> <path d="M9 3.236v15"/></symbol><symbol id="i-building-2" viewBox="0 0 24 24"><svg class="lucide lucide-building-2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M10 12h4"/> <path d="M10 8h4"/> <path d="M14 21v-3a2 2 0 0 0-4 0v3"/> <path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"/> <path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/></symbol><symbol id="i-user-round" viewBox="0 0 24 24"><svg class="lucide lucide-user-round" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <circle cx="12" cy="8" r="5"/> <path d="M20 21a8 8 0 0 0-16 0"/></symbol><symbol id="i-arrow-right-left" viewBox="0 0 24 24"><svg class="lucide lucide-arrow-right-left" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m16 3 4 4-4 4"/> <path d="M20 7H4"/> <path d="m8 21-4-4 4-4"/> <path d="M4 17h16"/></symbol><symbol id="i-book-user" viewBox="0 0 24 24"><svg class="lucide lucide-book-user" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M15 13a3 3 0 1 0-6 0"/> <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/> <circle cx="12" cy="8" r="2"/></symbol><symbol id="i-receipt" viewBox="0 0 24 24"><svg class="lucide lucide-receipt" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M12 17V7"/> <path d="M16 8h-6a2 2 0 0 0 0 4h4a2 2 0 0 1 0 4H8"/> <path d="M4 3a1 1 0 0 1 1-1 1.3 1.3 0 0 1 .7.2l.933.6a1.3 1.3 0 0 0 1.4 0l.934-.6a1.3 1.3 0 0 1 1.4 0l.933.6a1.3 1.3 0 0 0 1.4 0l.933-.6a1.3 1.3 0 0 1 1.4 0l.934.6a1.3 1.3 0 0 0 1.4 0l.933-.6A1.3 1.3 0 0 1 19 2a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1 1.3 1.3 0 0 1-.7-.2l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.934.6a1.3 1.3 0 0 1-1.4 0l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-1.4 0l-.934-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-.7.2 1 1 0 0 1-1-1z"/></symbol><symbol id="i-banknote" viewBox="0 0 24 24"><svg class="lucide lucide-banknote" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <rect width="20" height="12" x="2" y="6" rx="2"/> <circle cx="12" cy="12" r="2"/> <path d="M6 12h.01M18 12h.01"/></symbol><symbol id="i-repeat" viewBox="0 0 24 24"><svg class="lucide lucide-repeat" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m17 2 4 4-4 4"/> <path d="M3 11v-1a4 4 0 0 1 4-4h14"/> <path d="m7 22-4-4 4-4"/> <path d="M21 13v1a4 4 0 0 1-4 4H3"/></symbol><symbol id="i-hand-heart" viewBox="0 0 24 24"><svg class="lucide lucide-hand-heart" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M11 14h2a2 2 0 0 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 16"/> <path d="m14.45 13.39 5.05-4.694C20.196 8 21 6.85 21 5.75a2.75 2.75 0 0 0-4.797-1.837.276.276 0 0 1-.406 0A2.75 2.75 0 0 0 11 5.75c0 1.2.802 2.248 1.5 2.946L16 11.95"/> <path d="m2 15 6 6"/> <path d="m7 20 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a1 1 0 0 0-2.75-2.91"/></symbol><symbol id="i-wallet" viewBox="0 0 24 24"><svg class="lucide lucide-wallet" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/> <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol><symbol id="i-hard-hat" viewBox="0 0 24 24"><svg class="lucide lucide-hard-hat" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M10 10V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5"/> <path d="M14 6a6 6 0 0 1 6 6v3"/> <path d="M4 15v-3a6 6 0 0 1 6-6"/> <rect x="2" y="15" width="20" height="4" rx="1"/></symbol><symbol id="i-warehouse" viewBox="0 0 24 24"><svg class="lucide lucide-warehouse" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M18 21V10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1v11"/> <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 1.132-1.803l7.95-3.974a2 2 0 0 1 1.837 0l7.948 3.974A2 2 0 0 1 22 8z"/> <path d="M6 13h12"/> <path d="M6 17h12"/></symbol><symbol id="i-wrench" viewBox="0 0 24 24"><svg class="lucide lucide-wrench" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></symbol><symbol id="i-life-buoy" viewBox="0 0 24 24"><svg class="lucide lucide-life-buoy" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <circle cx="12" cy="12" r="10"/> <path d="m4.93 4.93 4.24 4.24"/> <path d="m14.83 9.17 4.24-4.24"/> <path d="m14.83 14.83 4.24 4.24"/> <path d="m9.17 14.83-4.24 4.24"/> <circle cx="12" cy="12" r="4"/></symbol><symbol id="i-car" viewBox="0 0 24 24"><svg class="lucide lucide-car" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/> <circle cx="7" cy="17" r="2"/> <path d="M9 17h6"/> <circle cx="17" cy="17" r="2"/></symbol><symbol id="i-bell" viewBox="0 0 24 24"><svg class="lucide lucide-bell" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M10.268 21a2 2 0 0 0 3.464 0"/> <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></symbol><symbol id="i-calendar-days" viewBox="0 0 24 24"><svg class="lucide lucide-calendar-days" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M8 2v3"/> <path d="M16 2v3"/> <rect x="3" y="3" width="18" height="18" rx="2"/> <path d="M3 9h18"/> <path d="M8 13h.01"/> <path d="M12 13h.01"/> <path d="M16 13h.01"/> <path d="M8 17h.01"/> <path d="M12 17h.01"/> <path d="M16 17h.01"/></symbol><symbol id="i-vote" viewBox="0 0 24 24"><svg class="lucide lucide-vote" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m9 12 2 2 4-4"/> <path d="M5 7c0-1.1.9-2 2-2h10a2 2 0 0 1 2 2v12H5V7Z"/> <path d="M22 19H2"/></symbol><symbol id="i-messages-square" viewBox="0 0 24 24"><svg class="lucide lucide-messages-square" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M16 10a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 14.286V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/> <path d="M20 9a2 2 0 0 1 2 2v10.286a.71.71 0 0 1-1.212.502l-2.202-2.202A2 2 0 0 0 17.172 19H10a2 2 0 0 1-2-2v-1"/></symbol><symbol id="i-folder-open" viewBox="0 0 24 24"><svg class="lucide lucide-folder-open" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></symbol><symbol id="i-file-badge" viewBox="0 0 24 24"><svg class="lucide lucide-file-badge" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M13 22h5a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v3.3"/> <path d="M14 2v5a1 1 0 0 0 1 1h5"/> <path d="m7.69 16.479 1.29 4.88a.5.5 0 0 1-.698.591l-1.843-.849a1 1 0 0 0-.879.001l-1.846.85a.5.5 0 0 1-.692-.593l1.29-4.88"/> <circle cx="6" cy="14" r="3"/></symbol><symbol id="i-chart-column" viewBox="0 0 24 24"><svg class="lucide lucide-chart-column" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M3 3v16a2 2 0 0 0 2 2h16"/> <path d="M18 17V9"/> <path d="M13 17V5"/> <path d="M8 17v-3"/></symbol><symbol id="i-shield-check" viewBox="0 0 24 24"><svg class="lucide lucide-shield-check" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/> <path d="m9 12 2 2 4-4"/></symbol><symbol id="i-user-cog" viewBox="0 0 24 24"><svg class="lucide lucide-user-cog" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M10 15H6a4 4 0 0 0-4 4v2"/> <path d="m14.305 16.53.923-.382"/> <path d="m15.228 13.852-.923-.383"/> <path d="m16.852 12.228-.383-.923"/> <path d="m16.852 17.772-.383.924"/> <path d="m19.148 12.228.383-.923"/> <path d="m19.53 18.696-.382-.924"/> <path d="m20.772 13.852.924-.383"/> <path d="m20.772 16.148.924.383"/> <circle cx="18" cy="15" r="3"/> <circle cx="9" cy="7" r="4"/></symbol><symbol id="i-globe" viewBox="0 0 24 24"><svg class="lucide lucide-globe" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <circle cx="12" cy="12" r="10"/> <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/> <path d="M2 12h20"/></symbol><symbol id="i-settings" viewBox="0 0 24 24"><svg class="lucide lucide-settings" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/> <circle cx="12" cy="12" r="3"/></symbol><symbol id="i-scroll-text" viewBox="0 0 24 24"><svg class="lucide lucide-scroll-text" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M15 12h-5"/> <path d="M15 8h-5"/> <path d="M19 17V5a2 2 0 0 0-2-2H4"/> <path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><svg class="lucide lucide-search" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m21 21-4.34-4.34"/> <circle cx="11" cy="11" r="8"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><svg class="lucide lucide-plus" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M5 12h14"/> <path d="M12 5v14"/></symbol><symbol id="i-download" viewBox="0 0 24 24"><svg class="lucide lucide-download" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M12 15V3"/> <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/> <path d="m7 10 5 5 5-5"/></symbol><symbol id="i-printer" viewBox="0 0 24 24"><svg class="lucide lucide-printer" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/> <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/> <rect x="6" y="14" width="12" height="8" rx="1"/></symbol><symbol id="i-chevron-right" viewBox="0 0 24 24"><svg class="lucide lucide-chevron-right" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m9 18 6-6-6-6"/></symbol><symbol id="i-arrow-right" viewBox="0 0 24 24"><svg class="lucide lucide-arrow-right" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M5 12h14"/> <path d="m12 5 7 7-7 7"/></symbol><symbol id="i-map-pin" viewBox="0 0 24 24"><svg class="lucide lucide-map-pin" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/> <circle cx="12" cy="10" r="3"/></symbol><symbol id="i-clock" viewBox="0 0 24 24"><svg class="lucide lucide-clock" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <circle cx="12" cy="12" r="10"/> <path d="M12 6v6l4 2"/></symbol><symbol id="i-circle-check" viewBox="0 0 24 24"><svg class="lucide lucide-circle-check" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <circle cx="12" cy="12" r="10"/> <path d="m16 9-5.5 5.5L8 12"/></symbol><symbol id="i-triangle-alert" viewBox="0 0 24 24"><svg class="lucide lucide-triangle-alert" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/> <path d="M12 9v4"/> <path d="M12 17h.01"/></symbol><symbol id="i-flame" viewBox="0 0 24 24"><svg class="lucide lucide-flame" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"/></symbol><symbol id="i-ambulance" viewBox="0 0 24 24"><svg class="lucide lucide-ambulance" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M10 10H6"/> <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/> <path d="M19 18h2a1 1 0 0 0 1-1v-3.28a1 1 0 0 0-.684-.948l-1.923-.641a1 1 0 0 1-.578-.502l-1.539-3.076A1 1 0 0 0 16.382 8H14"/> <path d="M8 8v4"/> <path d="M9 18h6"/> <circle cx="17" cy="18" r="2"/> <circle cx="7" cy="18" r="2"/></symbol><symbol id="i-siren" viewBox="0 0 24 24"><svg class="lucide lucide-siren" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M7 18v-6a5 5 0 1 1 10 0v6"/> <path d="M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z"/> <path d="M21 12h1"/> <path d="M18.5 4.5 18 5"/> <path d="M2 12h1"/> <path d="M12 2v1"/> <path d="m4.929 4.929.707.707"/> <path d="M12 12v6"/></symbol><symbol id="i-stethoscope" viewBox="0 0 24 24"><svg class="lucide lucide-stethoscope" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M11 2v2"/> <path d="M5 2v2"/> <path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1"/> <path d="M8 15a6 6 0 0 0 12 0v-3"/> <circle cx="20" cy="10" r="2"/></symbol><symbol id="i-sun" viewBox="0 0 24 24"><svg class="lucide lucide-sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <circle cx="12" cy="12" r="4"/> <path d="M12 2v2"/> <path d="M12 20v2"/> <path d="m4.93 4.93 1.41 1.41"/> <path d="m17.66 17.66 1.41 1.41"/> <path d="M2 12h2"/> <path d="M20 12h2"/> <path d="m6.34 17.66-1.41 1.41"/> <path d="m19.07 4.93-1.41 1.41"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><svg class="lucide lucide-moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></symbol><symbol id="i-languages" viewBox="0 0 24 24"><svg class="lucide lucide-languages" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m5 8 6 6"/> <path d="m4 14 6-6 2-3"/> <path d="M2 5h12"/> <path d="M7 2h1"/> <path d="m22 22-5-10-5 10"/> <path d="M14 18h6"/></symbol><symbol id="i-log-in" viewBox="0 0 24 24"><svg class="lucide lucide-log-in" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="m10 17 5-5-5-5"/> <path d="M15 12H3"/> <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></symbol><symbol id="i-camera" viewBox="0 0 24 24"><svg class="lucide lucide-camera" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"/> <circle cx="12" cy="13" r="3"/></symbol><symbol id="i-menu" viewBox="0 0 24 24"><svg class="lucide lucide-menu" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M4 5h16"/> <path d="M4 12h16"/> <path d="M4 19h16"/></symbol><symbol id="i-filter" viewBox="0 0 24 24"><svg class="lucide lucide-filter" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z"/></symbol><symbol id="i-upload" viewBox="0 0 24 24"><svg class="lucide lucide-upload" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M12 3v12"/> <path d="m17 8-5-5-5 5"/> <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></symbol><symbol id="i-trending-up" viewBox="0 0 24 24"><svg class="lucide lucide-trending-up" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M16 7h6v6"/> <path d="m22 7-8.5 8.5-5-5L2 17"/></symbol><symbol id="i-hand-coins" viewBox="0 0 24 24"><svg class="lucide lucide-hand-coins" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M11 15h2a2 2 0 1 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 17"/> <path d="m7 21 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9"/> <path d="m2 16 6 6"/> <circle cx="16" cy="9" r="2.9"/> <circle cx="6" cy="5" r="3"/></symbol><symbol id="i-droplets" viewBox="0 0 24 24"><svg class="lucide lucide-droplets" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z"/> <path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/></symbol><symbol id="i-lightbulb" viewBox="0 0 24 24"><svg class="lucide lucide-lightbulb" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/> <path d="M9 18h6"/> <path d="M10 22h4"/></symbol><symbol id="i-trees" viewBox="0 0 24 24"><svg class="lucide lucide-trees" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" > <path d="M10 10v.2A3 3 0 0 1 8.9 16H5a3 3 0 0 1-1-5.8V10a3 3 0 0 1 6 0Z"/> <path d="M7 16v6"/> <path d="M13 19v3"/> <path d="M12 19h8.3a1 1 0 0 0 .7-1.7L18 14h.3a1 1 0 0 0 .7-1.7L16 9h.2a1 1 0 0 0 .8-1.7L13 3l-1.4 1.5"/></symbol></defs></svg>
+<div class="top"><div class="top-in">
+  <div class="brand"><div class="logo" aria-hidden="true"><b>৫৭</b></div><div id="brand-t"></div></div>
+  <div class="seg" role="group" aria-label="View" id="seg"></div>
+  <div class="tools">
+    <div class="sizes" role="group" aria-label="Screen size" id="sizes"></div>
+    <button class="btn pill" id="lang-btn" aria-label="Language"></button>
+    <button class="btn pill" id="theme-btn" aria-label="Toggle dark mode"><svg class="ic sm"><use href="#i-moon"/></svg></button>
+  </div>
+</div></div>
+<div id="frame"><div id="root"></div></div>
+
+<script>
+/* ---------- state + helpers ---------- */
+const store={get(k,d){try{return localStorage.getItem(k)??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+let size='desk', lang=store.get('s57-lang','bn'), mode=store.get('s57-mode','guide'), pub='home', dash='overview';
+const h=location.hash.slice(1); if(['guide','public','dash','app'].includes(h)) mode=h;
+const $=s=>document.querySelector(s);
+const L=(b,e)=>lang==='bn'?b:e;
+const BN='০১২৩৪৫৬৭৮৯';
+const N=s=>lang==='bn'?String(s).replace(/\d/g,d=>BN[d]):String(s);
+const tk=n=>'৳ '+N(n.toLocaleString('en-IN'));
+const I=(n,c='')=>`<svg class="ic ${c}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const chip=(t,k='')=>`<span class="chip ${k}">${t}</span>`;
+const ph=(t,s,a='')=>`<div class="ph"><div><h1>${t}</h1>${s?`<p class="sub">${s}</p>`:''}</div><div class="row">${a}</div></div>`;
+const stat=(icon,l,v,s='',k='')=>`<div class="card stat"><div class="top-row"><span class="l">${l}</span><span class="icobox ${k}" style="width:32px;height:32px">${I(icon,'sm')}</span></div><div class="v num">${v}</div>${s?`<div class="small muted">${s}</div>`:''}</div>`;
+const tbl=(hd,rows)=>`<div class="tbl"><table><thead><tr>${hd.map(x=>`<th${x.endsWith('#')?' class="r"':''}>${x.replace('#','')}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map((c,i)=>`<td${hd[i].endsWith('#')?' class="r num"':''}>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+const bar=(p,c='')=>`<div class="bar"><i style="width:${p}%;${c?`background:${c}`:''}"></i></div>`;
+const btn=(t,icon='',k='')=>`<button class="btn ${k}" type="button">${icon?I(icon,'sm'):''}${t}</button>`;
+const search=(id,p)=>`<div class="search">${I('search','sm')}<input id="${id}" placeholder="${p}"></div>`;
+const ttl=(icon,t,k='')=>`<div class="ttl"><span class="icobox ${k}">${I(icon)}</span><h2>${t}</h2></div>`;
+
+/* ---------- illustrations: original SVG scenes, themed by CSS tokens ---------- */
+function rnd(seed){let s=seed;return()=>((s=s*16807%2147483647)/2147483647)}
+function buildings(r,x0,x1,base,maxH){let x=x0,o='';while(x<x1){const w=26+r()*30,hh=40+r()*maxH;o+=`<rect x="${x}" y="${base-hh}" width="${w}" height="${hh}" fill="var(--art-${r()>.5?'b1':'b2'})"/>`;for(let wy=base-hh+8;wy<base-10;wy+=12)for(let wx=x+5;wx<x+w-7;wx+=9)o+=`<rect x="${wx}" y="${wy}" width="4" height="6" fill="var(--art-win)" opacity=".9"/>`;x+=w+3}return o}
+const tree=(x,y,s=1)=>`<rect x="${x-1.5*s}" y="${y}" width="${3*s}" height="${12*s}" fill="var(--art-ink)" opacity=".6"/><circle cx="${x}" cy="${y-2*s}" r="${11*s}" fill="var(--art-tree)"/><circle cx="${x+7*s}" cy="${y+3*s}" r="${7*s}" fill="var(--art-tree)" opacity=".85"/>`;
+const sun=(x,y,r=18)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="var(--sun)" opacity=".9"/>`;
+function art(kind,seed=3,ratio='16/10'){
+  const [rw,rh]=ratio.split('/').map(Number), W=320, H=Math.round(W*rh/rw), r=rnd(seed), g=H-34;
+  let o=`<rect width="${W}" height="${H}" fill="var(--art-sky)"/>`;
+  const ground=`<rect y="${g}" width="${W}" height="${H-g}" fill="var(--art-ground)"/>`;
+  if(kind==='lake'){o+=sun(240,52,22)+buildings(r,0,W,g-14,70)+`<rect y="${g-14}" width="${W}" height="${H-g+14}" fill="var(--art-water)"/>`;for(let i=0;i<6;i++)o+=`<path d="M${20+i*52} ${g+4+(i%2)*10}h22" stroke="var(--art-win)" stroke-width="2" stroke-linecap="round" opacity=".7"/>`;o+=`<path d="M120 ${g+14}h64l-10 10h-44z" fill="var(--terra)"/><path d="M152 ${g+14}v-30l22 26z" fill="var(--art-win)" stroke="var(--art-ink)" stroke-width="1"/><path d="M128 ${g+24}q24 6 48 0" stroke="var(--art-ink)" stroke-width="1.2" fill="none" opacity=".5"/>`;o+=tree(14,g-24,1.1)+tree(300,g-26,1.2)}
+  else if(kind==='road'){o+=buildings(r,0,W,g,50)+ground+`<path d="M110 ${H}L150 ${g}h20L210 ${H}z" fill="var(--art-ink)" opacity=".75"/>`;for(let i=0;i<4;i++)o+=`<rect x="158" y="${g+4+i*9}" width="4" height="${4+i}" fill="var(--art-win)"/>`;o+=tree(50,g+2)+tree(270,g+4,1.1)+`<rect x="226" y="${g+6}" width="34" height="14" rx="3" fill="var(--warn)"/><circle cx="234" cy="${g+22}" r="4" fill="var(--art-ink)"/><circle cx="252" cy="${g+22}" r="4" fill="var(--art-ink)"/>`}
+  else if(kind==='cctv'){o+=buildings(r,0,W,g,60)+ground+`<rect x="200" y="${g-90}" width="5" height="90" fill="var(--art-ink)"/><path d="M203 ${g-86}h34" stroke="var(--art-ink)" stroke-width="4"/><rect x="226" y="${g-84}" width="30" height="14" rx="3" fill="var(--art-win)" stroke="var(--art-ink)" stroke-width="2"/><circle cx="252" cy="${g-77}" r="3" fill="var(--sun)"/><path d="M256 ${g-74}l40 50h-60z" fill="var(--warn)" opacity=".18"/>`+tree(60,g+2)}
+  else if(kind==='field'||kind==='sports'){o+=sun(60,46,16)+buildings(r,120,W,g-20,40)+`<rect y="${g-20}" width="${W}" height="${H-g+20}" fill="var(--art-tree)" opacity=".55"/><ellipse cx="160" cy="${g+6}" rx="120" ry="20" fill="none" stroke="var(--art-win)" stroke-width="3" opacity=".8"/><path d="M40 ${g+6}v-26h30v26" fill="none" stroke="var(--art-win)" stroke-width="3"/>`+(kind==='sports'?`<path d="M250 ${g-50}v50" stroke="var(--art-ink)" stroke-width="2"/><rect x="251" y="${g-50}" width="34" height="21" fill="var(--accent)"/><circle cx="266" cy="${g-39.5}" r="6.5" fill="var(--sun)"/>`:'')}
+  else if(kind==='mosque'){o+=sun(70,50,16)+ground+`<rect x="100" y="${g-60}" width="120" height="60" fill="var(--art-win)" stroke="var(--art-b2)" stroke-width="2"/><path d="M125 ${g-60}a35 35 0 0 1 70 0z" fill="var(--accent)"/><rect x="157" y="${g-108}" width="6" height="16" fill="var(--warn)"/><rect x="82" y="${g-100}" width="14" height="100" fill="var(--art-b2)"/><path d="M82 ${g-100}l7 -16 7 16z" fill="var(--accent)"/><rect x="224" y="${g-100}" width="14" height="100" fill="var(--art-b2)"/><path d="M224 ${g-100}l7 -16 7 16z" fill="var(--accent)"/>`;for(let i=0;i<3;i++)o+=`<path d="M${128+i*26} ${g}v-22a8 8 0 0 1 16 0v22z" fill="var(--art-b1)"/>`;o+=tree(30,g+2)+tree(290,g+2,1.1)}
+  else if(kind==='trees'){o+=sun(250,48,16)+ground;for(let i=0;i<7;i++)o+=tree(26+i*45,g-6+(i%2)*10,.7+r()*.5);o+=`<path d="M0 ${g+22}h${W}" stroke="var(--terra)" stroke-width="3" stroke-dasharray="6 6" opacity=".6"/>`}
+  else if(kind==='boishakh'){o+=sun(160,70,30)+ground;const cols=['var(--sun)','var(--art-win)','var(--warn)','var(--accent)'];for(let row=0;row<2;row++){const y=18+row*30;o+=`<path d="M0 ${y}q160 22 ${W} 0" stroke="var(--art-ink)" fill="none" stroke-width="1"/>`;for(let i=0;i<14;i++){const x=6+i*23,yy=y+ (Math.sin(i/13*Math.PI)*11);o+=`<path d="M${x} ${yy}h16l-8 13z" fill="${cols[(i+row)%4]}"/>`}}o+=`<g transform="translate(160 ${g+16})" fill="none" stroke="var(--art-win)" stroke-width="2"><ellipse rx="70" ry="12"/><ellipse rx="46" ry="8"/><ellipse rx="22" ry="4" stroke="var(--sun)"/></g>`}
+  else if(kind==='meeting'){o+=ground+`<rect x="40" y="26" width="240" height="${g-40}" rx="4" fill="var(--art-b1)"/><rect x="120" y="40" width="80" height="40" rx="3" fill="var(--accent)"/><path d="M130 52h60M130 62h40" stroke="var(--on-accent)" stroke-width="3" stroke-linecap="round"/>`;for(let rr=0;rr<3;rr++)for(let i=0;i<9;i++)o+=`<circle cx="${50+i*28+(rr%2)*14}" cy="${g-10+rr*12}" r="6" fill="var(--art-ink)" opacity="${.45+rr*.2}"/>`}
+  else if(kind==='art'){o+=ground+sun(60,50,14)+`<path d="M150 ${g+10}l20 -110 20 110M170 ${g-100}v120" stroke="var(--terra)" stroke-width="4" fill="none"/><rect x="128" y="${g-96}" width="84" height="62" fill="var(--art-win)" stroke="var(--art-ink)" stroke-width="2"/><circle cx="152" cy="${g-70}" r="10" fill="var(--sun)"/><path d="M134 ${g-40}q30 -26 72 -8" stroke="var(--accent)" stroke-width="5" fill="none"/>`+tree(260,g+2)+tree(40,g+4,.8)}
+  else if(kind==='drain'){o+=buildings(r,0,W,g,40)+ground+`<rect x="40" y="${g+6}" width="240" height="18" rx="9" fill="var(--art-water)" stroke="var(--art-ink)" stroke-width="1.5"/>`;for(let i=0;i<7;i++)o+=`<path d="M${60+i*32} ${g+10}v10" stroke="var(--art-ink)" stroke-width="2"/>`}
+  else if(kind==='hall'){o+=ground+`<rect x="60" y="${g-80}" width="200" height="80" fill="var(--art-b1)"/><path d="M50 ${g-80}h220l-110 -34z" fill="var(--terra)"/>`;for(let i=0;i<5;i++)o+=`<rect x="${78+i*36}" y="${g-62}" width="16" height="62" fill="var(--art-win)"/>`;o+=tree(28,g+2)+tree(292,g+2)}
+  return `<svg class="art" viewBox="0 0 ${W} ${H}" role="img" aria-label="${kind}" preserveAspectRatio="xMidYMid slice">${o}</svg>`;
+}
+
+/* ---------- shared content ---------- */
+const NOTICES=()=>[
+ [L('নভেম্বর মাসের সার্ভিস চার্জের বিল প্রস্তুত','Monthly service charge for November is now billed'),L('বিল','Billing'),'acc',L('০২ নভেম্বর ২০২৬','02 Nov 2026'),L('সমিতি অফিসে (রোড ৩) শনি থেকে বৃহস্পতিবার, সকাল ১০টা থেকে সন্ধ্যা ৬টার মধ্যে নগদে পরিশোধ করুন।','Pay in cash at the society office, Road 3, Saturday to Thursday, 10am to 6pm.'),'receipt'],
+ [L('৯ নভেম্বর রোড ৭-এর ড্রেন পরিষ্কার','Road 7 drain cleaning on 9 November'),L('রক্ষণাবেক্ষণ','Maintenance'),'warn',L('৩১ অক্টোবর ২০২৬','31 Oct 2026'),L('সকাল ৮টা থেকে দুপুর ২টা পর্যন্ত রোড ৭-এ গাড়ি রাখবেন না।','Please keep cars off Road 7 between 8am and 2pm.'),'wrench'],
+ [L('২১ ডিসেম্বর বার্ষিক সাধারণ সভা','Annual General Meeting on 21 December'),L('সাধারণ সভা','AGM'),'info',L('২৮ অক্টোবর ২০২৬','28 Oct 2026'),L('নিবন্ধিত সকল সদস্য আমন্ত্রিত। আলোচ্যসূচি ও বার্ষিক হিসাব সংযুক্ত।','All registered members are invited. Agenda and annual statement attached.'),'users'],
+ [L('ভাড়াটিয়া নিবন্ধন কার্যক্রম','Renter registration drive'),L('নিরাপত্তা','Security'),'bad',L('২০ অক্টোবর ২০২৬','20 Oct 2026'),L('৩০ নভেম্বরের মধ্যে সকল ভাড়াটিয়াকে সমিতি অফিসে নিবন্ধন করতে হবে।','All renters must register with the society office by 30 November.'),'shield-check'],
+ [L('সব ব্লকের প্রবেশপথে নতুন সিসিটিভি ক্যামেরা','New CCTV cameras at all block entrances'),L('উন্নয়ন','Development'),'good',L('১২ অক্টোবর ২০২৬','12 Oct 2026'),L('নিরাপত্তা প্রকল্পের আওতায় ২৪টি ক্যামেরা বসানো হয়েছে।','24 cameras installed under the safety project.'),'camera'],
+];
+const COMMITTEE=()=>[[L('মোঃ রফিকুল ইসলাম','Md. Rafiqul Islam'),L('সভাপতি','President')],[L('শাহানা আক্তার','Shahana Akter'),L('সহ-সভাপতি','Vice President')],[L('কামরুল হাসান','Kamrul Hasan'),L('সাধারণ সম্পাদক','General Secretary')],[L('তানভীর আহমেদ','Tanvir Ahmed'),L('যুগ্ম সম্পাদক','Joint Secretary')],[L('নাসরিন সুলতানা','Nasrin Sultana'),L('কোষাধ্যক্ষ','Treasurer')],[L('আব্দুল করিম','Abdul Karim'),L('সাংগঠনিক সম্পাদক','Organizing Secretary')],[L('ফারহানা রহমান','Farhana Rahman'),L('সাংস্কৃতিক সম্পাদক','Cultural Secretary')],[L('মিজানুর রহমান','Mizanur Rahman'),L('কার্যনির্বাহী সদস্য','Executive Member')]];
+const DEVS=()=>[[L('ব্লক সি সড়ক সংস্কার','Block C road resurfacing'),'warn',L('চলমান','In progress'),62,4800000,2970000,L('রোড ৯ থেকে রোড ১২, ১.৪ কিমি','Road 9 to Road 12, 1.4 km'),'road'],[L('সিসিটিভি দ্বিতীয় ধাপ','CCTV coverage phase 2'),'warn',L('চলমান','In progress'),80,1250000,1000000,L('সড়ক সংযোগস্থলে আরও ১৮টি ক্যামেরা','18 more cameras at road junctions'),'cctv'],[L('কেন্দ্রীয় খেলার মাঠ সংস্কার','Central playground renovation'),'',L('পরিকল্পিত','Planned'),0,2200000,0,L('হাঁটার পথ, বাতি ও বসার ব্যবস্থা','Walking track, lights and seating'),'field'],[L('বৃষ্টির পানি নিষ্কাশন, ব্লক এ','Rainwater drainage, Block A'),'good',L('সম্পন্ন','Completed'),100,3600000,3480000,L('আগস্ট ২০২৬-এ শেষ হয়েছে','Finished August 2026'),'drain']];
+const ini=n=>{const w=n.replace(/^(মোঃ|Md\.|Dr\.|ডা\.)\s*/,'').trim();return lang==='bn'?w[0]:w.split(' ').map(x=>x[0]).slice(0,2).join('')};
+
+/* ---------- PUBLIC WEBSITE ---------- */
+const PUB={
+home:()=>`
+<section class="card hero lift">
+  <div class="copy">
+    <span class="label" style="color:var(--accent)">${L('উত্তরা সেক্টর ৫৭ কল্যাণ সমিতি','Uttara Sector 57 Welfare Society')}</span>
+    <h1>${L('নিরাপদ, পরিচ্ছন্ন ও সুশৃঙ্খল সেক্টর, প্রতিটি বাসিন্দার জন্য','A safe, clean and well-run sector for every resident')}</h1>
+    <p class="muted">${L('খবর, নোটিশ, কমিটি, উন্নয়ন কাজ আর সদস্য সেবা, সেক্টর ৫৭-এর মানুষের জন্য এক জায়গায়।','News, notices, committee, development work and member services for the people of Sector 57, in one place.')}</p>
+    <div class="row"><button class="btn primary" data-go="forms">${I('file-pen','sm')}${L('সদস্য হিসেবে নিবন্ধন','Register as a member')}</button><button class="btn" data-go="notices">${I('megaphone','sm')}${L('সর্বশেষ নোটিশ','Latest notices')}</button></div>
+    <hr class="kantha" style="margin-top:4px">
+    <div class="grid" style="gap:8px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))">${[[L('ব্লক','Blocks'),6],[L('রোড','Roads'),24],[L('প্লট','Plots'),412],[L('ফ্ল্যাট ও ইউনিট','Flats and units'),'3,286']].map(([l,v])=>`<div><div class="num disp" style="font-size:22px;font-weight:700;color:var(--accent)">${N(v)}</div><div class="small muted">${l}</div></div>`).join('')}</div>
+  </div>
+  ${art('lake',7,'4/3')}
+</section>
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(340px,100%),1fr));margin-top:16px">
+  <div class="card stack">
+    <div class="row between">${ttl('megaphone',L('নোটিশ বোর্ড','Notice board'))}<a href="#" class="link" data-go="notices">${L('সব নোটিশ','View all')}${I('chevron-right','sm')}</a></div>
+    ${NOTICES().slice(0,3).map(a=>`<div class="row between nowrap" style="border-top:1px solid var(--line);padding-top:10px;align-items:flex-start"><div style="min-width:0"><h4>${a[0]}</h4><p class="small muted">${a[4]}</p></div><div class="stack" style="justify-items:end;gap:4px">${chip(a[1],a[2])}<span class="small muted num" style="white-space:nowrap">${a[3]}</span></div></div>`).join('')}
+  </div>
+  <div class="card stack">
+    ${ttl('calendar-days',L('আসন্ন অনুষ্ঠান','Upcoming events'),'sun')}
+    ${[['২১','21',L('ডিসে.','Dec'),L('বার্ষিক সাধারণ সভা','Annual General Meeting'),L('কমিউনিটি হল, বিকাল ৪টা','Community hall, 4pm')],['১৬','16',L('ডিসে.','Dec'),L('বিজয় দিবস ক্রীড়া প্রতিযোগিতা','Victory Day sports'),L('কেন্দ্রীয় খেলার মাঠ, সকাল ৯টা','Central playground, 9am')],['০৫','05',L('ডিসে.','Dec'),L('বিনামূল্যে স্বাস্থ্য ক্যাম্প','Free health camp'),L('সমিতি ক্লিনিক, সকাল ১০টা','Society clinic, 10am')]].map(e=>`<div class="row nowrap"><div class="date-tile"><b class="num">${L(e[0],e[1])}</b><span class="small">${e[2]}</span></div><div><h4>${e[3]}</h4><p class="small muted">${e[4]}</p></div></div>`).join('')}
+  </div>
+</div>
+<div class="grid g2" style="margin-top:14px">
+  <div class="card stack"><div class="row between">${ttl('hard-hat',L('উন্নয়ন কাজ','Development work'),'warn')}<a href="#" class="link" data-go="developments">${L('সব প্রকল্প','All projects')}${I('chevron-right','sm')}</a></div>
+    ${DEVS().slice(0,3).map(d=>`<div class="stack" style="gap:6px"><div class="row between"><h4>${d[0]}</h4><span class="small num muted">${N(d[3])}%</span></div>${bar(d[3])}</div>`).join('')}
+  </div>
+  <div class="card stack">${ttl('siren',L('জরুরি যোগাযোগ','Emergency contacts'),'sun')}
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:8px">${[[L('জাতীয় জরুরি সেবা','National emergency'),'999','siren'],[L('সমিতি অফিস','Society office'),'01711-000057','landmark'],[L('নিরাপত্তা কন্ট্রোল রুম','Security control room'),'01711-000058','shield-check'],[L('সমিতি ক্লিনিক','Society clinic'),'01711-000059','stethoscope']].map(c=>`<div class="card flat row nowrap" style="padding:10px;gap:8px"><span style="color:var(--sun)">${I(c[2])}</span><div style="min-width:0"><div class="small muted">${c[0]}</div><b class="num" style="user-select:all">${N(c[1])}</b></div></div>`).join('')}</div>
+  </div>
+</div>`,
+notices:()=>`${ph(L('নোটিশ বোর্ড','Notice board'),L('ব্যবস্থাপনা কমিটির অফিসিয়াল নোটিশ','Official notices from the managing committee'),`<select id="f-ann" style="width:auto"><option>${L('সব বিভাগ','All categories')}</option></select>`)}
+<div class="grid g2">${NOTICES().map(a=>`<article class="card stack"><div class="row between nowrap"><div class="row nowrap"><span class="icobox ${a[2]==='acc'||a[2]==='good'?'':a[2]==='bad'?'sun':a[2]}">${I(a[5])}</span>${chip(a[1],a[2])}</div><span class="small muted num">${a[3]}</span></div><h3>${a[0]}</h3><p class="muted">${a[4]}</p><a href="#" class="link">${L('পুরো নোটিশ পড়ুন','Read notice')}${I('arrow-right','sm')}</a></article>`).join('')}</div>`,
+committee:()=>`${ph(L('ব্যবস্থাপনা কমিটি','Managing committee'),L('মেয়াদ ২০২৫ থেকে ২০২৭, ১৪ ডিসেম্বর ২০২৪-এর সাধারণ সভায় নির্বাচিত','Term 2025 to 2027, elected at the AGM on 14 December 2024'))}
+<div class="grid g4">${COMMITTEE().map((c,i)=>`<div class="card stack" style="justify-items:center;text-align:center;padding:20px 14px"><div class="av lg" style="${i===0?'background:var(--accent);color:var(--on-accent)':''}">${ini(c[0])}</div><div><h3>${c[0]}</h3><p class="small muted">${c[1]}</p></div></div>`).join('')}</div>
+<p class="small muted" style="margin-top:10px">${L('ছবি যোগ হলে গোল ফ্রেমে মুখের ছবি বসবে; না থাকলে নামের প্রথম অক্ষর।','Portrait photos go in the round frame; the initial shows until one is uploaded.')}</p>`,
+developments:()=>`${ph(L('উন্নয়ন প্রকল্প','Development projects'),L('সমিতির তহবিল কোথায় খরচ হচ্ছে','Where society funds are being spent'))}
+<div class="grid g2">${DEVS().map(d=>`<div class="card stack" style="padding:10px">${art(d[7],d[3]+5,'16/7')}<div class="stack" style="padding:4px 6px 6px"><div class="row between"><h3>${d[0]}</h3>${chip(d[2],d[1])}</div><p class="small muted">${d[6]}</p>${bar(d[3],d[3]===100?'var(--good)':'')}<dl class="kv"><dt>${L('বাজেট','Budget')}</dt><dd class="num">${tk(d[4])}</dd><dt>${L('খরচ','Spent')}</dt><dd class="num">${tk(d[5])}</dd></dl></div></div>`).join('')}</div>`,
+gallery:()=>`${ph(L('ছবির গ্যালারি','Gallery'),L('অনুষ্ঠান ও সামাজিক জীবনের ছবি','Photos from events and community life'))}
+<div class="grid g3">${[[L('পহেলা বৈশাখ ১৪৩৩','Pohela Boishakh 1433'),54,'boishakh'],[L('বিজয় দিবস ক্রীড়া ২০২৫','Victory Day sports 2025'),42,'sports'],[L('বার্ষিক সাধারণ সভা ২০২৪','AGM 2024'),18,'meeting'],[L('বৃক্ষরোপণ, রোড ৫','Tree plantation, Road 5'),26,'trees'],[L('কেন্দ্রীয় ঈদগাহে ঈদের জামাত','Eid jamaat at the central eidgah'),31,'mosque'],[L('শিশুদের চিত্রাঙ্কন প্রতিযোগিতা','Children\'s art competition'),38,'art']].map((g,i)=>`<div class="card stack" style="padding:10px">${art(g[2],i+2,'4/3')}<div style="padding:0 4px 4px" class="row between nowrap"><h4>${g[0]}</h4><span class="small muted row nowrap" style="gap:4px">${I('image','sm')}${N(g[1])}</span></div></div>`).join('')}</div>`,
+forms:()=>`${ph(L('সদস্য সেবা','Member services'),L('অনলাইনে আবেদন করুন। প্রতিটি আবেদন সমিতি অফিস যাচাই করে।','Apply online. The society office reviews every request.'))}
+<div class="split">
+  <div class="stack">${[['users',L('সদস্যপদের আবেদন','Membership application'),L('প্লট ও ফ্ল্যাট মালিকদের জন্য','For plot and flat owners'),1],['book-user',L('ভাড়াটিয়া নিবন্ধন','Renter registration'),L('সকল ভাড়াটিয়ার জন্য বাধ্যতামূলক','Required for all renters')],['car',L('গাড়ির স্টিকারের আবেদন','Vehicle sticker request'),L('গাড়ি ও মোটরসাইকেল','Car and motorbike stickers')],['calendar-days',L('হল ও মাঠ বুকিং','Facility booking request'),L('কমিউনিটি হল, খেলার মাঠ, জিম','Hall, playground, gym')],['file-badge',L('অনাপত্তিপত্র (এনওসি)','NOC or clearance request'),L('বিক্রি, ভাড়া বা ইউটিলিটি সংযোগের জন্য','For sale, rent or utility')],['messages-square',L('অভিযোগ বা পরামর্শ','Complaint or suggestion'),L('রাস্তা, নিরাপত্তা, পরিচ্ছন্নতা','Roads, security, cleaning')]].map(f=>`<div class="card row between nowrap" style="${f[3]?'border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)':''}"><div class="row nowrap"><span class="icobox">${I(f[0])}</span><div><h4>${f[1]}</h4><p class="small muted">${f[2]}</p></div></div>${I('chevron-right')}</div>`).join('')}</div>
+  <form class="card stack" onsubmit="event.preventDefault()">
+    <h2>${L('সদস্যপদের আবেদন','Membership application')}</h2><p class="small muted">${L('প্রায় ৩ মিনিট লাগবে। অনুমোদন হলে এসএমএস পাবেন।','Takes about 3 minutes. You will get an SMS when it is approved.')}</p>
+    <hr class="kantha green">
+    <div class="grid g2" style="gap:10px">
+      <div class="field"><label for="fa-name">${L('পূর্ণ নাম','Full name')}</label><input id="fa-name" value="${L('আয়েশা সিদ্দিকা','Ayesha Siddiqua')}"></div>
+      <div class="field"><label for="fa-phone">${L('মোবাইল নম্বর','Mobile number')}</label><input id="fa-phone" value="${N('01712-345678')}"></div>
+      <div class="field"><label for="fa-block">${L('ব্লক','Block')}</label><select id="fa-block"><option>${L('ব্লক সি','Block C')}</option></select></div>
+      <div class="field"><label for="fa-road">${L('রোড','Road')}</label><select id="fa-road"><option>${L('রোড ৯','Road 9')}</option></select></div>
+      <div class="field"><label for="fa-plot">${L('প্লট / হোল্ডিং','Plot / holding')}</label><select id="fa-plot"><option>${L('প্লট ১৪','Plot 14')}</option></select></div>
+      <div class="field"><label for="fa-flat">${L('ফ্ল্যাট','Flat')}</label><select id="fa-flat"><option>${L('ভবন ১ · ফ্ল্যাট ৪বি','Building 1 · Flat 4B')}</option></select></div>
+      <div class="field"><label for="fa-nid">${L('জাতীয় পরিচয়পত্র নম্বর','NID number')}</label><input id="fa-nid" value="${N('1993 2614 5520')}"></div>
+      <div class="field"><label for="fa-type">${L('আমি','I am')}</label><select id="fa-type"><option>${L('মালিক, এখানেই থাকি','Owner, living here')}</option><option>${L('মালিক, অন্যত্র থাকি','Owner, living elsewhere')}</option></select></div>
+    </div>
+    <div class="field"><label for="fa-doc">${L('মালিকানার দলিল','Ownership document')}</label><input id="fa-doc" type="file"></div>
+    <div class="row"><button class="btn primary" type="submit">${I('circle-check','sm')}${L('আবেদন জমা দিন','Submit application')}</button><span class="small muted">${L('নমুনা ফর্ম, সংযুক্ত নয়','Sample form, not connected')}</span></div>
+  </form>
+</div>`
+};
+const PUBNAV=()=>[['home',L('প্রথম পাতা','Home'),'house'],['notices',L('নোটিশ','Notices'),'megaphone'],['committee',L('কমিটি','Committee'),'users'],['developments',L('উন্নয়ন','Developments'),'hard-hat'],['gallery',L('গ্যালারি','Gallery'),'image'],['forms',L('সদস্য সেবা','Member services'),'file-pen']];
+
+/* ---------- DASHBOARD ---------- */
+const DNAV=()=>[
+ ['',[['overview',L('সারসংক্ষেপ','Overview'),'layout-dashboard']]],
+ [L('সম্পত্তি','Property'),[['property',L('সম্পত্তির মানচিত্র','Property map'),'map'],['units',L('ইউনিট','Units'),'building-2']]],
+ [L('মানুষ','People'),[['members',L('সদস্য','Members'),'user-round'],['moves',L('ওঠা ও ছাড়া','Move-in and move-out'),'arrow-right-left'],['directory',L('বাসিন্দা তালিকা','Resident directory'),'book-user']]],
+ [L('হিসাব','Finance'),[['billing',L('বিল ও ইনভয়েস','Bills and invoices'),'receipt'],['collect',L('নগদ আদায়','Cash collection'),'banknote'],['recurring',L('নিয়মিত চার্জ','Recurring charges'),'repeat'],['donations',L('দান','Donations'),'hand-heart'],['expenses',L('খরচ ও বাজেট','Expenses and budget'),'wallet']]],
+ [L('পরিচালনা','Operations'),[['hrm',L('কর্মী ও এইচআরএম','Staff and HRM'),'hard-hat'],['facilities',L('সুবিধা ও সম্পদ','Facilities and assets'),'warehouse'],['work',L('কাজের আদেশ','Work orders'),'wrench'],['helpdesk',L('হেল্পডেস্ক','Helpdesk'),'life-buoy'],['vehicles',L('গাড়ি ও স্টিকার','Vehicles and stickers'),'car']]],
+ [L('কমিউনিটি','Community'),[['noticesd',L('নোটিশ ও এসএমএস','Notices and SMS'),'bell'],['events',L('অনুষ্ঠান ও সাধারণ সভা','Events and AGM'),'calendar-days'],['voting',L('নির্বাচন ও ভোট','Elections and voting'),'vote'],['board',L('কমিউনিটি বোর্ড','Community board'),'messages-square']]],
+ [L('নথি','Records'),[['documents',L('ডকুমেন্ট','Documents'),'folder-open'],['certs',L('সনদ ও এনওসি','Certificates and NOC'),'file-badge'],['reports',L('রিপোর্ট','Reports'),'chart-column']]],
+ [L('প্রশাসন','Administration'),[['roles',L('রোল ও অনুমতি','Roles and permissions'),'shield-check'],['users',L('ব্যবহারকারী','Users'),'user-cog'],['website',L('ওয়েবসাইট কনটেন্ট','Website content'),'globe'],['settings',L('সমিতির সেটিংস','Society settings'),'settings'],['audit',L('অডিট লগ','Audit log'),'scroll-text']]],
+];
+function chartSVG(){
+  const m=lang==='bn'?['মে','জুন','জুলাই','আগস্ট','সেপ্টে.','অক্টো.']:['May','Jun','Jul','Aug','Sep','Oct'];
+  const billed=[24.1,24.3,24.3,24.6,24.8,25.0], coll=[21.2,22.0,20.4,22.9,23.1,21.7];
+  const W=520,H=230,pl=34,pb=30,pt=22,pr=14,max=30,y=v=>pt+(H-pt-pb)*(1-v/max),bw=(W-pl-pr)/6;
+  let o='';[0,10,20,30].forEach(t=>{o+=`<line x1="${pl}" x2="${W-pr}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)" stroke-width="1"/><text x="${pl-6}" y="${y(t)+4}" text-anchor="end" font-size="13" fill="var(--muted)">${N(t)}</text>`});
+  m.forEach((mm,i)=>{const cx=pl+bw*i+bw/2;o+=`<rect x="${cx-15}" y="${y(billed[i])}" width="14" height="${y(0)-y(billed[i])}" rx="3" fill="var(--line)"/><rect x="${cx+1}" y="${y(coll[i])}" width="14" height="${y(0)-y(coll[i])}" rx="3" fill="var(--accent)"/><text x="${cx}" y="${H-8}" text-anchor="middle" font-size="13.5" fill="var(--muted)">${mm}</text>`;if(i===5)o+=`<text x="${cx+8}" y="${y(coll[i])-6}" text-anchor="middle" font-size="13.5" font-weight="700" fill="var(--accent)">${N(coll[i])}</text>`});
+  return `<div><svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="${L('বিল বনাম আদায়','Billed vs collected')}">${o}</svg></div>`;
+}
+const D={
+overview:()=>`${ph(L('শুভ সকাল, রফিকুল','Good morning, Rafiqul'),L('সেক্টর ৫৭ এক নজরে · ৪ নভেম্বর ২০২৬','Sector 57 at a glance · 4 November 2026'),btn(L('এক্সপোর্ট','Export'),'download')+btn(L('নতুন নোটিশ','New notice'),'plus','primary'))}
+<div class="grid g4">${stat('banknote',L('অক্টোবরে আদায়','Collected in October'),tk(2170000),L('বিলের ৮৭%','87% of billed'))}${stat('triangle-alert',L('বকেয়া','Arrears'),tk(684500),L('৩১২টি ইউনিট মেয়াদোত্তীর্ণ','312 units overdue'),'sun')}${stat('building-2',L('বসবাসরত ইউনিট','Occupied units'),N('3,014'),L('৩,২৮৬টির মধ্যে ২৭২টি খালি','272 vacant of 3,286'),'info')}${stat('life-buoy',L('খোলা অভিযোগ','Open tickets'),N(23),L('৫টি নির্ধারিত সময় পেরিয়েছে','5 past target time'),'warn')}</div>
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),1fr));margin-top:14px">
+  <div class="card stack"><div class="row between"><h2>${L('বিল বনাম আদায়','Billed vs collected')}</h2><span class="small muted">${L('লাখ টাকা, গত ৬ মাস','৳ lakh, last 6 months')}</span></div>
+    ${chartSVG()}
+    <div class="row small muted"><span class="legend"><i style="background:var(--line)"></i>${L('বিল','Billed')}</span><span class="legend"><i style="background:var(--accent)"></i>${L('আদায়','Collected')}</span></div>
+  </div>
+  <div class="card stack"><h2>${L('ব্লকভিত্তিক আদায়','Collection by block')}</h2>
+    ${[[L('ব্লক এ','Block A'),94],[L('ব্লক বি','Block B'),91],[L('ব্লক সি','Block C'),83],[L('ব্লক ডি','Block D'),88],[L('ব্লক ই','Block E'),79],[L('ব্লক এফ','Block F'),86]].map(b=>`<div class="stack" style="gap:4px"><div class="row between small"><span>${b[0]}</span><span class="num" style="${b[1]<80?'color:var(--bad);font-weight:600':''}">${N(b[1])}%</span></div>${bar(b[1],b[1]<80?'var(--bad)':'')}</div>`).join('')}
+  </div>
+</div>
+<div class="grid g3" style="margin-top:14px">
+  <div class="card stack"><h3>${L('অনুমোদনের অপেক্ষায়','Needs approval')}</h3>${[[L('খরচ: ড্রেন পাইপ, ','Expense: drain pipes, ')+tk(86000),L('কোষাধ্যক্ষ','Treasurer')],[L('নতুন ভাড়াটিয়া: ফ্ল্যাট ৬এ, রোড ৯','New renter: Flat 6A, Road 9'),L('ব্লক সি সমন্বয়ক','Block C coordinator')],[L('মালিকানা হস্তান্তর: প্লট ২২, রোড ৪','Ownership transfer: Plot 22, Road 4'),L('অফিস','Office')]].map(a=>`<div class="row between nowrap" style="border-top:1px solid var(--line);padding-top:10px"><div style="min-width:0"><h4>${a[0]}</h4><p class="small muted">${L('পাঠিয়েছেন ','From ')+a[1]}</p></div>${btn(L('দেখুন','Review'))}</div>`).join('')}</div>
+  <div class="card stack"><h3>${L('হেল্পডেস্ক','Helpdesk')}</h3>${[[L('রোড ৭-এ সড়কবাতি নষ্ট','Street light out, Road 7'),'warn',L('আজ শেষ সময়','Due today')],[L('রোড ১২-এ ময়লা নেওয়া হয়নি','Garbage not collected, Road 12'),'bad',L('১ দিন পেরিয়েছে','Overdue 1 day')],[L('রোড ২-এ জলাবদ্ধতা','Water logging, Road 2'),'info',L('কাজ চলছে','In progress')]].map(t=>`<div class="row between nowrap" style="border-top:1px solid var(--line);padding-top:10px"><span>${t[0]}</span>${chip(t[2],t[1])}</div>`).join('')}</div>
+  <div class="card stack"><h3>${L('এই সপ্তাহে','This week')}</h3>${[[L('মঙ্গল','Tue'),L('কমিটি সভা, সন্ধ্যা ৭টা','Committee meeting, 7pm')],[L('বৃহঃ','Thu'),L('৪২ জন কর্মীর বেতন প্রদান','Salary disbursement, 42 staff')],[L('শনি','Sat'),L('ব্লক এফ দোকানের ত্রৈমাসিক বিল তৈরি','Quarterly dues for Block F shops')]].map(e=>`<div class="row nowrap" style="border-top:1px solid var(--line);padding-top:10px"><span class="date-tile" style="min-width:48px;padding:4px 6px;font-weight:600">${e[0]}</span><span>${e[1]}</span></div>`).join('')}</div>
+</div>`,
+collect:()=>`${ph(L('নগদ আদায়','Cash collection'),L('টাকা গ্রহণ করে রসিদ দিন','Record a payment and issue the receipt'))}
+<div class="split">
+ <form class="card stack" onsubmit="event.preventDefault()"><h2>${L('টাকা গ্রহণ','Receive payment')}</h2>
+  <div class="field"><label for="c-unit">${L('ইউনিট বা পরিশোধকারী','Unit or payer')}</label><div class="search" style="max-width:none">${I('search','sm')}<input id="c-unit" value="${L('ফ্ল্যাট ৬এ, রোড ৯ · রোকেয়া বেগম','Flat 6A, Road 9 · Rokeya Begum')}"></div></div>
+  <div class="card flat stack" style="gap:8px">${[['c1',L('সার্ভিস চার্জ, নভেম্বর ২০২৬','Service charge, Nov 2026'),1500],['c2',L('সার্ভিস চার্জ, অক্টোবর ২০২৬ (বকেয়া)','Service charge, Oct 2026 (arrear)'),1500],['c3',L('জেনারেটর ফি, ৪র্থ প্রান্তিক ২০২৬','Generator fee, Q4 2026'),1500]].map(l=>`<label class="check"><input type="checkbox" checked id="${l[0]}"><span style="flex:1">${l[1]}</span><b class="num">${tk(l[2])}</b></label>`).join('')}</div>
+  <div class="grid g2" style="gap:10px"><div class="field"><label for="c-amt">${L('প্রাপ্ত টাকা','Amount received')}</label><input id="c-amt" class="num" value="${tk(4500)}"></div><div class="field"><label for="c-by">${L('আদায়কারী','Collected by')}</label><select id="c-by"><option>${L('অফিস, নাসরিন সুলতানা','Office, Nasrin Sultana')}</option></select></div></div>
+  <div class="row"><button class="btn primary" type="submit">${I('printer','sm')}${L('সংরক্ষণ ও রসিদ প্রিন্ট','Save and print receipt')}</button><span class="small muted">${L('পরিশোধকারীকে এসএমএসে রসিদ যাবে','SMS receipt goes to the payer')}</span></div>
+ </form>
+ <div class="receipt">
+  <div class="rh jamdani"><div class="row nowrap" style="justify-content:center;gap:8px"><div class="logo" aria-hidden="true" style="width:30px;height:30px"><b style="width:18px;height:18px;font-size:9.5px">৫৭</b></div><b>${L('উত্তরা সেক্টর ৫৭ কল্যাণ সমিতি','Uttara Sector 57 Welfare Society')}</b></div><div class="small" style="margin-top:4px">${L('টাকা প্রাপ্তির রসিদ','Money receipt')}</div></div>
+  <hr class="kantha">
+  <div class="rb">
+   <div class="row between small"><span>${L('রসিদ নং','Receipt no.')} <b class="mono">RC-08813</b></span><span class="num">${L('৪ নভেম্বর ২০২৬','4 Nov 2026')}</span></div>
+   <dl class="kv"><dt>${L('প্রাপক','Received from')}</dt><dd>${L('রোকেয়া বেগম (মালিক)','Rokeya Begum (owner)')}</dd><dt>${L('ঠিকানা','Unit')}</dt><dd>${L('ফ্ল্যাট ৬এ, ভবন ১, প্লট ১৪, রোড ৯, ব্লক সি','Flat 6A, Bldg 1, Plot 14, Road 9, Block C')}</dd><dt>${L('বাবদ','For')}</dt><dd>${L('সার্ভিস চার্জ (অক্টো, নভে), জেনারেটর ফি','Service charge (Oct, Nov), generator fee')}</dd></dl>
+   <div class="words row between nowrap"><span>${L('কথায়: চার হাজার পাঁচশত টাকা মাত্র','In words: Taka four thousand five hundred only')}</span><span class="num" style="font-size:18px">${tk(4500)}</span></div>
+   <div class="row between small muted"><span>${L('আদায়কারী: নাসরিন সুলতানা','Collected by: Nasrin Sultana')}</span><span>${L('নগদ','Cash')}</span></div>
+  </div>
+ </div>
+</div>
+<div class="grid g3" style="margin-top:14px">${stat('receipt',L('আজকের রসিদ','Receipts today'),N(48))}${stat('wallet',L('হাতে নগদ','Cash in hand'),tk(96500),L('কোষাধ্যক্ষের কাছে জমা বাকি','Not yet handed to treasurer'),'warn')}<div class="card stack"><span class="l small muted">${L('দিন শেষ','End of day')}</span><button class="btn primary" type="button">${I('hand-coins','sm')}${L('দিন বন্ধ করে কোষাধ্যক্ষকে বুঝিয়ে দিন','Close day and hand over to treasurer')}</button></div></div>`,
+billing:()=>`${ph(L('বিল ও ইনভয়েস','Bills and invoices'),L('নভেম্বর ২০২৬ বিল চক্র','November 2026 billing run'),btn(L('হাতে তৈরি','Generate manually'),'repeat')+btn(L('নতুন ইনভয়েস','New invoice'),'plus','primary'))}
+<div class="grid g4" style="margin-bottom:14px">${stat('receipt',L('মোট বিল','Billed'),tk(2512000),L('৩,০১৪টি ইনভয়েস','3,014 invoices'))}${stat('circle-check',L('আদায়','Collected'),tk(1386000),N(55)+'%')}${stat('clock',L('অপরিশোধিত','Outstanding'),tk(1126000),'','warn')}${stat('triangle-alert',L('আগের বকেয়া','Earlier arrears'),tk(684500),L('৩১২টি ইউনিট','312 units'),'sun')}</div>
+<div class="toolbar">${search('b-q',L('ইনভয়েস বা ইউনিট খুঁজুন','Search invoice or unit'))}<select id="b-f" style="width:auto"><option>${L('সব অবস্থা','All status')}</option><option>${L('অপরিশোধিত','Unpaid')}</option><option>${L('পরিশোধিত','Paid')}</option></select></div>
+${tbl([L('ইনভয়েস','Invoice'),L('ইউনিট','Unit'),L('যার নামে বিল','Bill to'),L('চার্জ','Charge'),L('সময়কাল','Period'),L('পরিমাণ','Amount')+'#',L('অবস্থা','Status')],[
+['<span class="mono">INV-2611-0412</span>',L('ফ্ল্যাট ৪বি, রোড ৯','Flat 4B, Road 9'),L('রাশেদ হোসেন (ভাড়াটিয়া)','Rashed Hossain (renter)'),L('সার্ভিস চার্জ','Service charge'),L('নভে. ২০২৬','Nov 2026'),tk(1500),chip(L('পরিশোধিত','Paid'),'good')],
+['<span class="mono">INV-2611-0413</span>',L('ফ্ল্যাট ৬এ, রোড ৯','Flat 6A, Road 9'),L('রোকেয়া বেগম (মালিক)','Rokeya Begum (owner)'),L('সার্ভিস চার্জ','Service charge'),L('নভে. ২০২৬','Nov 2026'),tk(1500),chip(L('অপরিশোধিত','Unpaid'),'warn')],
+['<span class="mono">INV-2611-0907</span>',L('দোকান ২, রোড ২','Shop 2, Road 2'),L('কাশেম ফার্মেসি','Kashem Pharmacy'),L('বাণিজ্যিক চার্জ','Commercial charge'),L('অক্টো. থেকে ডিসে. ২০২৬','Oct to Dec 2026'),tk(9000),chip(L('পরিশোধিত','Paid'),'good')],
+['<span class="mono">INV-2610-1188</span>',L('ফ্লোর ২, রোড ২২','Floor 2, Road 22'),L('নূর ট্রেডার্স লিমিটেড','Nur Traders Ltd'),L('গুদাম চার্জ','Warehouse charge'),L('অক্টো. ২০২৬','Oct 2026'),tk(18000),chip(L('মেয়াদোত্তীর্ণ','Overdue'),'bad')]])}`,
+members:()=>`${ph(L('সদস্য','Members'),L('মালিক, ভাড়াটিয়া ও তাদের পরিবার','Owners, renters and their households'),btn(L('এক্সেল থেকে আনুন','Import from Excel'),'upload')+btn(L('সদস্য যোগ','Add member'),'plus','primary'))}
+<div class="grid g4" style="margin-bottom:14px">${stat('user-round',L('মালিক','Owners'),N('2,148'))}${stat('house',L('ভাড়াটিয়া পরিবার','Renter households'),N('1,412'),'','info')}${stat('users',L('ব্যাচেলর ভাড়াটিয়া','Bachelor renters'),N(386),'','info')}${stat('shield-check',L('যাচাই বাকি','Pending verification'),N(17),'','warn')}</div>
+<div class="toolbar">${search('m-q',L('সদস্য খুঁজুন','Search members'))}<select id="m-f" style="width:auto"><option>${L('সবাই','All')}</option><option>${L('মালিক','Owners')}</option><option>${L('ভাড়াটিয়া','Renters')}</option></select></div>
+${tbl([L('নাম','Name'),L('ধরন','Role'),L('ইউনিট','Unit'),L('ফোন','Phone'),L('এনআইডি','NID'),L('অবস্থা','Status')],[
+[L('মোঃ জাহাঙ্গীর আলম','Md. Jahangir Alam'),L('মালিক','Owner'),L('প্লট ১৪, রোড ৯ (+৩টি ইউনিট)','Plot 14, Road 9 (+3 units)'),N('01711-223344'),L('যাচাইকৃত','Verified'),chip(L('সক্রিয়','Active'),'good')],
+[L('রাশেদ হোসেন','Rashed Hossain'),L('পারিবারিক ভাড়াটিয়া','Family renter'),L('ফ্ল্যাট ৪বি, রোড ৯','Flat 4B, Road 9'),N('01819-556677'),L('যাচাইকৃত','Verified'),chip(L('সক্রিয়','Active'),'good')],
+[L('সাব্বির ইসলাম','Sabbir Islam'),L('ব্যাচেলর ভাড়াটিয়া','Bachelor renter'),L('ফ্ল্যাট ৬এ, রোড ৯','Flat 6A, Road 9'),N('01922-889900'),L('বাকি','Pending'),chip(L('যাচাই করুন','Verify'),'warn')],
+[L('নূর ট্রেডার্স লিমিটেড','Nur Traders Ltd'),L('মালিক, বাণিজ্যিক','Owner, commercial'),L('ফ্লোর ২, রোড ২২','Floor 2, Road 22'),N('01733-112233'),L('ট্রেড লাইসেন্স','Trade licence'),chip(L('সক্রিয়','Active'),'good')]].map(r=>[`<div class="row nowrap"><div class="av">${ini(r[0])}</div>${r[0]}</div>`,...r.slice(1)]))}`
+};
+const SHOWN=['overview','collect','billing','members'];
+const placeholder=(k,l,icon)=>`${ph(l,L('এই পাতার কাঠামো অনুমোদিত v1 মকআপে আছে','This page\'s layout is in the approved v1 mockup'))}
+<div class="card stack" style="max-width:560px;justify-items:start;padding:24px"><span class="icobox">${I(icon,'lg')}</span><h3>${L('একই রং, আইকন ও কার্ড এখানেও বসবে','The same colours, icons and cards apply here')}</h3><p class="muted">${L('এই সংস্করণে চারটি পাতা পুরো নকশায় দেখানো হয়েছে: সারসংক্ষেপ, নগদ আদায়, বিল ও সদস্য।','This version shows four dashboard pages in full: overview, cash collection, bills and members.')}</p><div class="row">${SHOWN.map(s=>`<button class="btn" data-dash="${s}">${DNAV().flatMap(g=>g[1]).find(x=>x[0]===s)[1]}</button>`).join('')}</div></div>`;
+
+/* ---------- RESIDENT APP ---------- */
+const tabbar=on=>`<div class="tabbar">${[['house',L('হোম','Home')],['receipt',L('বিল','Bills')],['life-buoy',L('অভিযোগ','Help')],['user-round',L('প্রোফাইল','Profile')]].map((t,i)=>`<span class="${i===on?'on':''}">${I(t[0])}${t[1]}</span>`).join('')}</div>`;
+const APP=()=>`<div class="wrap">${ph(L('বাসিন্দা অ্যাপ','Resident app'),L('মালিক, ভাড়াটিয়া ও কর্মীদের জন্য মোবাইল ভিউ','Mobile view for owners, renters and staff'))}<div class="phones">
+<div><div class="phone"><div class="screen">
+ <div class="app-head jamdani stack" style="gap:6px"><span class="small" style="opacity:.85">${L('আসসালামু আলাইকুম','Assalamu alaikum')}</span><h3>${L('রাশেদ হোসেন','Rashed Hossain')}</h3><span class="small" style="opacity:.85">${L('ফ্ল্যাট ৪বি, রোড ৯, ব্লক সি','Flat 4B, Road 9, Block C')}</span></div>
+ <div class="card stack" style="padding:12px;gap:4px"><span class="label">${L('এখন পরিশোধযোগ্য','Due now')}</span><div class="num" style="font-size:24px;font-weight:700">${tk(1500)}</div><p class="small muted">${L('সার্ভিস চার্জ, নভেম্বর · অফিসে নগদে দিন','Service charge, Nov · pay at the office')}</p></div>
+ <div class="grid" style="grid-template-columns:1fr 1fr;gap:8px">${[['receipt',L('বিল','Bills')],['life-buoy',L('অভিযোগ','Helpdesk')],['bell',L('নোটিশ','Notices')],['calendar-days',L('বুকিং','Bookings')]].map(x=>`<div class="card stack" style="padding:12px;justify-items:center;gap:6px"><span class="icobox" style="width:34px;height:34px">${I(x[0],'sm')}</span><b class="small">${x[1]}</b></div>`).join('')}</div>
+ <div class="card row nowrap" style="padding:12px"><span style="color:var(--warn)">${I('megaphone')}</span><div><h4>${NOTICES()[1][0]}</h4><p class="small muted">${L('নোটিশ · ৩১ অক্টো.','Notice · 31 Oct')}</p></div></div>
+ ${tabbar(0)}
+</div></div><div class="cap">${L('হোম','Home')}</div></div>
+<div><div class="phone"><div class="screen">
+ <h3>${L('বিল ও রসিদ','Bills and receipts')}</h3>
+ ${[[L('নভেম্বর ২০২৬','Nov 2026'),1500,L('অপরিশোধিত','Unpaid'),'warn'],[L('অক্টোবর ২০২৬','Oct 2026'),1500,L('পরিশোধিত','Paid'),'good'],[L('সেপ্টেম্বর ২০২৬','Sep 2026'),1500,L('পরিশোধিত','Paid'),'good'],[L('জেনারেটর, ৩য় প্রান্তিক','Q3 generator'),1500,L('পরিশোধিত','Paid'),'good']].map(b=>`<div class="card row between nowrap" style="padding:12px"><div><h4>${b[0]}</h4><p class="small muted num">${tk(b[1])}</p></div>${chip(b[2],b[3])}</div>`).join('')}
+ <div class="card flat small row nowrap">${I('circle-check','sm')}${L('অফিসে টাকা দিলে এসএমএসে রসিদ আসবে।','Receipts arrive by SMS when you pay at the office.')}</div>
+ ${tabbar(1)}
+</div></div><div class="cap">${L('বিল','Bills')}</div></div>
+<div><div class="phone"><div class="screen">
+ <h3>${L('অভিযোগ','Ticket')} <span class="mono">T-2290</span></h3>
+ <div class="card stack" style="padding:12px"><h4>${L('রোড ৭-এ সড়কবাতি নষ্ট','Street light out, Road 7')}</h4>${chip(L('আজ শেষ সময়','Due today'),'warn')}<p class="small muted">${L('দায়িত্বে: কালাম মিয়া, ইলেকট্রিশিয়ান','Assigned to Kalam Mia, electrician')}</p></div>
+ ${[[L('জমা হয়েছে','Submitted'),L('৩ নভে., রাত ৮:১০','03 Nov, 8:10pm')],[L('দায়িত্ব দেওয়া হয়েছে','Assigned'),L('৪ নভে., সকাল ৯:৩০','04 Nov, 9:30am')],[L('কাজ শুরু','Work started'),L('৪ নভে., সকাল ১১:০০','04 Nov, 11:00am')]].map(s=>`<div class="row nowrap"><span style="color:var(--good)">${I('circle-check')}</span><div><h4>${s[0]}</h4><p class="small muted">${s[1]}</p></div></div>`).join('')}
+ <button class="btn primary" type="button" style="justify-content:center">${I('camera','sm')}${L('ছবি বা মন্তব্য যোগ করুন','Add photo or comment')}</button>
+ ${tabbar(2)}
+</div></div><div class="cap">${L('হেল্পডেস্ক','Helpdesk')}</div></div>
+<div><div class="phone"><div class="screen">
+ <h3>${L('আমার পরিবার','My household')}</h3>
+ <div class="card stack" style="padding:12px;gap:2px"><span class="label">${L('ফ্ল্যাট ৪বি, রোড ৯, ব্লক সি','Flat 4B, Road 9, Block C')}</span><p class="small muted">${L('পারিবারিক ভাড়াটিয়া, ফেব্রুয়ারি ২০২৬ থেকে','Family renter since Feb 2026')}</p></div>
+ ${[[L('রাশেদ হোসেন','Rashed Hossain'),L('পরিবার প্রধান','Head')],[L('মিতু হোসেন','Mitu Hossain'),L('স্ত্রী','Spouse')],[L('আরিফ হোসেন','Arif Hossain'),L('সন্তান','Child')],[L('শেফালী','Shefali'),L('গৃহকর্মী','Domestic help')]].map(p=>`<div class="row nowrap"><div class="av">${ini(p[0])}</div><div><h4>${p[0]}</h4><p class="small muted">${p[1]}</p></div></div>`).join('')}
+ <div class="card row between nowrap" style="padding:12px"><span class="small row nowrap">${I('car','sm')}${L('গাড়ির স্টিকার','Car sticker')} <span class="mono">S57-C-0912</span></span>${chip(L('ডিসে. ২০২৬','Dec 2026'),'acc')}</div>
+ ${tabbar(3)}
+</div></div><div class="cap">${L('প্রোফাইল ও পরিবার','Profile and household')}</div></div>
+</div></div>`;
+
+/* ---------- DESIGN GUIDE ---------- */
+const SW=()=>[
+ [L('বোতল সবুজ','Bottle green'),'--accent','#006a4e','#4fbf8f',L('প্রধান বোতাম, লিংক, সক্রিয় মেনু। পতাকার সবুজ।','Primary buttons, links, active nav. The flag green.')],
+ [L('সবুজ হালকা','Green soft'),'--accent-soft','#e2efe8','#153028',L('আইকন বাক্স, নির্বাচিত সারি','Icon boxes, selected rows')],
+ [L('লাল সূর্য','Sun red'),'--sun','#c42136','#ff6b7a',L('লোগো, কাঁথা ফোঁড়, জরুরি তথ্য। খুব কম ব্যবহার।','Logo disc, kantha stitch, urgent items. Use rarely.')],
+ [L('মসলিন জমিন','Muslin ground'),'--bg','#f4f5f1','#0f1412',L('পাতার পটভূমি','Page background')],
+ [L('কার্ড','Card'),'--surface','#ffffff','#161d1a',L('সব কার্ড ও টেবিল','All cards and tables')],
+ [L('ভেতরের প্যানেল','Inset panel'),'--surface-2','#eef0ea','#1c2521',L('টেবিলের মাথা, ফ্ল্যাট কার্ড','Table heads, flat cards')],
+ [L('রেখা','Line'),'--line','#dde2d8','#2a3530',L('বর্ডার ও বিভাজক','Borders and dividers')],
+ [L('কালি','Ink'),'--fg','#18201c','#e7ece8',L('মূল লেখা','Body text')],
+ [L('ধূসর লেখা','Muted ink'),'--muted','#59635c','#9aa79f',L('গৌণ লেখা, লেবেল','Secondary text, labels')],
+];
+const SEM=()=>[[L('সফল','Success'),'good','#1f7a4a',L('পরিশোধিত, সক্রিয়','Paid, active')],[L('হলুদ সতর্কতা','Haldi warning'),'warn','#9a6200',L('বাকি, আজ শেষ সময়','Pending, due today')],[L('বিপদ','Danger'),'bad','#c42136',L('মেয়াদোত্তীর্ণ, বকেয়া','Overdue, arrears')],[L('জামদানি নীল','Jamdani indigo'),'info','#2c4a7c',L('তথ্য, চলমান','Info, in progress')],[L('পোড়ামাটি','Terracotta'),'terra','#a4532e',L('শুধু ছবি ও অলংকরণে','Illustrations only')]];
+const ICONS=()=>[['house',L('প্রথম পাতা','Home')],['megaphone',L('নোটিশ','Notice')],['receipt',L('বিল','Bill')],['banknote',L('নগদ','Cash')],['hand-heart',L('দান','Donation')],['building-2',L('ইউনিট','Unit')],['map',L('মানচিত্র','Map')],['user-round',L('সদস্য','Member')],['hard-hat',L('কর্মী','Staff')],['wrench',L('মেরামত','Repair')],['life-buoy',L('অভিযোগ','Ticket')],['car',L('গাড়ি','Vehicle')],['calendar-days',L('অনুষ্ঠান','Event')],['vote',L('ভোট','Vote')],['file-badge',L('সনদ','Certificate')],['shield-check',L('অনুমতি','Permission')],['siren',L('জরুরি','Emergency')],['chart-column',L('রিপোর্ট','Report')]];
+const TOKENS=`:root {
+  --bg: #f4f5f1;  --surface: #ffffff;  --surface-2: #eef0ea;
+  --line: #dde2d8;  --fg: #18201c;  --muted: #59635c;
+  --accent: #006a4e;  --accent-strong: #00563f;
+  --accent-soft: #e2efe8;  --on-accent: #ffffff;
+  --sun: #c42136;  --sun-soft: #fbe6e8;
+  --good: #1f7a4a;  --warn: #9a6200;  --bad: #c42136;  --info: #2c4a7c;
+  --terra: #a4532e;
+  --radius: 12px;
+  --font-sans: "Noto Sans Bengali", "Hind Siliguri", system-ui, sans-serif;
+  --font-display: "Noto Serif Bengali", "Noto Sans Bengali", serif;
+}
+/* dark values: see design/tokens.css */
+
+@theme inline {               /* Tailwind v4 */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-sun: var(--sun);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --color-info: var(--info);
+  --radius-card: var(--radius);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+}
+
+/* usage */
+<div class="rounded-card border border-line bg-surface p-4">
+  <button class="bg-accent text-on-accent rounded-lg px-3 py-2">জমা দিন</button>
+</div>`;
+function contrast(a,b){const lum=h=>{const c=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(v=>v<=.03928?v/12.92:((v+.055)/1.055)**2.4);return .2126*c[0]+.7152*c[1]+.0722*c[2]};const [x,y]=[lum(a),lum(b)].sort((p,q)=>q-p);return (x+.05)/(y+.05)}
+const GUIDE=()=>`<div class="wrap">
+<section class="card jamdani lift" style="padding:26px;color:var(--accent);margin-bottom:6px">
+  <div style="color:var(--fg)" class="stack">
+    <span class="label" style="color:var(--accent)">${L('নকশা নির্দেশিকা · সংস্করণ ২','Design guide · version 2')}</span>
+    <h1 class="disp" style="font-size:clamp(24px,3.2vw,32px)">${L('সেক্টর ৫৭-এর রং, অক্ষর ও নকশা','Sector 57 colours, type and motifs')}</h1>
+    <p class="muted" style="max-width:68ch">${L('শান্ত মসলিন রঙের জমিনে সাদা কার্ড, প্রধান রং পতাকার বোতল সবুজ। লাল সূর্য আর নকশি কাঁথার ফোঁড় অল্প জায়গায়, জামদানির নকশা শুধু হেডার ও রসিদে। দেখতে দেশি, কিন্তু ব্যবহারে আধুনিক ও হালকা।','White cards on a calm muslin ground, with the flag\'s bottle green as the one brand colour. Sun red and nakshi kantha stitches appear in small places, and the jamdani lattice only on headers and receipts. Local in feel, modern and light in use.')}</p>
+    <div class="row"><button class="btn primary" data-mode="public">${I('globe','sm')}${L('ওয়েবসাইট দেখুন','See the website')}</button><button class="btn" data-mode="dash">${I('layout-dashboard','sm')}${L('ড্যাশবোর্ড দেখুন','See the dashboard')}</button><button class="btn" data-mode="app">${I('phone','sm')}${L('অ্যাপ দেখুন','See the app')}</button></div>
+  </div>
+</section>
+
+<div class="section-h"><h2>${L('১. মূল রং','1. Core palette')}</h2><p class="muted small">${L('প্রতিটি রং একটি টোকেন। কোডে সরাসরি হেক্স নয়, সবসময় টোকেন ব্যবহার করুন। ডার্ক মোডের মান পাশে দেওয়া।','Every colour is a token. Code always uses the token, never the hex. Dark mode values are shown alongside.')}</p></div>
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr))">${SW().map(s=>`<div class="sw"><div class="c" style="background:var(${s[1]});${s[1]==='--surface'||s[1]==='--bg'?'border-bottom:1px solid var(--line)':''}"></div><div class="meta"><b>${s[0]}</b><code>${s[1]}</code><code>${L('আলো','light')} ${s[2]} · ${L('ডার্ক','dark')} ${s[3]}</code><span class="small muted">${s[4]}</span></div></div>`).join('')}</div>
+
+<div class="section-h"><h2>${L('২. অবস্থার রং','2. Status colours')}</h2><p class="muted small">${L('অবস্থা বোঝাতে চিপ ব্যবহার করুন: রঙের সাথে বিন্দু ও লেখা থাকে, শুধু রঙে অর্থ নয়।','Show state with a chip: colour, dot and words together, never colour alone.')}</p></div>
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr))">${SEM().map(s=>`<div class="card stack" style="gap:8px"><div class="row between nowrap"><b>${s[0]}</b>${s[1]==='terra'?'':chip(s[3].split(',')[0],s[1])}</div><div style="height:30px;border-radius:8px;background:var(--${s[1]})"></div><code class="mono muted">--${s[1]} · ${s[2]}</code><span class="small muted">${s[3]}</span></div>`).join('')}</div>
+
+<div class="section-h"><h2>${L('৩. রঙের অনুপাত','3. How much of each')}</h2><p class="muted small">${L('পর্দার বেশিরভাগ নিরপেক্ষ থাকবে। সবুজ দিকনির্দেশ দেয়, লাল শুধু নজর কাড়তে।','Most of every screen stays neutral. Green guides the eye, red only flags.')}</p></div>
+<div class="card stack">
+  <div class="ratio"><div style="flex:78;background:var(--bg);color:var(--muted)">${L('নিরপেক্ষ','Neutral')} ${N(78)}%</div><div style="flex:14;background:var(--accent);color:var(--on-accent)">${L('সবুজ','Green')} ${N(14)}%</div><div style="flex:5;background:var(--warn-soft);color:var(--warn)">${N(5)}%</div><div style="flex:3;background:var(--sun)"></div></div>
+  <div class="row small muted"><span class="legend"><i style="background:var(--warn-soft)"></i>${L('অবস্থার চিপ ৫%','Status chips 5%')}</span><span class="legend"><i style="background:var(--sun)"></i>${L('লাল সূর্য ৩%','Sun red 3%')}</span></div>
+  <div class="grid g3" style="gap:8px" id="contrast"></div>
+</div>
+
+<div class="section-h"><h2>${L('৪. অক্ষর','4. Type')}</h2><p class="muted small">${L('গুগল ফন্টের নোটো সান্স বাংলা পুরো UI-তে, বাংলা ও ইংরেজি দুটোই এতে আছে। ওয়েবসাইটের বড় শিরোনামে নোটো সেরিফ বাংলা। বাংলার জন্য লাইন উচ্চতা ১.৬।','Noto Sans Bengali (Google Fonts) runs the whole UI and covers both Bangla and Latin. Noto Serif Bengali is only for big website headings. Line height 1.6 for Bangla.')}</p></div>
+<div class="card">
+  <div class="typo-row"><span class="small muted">${L('ওয়েব শিরোনাম','Website heading')}<br><code class="mono">serif 32 / 700</code></span><span class="disp" style="font-size:30px;font-weight:700;line-height:1.35">${L('আমাদের সেক্টর, আমাদের দায়িত্ব','Our sector, our responsibility')}</span></div>
+  <div class="typo-row"><span class="small muted">${L('পাতার শিরোনাম','Page title')}<br><code class="mono">sans 23 / 700</code></span><h1>${L('বিল ও ইনভয়েস','Bills and invoices')}</h1></div>
+  <div class="typo-row"><span class="small muted">${L('কার্ড শিরোনাম','Card title')}<br><code class="mono">sans 17.5 / 650</code></span><h2>${L('ব্লকভিত্তিক আদায়','Collection by block')}</h2></div>
+  <div class="typo-row"><span class="small muted">${L('মূল লেখা','Body')}<br><code class="mono">sans 14.5 / 400</code></span><p>${L('সমিতি অফিসে শনি থেকে বৃহস্পতিবার, সকাল ১০টা থেকে সন্ধ্যা ৬টার মধ্যে নগদে পরিশোধ করুন।','Pay in cash at the society office, Saturday to Thursday, 10am to 6pm.')}</p></div>
+  <div class="typo-row"><span class="small muted">${L('সংখ্যা','Numbers')}<br><code class="mono">tabular-nums</code></span><span class="num" style="font-size:22px;font-weight:700">${tk(2170000)} <span class="muted small" style="font-weight:500">${L('লাখ-কোটি দলবদ্ধ, বাংলা অঙ্ক','lakh grouping, Bangla digits in bn')}</span></span></div>
+</div>
+
+<div class="section-h"><h2>${L('৫. দেশি নকশা','5. Local motifs')}</h2><p class="muted small">${L('প্রতিটি অংশে একটির বেশি নকশা নয়, আর কখনো লেখার পেছনে নয়। সব নকশা CSS দিয়ে তৈরি, কোনো ছবি ফাইল লাগে না।','At most one motif per region, never behind running text. All are pure CSS, no image downloads.')}</p></div>
+<div class="grid g3">
+  <div class="card stack"><b>${L('নকশি কাঁথার ফোঁড়','Nakshi kantha stitch')}</b><hr class="kantha"><hr class="kantha green"><p class="small muted">${L('বিভাজক রেখা: হিরো, ফর্মের শিরোনাম, রসিদ। লাল বা সবুজ।','Divider for heroes, form headers and receipts. Red or green.')}</p><code class="mono muted">.kantha</code></div>
+  <div class="card stack"><b>${L('জামদানি জাল','Jamdani lattice')}</b><div class="jamdani" style="height:64px;border-radius:8px;color:var(--accent);background:var(--accent-soft)"></div><p class="small muted">${L('৯% স্বচ্ছতায় পটভূমি: গাইড হেডার, অ্যাপ হেডার, রসিদের মাথা।','9% opacity background on guide header, app header and receipt head.')}</p><code class="mono muted">.jamdani</code></div>
+  <div class="card stack"><b>${L('লোগো চিহ্ন','Logo mark')}</b><div class="row"><div class="logo" style="width:56px;height:56px;border-radius:14px"><b style="width:34px;height:34px;left:8px;top:8px;font-size:17px">৫৭</b></div><div class="logo"><b>৫৭</b></div></div><p class="small muted">${L('সবুজ জমিনে লাল সূর্য, নিচে কাঁথার ফোঁড়। ফাইল: design/logo.svg','Red sun on green with a kantha stitch below. File: design/logo.svg')}</p></div>
+</div>
+
+<div class="section-h"><h2>${L('৬. আইকন','6. Icons')}</h2><p class="muted small">${L('লুসিড আইকন (ISC লাইসেন্স, বিনামূল্যে বাণিজ্যিক ব্যবহার)। রেখা ১.৭৫, মাপ ১৮ বা ২২ পিক্সেল। Next.js-এ lucide-react প্যাকেজ।','Lucide icons (ISC licence, free for commercial use). Stroke 1.75, size 18 or 22 px. In Next.js use the lucide-react package.')}</p></div>
+<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px">${ICONS().map(i=>`<div class="tile-ic">${I(i[0],'lg')}<span>${i[1]}</span></div>`).join('')}</div>
+
+<div class="section-h"><h2>${L('৭. কম্পোনেন্ট','7. Components')}</h2></div>
+<div class="grid g3">
+  <div class="card stack"><span class="label">${L('বোতাম','Buttons')}</span><div class="row">${btn(L('জমা দিন','Submit'),'circle-check','primary')}${btn(L('বাতিল','Cancel'))}${btn(L('মুছুন','Delete'),'','danger')}</div><p class="small muted">${L('এক পাতায় একটিই প্রধান (সবুজ) বোতাম।','One primary green button per view.')}</p></div>
+  <div class="card stack"><span class="label">${L('চিপ','Chips')}</span><div class="row">${chip(L('পরিশোধিত','Paid'),'good')}${chip(L('বাকি','Pending'),'warn')}${chip(L('মেয়াদোত্তীর্ণ','Overdue'),'bad')}${chip(L('চলমান','In progress'),'info')}${chip(L('খসড়া','Draft'))}</div></div>
+  <div class="card stack"><span class="label">${L('ইনপুট','Input')}</span><div class="field"><label for="g-in">${L('মোবাইল নম্বর','Mobile number')}</label><input id="g-in" value="${N('01712-345678')}"></div></div>
+  ${stat('banknote',L('অক্টোবরে আদায়','Collected in October'),tk(2170000),L('বিলের ৮৭%','87% of billed'))}
+  <div class="card stack">${ttl('megaphone',L('কার্ড শিরোনাম','Card title'))}<p class="small muted">${L('আইকন বাক্স + শিরোনাম: কার্ডের সাধারণ মাথা।','Icon box plus title is the standard card head.')}</p></div>
+  <div class="card stack" style="padding:10px">${art('boishakh',4,'16/7')}<span class="small muted" style="padding:0 4px">${L('ছবির কার্ড: ১০px প্যাডিং, ছবির কোণ ৮px','Image card: 10px padding, 8px image radius')}</span></div>
+</div>
+
+<div class="section-h"><h2>${L('৮. ছবি','8. Imagery')}</h2><p class="muted small">${L('এই মকআপের ছবিগুলো নিজস্ব SVG অলংকরণ, কোনো লাইসেন্স লাগে না, আর প্রতিটি ২ কিলোবাইটের কম। আসল গ্যালারি, কমিটি ও প্রকল্পের ছবি সমিতির নিজের তোলা হবে।','Pictures in this mockup are original SVG illustrations: no licence needed and each is under 2 KB. Real gallery, committee and project photos should be the society\'s own.')}</p></div>
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:10px">${['lake','road','cctv','mosque','boishakh','trees'].map((k,i)=>art(k,i+3,'4/3')).join('')}</div>
+<div class="grid g2" style="margin-top:12px">
+  <div class="card stack do"><b>${L('করুন','Do')}</b><p class="small">${L('ছবি WebP, সর্বোচ্চ ১৬০০px চওড়া, ১৫০ কিলোবাইটের নিচে; next/image দিয়ে lazy লোড। অনুপাত ৪:৩ (গ্যালারি) বা ১৬:৭ (প্রকল্প)। alt টেক্সট বাংলায়।','Photos as WebP, max 1600px wide, under 150 KB, lazy-loaded with next/image. 4:3 for gallery, 16:7 for projects. Bangla alt text.')}</p></div>
+  <div class="card stack dont"><b>${L('করবেন না','Don\'t')}</b><p class="small">${L('ইন্টারনেট থেকে নেওয়া স্টক ছবি, লেখার ওপর ছবি, লাল রঙে বড় পটভূমি, এক পাতায় একাধিক নকশা।','Stock photos from the web, text over photos, large red backgrounds, more than one motif on a screen.')}</p></div>
+</div>
+
+<div class="section-h"><h2>${L('৯. স্ক্রিনের মাপ','9. Screen sizes')}</h2><p class="muted small">${L('ওপরের ডেস্কটপ / ট্যাবলেট / মোবাইল বোতাম দিয়ে যেকোনো পাতা তিন মাপে দেখুন।','Use the Desktop / Tablet / Mobile switch at the top to preview any page at each size.')}</p></div>
+<div class="grid g3">${[['layout-dashboard',L('ডেস্কটপ','Desktop'),L('১১০০px বা বেশি · অফিস','1100px and up · office'),L('পূর্ণ সাইডবার, ৪ কলামের স্ট্যাট, পাশাপাশি ফর্ম ও রসিদ। টেবিলে সব কলাম।','Full sidebar, 4-column stats, form and receipt side by side, tables show every column.')],['building-2',L('ট্যাবলেট','Tablet'),L('৬০০ থেকে ১০৯৯px · মালিক','600 to 1099px · owners'),L('সাইডবার শুধু আইকনে, স্ট্যাট ও কার্ড ২ কলামে, বোতাম আঙুলের মাপে (কমপক্ষে ৪০px)।','Icon-only sidebar rail, stats and cards in 2 columns, touch-sized buttons (40px or more).')],['phone',L('মোবাইল','Mobile'),L('৬০০px এর কম · বেশিরভাগ বাসিন্দা','Under 600px · most residents'),L('এক কলাম, মেনু ওপরে আড়াআড়ি স্ক্রল, টেবিল নিজের ভেতরে স্ক্রল, ফর্মের ঘর পুরো চওড়া।','One column, menu scrolls sideways at the top, tables scroll inside their card, full-width form fields.')]].map(d=>`<div class="card stack"><div class="ttl"><span class="icobox">${I(d[0])}</span><div><h3>${d[1]}</h3><span class="small muted">${d[2]}</span></div></div><p class="small">${d[3]}</p></div>`).join('')}</div>
+<p class="small muted" style="margin-top:8px">${L('Tailwind-এ: মোবাইল আগে লিখুন, তারপর md: (৬০০px) ও xl: (১১০০px)। tokens.css-এ এই দুটি মাপ দেওয়া আছে।','In Tailwind: write mobile first, then md: (600px) and xl: (1100px). Both breakpoints are set in tokens.css.')}</p>
+
+<div class="section-h"><h2>${L('১০. কোডে ব্যবহার','10. In code')}</h2><p class="muted small">${L('পুরো ফাইল (ডার্ক মোডসহ): sector57/design/tokens.css, Next.js-এর globals.css-এ বসান।','Full file with dark mode: sector57/design/tokens.css, goes in the Next.js globals.css.')}</p></div>
+<div class="card stack"><div class="row between"><code class="mono muted">globals.css · Tailwind v4</code><button class="btn" type="button" id="copy-tokens">${I('file-pen','sm')}<span>${L('কপি করুন','Copy')}</span></button></div><pre class="code" id="tok"></pre></div>
+</div>`;
+
+/* ---------- render ---------- */
+function render(){
+  document.documentElement.lang=lang;
+  $('#brand-t').innerHTML=`${L('সেক্টর ৫৭ কল্যাণ সমিতি','Sector 57 Welfare Society')}<div class="small muted" style="font-weight:500">${L('উত্তরা, ঢাকা','Uttara, Dhaka')}</div>`;
+  $('#seg').innerHTML=[['guide',L('রং ও নকশা','Design guide'),'file-pen'],['public',L('ওয়েবসাইট','Website'),'globe'],['dash',L('ড্যাশবোর্ড','Dashboard'),'layout-dashboard'],['app',L('বাসিন্দা অ্যাপ','Resident app'),'phone']].map(([k,l,ic])=>`<button data-mode="${k}" aria-pressed="${k===mode}" title="${l}">${I(ic,'sm')}<span>${l}</span></button>`).join('');
+  $('#sizes').innerHTML=[['desk','layout-dashboard',L('ডেস্কটপ','Desktop')],['tablet','building-2',L('ট্যাবলেট','Tablet')],['phone','phone',L('মোবাইল','Mobile')]].map(([k,ic,l])=>`<button data-size="${k}" aria-pressed="${k===size}" title="${l}">${l}</button>`).join('');
+  $('#frame').className=size==='desk'?'':size;
+  $('#lang-btn').innerHTML=`${I('languages','sm')}${lang==='bn'?'English':'বাংলা'}`;
+  const root=$('#root');
+  if(mode==='guide'){root.innerHTML=`<main class="view">${GUIDE()}</main>`;$('#tok').textContent=TOKENS;fillContrast()}
+  else if(mode==='public'){
+    root.innerHTML=`<nav class="site-nav" aria-label="Website"><div class="in">${PUBNAV().map(([k,l,ic])=>`<button data-pub="${k}" ${k===pub?'aria-current="page"':''} class="row nowrap" style="gap:6px">${I(ic,'sm')}${l}</button>`).join('')}<button class="btn primary" style="margin:6px 0 6px auto;white-space:nowrap">${I('log-in','sm')}${L('লগইন','Log in')}</button></div></nav>
+    <main class="wrap view">${PUB[pub]()}</main>
+    <footer class="site-foot"><div class="in"><div><h4>${L('উত্তরা সেক্টর ৫৭ কল্যাণ সমিতি','Uttara Sector 57 Welfare Society')}</h4><p>${L('বাড়ি ১, রোড ৩, সেক্টর ৫৭, উত্তরা, ঢাকা','House 1, Road 3, Sector 57, Uttara, Dhaka')}</p></div><div><h4>${L('অফিস সময়','Office hours')}</h4><p>${L('শনি থেকে বৃহস্পতিবার, সকাল ১০টা থেকে সন্ধ্যা ৬টা','Saturday to Thursday, 10am to 6pm')}</p></div><div><h4>${L('যোগাযোগ','Contact')}</h4><p class="num">${N('01711-000057')} · office@sector57society.org</p></div></div><hr class="kantha" style="opacity:.9"></footer>`;
+  } else if(mode==='dash'){
+    const items=DNAV().flatMap(g=>g[1]); const cur=items.find(x=>x[0]===dash);
+    root.innerHTML=`<div class="dash"><nav class="side" aria-label="Dashboard">${DNAV().map(([g,its])=>`${g?`<div class="grp">${g}</div>`:''}${its.map(([k,l,ic])=>`<button data-dash="${k}" title="${l}" ${k===dash?'aria-current="page"':''}>${I(ic,'sm')}<span>${l}</span></button>`).join('')}`).join('')}</nav><main class="main view">${D[dash]?D[dash]():placeholder(dash,cur[1],cur[2])}</main></div>`;
+  } else root.innerHTML=`<main class="view">${APP()}</main>`;
+}
+function fillContrast(){
+  const dark=document.documentElement.dataset.theme==='dark'||(!document.documentElement.dataset.theme&&matchMedia('(prefers-color-scheme: dark)').matches);
+  const P=dark?[['#4fbf8f','#161d1a',L('সবুজ লেখা, কার্ডে','Green text on card')],['#e7ece8','#0f1412',L('কালি, জমিনে','Ink on ground')],['#06150f','#4fbf8f',L('বোতামের লেখা','Button label')]]:[['#006a4e','#ffffff',L('সবুজ লেখা, কার্ডে','Green text on card')],['#18201c','#f4f5f1',L('কালি, জমিনে','Ink on ground')],['#ffffff','#006a4e',L('বোতামের লেখা','Button label')]];
+  $('#contrast').innerHTML=P.map(p=>{const c=contrast(p[0],p[1]);return `<div class="card flat row between nowrap" style="padding:10px"><span class="small">${p[2]}</span>${chip(N(c.toFixed(1))+':'+N(1)+(c>=7?' AAA':c>=4.5?' AA':''),c>=4.5?'good':'warn')}</div>`}).join('');
+}
+document.addEventListener('click',e=>{
+  if(e.target.closest('#copy-tokens')){const b=e.target.closest('#copy-tokens');navigator.clipboard?.writeText(TOKENS).then(()=>{b.querySelector('span').textContent=L('কপি হয়েছে','Copied')}).catch(()=>{const r=document.createRange();r.selectNodeContents($('#tok'));getSelection().removeAllRanges();getSelection().addRange(r)});return}
+  const sz=e.target.closest('[data-size]'); if(sz){size=sz.dataset.size;render();return}
+  if(e.target.closest('#lang-btn')){lang=lang==='bn'?'en':'bn';store.set('s57-lang',lang);render();return}
+  if(e.target.closest('#theme-btn')){const d=document.documentElement,isDark=d.dataset.theme?d.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;d.dataset.theme=isDark?'light':'dark';$('#theme-btn').innerHTML=I(isDark?'moon':'sun','sm');if(mode==='guide')fillContrast();return}
+  const t=e.target.closest('[data-mode],[data-pub],[data-dash],[data-go]'); if(!t)return;
+  if(t.dataset.mode){mode=t.dataset.mode;store.set('s57-mode',mode)}
+  else if(t.dataset.pub){pub=t.dataset.pub}
+  else if(t.dataset.dash){dash=t.dataset.dash}
+  else if(t.dataset.go){e.preventDefault();pub=t.dataset.go}
+  render(); scrollTo(0,0);
+});
+render();
+</script>
+
+</body></html>
