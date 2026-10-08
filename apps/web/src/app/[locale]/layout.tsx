@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import localFont from "next/font/local";
-import { Geist_Mono,  } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
 import { ThemeScript } from "@/components/theme/theme-script";
 import { routing } from "@/i18n/routing";
@@ -30,6 +30,8 @@ export async function generateMetadata({ params }: LayoutProps<"/[locale]">): Pr
   if (!hasLocale(routing.locales, locale)) return {};
   const t = await getTranslations({ locale, namespace: "Common" });
   return {
+    // Absolute canonical and hreflang URLs in production (e.g. https://sector57society.org).
+    ...(process.env.SITE_URL ? { metadataBase: new URL(process.env.SITE_URL) } : {}),
     title: { default: t("societyName"), template: `%s | ${t("societyShort")}` },
     description: t("siteDescription"),
   };

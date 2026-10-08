@@ -45,7 +45,12 @@
 
 ## Current state (2026-10-08)
 
-- Step 0 (Foundations) built on branch `step/00-foundations`, awaiting Codex review. The visual check at 375/820/1440 is deferred. Headless Chrome won't go below about 500 px wide, so use CDP viewport emulation, not `--window-size`.
+- Step 0 (Foundations) is committed and pushed (`step/00-foundations`). Step 1 (public site shell, home, notices) is built on `step/01-public-site`, awaiting Codex review. Visual checks at 375/820/1440 are deferred for both. Headless Chrome won't go below about 500 px wide, so use CDP viewport emulation, not `--window-size`.
+- Step 1 adds:
+  - API: `GET /public/notices` (paged, `?category=`), `GET /public/notices/:id` and `GET /public/pages/:slug` (modules `notices`, `site-pages`; public, read-only, `@SkipThrottle` because every call comes from the Next server). Migration `1_notices_public_idx`.
+  - Seed: the `home` and `site` pages are created only if missing, so later edits are never overwritten. Demo notices are seeded only outside production.
+  - Web: `(site)` route group with header, nav and footer; pages are cached with `revalidate = 60`.
+- Notice categories are fixed keys (`NOTICE_CATEGORIES` in shared); labels live in i18n, and colour and icon in `components/site/notice-category.ts`. Home and footer content is JSON in `site_pages` (`homeContentSchema` and `siteInfoSchema` in shared), stored as `{bn, en?}`.
 - API: helmet, nestjs-pino, nestjs-zod global pipe, throttler, cookie-parser and swagger (dev only, `/docs`, JSON at `/docs/json`) are wired up. The env is validated at startup (`src/config/env.ts`), there is a global exception filter, and a `SocietyContext` guard and decorator resolve the society from `DEFAULT_SOCIETY_SLUG`. Routes: `GET /health`, `GET /society`. Auth, RBAC and feature modules are not built yet; CASL and argon2 are installed but unused.
 - Web: `next-intl` routing (`bn` at `/`, `en` at `/en/`, via `src/proxy.ts`), local Noto Bengali fonts, a theme toggle (saved in `localStorage` key `s57-theme`, otherwise follows the system), a locale switch, mockup components in `src/components/kit`, a dev-only gallery at `/dev/components`, and a typed `openapi-fetch` client (`src/lib/api`). Regenerate its types with `pnpm --filter @s57/web api:types` while the API runs. React Query, react-hook-form and TanStack Table are not used yet.
 - `packages/shared`: `bn.json`/`en.json` messages, NFC helper, Bangla digits and `৳` formatting, `pick(bn, en)`, zod basics (phone, uuid, pagination) and the society contract, all with Vitest tests.

@@ -1,4 +1,4 @@
-import { bnDigits, formatNumber, formatTaka } from './format.js';
+import { bnDigits, formatDate, formatNumber, formatTaka } from './format.js';
 
 describe('bnDigits', () => {
   it('maps every ASCII digit', () => {
@@ -30,5 +30,21 @@ describe('formatTaka', () => {
   });
   it('keeps large amounts exact', () => {
     expect(formatTaka('999999999999.99', 'en')).toBe('৳ 9,99,99,99,99,999.99');
+  });
+});
+
+describe('formatDate', () => {
+  it('writes Bangla digits and month names in bn', () => {
+    expect(formatDate('2026-11-02T04:00:00Z', 'bn')).toBe('০২ নভেম্বর, ২০২৬');
+  });
+
+  it('uses Dhaka time for timestamps', () => {
+    // 20:00 UTC is already the next day in Dhaka (UTC+6).
+    expect(formatDate('2026-11-01T20:00:00Z', 'en')).toBe('02 November 2026');
+  });
+
+  it('keeps plain dates on their calendar day', () => {
+    expect(formatDate('2026-12-21', 'en', 'day')).toBe('21');
+    expect(formatDate('2026-12-21', 'en', 'month')).toBe('Dec');
   });
 });

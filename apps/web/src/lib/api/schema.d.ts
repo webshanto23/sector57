@@ -36,6 +36,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/public/notices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicNoticesController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/notices/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicNoticesController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/pages/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicSitePagesController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -47,6 +95,45 @@ export interface components {
             nameBn: string;
             nameEn: string | null;
             fiscalYearStartMonth: number;
+        };
+        NoticeListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                titleBn: string;
+                titleEn: string | null;
+                bodyBn: string;
+                bodyEn: string | null;
+                /** @enum {string} */
+                category: "billing" | "maintenance" | "agm" | "security" | "development" | "general";
+                /** Format: date-time */
+                publishAt: string;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+        };
+        NoticeDto_Output: {
+            /** Format: uuid */
+            id: string;
+            titleBn: string;
+            titleEn: string | null;
+            bodyBn: string;
+            bodyEn: string | null;
+            /** @enum {string} */
+            category: "billing" | "maintenance" | "agm" | "security" | "development" | "general";
+            /** Format: date-time */
+            publishAt: string;
+        };
+        SitePageDto_Output: {
+            slug: string;
+            titleBn: string;
+            titleEn: string | null;
+            content: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            updatedAt: string;
         };
     };
     responses: never;
@@ -89,6 +176,71 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SocietyDto_Output"];
+                };
+            };
+        };
+    };
+    PublicNoticesController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                category?: "billing" | "maintenance" | "agm" | "security" | "development" | "general";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoticeListDto_Output"];
+                };
+            };
+        };
+    };
+    PublicNoticesController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoticeDto_Output"];
+                };
+            };
+        };
+    };
+    PublicSitePagesController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SitePageDto_Output"];
                 };
             };
         };

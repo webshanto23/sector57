@@ -7,7 +7,9 @@ import { AppController } from './app.controller.js';
 import { AllExceptionsFilter } from './common/all-exceptions.filter.js';
 import { ConfigModule } from './config/config.module.js';
 import { ENV, type Env } from './config/env.js';
+import { NoticesModule } from './notices/notices.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { SitePagesModule } from './site-pages/site-pages.module.js';
 import { SocietyContextGuard } from './society/society-context.guard.js';
 import { SocietyModule } from './society/society.module.js';
 
@@ -29,6 +31,8 @@ import { SocietyModule } from './society/society.module.js';
     ThrottlerModule.forRoot({ throttlers: [{ name: 'default', ttl: 60_000, limit: 120 }] }),
     PrismaModule,
     SocietyModule,
+    NoticesModule,
+    SitePagesModule,
   ],
   controllers: [AppController],
   providers: [

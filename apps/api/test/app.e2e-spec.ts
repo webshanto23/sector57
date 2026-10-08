@@ -1,27 +1,14 @@
-import 'dotenv/config';
-
 import { INestApplication } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types.js';
-import { AppModule } from './../src/app.module.js';
-import { ENV, loadEnv } from './../src/config/env.js';
-import { configureApp } from './../src/setup.js';
+import { createTestApp } from './create-app.js';
 
 // Runs against TEST_DATABASE_URL (sector57_test), migrated and seeded.
 describe('App (e2e)', () => {
   let app: INestApplication<App>;
 
   beforeAll(async () => {
-    if (process.env.TEST_DATABASE_URL) process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
-    const moduleFixture: TestingModule = await Test.createTestingModule({ imports: [AppModule] })
-      .overrideProvider(ENV)
-      .useValue(loadEnv({ ...process.env, NODE_ENV: 'test' }))
-      .compile();
-
-    app = moduleFixture.createNestApplication();
-    configureApp(app);
-    await app.init();
+    app = await createTestApp();
   });
 
   afterAll(async () => {

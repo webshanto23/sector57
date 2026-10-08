@@ -49,3 +49,29 @@ export function formatTaka(amount: string | number | bigint, locale: Locale): st
   const value = paisa === '00' ? `${sign}${whole}` : `${sign}${whole}.${paisa}`;
   return `৳ ${formatNumber(value, locale)}`;
 }
+
+/** Dates are shown in Dhaka time for now; becomes a per-society setting when another society is onboarded. */
+export const TIME_ZONE = 'Asia/Dhaka';
+
+const DATE_STYLES = {
+  // ০২ নভেম্বর, ২০২৬ / 02 November 2026
+  long: { day: '2-digit', month: 'long', year: 'numeric' },
+  // Date tile: ২১ / 21
+  day: { day: '2-digit' },
+  // Date tile: ডিসেম্বর / Dec
+  month: { month: 'short' },
+} as const satisfies Record<string, Intl.DateTimeFormatOptions>;
+
+/**
+ * Formats an ISO date or timestamp for display. Bangla uses `bn-BD`, which
+ * already writes Bangla digits and month names. Plain dates (`2026-12-21`) are
+ * read as that calendar day, not shifted by the time zone.
+ */
+export function formatDate(value: string | Date, locale: Locale, style: keyof typeof DATE_STYLES = 'long'): string {
+  const plainDate = typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+  const date = typeof value === 'string' ? new Date(plainDate ? `${value}T00:00:00Z` : value) : value;
+  return new Intl.DateTimeFormat(locale === 'bn' ? 'bn-BD' : 'en-GB', {
+    ...DATE_STYLES[style],
+    timeZone: plainDate ? 'UTC' : TIME_ZONE,
+  }).format(date);
+}

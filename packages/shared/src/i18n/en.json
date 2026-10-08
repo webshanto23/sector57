@@ -2,6 +2,7 @@
   "Common": {
     "societyName": "Uttara Sector 57 Welfare Society",
     "societyShort": "Uttara Sector 57",
+    "logoMark": "57",
     "siteDescription": "Notices, member services and committee information for the Uttara Sector 57 Welfare Society.",
     "language": "Language",
     "switchToEnglish": "English",
@@ -14,7 +15,15 @@
     "export": "Export",
     "loading": "Loading…",
     "empty": "Nothing found",
-    "error": "Something went wrong. Please try again."
+    "error": "Something went wrong. Please try again.",
+    "tryAgain": "Try again",
+    "back": "Go back",
+    "previous": "Previous page",
+    "next": "Next page",
+    "pageOf": "Page {page} of {pages}",
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "The page you are looking for has moved or no longer exists.",
+    "goHome": "Go to the home page"
   },
   "Status": {
     "paid": "Paid",
@@ -31,8 +40,46 @@
       "committee": "Committee",
       "developments": "Developments",
       "gallery": "Gallery",
-      "forms": "Member services"
+      "forms": "Member services",
+      "label": "Website",
+      "login": "Log in"
     },
-    "comingSoon": "The new website is being built."
+    "brandPlace": "Uttara, Dhaka",
+    "footer": {
+      "officeHours": "Office hours",
+      "contact": "Contact"
+    },
+    "home": {
+      "register": "Register as a member",
+      "latestNotices": "Latest notices",
+      "noticeBoard": "Notice board",
+      "allNotices": "View all",
+      "events": "Upcoming events",
+      "noEvents": "No upcoming events",
+      "developments": "Development work",
+      "allProjects": "All projects",
+      "emergency": "Emergency contacts",
+      "progress": "{title}: {percent}% complete",
+      "artLabel": "Sector 57 buildings by the lake"
+    }
+  },
+  "Notices": {
+    "title": "Notice board",
+    "sub": "Official notices from the managing committee",
+    "allCategories": "All categories",
+    "filter": "Choose a category",
+    "apply": "Show",
+    "readNotice": "Read notice",
+    "backToList": "All notices",
+    "empty": "No notices in this category yet.",
+    "published": "Published {date}",
+    "category": {
+      "billing": "Billing",
+      "maintenance": "Maintenance",
+      "agm": "AGM",
+      "security": "Security",
+      "development": "Development",
+      "general": "General"
+    }
   }
 }

@@ -2,6 +2,7 @@
   "Common": {
     "societyName": "উত্তরা সেক্টর ৫৭ কল্যাণ সমিতি",
     "societyShort": "উত্তরা সেক্টর ৫৭",
+    "logoMark": "৫৭",
     "siteDescription": "উত্তরা সেক্টর ৫৭ কল্যাণ সমিতির নোটিশ, সদস্য সেবা ও কমিটির তথ্য।",
     "language": "ভাষা",
     "switchToEnglish": "English",
@@ -14,7 +15,15 @@
     "export": "এক্সপোর্ট",
     "loading": "লোড হচ্ছে…",
     "empty": "কিছু পাওয়া যায়নি",
-    "error": "কিছু একটা ভুল হয়েছে। আবার চেষ্টা করুন।"
+    "error": "কিছু একটা ভুল হয়েছে। আবার চেষ্টা করুন।",
+    "tryAgain": "আবার চেষ্টা করুন",
+    "back": "ফিরে যান",
+    "previous": "আগের পাতা",
+    "next": "পরের পাতা",
+    "pageOf": "পাতা {page} / {pages}",
+    "notFoundTitle": "পাতাটি পাওয়া যায়নি",
+    "notFoundBody": "আপনি যে পাতাটি খুঁজছেন সেটি সরানো হয়েছে বা আর নেই।",
+    "goHome": "প্রথম পাতায় যান"
   },
   "Status": {
     "paid": "পরিশোধিত",
@@ -31,8 +40,46 @@
       "committee": "কমিটি",
       "developments": "উন্নয়ন",
       "gallery": "গ্যালারি",
-      "forms": "সদস্য সেবা"
+      "forms": "সদস্য সেবা",
+      "label": "ওয়েবসাইট",
+      "login": "লগইন"
     },
-    "comingSoon": "নতুন ওয়েবসাইট তৈরি হচ্ছে।"
+    "brandPlace": "উত্তরা, ঢাকা",
+    "footer": {
+      "officeHours": "অফিস সময়",
+      "contact": "যোগাযোগ"
+    },
+    "home": {
+      "register": "সদস্য হিসেবে নিবন্ধন",
+      "latestNotices": "সর্বশেষ নোটিশ",
+      "noticeBoard": "নোটিশ বোর্ড",
+      "allNotices": "সব নোটিশ",
+      "events": "আসন্ন অনুষ্ঠান",
+      "noEvents": "এখন কোনো অনুষ্ঠান নেই",
+      "developments": "উন্নয়ন কাজ",
+      "allProjects": "সব প্রকল্প",
+      "emergency": "জরুরি যোগাযোগ",
+      "progress": "{title}: {percent}% সম্পন্ন",
+      "artLabel": "লেকের ধারে সেক্টর ৫৭-এর ভবন"
+    }
+  },
+  "Notices": {
+    "title": "নোটিশ বোর্ড",
+    "sub": "ব্যবস্থাপনা কমিটির অফিসিয়াল নোটিশ",
+    "allCategories": "সব বিভাগ",
+    "filter": "বিভাগ বাছাই",
+    "apply": "দেখান",
+    "readNotice": "পুরো নোটিশ পড়ুন",
+    "backToList": "সব নোটিশ",
+    "empty": "এই বিভাগে এখনো কোনো নোটিশ নেই।",
+    "published": "প্রকাশ: {date}",
+    "category": {
+      "billing": "বিল",
+      "maintenance": "রক্ষণাবেক্ষণ",
+      "agm": "সাধারণ সভা",
+      "security": "নিরাপত্তা",
+      "development": "উন্নয়ন",
+      "general": "সাধারণ"
+    }
   }
 }

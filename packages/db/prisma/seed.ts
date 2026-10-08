@@ -1,10 +1,12 @@
 // Idempotent seed: the Sector 57 society, its location levels, the permission
-// catalogue and the starter roles. Safe to run repeatedly; it never deletes rows.
+// catalogue, the starter roles and the public website pages (plus demo notices
+// outside production). Safe to run repeatedly; it never deletes rows.
 // Users are not seeded here: the first super admin is created separately so no
 // password ever lives in source control.
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client.ts";
+import { demoNotices, SITE_PAGES } from "./seed-site.ts";
 
 const connectionString = process.env["DATABASE_URL"];
 if (!connectionString) {
@@ -14,6 +16,14 @@ if (!connectionString) {
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
 const nfc = (text: string) => text.normalize("NFC");
+
+/** NFC for every string inside seeded JSON and rows. */
+function nfcDeep<T>(value: T): T {
+  if (typeof value === "string") return nfc(value) as T;
+  if (Array.isArray(value)) return value.map(nfcDeep) as T;
+  if (value instanceof Date || value === null || typeof value !== "object") return value;
+  return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, nfcDeep(v)])) as T;
+}
 
 const SOCIETY = {
   slug: "sector57",
@@ -134,7 +144,31 @@ async function main() {
     });
   }
 
-  console.log(`Seeded society "${society.slug}" with ${permissions.length} permissions and ${ROLES.length} roles.`);
+  // Starting content only: never overwrite what the committee has edited since.
+  for (const page of SITE_PAGES) {
+    await prisma.site_pages.upsert({
+      where: { society_id_slug: { society_id: society.id, slug: page.slug } },
+      update: {},
+      create: { ...nfcDeep(page), society_id: society.id, is_published: true },
+    });
+  }
+
+  // Demo notices never reach a production database. Matched by title so reruns add nothing.
+  let notices = 0;
+  if (process.env["NODE_ENV"] !== "production") {
+    for (const notice of demoNotices().map(nfcDeep)) {
+      const exists = await prisma.notices.findFirst({
+        where: { society_id: society.id, title_bn: notice.title_bn },
+        select: { id: true },
+      });
+      if (!exists) {
+        await prisma.notices.create({ data: { ...notice, society_id: society.id } });
+        notices++;
+      }
+    }
+  }
+
+  console.log(`Seeded society "${society.slug}" with ${permissions.length} permissions and ${ROLES.length} roles, ${SITE_PAGES.length} site pages, ${notices} new demo notices.`);
 }
 
 main()
