@@ -1,0 +1,131 @@
+{
+  "Common": {
+    "societyName": "উত্তরা সেক্টর ৫৭ কল্যাণ সমিতি",
+    "societyShort": "উত্তরা সেক্টর ৫৭",
+    "logoMark": "৫৭",
+    "siteDescription": "উত্তরা সেক্টর ৫৭ কল্যাণ সমিতির নোটিশ, সদস্য সেবা ও কমিটির তথ্য।",
+    "language": "ভাষা",
+    "switchToEnglish": "English",
+    "switchToBangla": "বাংলা",
+    "themeToggle": "ডার্ক মোড চালু বা বন্ধ করুন",
+    "search": "খুঁজুন",
+    "viewAll": "সব দেখুন",
+    "save": "সংরক্ষণ",
+    "cancel": "বাতিল",
+    "export": "এক্সপোর্ট",
+    "loading": "লোড হচ্ছে…",
+    "empty": "কিছু পাওয়া যায়নি",
+    "error": "কিছু একটা ভুল হয়েছে। আবার চেষ্টা করুন।",
+    "tryAgain": "আবার চেষ্টা করুন",
+    "back": "ফিরে যান",
+    "previous": "আগের পাতা",
+    "next": "পরের পাতা",
+    "pageOf": "পাতা {page} / {pages}",
+    "notFoundTitle": "পাতাটি পাওয়া যায়নি",
+    "notFoundBody": "আপনি যে পাতাটি খুঁজছেন সেটি সরানো হয়েছে বা আর নেই।",
+    "goHome": "প্রথম পাতায় যান"
+  },
+  "Status": {
+    "paid": "পরিশোধিত",
+    "unpaid": "অপরিশোধিত",
+    "overdue": "মেয়াদোত্তীর্ণ",
+    "active": "সক্রিয়",
+    "pending": "বাকি",
+    "verified": "যাচাইকৃত"
+  },
+  "Site": {
+    "nav": {
+      "home": "প্রথম পাতা",
+      "notices": "নোটিশ",
+      "committee": "কমিটি",
+      "developments": "উন্নয়ন",
+      "gallery": "গ্যালারি",
+      "forms": "সদস্য সেবা",
+      "label": "ওয়েবসাইট",
+      "login": "লগইন"
+    },
+    "brandPlace": "উত্তরা, ঢাকা",
+    "footer": {
+      "officeHours": "অফিস সময়",
+      "contact": "যোগাযোগ"
+    },
+    "home": {
+      "register": "সদস্য হিসেবে নিবন্ধন",
+      "latestNotices": "সর্বশেষ নোটিশ",
+      "noticeBoard": "নোটিশ বোর্ড",
+      "allNotices": "সব নোটিশ",
+      "events": "আসন্ন অনুষ্ঠান",
+      "noEvents": "এখন কোনো অনুষ্ঠান নেই",
+      "developments": "উন্নয়ন কাজ",
+      "allProjects": "সব প্রকল্প",
+      "emergency": "জরুরি যোগাযোগ",
+      "progress": "{title}: {percent}% সম্পন্ন",
+      "artLabel": "লেকের ধারে সেক্টর ৫৭-এর ভবন"
+    }
+  },
+  "Notices": {
+    "title": "নোটিশ বোর্ড",
+    "sub": "ব্যবস্থাপনা কমিটির অফিসিয়াল নোটিশ",
+    "allCategories": "সব বিভাগ",
+    "filter": "বিভাগ বাছাই",
+    "apply": "দেখান",
+    "readNotice": "পুরো নোটিশ পড়ুন",
+    "backToList": "সব নোটিশ",
+    "empty": "এই বিভাগে এখনো কোনো নোটিশ নেই।",
+    "published": "প্রকাশ: {date}",
+    "category": {
+      "billing": "বিল",
+      "maintenance": "রক্ষণাবেক্ষণ",
+      "agm": "সাধারণ সভা",
+      "security": "নিরাপত্তা",
+      "development": "উন্নয়ন",
+      "general": "সাধারণ"
+    }
+  },
+  "Committee": {
+    "title": "ব্যবস্থাপনা কমিটি",
+    "term": "মেয়াদ {start} থেকে {end}",
+    "termSince": "মেয়াদ শুরু {start}",
+    "empty": "কমিটির তথ্য শীঘ্রই যোগ হবে।",
+    "photoNote": "ছবি যোগ হলে গোল ফ্রেমে মুখের ছবি বসবে; না থাকলে নামের প্রথম অক্ষর।",
+    "position": {
+      "president": "সভাপতি",
+      "vice_president": "সহ-সভাপতি",
+      "general_secretary": "সাধারণ সম্পাদক",
+      "joint_secretary": "যুগ্ম সম্পাদক",
+      "treasurer": "কোষাধ্যক্ষ",
+      "organizing_secretary": "সাংগঠনিক সম্পাদক",
+      "cultural_secretary": "সাংস্কৃতিক সম্পাদক",
+      "executive_member": "কার্যনির্বাহী সদস্য"
+    }
+  },
+  "Developments": {
+    "title": "উন্নয়ন প্রকল্প",
+    "sub": "সমিতির তহবিল কোথায় খরচ হচ্ছে",
+    "budget": "বাজেট",
+    "spent": "খরচ",
+    "empty": "এখনো কোনো প্রকল্প যোগ হয়নি।",
+    "status": {
+      "planned": "পরিকল্পিত",
+      "in_progress": "চলমান",
+      "completed": "সম্পন্ন"
+    }
+  },
+  "Gallery": {
+    "title": "ছবির গ্যালারি",
+    "sub": "অনুষ্ঠান ও সামাজিক জীবনের ছবি",
+    "photoCount": "{count}টি ছবি",
+    "empty": "এখনো কোনো অ্যালবাম নেই।",
+    "noPhotos": "এই অ্যালবামে এখনো ছবি নেই।",
+    "backToGallery": "সব অ্যালবাম",
+    "photo": "{album}, ছবি {n}",
+    "placeholderNote": "ছবি আপলোড হলে এখানে আসল ছবি দেখা যাবে।"
+  },
+  "Forms": {
+    "title": "সদস্য সেবা",
+    "sub": "অনলাইনে আবেদন করুন। প্রতিটি আবেদন সমিতি অফিস যাচাই করে।",
+    "comingSoonTitle": "অনলাইন আবেদন শীঘ্রই আসছে",
+    "comingSoonBody": "সদস্যপদ, ভাড়াটিয়া নিবন্ধন ও অন্যান্য আবেদন খুব শীঘ্রই এখান থেকে করা যাবে। ততদিন সমিতি অফিসে এসে আবেদন করুন।",
+    "office": "সমিতি অফিস"
+  }
+}

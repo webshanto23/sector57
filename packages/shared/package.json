@@ -1,18 +1,25 @@
 {
   "name": "@s57/shared",
   "version": "1.0.0",
-  "description": "",
-  "scripts": {
-    "typecheck": "tsc -p tsconfig.json"
-  },
-  "exports": {
-    ".": "./src/index.ts"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "private": true,
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./i18n/*.json": "./src/i18n/*.json"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
   "dependencies": {
     "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.11"
   }
 }

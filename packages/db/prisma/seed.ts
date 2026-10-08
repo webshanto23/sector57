@@ -1,10 +1,13 @@
 // Idempotent seed: the Sector 57 society, its location levels, the permission
-// catalogue and the starter roles. Safe to run repeatedly; it never deletes rows.
+// catalogue, the starter roles and the public website pages (plus demo notices,
+// committee, developments and gallery outside production). Safe to run
+// repeatedly; it never deletes rows.
 // Users are not seeded here: the first super admin is created separately so no
 // password ever lives in source control.
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client.ts";
+import { DEMO_ALBUMS, DEMO_COMMITTEE, DEMO_DEVELOPMENTS_PAGE, demoNotices, SITE_PAGES } from "./seed-site.ts";
 
 const connectionString = process.env["DATABASE_URL"];
 if (!connectionString) {
@@ -14,6 +17,14 @@ if (!connectionString) {
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
 const nfc = (text: string) => text.normalize("NFC");
+
+/** NFC for every string inside seeded JSON and rows. */
+function nfcDeep<T>(value: T): T {
+  if (typeof value === "string") return nfc(value) as T;
+  if (Array.isArray(value)) return value.map(nfcDeep) as T;
+  if (value instanceof Date || value === null || typeof value !== "object") return value;
+  return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, nfcDeep(v)])) as T;
+}
 
 const SOCIETY = {
   slug: "sector57",
@@ -134,7 +145,84 @@ async function main() {
     });
   }
 
-  console.log(`Seeded society "${society.slug}" with ${permissions.length} permissions and ${ROLES.length} roles.`);
+  // Starting content only: never overwrite what the committee has edited since.
+  for (const page of SITE_PAGES) {
+    await prisma.site_pages.upsert({
+      where: { society_id_slug: { society_id: society.id, slug: page.slug } },
+      update: {},
+      create: { ...nfcDeep(page), society_id: society.id, is_published: true },
+    });
+  }
+
+  console.log(`Seeded society "${society.slug}" with ${permissions.length} permissions, ${ROLES.length} roles and ${SITE_PAGES.length} site pages.`);
+
+  // Demo content never reaches a production database. Everything is matched by a
+  // natural key (title, name, slug), so reruns add nothing.
+  if (process.env["NODE_ENV"] !== "production") {
+    console.log(`Demo content: ${JSON.stringify(await seedDemo(society.id))} new rows.`);
+  }
+}
+
+async function seedDemo(societyId: string) {
+  const added = { notices: 0, committee: 0, albums: 0 };
+
+  for (const notice of demoNotices().map(nfcDeep)) {
+    const exists = await prisma.notices.findFirst({
+      where: { society_id: societyId, title_bn: notice.title_bn },
+      select: { id: true },
+    });
+    if (!exists) {
+      await prisma.notices.create({ data: { ...notice, society_id: societyId } });
+      added.notices++;
+    }
+  }
+
+  const page = nfcDeep(DEMO_DEVELOPMENTS_PAGE);
+  await prisma.site_pages.upsert({
+    where: { society_id_slug: { society_id: societyId, slug: page.slug } },
+    update: {},
+    create: { ...page, society_id: societyId, is_published: true },
+  });
+
+  for (const [index, member] of DEMO_COMMITTEE.members.map(nfcDeep).entries()) {
+    const person =
+      (await prisma.persons.findFirst({ where: { society_id: societyId, full_name: member.full_name } })) ??
+      (await prisma.persons.create({
+        data: { society_id: societyId, full_name: member.full_name, full_name_en: member.full_name_en },
+      }));
+    const seat = await prisma.committee_members.findFirst({
+      where: { society_id: societyId, person_id: person.id, position: member.position },
+      select: { id: true },
+    });
+    if (!seat) {
+      await prisma.committee_members.create({
+        data: {
+          society_id: societyId,
+          person_id: person.id,
+          position: member.position,
+          sort_order: index,
+          term_start: DEMO_COMMITTEE.term_start,
+          term_end: DEMO_COMMITTEE.term_end,
+        },
+      });
+      added.committee++;
+    }
+  }
+
+  for (const { photos, ...album } of DEMO_ALBUMS.map(nfcDeep)) {
+    const exists = await prisma.gallery_albums.findFirst({
+      where: { society_id: societyId, title_bn: album.title_bn },
+      select: { id: true },
+    });
+    if (!exists) {
+      await prisma.gallery_albums.create({
+        data: { ...album, society_id: societyId, gallery_photos: { create: photos } },
+      });
+      added.albums++;
+    }
+  }
+
+  return added;
 }
 
 main()

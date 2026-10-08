@@ -86,6 +86,15 @@
   --info: #2c4a7c;
   --info-soft: #e5ebf5;
   --terra: #a4532e;
+  /* Mockup illustrations (art()) */
+  --art-sky: #e4ece6;
+  --art-b1: #cdd6cf;
+  --art-b2: #b5c2b9;
+  --art-win: #f7f8f4;
+  --art-tree: #2f8a63;
+  --art-water: #c6dbd9;
+  --art-ground: #dde3d3;
+  --art-ink: #3d4a42;
 
   --background: var(--bg);
   --foreground: var(--fg);
@@ -146,6 +155,14 @@
   --info: #8fb0e6;
   --info-soft: #1a2438;
   --terra: #e08a62;
+  --art-sky: #18231f;
+  --art-b1: #26322d;
+  --art-b2: #31403a;
+  --art-win: #e3b04b;
+  --art-tree: #2f7a58;
+  --art-water: #1b2d2f;
+  --art-ground: #1f2a24;
+  --art-ink: #9aa79f;
 }
 
 @layer base {
@@ -167,4 +184,29 @@
     line-height: 1.3;
     text-wrap: balance;
   }
+  /* Heading scale from the mockup. */
+  h1 {
+    font-size: 23px;
+    font-weight: 700;
+  }
+  h2 {
+    font-size: 17.5px;
+    font-weight: 650;
+  }
+  h3 {
+    font-size: 15.5px;
+    font-weight: 600;
+  }
+  h4 {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  a {
+    color: var(--primary);
+    text-underline-offset: 3px;
+  }
+}
+
+@utility num {
+  font-variant-numeric: tabular-nums;
 }

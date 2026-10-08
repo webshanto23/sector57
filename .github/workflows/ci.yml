@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: sector57_test
+          POSTGRES_USER: sector57
+          POSTGRES_PASSWORD: sector57
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sector57 -d sector57_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql://sector57:sector57@localhost:5432/sector57_test
+      TEST_DATABASE_URL: postgresql://sector57:sector57@localhost:5432/sector57_test
+      DEFAULT_SOCIETY_SLUG: sector57
+      WEB_ORIGIN: http://localhost:3000
+      API_URL: http://localhost:4000
+      NODE_ENV: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.9.1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @s57/db generate
+
+      - name: Apply database migrations
+        run: pnpm --filter @s57/db migrate:deploy
+
+      - name: Run workspace checks
+        run: pnpm check
+
+      - name: Run API e2e tests
+        run: pnpm test:e2e
+        env:
+          TEST_DATABASE_URL: postgresql://sector57:sector57@localhost:5432/sector57_test
+
+      - name: Build Docker API image
+        run: docker build --target api -t sector57-api:ci .
+
+      - name: Build Docker web image
+        run: docker build --target web -t sector57-web:ci .

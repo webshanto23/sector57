@@ -1,0 +1,131 @@
+{
+  "Common": {
+    "societyName": "Uttara Sector 57 Welfare Society",
+    "societyShort": "Uttara Sector 57",
+    "logoMark": "57",
+    "siteDescription": "Notices, member services and committee information for the Uttara Sector 57 Welfare Society.",
+    "language": "Language",
+    "switchToEnglish": "English",
+    "switchToBangla": "বাংলা",
+    "themeToggle": "Toggle dark mode",
+    "search": "Search",
+    "viewAll": "View all",
+    "save": "Save",
+    "cancel": "Cancel",
+    "export": "Export",
+    "loading": "Loading…",
+    "empty": "Nothing found",
+    "error": "Something went wrong. Please try again.",
+    "tryAgain": "Try again",
+    "back": "Go back",
+    "previous": "Previous page",
+    "next": "Next page",
+    "pageOf": "Page {page} of {pages}",
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "The page you are looking for has moved or no longer exists.",
+    "goHome": "Go to the home page"
+  },
+  "Status": {
+    "paid": "Paid",
+    "unpaid": "Unpaid",
+    "overdue": "Overdue",
+    "active": "Active",
+    "pending": "Pending",
+    "verified": "Verified"
+  },
+  "Site": {
+    "nav": {
+      "home": "Home",
+      "notices": "Notices",
+      "committee": "Committee",
+      "developments": "Developments",
+      "gallery": "Gallery",
+      "forms": "Member services",
+      "label": "Website",
+      "login": "Log in"
+    },
+    "brandPlace": "Uttara, Dhaka",
+    "footer": {
+      "officeHours": "Office hours",
+      "contact": "Contact"
+    },
+    "home": {
+      "register": "Register as a member",
+      "latestNotices": "Latest notices",
+      "noticeBoard": "Notice board",
+      "allNotices": "View all",
+      "events": "Upcoming events",
+      "noEvents": "No upcoming events",
+      "developments": "Development work",
+      "allProjects": "All projects",
+      "emergency": "Emergency contacts",
+      "progress": "{title}: {percent}% complete",
+      "artLabel": "Sector 57 buildings by the lake"
+    }
+  },
+  "Notices": {
+    "title": "Notice board",
+    "sub": "Official notices from the managing committee",
+    "allCategories": "All categories",
+    "filter": "Choose a category",
+    "apply": "Show",
+    "readNotice": "Read notice",
+    "backToList": "All notices",
+    "empty": "No notices in this category yet.",
+    "published": "Published {date}",
+    "category": {
+      "billing": "Billing",
+      "maintenance": "Maintenance",
+      "agm": "AGM",
+      "security": "Security",
+      "development": "Development",
+      "general": "General"
+    }
+  },
+  "Committee": {
+    "title": "Managing committee",
+    "term": "Term {start} to {end}",
+    "termSince": "Term since {start}",
+    "empty": "Committee details will be added soon.",
+    "photoNote": "Portrait photos go in the round frame; the initial shows until one is uploaded.",
+    "position": {
+      "president": "President",
+      "vice_president": "Vice President",
+      "general_secretary": "General Secretary",
+      "joint_secretary": "Joint Secretary",
+      "treasurer": "Treasurer",
+      "organizing_secretary": "Organizing Secretary",
+      "cultural_secretary": "Cultural Secretary",
+      "executive_member": "Executive Member"
+    }
+  },
+  "Developments": {
+    "title": "Development projects",
+    "sub": "Where society funds are being spent",
+    "budget": "Budget",
+    "spent": "Spent",
+    "empty": "No projects have been added yet.",
+    "status": {
+      "planned": "Planned",
+      "in_progress": "In progress",
+      "completed": "Completed"
+    }
+  },
+  "Gallery": {
+    "title": "Gallery",
+    "sub": "Photos from events and community life",
+    "photoCount": "{count} photos",
+    "empty": "No albums yet.",
+    "noPhotos": "This album has no photos yet.",
+    "backToGallery": "All albums",
+    "photo": "{album}, photo {n}",
+    "placeholderNote": "Real photos appear here once they are uploaded."
+  },
+  "Forms": {
+    "title": "Member services",
+    "sub": "Apply online. The society office reviews every request.",
+    "comingSoonTitle": "Online applications are coming soon",
+    "comingSoonBody": "Membership, renter registration and other requests will soon be available here. Until then, please apply at the society office.",
+    "office": "Society office"
+  }
+}
