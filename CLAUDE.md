@@ -42,6 +42,8 @@
 - One DigitalOcean droplet runs everything: Next.js, NestJS and PostgreSQL, with PM2 and Nginx. No Vercel, no managed database.
 - Docker setup (Anis, 2026-10-08): `Dockerfile` (`api` and web targets), `docker-compose.yml` (Postgres 18, API on 4000, web on 3000) and `.dockerignore`. While the compose stack runs, it holds ports 3000 and 4000, so local `pnpm dev` servers fall back to other ports or fail to bind.
 - CI: `.github/workflows/ci.yml` is a draft that Anis owns and is finishing; don't change it unless asked. Until it works, run `pnpm check` before pushing; a `deploy.sh` script is planned.
+- `pnpm check` needs no database. `pnpm test:e2e` (root) migrates and seeds the test database (`TEST_DATABASE_URL`), then runs the API e2e tests; run it too before pushing API changes.
+- The web `/api` proxy (rewrites in `apps/web/next.config.ts`) is fixed at build time from `API_URL`. Docker passes it as a build arg; on the droplet, build with the production `API_URL` set.
 
 ## Current state (2026-10-08)
 
