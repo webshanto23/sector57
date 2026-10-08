@@ -5,8 +5,10 @@ services:
       POSTGRES_DB: sector57_dev
       POSTGRES_USER: sector57
       POSTGRES_PASSWORD: sector57
+    # Only this computer can connect (the API uses Docker's internal network).
+    # Host port 5433 because a local Postgres (FlyEnv) already uses 127.0.0.1:5432.
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - postgres-data:/var/lib/postgresql
     healthcheck:
@@ -26,8 +28,9 @@ services:
       NODE_ENV: production
       PORT: 4000
       WEB_ORIGIN: http://localhost:3000
+    # Local only: browsers reach the API through the web server's /api proxy.
     ports:
-      - "4000:4000"
+      - "127.0.0.1:4000:4000"
     depends_on:
       db:
         condition: service_healthy
