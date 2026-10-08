@@ -24,6 +24,11 @@ describe('loadEnv', () => {
     expect(() => loadEnv({ PORT: 'abc' })).toThrow(/PORT[\s\S]*DATABASE_URL/);
   });
 
+  it('treats an empty MEDIA_BASE_URL as unset and rejects a non-http one', () => {
+    expect(loadEnv({ ...base, MEDIA_BASE_URL: '' }).MEDIA_BASE_URL).toBeUndefined();
+    expect(() => loadEnv({ ...base, MEDIA_BASE_URL: 'ftp://files.example' })).toThrow(/MEDIA_BASE_URL/);
+  });
+
   it('rejects a non-postgres database url', () => {
     expect(() => loadEnv({ DATABASE_URL: 'mysql://localhost/db' })).toThrow(/DATABASE_URL/);
   });

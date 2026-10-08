@@ -84,6 +84,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/public/committee": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicCommitteeController_current"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/gallery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicGalleryController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/gallery/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicGalleryController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -134,6 +182,48 @@ export interface components {
             };
             /** Format: date-time */
             updatedAt: string;
+        };
+        CommitteeDto_Output: {
+            termStart: string | null;
+            termEnd: string | null;
+            members: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+                position: string;
+                photoUrl: string | null;
+            }[];
+        };
+        AlbumListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                titleBn: string;
+                titleEn: string | null;
+                eventDate: string | null;
+                photoCount: number;
+                coverUrl: string | null;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+        };
+        AlbumDto_Output: {
+            /** Format: uuid */
+            id: string;
+            titleBn: string;
+            titleEn: string | null;
+            eventDate: string | null;
+            photoCount: number;
+            coverUrl: string | null;
+            photos: {
+                /** Format: uuid */
+                id: string;
+                url: string | null;
+                captionBn: string | null;
+                captionEn: string | null;
+            }[];
         };
     };
     responses: never;
@@ -241,6 +331,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SitePageDto_Output"];
+                };
+            };
+        };
+    };
+    PublicCommitteeController_current: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitteeDto_Output"];
+                };
+            };
+        };
+    };
+    PublicGalleryController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumListDto_Output"];
+                };
+            };
+        };
+    };
+    PublicGalleryController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumDto_Output"];
                 };
             };
         };

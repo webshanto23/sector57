@@ -12,7 +12,8 @@ export async function createTestApp(): Promise<INestApplication<App>> {
   if (process.env.TEST_DATABASE_URL) process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
   const moduleFixture = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(ENV)
-    .useValue(loadEnv({ ...process.env, NODE_ENV: 'test', LOG_LEVEL: 'warn' }))
+    // No media storage in tests: stored keys resolve to null, absolute URLs pass through.
+    .useValue(loadEnv({ ...process.env, NODE_ENV: 'test', LOG_LEVEL: 'warn', MEDIA_BASE_URL: '' }))
     .compile();
 
   const app = moduleFixture.createNestApplication<INestApplication<App>>();

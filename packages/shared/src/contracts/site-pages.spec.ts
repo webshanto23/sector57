@@ -1,4 +1,4 @@
-import { homeContentSchema, pageSlug, pickContent, siteInfoSchema } from './site-pages.js';
+import { developmentsContentSchema, pageSlug, pickContent, siteInfoSchema } from './site-pages.js';
 
 const site = {
   bn: { address: 'বাড়ি ১, রোড ৩', officeHours: 'সকাল ১০টা থেকে সন্ধ্যা ৬টা', phone: '01711-000057' },
@@ -16,18 +16,25 @@ describe('pickContent', () => {
   });
 });
 
-describe('homeContentSchema', () => {
-  it('rejects an out-of-range progress value', () => {
-    const home = {
-      bn: {
-        hero: { label: 'ক', title: 'খ', lead: '' },
-        stats: [],
-        events: [],
-        developments: [{ title: 'রোড', progress: 140 }],
-        emergency: [],
-      },
-    };
-    expect(homeContentSchema.safeParse(home).success).toBe(false);
+describe('developmentsContentSchema', () => {
+  const project = {
+    titleBn: 'রোড সংস্কার',
+    descriptionBn: '',
+    status: 'in_progress',
+    progress: 62,
+    budget: '4800000',
+    spent: '2970000.50',
+  };
+
+  it('accepts a project and defaults its illustration', () => {
+    const parsed = developmentsContentSchema.parse({ projects: [project] });
+    expect(parsed.projects[0]!.art).toBe('road');
+  });
+
+  it('rejects out-of-range progress and money written as a number', () => {
+    expect(developmentsContentSchema.safeParse({ projects: [{ ...project, progress: 140 }] }).success).toBe(false);
+    expect(developmentsContentSchema.safeParse({ projects: [{ ...project, budget: 4800000 }] }).success).toBe(false);
+    expect(developmentsContentSchema.safeParse({ projects: [{ ...project, spent: '1.234' }] }).success).toBe(false);
   });
 });
 

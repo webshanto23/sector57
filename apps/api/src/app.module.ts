@@ -4,9 +4,11 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 import { AppController } from './app.controller.js';
+import { CommitteeModule } from './committee/committee.module.js';
 import { AllExceptionsFilter } from './common/all-exceptions.filter.js';
 import { ConfigModule } from './config/config.module.js';
 import { ENV, type Env } from './config/env.js';
+import { GalleryModule } from './gallery/gallery.module.js';
 import { NoticesModule } from './notices/notices.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { SitePagesModule } from './site-pages/site-pages.module.js';
@@ -33,6 +35,8 @@ import { SocietyModule } from './society/society.module.js';
     SocietyModule,
     NoticesModule,
     SitePagesModule,
+    CommitteeModule,
+    GalleryModule,
   ],
   controllers: [AppController],
   providers: [

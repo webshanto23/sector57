@@ -60,6 +60,8 @@ const DATE_STYLES = {
   day: { day: '2-digit' },
   // Date tile: ডিসেম্বর / Dec
   month: { month: 'short' },
+  // Committee term: ২০২৫ / 2025
+  year: { year: 'numeric' },
 } as const satisfies Record<string, Intl.DateTimeFormatOptions>;
 
 /**

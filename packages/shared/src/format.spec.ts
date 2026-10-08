@@ -46,5 +46,6 @@ describe('formatDate', () => {
   it('keeps plain dates on their calendar day', () => {
     expect(formatDate('2026-12-21', 'en', 'day')).toBe('21');
     expect(formatDate('2026-12-21', 'en', 'month')).toBe('Dec');
+    expect(formatDate('2025-01-01', 'bn', 'year')).toBe('২০২৫');
   });
 });

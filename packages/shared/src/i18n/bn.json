@@ -81,5 +81,44 @@
       "development": "উন্নয়ন",
       "general": "সাধারণ"
     }
+  },
+  "Committee": {
+    "title": "ব্যবস্থাপনা কমিটি",
+    "term": "মেয়াদ {start} থেকে {end}",
+    "termSince": "মেয়াদ শুরু {start}",
+    "empty": "কমিটির তথ্য শীঘ্রই যোগ হবে।",
+    "photoNote": "ছবি যোগ হলে গোল ফ্রেমে মুখের ছবি বসবে; না থাকলে নামের প্রথম অক্ষর।",
+    "position": {
+      "president": "সভাপতি",
+      "vice_president": "সহ-সভাপতি",
+      "general_secretary": "সাধারণ সম্পাদক",
+      "joint_secretary": "যুগ্ম সম্পাদক",
+      "treasurer": "কোষাধ্যক্ষ",
+      "organizing_secretary": "সাংগঠনিক সম্পাদক",
+      "cultural_secretary": "সাংস্কৃতিক সম্পাদক",
+      "executive_member": "কার্যনির্বাহী সদস্য"
+    }
+  },
+  "Developments": {
+    "title": "উন্নয়ন প্রকল্প",
+    "sub": "সমিতির তহবিল কোথায় খরচ হচ্ছে",
+    "budget": "বাজেট",
+    "spent": "খরচ",
+    "empty": "এখনো কোনো প্রকল্প যোগ হয়নি।",
+    "status": {
+      "planned": "পরিকল্পিত",
+      "in_progress": "চলমান",
+      "completed": "সম্পন্ন"
+    }
+  },
+  "Gallery": {
+    "title": "ছবির গ্যালারি",
+    "sub": "অনুষ্ঠান ও সামাজিক জীবনের ছবি",
+    "photoCount": "{count}টি ছবি",
+    "empty": "এখনো কোনো অ্যালবাম নেই।",
+    "noPhotos": "এই অ্যালবামে এখনো ছবি নেই।",
+    "backToGallery": "সব অ্যালবাম",
+    "photo": "{album}, ছবি {n}",
+    "placeholderNote": "ছবি আপলোড হলে এখানে আসল ছবি দেখা যাবে।"
   }
 }

@@ -81,5 +81,44 @@
       "development": "Development",
       "general": "General"
     }
+  },
+  "Committee": {
+    "title": "Managing committee",
+    "term": "Term {start} to {end}",
+    "termSince": "Term since {start}",
+    "empty": "Committee details will be added soon.",
+    "photoNote": "Portrait photos go in the round frame; the initial shows until one is uploaded.",
+    "position": {
+      "president": "President",
+      "vice_president": "Vice President",
+      "general_secretary": "General Secretary",
+      "joint_secretary": "Joint Secretary",
+      "treasurer": "Treasurer",
+      "organizing_secretary": "Organizing Secretary",
+      "cultural_secretary": "Cultural Secretary",
+      "executive_member": "Executive Member"
+    }
+  },
+  "Developments": {
+    "title": "Development projects",
+    "sub": "Where society funds are being spent",
+    "budget": "Budget",
+    "spent": "Spent",
+    "empty": "No projects have been added yet.",
+    "status": {
+      "planned": "Planned",
+      "in_progress": "In progress",
+      "completed": "Completed"
+    }
+  },
+  "Gallery": {
+    "title": "Gallery",
+    "sub": "Photos from events and community life",
+    "photoCount": "{count} photos",
+    "empty": "No albums yet.",
+    "noPhotos": "This album has no photos yet.",
+    "backToGallery": "All albums",
+    "photo": "{album}, photo {n}",
+    "placeholderNote": "Real photos appear here once they are uploaded."
   }
 }

@@ -136,3 +136,93 @@ export function demoNotices(now = Date.now()) {
     },
   ].map(({ daysAgo, ...notice }) => ({ ...notice, is_public: true, publish_at: new Date(now - daysAgo * DAY) }));
 }
+
+/** Demo managing committee from the mockup (persons carry no phone, NID or other private data). */
+export const DEMO_COMMITTEE = {
+  term_start: new Date("2025-01-01T00:00:00Z"),
+  term_end: new Date("2027-12-31T00:00:00Z"),
+  members: [
+    { full_name: "মোঃ রফিকুল ইসলাম", full_name_en: "Md. Rafiqul Islam", position: "president" },
+    { full_name: "শাহানা আক্তার", full_name_en: "Shahana Akter", position: "vice_president" },
+    { full_name: "কামরুল হাসান", full_name_en: "Kamrul Hasan", position: "general_secretary" },
+    { full_name: "তানভীর আহমেদ", full_name_en: "Tanvir Ahmed", position: "joint_secretary" },
+    { full_name: "নাসরিন সুলতানা", full_name_en: "Nasrin Sultana", position: "treasurer" },
+    { full_name: "আব্দুল করিম", full_name_en: "Abdul Karim", position: "organizing_secretary" },
+    { full_name: "ফারহানা রহমান", full_name_en: "Farhana Rahman", position: "cultural_secretary" },
+    { full_name: "মিজানুর রহমান", full_name_en: "Mizanur Rahman", position: "executive_member" },
+  ],
+};
+
+/** Demo `developments` page (shape: developmentsContentSchema). Budget figures are illustrative. */
+export const DEMO_DEVELOPMENTS_PAGE = {
+  slug: "developments",
+  title_bn: "উন্নয়ন প্রকল্প",
+  title_en: "Development projects",
+  content: {
+    projects: [
+      {
+        titleBn: "ব্লক সি সড়ক সংস্কার",
+        titleEn: "Block C road resurfacing",
+        descriptionBn: "রোড ৯ থেকে রোড ১২, ১.৪ কিমি",
+        descriptionEn: "Road 9 to Road 12, 1.4 km",
+        status: "in_progress",
+        progress: 62,
+        budget: "4800000",
+        spent: "2970000",
+        art: "road",
+      },
+      {
+        titleBn: "সিসিটিভি দ্বিতীয় ধাপ",
+        titleEn: "CCTV coverage phase 2",
+        descriptionBn: "সড়ক সংযোগস্থলে আরও ১৮টি ক্যামেরা",
+        descriptionEn: "18 more cameras at road junctions",
+        status: "in_progress",
+        progress: 80,
+        budget: "1250000",
+        spent: "1000000",
+        art: "cctv",
+      },
+      {
+        titleBn: "কেন্দ্রীয় খেলার মাঠ সংস্কার",
+        titleEn: "Central playground renovation",
+        descriptionBn: "হাঁটার পথ, বাতি ও বসার ব্যবস্থা",
+        descriptionEn: "Walking track, lights and seating",
+        status: "planned",
+        progress: 0,
+        budget: "2200000",
+        spent: "0",
+        art: "field",
+      },
+      {
+        titleBn: "বৃষ্টির পানি নিষ্কাশন, ব্লক এ",
+        titleEn: "Rainwater drainage, Block A",
+        descriptionBn: "আগস্ট ২০২৬-এ শেষ হয়েছে",
+        descriptionEn: "Finished August 2026",
+        status: "completed",
+        progress: 100,
+        budget: "3600000",
+        spent: "3480000",
+        art: "drain",
+      },
+    ],
+  },
+};
+
+/** Demo gallery albums. Photo keys are placeholders: no file exists, so the site draws illustrations. */
+export const DEMO_ALBUMS = [
+  { title_bn: "পহেলা বৈশাখ ১৪৩৩", title_en: "Pohela Boishakh 1433", event_date: "2026-04-14", photos: 9 },
+  { title_bn: "বিজয় দিবস ক্রীড়া ২০২৫", title_en: "Victory Day sports 2025", event_date: "2025-12-16", photos: 8 },
+  { title_bn: "বার্ষিক সাধারণ সভা ২০২৪", title_en: "AGM 2024", event_date: "2024-12-14", photos: 5 },
+  { title_bn: "বৃক্ষরোপণ, রোড ৫", title_en: "Tree plantation, Road 5", event_date: "2025-07-05", photos: 6 },
+  { title_bn: "কেন্দ্রীয় ঈদগাহে ঈদের জামাত", title_en: "Eid jamaat at the central eidgah", event_date: "2026-03-21", photos: 7 },
+  { title_bn: "শিশুদের চিত্রাঙ্কন প্রতিযোগিতা", title_en: "Children's art competition", event_date: "2026-02-21", photos: 8 },
+].map((album, index) => ({
+  title_bn: album.title_bn,
+  title_en: album.title_en,
+  event_date: new Date(`${album.event_date}T00:00:00Z`),
+  is_published: true,
+  photos: Array.from({ length: album.photos }, (_, n) => ({
+    file_url: `demo/gallery/${index + 1}-${n + 1}.jpg`,
+    sort_order: n,
+  })),
+}));

@@ -15,11 +15,11 @@ import {
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Card, Chip, IconTitle, Kantha, ProgressBar } from "@/components/kit";
-import { LakeArt } from "@/components/site/art";
+import { Art } from "@/components/site/art";
 import { NOTICE_CATEGORY_STYLE } from "@/components/site/notice-category";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { getHomeContent, getLatestNotices } from "@/lib/api/public";
+import { getDevelopments, getHomeContent, getLatestNotices } from "@/lib/api/public";
 import { alternates } from "@/lib/metadata";
 
 export const revalidate = 60;
@@ -46,14 +46,23 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
   const locale = raw as Locale;
   setRequestLocale(locale);
 
-  const [t, tn, common, content, notices] = await Promise.all([
+  const [t, tn, common, content, notices, developments] = await Promise.all([
     getTranslations("Site.home"),
     getTranslations("Notices"),
     getTranslations("Common"),
     getHomeContent(),
     getLatestNotices(3),
+    getDevelopments(),
   ]);
   const home = content ? pickContent(content, locale) : null;
+  // Same projects as the developments page: ongoing first, at most three.
+  const projects = (developments?.projects ?? [])
+    .filter((project) => project.status !== "completed")
+    .slice(0, 3)
+    .map((project) => ({
+      title: pick(project.titleBn, project.titleEn, locale),
+      progress: project.progress,
+    }));
 
   return (
     <div className="grid gap-3.5">
@@ -83,14 +92,16 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
                 {home.stats.map((stat) => (
                   <div key={stat.label} className="flex flex-col-reverse">
                     <dt className="text-xs text-muted-foreground">{stat.label}</dt>
-                    <dd className="font-display text-[22px] font-bold text-primary">{localDigits(stat.value, locale)}</dd>
+                    <dd className="font-display text-[22px] font-bold text-primary">
+                      {localDigits(stat.value, locale)}
+                    </dd>
                   </div>
                 ))}
               </dl>
             </>
           ) : null}
         </div>
-        <LakeArt label={t("artLabel")} className="h-full object-cover" />
+        <Art scene="lake" seed={7} ratio={[4, 3]} label={t("artLabel")} className="h-full" />
       </section>
 
       <div className="mt-0.5 grid grid-cols-[repeat(auto-fit,minmax(min(340px,100%),1fr))] gap-3.5">
@@ -111,7 +122,9 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
                     {pick(notice.titleBn, notice.titleEn, locale)}
                   </Link>
                 </h4>
-                <p className="line-clamp-2 text-xs text-muted-foreground">{pick(notice.bodyBn, notice.bodyEn, locale)}</p>
+                <p className="line-clamp-2 text-xs text-muted-foreground">
+                  {pick(notice.bodyBn, notice.bodyEn, locale)}
+                </p>
               </div>
               <div className="grid justify-items-end gap-1">
                 <Chip tone={NOTICE_CATEGORY_STYLE[notice.category].tone}>{tn(`category.${notice.category}`)}</Chip>
@@ -146,53 +159,63 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
         </Card>
       </div>
 
-      {home ? (
+      {home || projects.length > 0 ? (
         <div className="grid grid-cols-1 gap-3.5 min-[701px]:grid-cols-2">
-          <Card className="grid content-start gap-2.5">
-            <div className="flex items-center justify-between gap-2">
-              <IconTitle icon={HardHat} tone="warn">
-                {t("developments")}
-              </IconTitle>
-              <Link href="/developments" className={linkClass}>
-                {t("allProjects")}
-                <ChevronRight className="size-[15px]" aria-hidden />
-              </Link>
-            </div>
-            {home.developments.slice(0, 3).map((item) => (
-              <div key={item.title} className="grid gap-1.5">
-                <div className="flex items-center justify-between gap-2">
-                  <h4>{item.title}</h4>
-                  <span className="text-xs text-muted-foreground">{localDigits(`${item.progress}%`, locale)}</span>
-                </div>
-                <ProgressBar
-                  value={item.progress}
-                  label={t("progress", { title: item.title, percent: localDigits(item.progress, locale) })}
-                />
+          {projects.length > 0 ? (
+            <Card className="grid content-start gap-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <IconTitle icon={HardHat} tone="warn">
+                  {t("developments")}
+                </IconTitle>
+                <Link href="/developments" className={linkClass}>
+                  {t("allProjects")}
+                  <ChevronRight className="size-[15px]" aria-hidden />
+                </Link>
               </div>
-            ))}
-          </Card>
+              {projects.map((item) => (
+                <div key={item.title} className="grid gap-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <h4>{item.title}</h4>
+                    <span className="text-xs text-muted-foreground">{localDigits(`${item.progress}%`, locale)}</span>
+                  </div>
+                  <ProgressBar
+                    value={item.progress}
+                    label={t("progress", {
+                      title: item.title,
+                      percent: localDigits(item.progress, locale),
+                    })}
+                  />
+                </div>
+              ))}
+            </Card>
+          ) : null}
 
-          <Card className="grid content-start gap-2.5">
-            <IconTitle icon={Siren} tone="sun">
-              {t("emergency")}
-            </IconTitle>
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(200px,100%),1fr))] gap-2">
-              {home.emergency.map((contact) => {
-                const Icon = CONTACT_ICON[contact.icon];
-                return (
-                  <Card key={contact.label} flat className="flex items-center gap-2 p-2.5 min-[600px]:p-2.5">
-                    <Icon className="size-[18px] flex-none text-sun" aria-hidden />
-                    <div className="min-w-0">
-                      <div className="text-xs text-muted-foreground">{contact.label}</div>
-                      <a href={`tel:${contact.phone.replace(/[^\d+]/g, "")}`} className="font-bold text-fg no-underline">
-                        {localDigits(contact.phone, locale)}
-                      </a>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          </Card>
+          {home ? (
+            <Card className="grid content-start gap-2.5">
+              <IconTitle icon={Siren} tone="sun">
+                {t("emergency")}
+              </IconTitle>
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(min(200px,100%),1fr))] gap-2">
+                {home.emergency.map((contact) => {
+                  const Icon = CONTACT_ICON[contact.icon];
+                  return (
+                    <Card key={contact.label} flat className="flex items-center gap-2 p-2.5 min-[600px]:p-2.5">
+                      <Icon className="size-[18px] flex-none text-sun" aria-hidden />
+                      <div className="min-w-0">
+                        <div className="text-xs text-muted-foreground">{contact.label}</div>
+                        <a
+                          href={`tel:${contact.phone.replace(/[^\d+]/g, "")}`}
+                          className="font-bold text-fg no-underline"
+                        >
+                          {localDigits(contact.phone, locale)}
+                        </a>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            </Card>
+          ) : null}
         </div>
       ) : null}
     </div>

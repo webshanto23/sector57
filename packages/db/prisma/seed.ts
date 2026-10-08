@@ -1,12 +1,13 @@
 // Idempotent seed: the Sector 57 society, its location levels, the permission
-// catalogue, the starter roles and the public website pages (plus demo notices
-// outside production). Safe to run repeatedly; it never deletes rows.
+// catalogue, the starter roles and the public website pages (plus demo notices,
+// committee, developments and gallery outside production). Safe to run
+// repeatedly; it never deletes rows.
 // Users are not seeded here: the first super admin is created separately so no
 // password ever lives in source control.
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../generated/prisma/client.ts";
-import { demoNotices, SITE_PAGES } from "./seed-site.ts";
+import { DEMO_ALBUMS, DEMO_COMMITTEE, DEMO_DEVELOPMENTS_PAGE, demoNotices, SITE_PAGES } from "./seed-site.ts";
 
 const connectionString = process.env["DATABASE_URL"];
 if (!connectionString) {
@@ -153,22 +154,75 @@ async function main() {
     });
   }
 
-  // Demo notices never reach a production database. Matched by title so reruns add nothing.
-  let notices = 0;
+  console.log(`Seeded society "${society.slug}" with ${permissions.length} permissions, ${ROLES.length} roles and ${SITE_PAGES.length} site pages.`);
+
+  // Demo content never reaches a production database. Everything is matched by a
+  // natural key (title, name, slug), so reruns add nothing.
   if (process.env["NODE_ENV"] !== "production") {
-    for (const notice of demoNotices().map(nfcDeep)) {
-      const exists = await prisma.notices.findFirst({
-        where: { society_id: society.id, title_bn: notice.title_bn },
-        select: { id: true },
-      });
-      if (!exists) {
-        await prisma.notices.create({ data: { ...notice, society_id: society.id } });
-        notices++;
-      }
+    console.log(`Demo content: ${JSON.stringify(await seedDemo(society.id))} new rows.`);
+  }
+}
+
+async function seedDemo(societyId: string) {
+  const added = { notices: 0, committee: 0, albums: 0 };
+
+  for (const notice of demoNotices().map(nfcDeep)) {
+    const exists = await prisma.notices.findFirst({
+      where: { society_id: societyId, title_bn: notice.title_bn },
+      select: { id: true },
+    });
+    if (!exists) {
+      await prisma.notices.create({ data: { ...notice, society_id: societyId } });
+      added.notices++;
     }
   }
 
-  console.log(`Seeded society "${society.slug}" with ${permissions.length} permissions and ${ROLES.length} roles, ${SITE_PAGES.length} site pages, ${notices} new demo notices.`);
+  const page = nfcDeep(DEMO_DEVELOPMENTS_PAGE);
+  await prisma.site_pages.upsert({
+    where: { society_id_slug: { society_id: societyId, slug: page.slug } },
+    update: {},
+    create: { ...page, society_id: societyId, is_published: true },
+  });
+
+  for (const [index, member] of DEMO_COMMITTEE.members.map(nfcDeep).entries()) {
+    const person =
+      (await prisma.persons.findFirst({ where: { society_id: societyId, full_name: member.full_name } })) ??
+      (await prisma.persons.create({
+        data: { society_id: societyId, full_name: member.full_name, full_name_en: member.full_name_en },
+      }));
+    const seat = await prisma.committee_members.findFirst({
+      where: { society_id: societyId, person_id: person.id, position: member.position },
+      select: { id: true },
+    });
+    if (!seat) {
+      await prisma.committee_members.create({
+        data: {
+          society_id: societyId,
+          person_id: person.id,
+          position: member.position,
+          sort_order: index,
+          term_start: DEMO_COMMITTEE.term_start,
+          term_end: DEMO_COMMITTEE.term_end,
+        },
+      });
+      added.committee++;
+    }
+  }
+
+  for (const { photos, ...album } of DEMO_ALBUMS.map(nfcDeep)) {
+    const exists = await prisma.gallery_albums.findFirst({
+      where: { society_id: societyId, title_bn: album.title_bn },
+      select: { id: true },
+    });
+    if (!exists) {
+      await prisma.gallery_albums.create({
+        data: { ...album, society_id: societyId, gallery_photos: { create: photos } },
+      });
+      added.albums++;
+    }
+  }
+
+  return added;
 }
 
 main()

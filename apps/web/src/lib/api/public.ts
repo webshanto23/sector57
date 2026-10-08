@@ -1,8 +1,10 @@
 import "server-only";
 
 import {
+  developmentsContentSchema,
   homeContentSchema,
   siteInfoSchema,
+  type DevelopmentsContent,
   type HomeContent,
   type NoticeListQuery,
   type SiteInfo,
@@ -60,6 +62,42 @@ async function getPageContent<S extends z.ZodType>(slug: string, schema: S): Pro
 
 export const getHomeContent = (): Promise<HomeContent | null> => getPageContent("home", homeContentSchema);
 export const getSiteInfo = (): Promise<SiteInfo | null> => getPageContent("site", siteInfoSchema);
+export const getDevelopments = (): Promise<DevelopmentsContent | null> =>
+  getPageContent("developments", developmentsContentSchema);
+
+/** True inside `next build`, where the API may not be running (Docker image builds). */
+const building = () => process.env.NEXT_PHASE === "phase-production-build";
+
+/**
+ * Current committee. At runtime it throws when the API is down, so revalidation
+ * keeps the last good page; while building it renders empty and fills in on the
+ * first revalidation.
+ */
+export async function getCommittee() {
+  try {
+    const { data } = await api.GET("/public/committee");
+    if (!data) throw new Error("Could not load the committee");
+    return data;
+  } catch (error) {
+    if (building()) return { termStart: null, termEnd: null, members: [] };
+    throw error;
+  }
+}
+
+/** Gallery albums; throws when the API is down. */
+export async function getAlbums(page: number, pageSize: number) {
+  const { data } = await api.GET("/public/gallery", { params: { query: { page, pageSize } } });
+  if (!data) throw new Error("Could not load the gallery");
+  return data;
+}
+
+/** One album with photos, or null when it does not exist or is not published. */
+export async function getAlbum(id: string) {
+  const { data, response } = await api.GET("/public/gallery/{id}", { params: { path: { id } } });
+  if (response.status === 404 || response.status === 400) return null;
+  if (!data) throw new Error("Could not load the album");
+  return data;
+}
 
 /** The society this site serves; null when the API is unreachable (callers fall back to the i18n name). */
 export async function getSociety() {

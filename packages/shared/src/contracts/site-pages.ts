@@ -38,11 +38,57 @@ export const homeContentSchema = localized(
     // Shown as typed; numbers are converted to the locale's digits when rendered.
     stats: z.array(z.object({ label: line, value: z.string().max(20) })).max(6),
     events: z.array(z.object({ date: z.iso.date(), title: line, place: line })).max(6),
-    developments: z.array(z.object({ title: line, progress: z.number().int().min(0).max(100) })).max(6),
     emergency: z.array(z.object({ label: line, phone, icon: z.enum(CONTACT_ICONS) })).max(8),
   }),
 );
 export type HomeContent = z.infer<typeof homeContentSchema>;
+
+/** Illustrations the site can draw where a photo is missing (ports of the mockup's `art()` scenes). */
+export const ART_SCENES = [
+  'lake',
+  'road',
+  'cctv',
+  'field',
+  'sports',
+  'mosque',
+  'trees',
+  'boishakh',
+  'meeting',
+  'art',
+  'drain',
+  'hall',
+] as const;
+export type ArtScene = (typeof ART_SCENES)[number];
+
+/** Decimal money as a string (BDT, up to 2 decimals). Never a JS number. */
+const money = z.string().regex(/^\d{1,12}(\.\d{1,2})?$/);
+
+export const PROJECT_STATUSES = ['planned', 'in_progress', 'completed'] as const;
+export type ProjectStatus = (typeof PROJECT_STATUSES)[number];
+
+/**
+ * Slug `developments`: development projects. Bilingual per field (`*Bn` / `*En`)
+ * rather than `{bn, en}`, so the figures are stored once. Budget and spent are
+ * display figures, not accounting: linking them to expenses needs a projects table.
+ */
+export const developmentsContentSchema = z.object({
+  projects: z
+    .array(
+      z.object({
+        titleBn: line,
+        titleEn: line.optional(),
+        descriptionBn: z.string().max(600),
+        descriptionEn: z.string().max(600).optional(),
+        status: z.enum(PROJECT_STATUSES),
+        progress: z.number().int().min(0).max(100),
+        budget: money,
+        spent: money,
+        art: z.enum(ART_SCENES).default('road'),
+      }),
+    )
+    .max(50),
+});
+export type DevelopmentsContent = z.infer<typeof developmentsContentSchema>;
 
 /** Slug `site`: footer and contact details shown on every public page. */
 export const siteInfoSchema = localized(

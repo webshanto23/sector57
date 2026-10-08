@@ -12,6 +12,8 @@ const envSchema = z.object({
     .default('http://localhost:3000')
     .transform((value) => value.split(',').map((origin) => origin.trim()))
     .pipe(z.array(z.url())),
+  // Public base URL of uploaded files (DigitalOcean Spaces CDN). Unset: stored files are not linked.
+  MEDIA_BASE_URL: z.preprocess((value) => (value === '' ? undefined : value), z.url({ protocol: /^https?$/ }).optional()),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
 });
 
