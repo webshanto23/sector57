@@ -5,7 +5,7 @@ import { App } from 'supertest/types.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
 import { createTestApp } from './create-app.js';
 
-const MARK = `e2e-${Date.now()}`;
+const MARK = `e2e-community-${Date.now()}`;
 const day = (offset: number) => {
   const date = new Date();
   date.setUTCHours(0, 0, 0, 0);

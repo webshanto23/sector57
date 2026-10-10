@@ -78,6 +78,10 @@
   - `locations.path` is `/<root id>/.../<own id>/` (`locationPath` in shared); a scope covers rows whose path starts with its path. Only `LOCATION_SCOPED_MODULES` respect a scope; a scoped role grants nothing on other modules.
   - Writes are audited by the global `AuditInterceptor`; name the entity with `@AuditEntity(...)`, or `@SkipAudit()` when the handler records its own row.
   - New permission modules go in both `PERMISSION_MODULES` (shared) and the seed; the e2e test checks they match.
+- Step 6 (roles and users admin) is built on `step/06-roles-users`, branched from `step/05-permissions`, awaiting Codex review. Rules for later steps:
+  - Grant limits live in `apps/api/src/permissions/grant-limits.ts`: a caller grants only what they hold society-wide, assigns a role only over an area where they hold all its permissions, and changes only users they could have given every role to. Only full access touches the system role, which is read-only.
+  - Services that check grant limits or write their own audit rows take an `Actor` (`@CurrentActor()`: society, user id, access, IP). Validate `:id` with `IdParamDto` (`src/common`).
+  - Dashboard pages call `requirePermission(module, action)` (404 otherwise) and load data through `src/lib/api/admin.ts`; module labels for any UI are in `Admin.modules` and the matrix order in `components/admin/modules.ts` (a new module fails to compile until it is placed there).
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
 
 ## Reference material

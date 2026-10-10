@@ -31,3 +31,13 @@ export const CurrentAccess = createParamDecorator((_data: unknown, context: Exec
   if (!access) throw new InternalServerErrorException('Access not loaded');
   return access;
 });
+
+/** Who is making a change: their society, user id, access and IP. For services that check grant limits and write audit rows. */
+export type Actor = { societyId: string; userId: string; access: CallerAccess; ip: string | null };
+
+/** The caller as an `Actor`. Only on `@Can` and `@Authenticated` routes. */
+export const CurrentActor = createParamDecorator((_data: unknown, context: ExecutionContext): Actor => {
+  const request = context.switchToHttp().getRequest<Request>();
+  if (!request.auth || !request.access) throw new InternalServerErrorException('Access not loaded');
+  return { societyId: request.auth.societyId, userId: request.auth.userId, access: request.access, ip: request.ip ?? null };
+});

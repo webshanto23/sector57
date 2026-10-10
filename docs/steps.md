@@ -24,7 +24,7 @@ Schema changes are additive and need Anis's approval first.
 | – | Docker, CI draft, localhost-only ports | Done (`fix/compose-local-ports` not merged yet) | `fix/compose-local-ports` |
 | 4 | Auth (phone + password) | Pushed, awaiting Codex review and merge | `step/04-auth` |
 | 5 | Permissions engine and dashboard shell | Built, awaiting Codex review | `step/05-permissions` |
-| 6 | Roles and users admin | Planned | `step/06-roles-users` |
+| 6 | Roles and users admin | Built, awaiting Codex review | `step/06-roles-users` |
 | 7 | Content CMS and file storage | Planned | `step/07-cms` |
 | 9 | Property: location tree and units | Planned | `step/09-property` |
 | 10 | Members | Planned | `step/10-members` |
@@ -162,12 +162,49 @@ Branch `step/05-permissions`, branched from `step/04-auth`. Scope confirmed by A
 
 **Not in this step:** role and user admin screens (Step 6), real dashboard pages, overview figures (milestone 2), a mobile drawer (the phone layout is the mockup's scrolling strip).
 
-## Step 6: Roles and users admin — Planned
+## Step 6: Roles and users admin — Built, awaiting Codex review
 
-- **Roles:** list, create, edit, with a permission matrix (module × action). The system role stays protected.
-- **Users:** create or invite, assign roles with an optional area scope, disable.
+Branch `step/06-roles-users`, branched from `step/05-permissions`. Scope confirmed by Anis on 2026-10-10. No schema change.
 
-**Open decision:** "invite" needs SMS or email delivery. Until then, should the office create the user with a temporary password?
+**Decisions (Anis, 2026-10-10)**
+- No invites yet (they need SMS or email): the office creates the user, who gets a random 10-character temporary password, shown once. The account is `active` at once and the user is not forced to change the password. `invited` stays unused.
+- Resetting another user's password needs `users.edit`, not a separate permission.
+
+**Rules (enforced by the API, mirrored in the UI)**
+- No escalation: without full access, a caller puts into a role (or takes out of it) only permissions they hold for the whole society, and gives (or takes away) a role only if they hold all its permissions over at least that area. A scoped role's society-wide permissions grant nothing, so they don't count (`src/permissions/grant-limits.ts`).
+- A caller changes only users whose roles they could have given (`canManage`); a holder of the system role only by another one. Only full access gives or removes the system role.
+- The system role is read-only: it can't be edited or deleted.
+- Nobody changes their own status or roles, or resets their own password, from the users admin; their own profile (names, email, language) is fine.
+- The last active, unscoped holder of the system role can't be disabled or lose it (409 `last_admin`). Through the API this can't happen anyway (only another active full-access user can touch a system holder), so it's a second guard.
+- Users are never deleted. Disabling ends their refresh sessions at once; their access token stops working on the next request because the permission check reads the status. A role change applies on the next request.
+- A role is deleted only while nobody holds it (409 `role_in_use`).
+
+**Shared**
+- `contracts/roles.ts`: `roleInputSchema`, role list and detail, `canGrant` (the UI's copy of the rule).
+- `contracts/users.ts`: `USER_STATUSES`, create, update, set-roles and list-query schemas, `userDetailSchema` (with `isSelf` and `canManage`), form options.
+- `asciiDigits`, `optionalEmail`, a `short` date style, and the `Admin` messages (module and action labels, roles, users, errors) in `bn.json` and `en.json`.
+
+**API (modules `roles`, `users`; the services write their own audit rows with before and after)**
+- `GET /roles` and `GET /roles/:id` need `roles.view`; `POST /roles` needs `roles.create`; `PUT /roles/:id` needs `roles.edit` (the whole role: name, description, matrix; PUT rather than the PATCH in the scope note, because the form always sends everything); `DELETE /roles/:id` needs `roles.delete`.
+- `GET /users` (paged; `q` matches name, English name or phone, Bangla digits allowed; `status`, `roleId`), `GET /users/:id`, `GET /users/options` (roles with `grantable`, and non-unit locations for the area picker) need `users.view`.
+- `POST /users` needs `users.create`. It answers `{ id, temporaryPassword }` and reuses the `persons` row with the same phone if one exists.
+- `PATCH /users/:id` (profile and status), `PUT /users/:id/roles` (keeps unchanged rows, so the grant date and granter stay), `POST /users/:id/reset-password` need `users.edit`.
+- Errors: 403 `beyond_your_permissions`, 403 `system_role_protected`, 403 `cannot_change_self`, 409 `role_name_taken`, `role_in_use`, `phone_taken`, `last_admin`, 400 `invalid_assignment`.
+- `@CurrentActor()` gives a handler the caller's society, user id, access and IP in one value. `IdParamDto` validates `:id`.
+
+**Web**
+- `/dashboard/roles`: the list (system badge, permission and user counts). `/dashboard/roles/new` and `/dashboard/roles/[id]`: name, description and the matrix, grouped like the sidebar, with row and column toggles and a pin on area-bound modules. Cells the caller can't grant are disabled; the system role, and a role holding permissions the caller lacks, are read-only. Delete asks once, inline.
+- `/dashboard/users`: search, status and role filters (a plain GET form), a table that becomes cards on phones, paging. `/dashboard/users/new`: profile, roles with areas, then the temporary password with a copy button. `/dashboard/users/[id]`: profile, roles with areas, disable or enable, reset password.
+- Pages answer 404 when the user lacks the module's permission (`requirePermission` in `lib/api/session.ts`); server data comes from `lib/api/admin.ts` and reloads with `router.refresh()` after a change.
+
+**Tests**
+- Unit: `grant-limits.spec.ts` (area coverage, scoped roles, system role, `canManage`), the shared contracts (`admin.spec.ts`).
+- e2e (`test/admin.e2e-spec.ts`): role create, edit and delete with audit rows; duplicate name; no granting what you don't hold; system role protected; role in use; another society's roles and users are 404; the temporary password logs in and isn't in the audit row; duplicate phone; a block manager can give a role only inside their block; nobody touches a user holding more than they do; no self changes; disabling cuts a user off at once and ends their sessions; a role change applies on the next request; reset password ends every session.
+- Fixed on the way: three e2e files built the same society slug from `Date.now()` and failed now and then when run in parallel; each file has its own prefix now.
+
+**Checked:** `pnpm check` and the e2e suite pass; all six pages render with real data in Bangla and English (curl as the dev admin). The forms were not clicked through in a browser; that and the 375/820/1440 checks are part of the deferred visual pass.
+
+**Not in this step:** invites, forced password change, a user's session list, the audit log viewer, bulk import of users. The area picker lists nothing until Step 9 builds the location tree.
 
 ## Step 7: Content CMS and file storage — Planned
 

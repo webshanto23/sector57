@@ -15,6 +15,6 @@ import { TokensService } from './tokens.service.js';
   imports: [PrismaModule, AuditModule, PermissionsModule],
   controllers: [AuthController, MeController],
   providers: [PasswordService, TokensService, SessionsService, AuthService, AuthGuard, CsrfGuard],
-  exports: [AuthService, PasswordService, AuthGuard, CsrfGuard],
+  exports: [AuthService, PasswordService, SessionsService, AuthGuard, CsrfGuard],
 })
 export class AuthModule {}

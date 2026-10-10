@@ -212,6 +212,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RolesController_list"];
+        put?: never;
+        post: operations["RolesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/roles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RolesController_get"];
+        put: operations["RolesController_update"];
+        post?: never;
+        delete: operations["RolesController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UsersController_list"];
+        put?: never;
+        post: operations["UsersController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UsersController_options"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UsersController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["UsersController_update"];
+        trace?: never;
+    };
+    "/users/{id}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["UsersController_setRoles"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{id}/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UsersController_resetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -340,6 +452,154 @@ export interface components {
         ChangePasswordDto: {
             currentPassword: string;
             newPassword: string;
+        };
+        RoleListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                description: string | null;
+                isSystem: boolean;
+                userCount: number;
+                permissionCount: number;
+            }[];
+        };
+        RoleDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description: string | null;
+            isSystem: boolean;
+            userCount: number;
+            permissionCount: number;
+            permissions: {
+                /** @enum {string} */
+                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "audit";
+                /** @enum {string} */
+                action: "view" | "create" | "edit" | "approve" | "delete" | "export";
+            }[];
+        };
+        RoleInputDto: {
+            name: string;
+            description?: string | null;
+            permissions: {
+                /** @enum {string} */
+                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "audit";
+                /** @enum {string} */
+                action: "view" | "create" | "edit" | "approve" | "delete" | "export";
+            }[];
+        };
+        UserListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                name: string | null;
+                nameEn: string | null;
+                phone: string;
+                email: string | null;
+                /** @enum {string} */
+                status: "invited" | "active" | "disabled";
+                /** @enum {string} */
+                language: "bn" | "en";
+                lastLoginAt: string | null;
+                lockedUntil: string | null;
+                roles: {
+                    /** Format: uuid */
+                    roleId: string;
+                    scopeLocationId: string | null;
+                    roleName: string;
+                    isSystem: boolean;
+                    scopeName: string | null;
+                }[];
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+        };
+        UserFormOptionsDto_Output: {
+            roles: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                isSystem: boolean;
+                grantable: boolean;
+            }[];
+            scopes: {
+                /** Format: uuid */
+                id: string;
+                parentId: string | null;
+                name: string;
+                levelBn: string;
+                levelEn: string | null;
+                depth: number;
+            }[];
+        };
+        UserDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            name: string | null;
+            nameEn: string | null;
+            phone: string;
+            email: string | null;
+            /** @enum {string} */
+            status: "invited" | "active" | "disabled";
+            /** @enum {string} */
+            language: "bn" | "en";
+            lastLoginAt: string | null;
+            lockedUntil: string | null;
+            roles: {
+                /** Format: uuid */
+                roleId: string;
+                scopeLocationId: string | null;
+                roleName: string;
+                isSystem: boolean;
+                scopeName: string | null;
+            }[];
+            /** Format: date-time */
+            createdAt: string;
+            isSelf: boolean;
+            canManage: boolean;
+        };
+        CreateUserDto: {
+            name: string;
+            nameEn?: string | null;
+            phone: string;
+            email?: string | null;
+            /**
+             * @default bn
+             * @enum {string}
+             */
+            language: "bn" | "en";
+            /** @default [] */
+            roles: {
+                /** Format: uuid */
+                roleId: string;
+                scopeLocationId: string | null;
+            }[];
+        };
+        CreatedUserDto_Output: {
+            /** Format: uuid */
+            id: string;
+            temporaryPassword: string;
+        };
+        UpdateUserDto: {
+            name?: string;
+            nameEn?: string | null;
+            email?: string | null;
+            /** @enum {string} */
+            language?: "bn" | "en";
+            /** @enum {string} */
+            status?: "active" | "disabled";
+        };
+        SetUserRolesDto: {
+            roles: {
+                /** Format: uuid */
+                roleId: string;
+                scopeLocationId: string | null;
+            }[];
+        };
+        PasswordResetDto_Output: {
+            temporaryPassword: string;
         };
     };
     responses: never;
@@ -607,6 +867,272 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    RolesController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleListDto_Output"];
+                };
+            };
+        };
+    };
+    RolesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleInputDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleDetailDto_Output"];
+                };
+            };
+        };
+    };
+    RolesController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleDetailDto_Output"];
+                };
+            };
+        };
+    };
+    RolesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleDetailDto_Output"];
+                };
+            };
+        };
+    };
+    RolesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UsersController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                status?: "invited" | "active" | "disabled";
+                roleId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserListDto_Output"];
+                };
+            };
+        };
+    };
+    UsersController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateUserDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedUserDto_Output"];
+                };
+            };
+        };
+    };
+    UsersController_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserFormOptionsDto_Output"];
+                };
+            };
+        };
+    };
+    UsersController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserDetailDto_Output"];
+                };
+            };
+        };
+    };
+    UsersController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUserDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserDetailDto_Output"];
+                };
+            };
+        };
+    };
+    UsersController_setRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetUserRolesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserDetailDto_Output"];
+                };
+            };
+        };
+    };
+    UsersController_resetPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordResetDto_Output"];
+                };
             };
         };
     };

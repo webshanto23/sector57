@@ -8,7 +8,7 @@ import { TokensService } from './../src/auth/tokens.service.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
 import { createTestApp } from './create-app.js';
 
-const MARK = `e2e-${Date.now()}`;
+const MARK = `e2e-auth-${Date.now()}`;
 const PASSWORD = 'correct horse battery';
 const ORIGIN = 'http://localhost:3000';
 

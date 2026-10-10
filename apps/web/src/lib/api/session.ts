@@ -1,7 +1,8 @@
 import "server-only";
 
-import { AUTH_COOKIES, type MeWithAccess } from "@s57/shared";
+import { AUTH_COOKIES, canAnywhere, type MeWithAccess, type PermissionAction, type PermissionModule } from "@s57/shared";
 import { cookies } from "next/headers";
+import { notFound } from "next/navigation";
 import { cache } from "react";
 import { api } from "./client";
 
@@ -21,3 +22,13 @@ export const getMe = cache(async (): Promise<MeWithAccess | null> => {
   if (!data) throw new Error("Could not load the current user");
   return data;
 });
+
+/**
+ * The logged-in user, if they may `action` on `module` somewhere; otherwise a 404, so a
+ * page they may not open isn't revealed. Only hides pages: the API checks every call.
+ */
+export async function requirePermission(module: PermissionModule, action: PermissionAction = "view"): Promise<MeWithAccess> {
+  const me = await getMe();
+  if (!me || !canAnywhere(me.access, module, action)) notFound();
+  return me;
+}

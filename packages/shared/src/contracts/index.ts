@@ -5,3 +5,5 @@ export * from './committee.js';
 export * from './gallery.js';
 export * from './auth.js';
 export * from './permissions.js';
+export * from './roles.js';
+export * from './users.js';

@@ -56,6 +56,8 @@ export const TIME_ZONE = 'Asia/Dhaka';
 const DATE_STYLES = {
   // ০২ নভেম্বর, ২০২৬ / 02 November 2026
   long: { day: '2-digit', month: 'long', year: 'numeric' },
+  // Tables: ১০ অক্টো, ২০২৬ / 10 Oct 2026
+  short: { day: '2-digit', month: 'short', year: 'numeric' },
   // Date tile: ২১ / 21
   day: { day: '2-digit' },
   // Date tile: ডিসেম্বর / Dec
