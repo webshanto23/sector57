@@ -73,7 +73,11 @@
   - `AuditService` (`src/audit`) writes `audit_logs`. Login events are logged; Step 5 adds the interceptor for all writes.
   - CLI (after `pnpm --filter @s57/api build`): `create-admin` (first super admin, granted the role with `is_system`) and `reset-password` (random 10-character password, logs the user out everywhere). Both prompt, so no secrets end up in the repo.
   - Web: `/login` page, placeholder `/dashboard` (change password, log out). `src/proxy.ts` refreshes an expired session for `/dashboard` before rendering, or redirects to `/login?next=`. The browser API client adds the CSRF header and retries once after a refresh.
-- `turbo.exe` is currently blocked by Windows ("Permission denied"), so `pnpm check` fails to start. Until that's fixed, run `pnpm -r --if-present run lint`, `typecheck` and `test` instead.
+- Step 4 is pushed (`step/04-auth`, awaiting Codex review and merge). Step 5 (permissions engine and dashboard shell) is built on `step/05-permissions`, branched from it, awaiting Codex review. Its rules for later steps:
+  - Every logged-in route declares `@Can(module, action)` or `@Authenticated()`; anything else is refused. Narrow queries with `scopeWhere(...)`, check single rows with `access.can(action, module, { path })`, and answer 404 for rows out of scope.
+  - `locations.path` is `/<root id>/.../<own id>/` (`locationPath` in shared); a scope covers rows whose path starts with its path. Only `LOCATION_SCOPED_MODULES` respect a scope; a scoped role grants nothing on other modules.
+  - Writes are audited by the global `AuditInterceptor`; name the entity with `@AuditEntity(...)`, or `@SkipAudit()` when the handler records its own row.
+  - New permission modules go in both `PERMISSION_MODULES` (shared) and the seed; the e2e test checks they match.
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
 
 ## Reference material

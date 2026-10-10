@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
 import { api } from "@/lib/api/client";
 
-export function LogoutButton() {
+/** `compact` shows only the icon below 600 px (the dashboard header). */
+export function LogoutButton({ compact = false }: { compact?: boolean }) {
   const t = useTranslations("Account");
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -21,9 +22,9 @@ export function LogoutButton() {
   }
 
   return (
-    <Button variant="outline" onClick={logout} disabled={pending}>
+    <Button variant="outline" onClick={logout} disabled={pending} title={compact ? t("logout") : undefined}>
       <LogOut aria-hidden />
-      {t("logout")}
+      <span className={compact ? "max-[600px]:sr-only" : undefined}>{t("logout")}</span>
     </Button>
   );
 }

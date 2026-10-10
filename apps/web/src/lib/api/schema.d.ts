@@ -318,6 +318,25 @@ export interface components {
             /** @enum {string} */
             language: "bn" | "en";
         };
+        MeWithAccessDto_Output: {
+            /** Format: uuid */
+            id: string;
+            phone: string;
+            name: string | null;
+            nameEn: string | null;
+            /** @enum {string} */
+            language: "bn" | "en";
+            access: {
+                fullAccess: boolean;
+                grants: {
+                    /** @enum {string} */
+                    module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "audit";
+                    /** @enum {string} */
+                    action: "view" | "create" | "edit" | "approve" | "delete" | "export";
+                    scopeLocationId: string | null;
+                }[];
+            };
+        };
         ChangePasswordDto: {
             currentPassword: string;
             newPassword: string;
@@ -565,7 +584,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MeDto_Output"];
+                    "application/json": components["schemas"]["MeWithAccessDto_Output"];
                 };
             };
         };

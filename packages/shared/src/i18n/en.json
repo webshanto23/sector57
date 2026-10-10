@@ -155,10 +155,8 @@
     }
   },
   "Account": {
-    "title": "Dashboard",
     "sub": "Your account",
     "signedInAs": "Logged in as",
-    "comingSoon": "Pages for members, property and website content will appear here in the next steps.",
     "logout": "Log out",
     "changePassword": "Change password",
     "changePasswordSub": "Changing your password logs you out on all your other devices.",
@@ -168,5 +166,47 @@
     "savePassword": "Save password",
     "saving": "Saving…",
     "passwordChanged": "Your password has been changed."
+  },
+  "Dashboard": {
+    "label": "Dashboard",
+    "groups": {
+      "property": "Property",
+      "people": "People",
+      "finance": "Finance",
+      "community": "Community",
+      "records": "Records",
+      "admin": "Administration"
+    },
+    "nav": {
+      "overview": "Overview",
+      "property": "Property map",
+      "units": "Units",
+      "members": "Members",
+      "moves": "Move-in and move-out",
+      "directory": "Resident directory",
+      "billing": "Bills and invoices",
+      "collect": "Cash collection",
+      "recurring": "Recurring charges",
+      "donations": "Donations",
+      "expenses": "Expenses and budget",
+      "notices": "Notices and SMS",
+      "documents": "Documents",
+      "roles": "Roles and permissions",
+      "users": "Users",
+      "website": "Website content",
+      "settings": "Society settings",
+      "audit": "Audit log",
+      "account": "My account"
+    },
+    "placeholderTitle": "This page is built in a later step",
+    "placeholderBody": "The same colours, icons and cards apply here. The list on the left shows the pages your permissions allow.",
+    "overviewSub": "Today's accounts and work at a glance",
+    "overviewTitle": "The overview comes in a later step",
+    "overviewBody": "Bills, collections and expenses will show here once they are added.",
+    "noAccess": "Your account has no page permissions yet. Please contact the office.",
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "This page does not exist, or you do not have permission to see it.",
+    "backToOverview": "Back to the overview",
+    "userMenu": "Account"
   }
 }

@@ -1,0 +1,110 @@
+import { canAnywhere, type Access, type PermissionModule } from "@s57/shared";
+import {
+  ArrowRightLeft,
+  Banknote,
+  Bell,
+  BookUser,
+  Building2,
+  FolderOpen,
+  Globe,
+  HandHeart,
+  LayoutDashboard,
+  Map,
+  Receipt,
+  Repeat,
+  ScrollText,
+  Settings,
+  ShieldCheck,
+  UserCog,
+  UserRound,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
+
+/** URL segment under /dashboard and the i18n key in `Dashboard.nav`. */
+export type NavKey =
+  | "overview"
+  | "property"
+  | "units"
+  | "members"
+  | "moves"
+  | "directory"
+  | "billing"
+  | "collect"
+  | "recurring"
+  | "donations"
+  | "expenses"
+  | "notices"
+  | "documents"
+  | "roles"
+  | "users"
+  | "website"
+  | "settings"
+  | "audit";
+
+export type NavItem = {
+  key: NavKey;
+  icon: LucideIcon;
+  /** Shown when the user may `view` this module anywhere; null for the overview (everyone). */
+  module: PermissionModule | null;
+};
+export type NavGroup = { key: "property" | "people" | "finance" | "community" | "records" | "admin" | null; items: NavItem[] };
+
+/**
+ * The mockup's `DNAV`, in its order. Items whose module is not in the permission
+ * catalogue yet (staff, facilities, work orders, helpdesk, vehicles, events, voting,
+ * board, certificates, reports) are left out until that module exists.
+ */
+export const DASHBOARD_NAV: NavGroup[] = [
+  { key: null, items: [{ key: "overview", icon: LayoutDashboard, module: null }] },
+  {
+    key: "property",
+    items: [
+      { key: "property", icon: Map, module: "locations" },
+      { key: "units", icon: Building2, module: "units" },
+    ],
+  },
+  {
+    key: "people",
+    items: [
+      { key: "members", icon: UserRound, module: "members" },
+      { key: "moves", icon: ArrowRightLeft, module: "tenancies" },
+      { key: "directory", icon: BookUser, module: "members" },
+    ],
+  },
+  {
+    key: "finance",
+    items: [
+      { key: "billing", icon: Receipt, module: "billing" },
+      { key: "collect", icon: Banknote, module: "payments" },
+      { key: "recurring", icon: Repeat, module: "billing" },
+      { key: "donations", icon: HandHeart, module: "donations" },
+      { key: "expenses", icon: Wallet, module: "expenses" },
+    ],
+  },
+  { key: "community", items: [{ key: "notices", icon: Bell, module: "notices" }] },
+  { key: "records", items: [{ key: "documents", icon: FolderOpen, module: "documents" }] },
+  {
+    key: "admin",
+    items: [
+      { key: "roles", icon: ShieldCheck, module: "roles" },
+      { key: "users", icon: UserCog, module: "users" },
+      { key: "website", icon: Globe, module: "site" },
+      { key: "settings", icon: Settings, module: "settings" },
+      { key: "audit", icon: ScrollText, module: "audit" },
+    ],
+  },
+];
+
+const allowed = (item: NavItem, access: Access) => item.module === null || canAnywhere(access, item.module);
+
+/** The nav keys this user may see, in order (empty groups dropped). Only hides links; the API checks every request. */
+export function visibleNavKeys(access: Access): NavKey[] {
+  return DASHBOARD_NAV.flatMap((group) => group.items.filter((item) => allowed(item, access)).map((item) => item.key));
+}
+
+/** The nav item for a `/dashboard/[section]` URL, if this user may open it (overview has its own route). */
+export function sectionFor(key: string, access: Access): NavItem | undefined {
+  const item = DASHBOARD_NAV.flatMap((group) => group.items).find((candidate) => candidate.key === key);
+  return item && item.module !== null && allowed(item, access) ? item : undefined;
+}

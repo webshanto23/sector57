@@ -4,6 +4,8 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 import { AppController } from './app.controller.js';
+import { AuditInterceptor } from './audit/audit.interceptor.js';
+import { AuditModule } from './audit/audit.module.js';
 import { AuthGuard } from './auth/auth.guard.js';
 import { AuthModule } from './auth/auth.module.js';
 import { CsrfGuard } from './auth/csrf.guard.js';
@@ -13,6 +15,8 @@ import { ConfigModule } from './config/config.module.js';
 import { ENV, type Env } from './config/env.js';
 import { GalleryModule } from './gallery/gallery.module.js';
 import { NoticesModule } from './notices/notices.module.js';
+import { PermissionsGuard } from './permissions/permissions.guard.js';
+import { PermissionsModule } from './permissions/permissions.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { SitePagesModule } from './site-pages/site-pages.module.js';
 import { SocietyContextGuard } from './society/society-context.guard.js';
@@ -40,19 +44,25 @@ import { SocietyModule } from './society/society.module.js';
     SitePagesModule,
     CommitteeModule,
     GalleryModule,
+    AuditModule,
     AuthModule,
+    PermissionsModule,
   ],
   controllers: [AppController],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },
     // Responses declared with @ZodResponse are parsed by their schema, so unlisted fields never leak.
     { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
+    // Every successful write by a logged-in user leaves an audit_logs row.
+    { provide: APP_INTERCEPTOR, useExisting: AuditInterceptor },
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
-    // Order matters: rate limit, attach the society, check the login (default deny), then CSRF.
+    // Order matters: rate limit, attach the society, check the login (default deny), CSRF,
+    // then the permission the route declares (default deny again: no @Can, no entry).
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useExisting: SocietyContextGuard },
     { provide: APP_GUARD, useExisting: AuthGuard },
     { provide: APP_GUARD, useExisting: CsrfGuard },
+    { provide: APP_GUARD, useExisting: PermissionsGuard },
   ],
 })
 export class AppModule {}

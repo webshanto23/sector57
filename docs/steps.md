@@ -22,8 +22,8 @@ Schema changes are additive and need Anis's approval first.
 | 1 | Public site shell, home and notices | Done | `step/01-public-site` |
 | 2 | Committee, developments and gallery | Done | `step/02-committee-gallery` |
 | – | Docker, CI draft, localhost-only ports | Done (`fix/compose-local-ports` not merged yet) | `fix/compose-local-ports` |
-| 4 | Auth (phone + password) | Built, awaiting Codex review | `step/04-auth` |
-| 5 | Permissions engine and dashboard shell | Planned | `step/05-permissions` |
+| 4 | Auth (phone + password) | Pushed, awaiting Codex review and merge | `step/04-auth` |
+| 5 | Permissions engine and dashboard shell | Built, awaiting Codex review | `step/05-permissions` |
 | 6 | Roles and users admin | Planned | `step/06-roles-users` |
 | 7 | Content CMS and file storage | Planned | `step/07-cms` |
 | 9 | Property: location tree and units | Planned | `step/09-property` |
@@ -131,14 +131,36 @@ Branch `step/04-auth`. Scope confirmed by Anis on 2026-10-10 and built the same 
 - In Docker, the API sees the web container's address instead of the visitor's, so the per-IP login limit is shared by everyone. On the droplet (Nginx → Next → API on loopback) it sees the real visitor.
 - The web proxy helpers (`src/lib/session-proxy.ts`, `src/lib/safe-next.ts`) have no unit tests because the web app has no test runner yet; the flow was checked end to end with curl.
 
-## Step 5: Permissions engine and dashboard shell — Planned
+## Step 5: Permissions engine and dashboard shell — Built, awaiting Codex review
 
-- CASL ability built from `user_roles` → `role_permissions` → `permissions`, cached per request.
-- Area scope via `user_roles.scope_location_id` and `locations.path` prefix checks.
-- `@Can('module', 'action')` guard and a query helper that adds the scope to Prisma `where` clauses.
-- Never check a role by name.
-- Audit-log interceptor on every write.
-- Dashboard layout: the mockup's `DNAV` sidebar, filtered by the user's permissions; pages not built yet show the mockup's placeholder card.
+Branch `step/05-permissions`, branched from `step/04-auth`. Scope confirmed by Anis on 2026-10-10. No schema change.
+
+**Decisions (Anis, 2026-10-10)**
+- The protected system role (`is_system`, unscoped) has full access through the flag, so modules added later need no re-grant.
+- A role limited to an area grants nothing on society-wide modules (`settings`, `users`, `roles`, `committee`, `notices`, `documents`, `site`, `gallery`, `donations`, `expenses`, `budgets`, `ledger`, `audit`). Area-bound modules: `locations`, `units`, `members`, `ownerships`, `tenancies`, `forms`, `billing`, `payments` (`LOCATION_SCOPED_MODULES` in shared).
+- Mockup nav items with no permission module yet (staff, facilities, work orders, helpdesk, vehicles, events, voting, board, certificates, reports) are hidden. Overview is shown to every logged-in user.
+
+**Shared**
+- `PERMISSION_MODULES`, `PERMISSION_ACTIONS`, `LOCATION_SCOPED_MODULES`, `accessSchema`, `meWithAccessSchema`, `canAnywhere`.
+- `locations.path` format, fixed here for Step 9: the ids from the root down to the location itself, each followed by `/` (`locationPath(parentPath, id)`), so a row is inside a scope when its path starts with the scope's path.
+
+**API (`src/permissions`, `src/audit`)**
+- `AbilityService.load` reads the caller's grants in one query; a disabled user (or a role or scope from another society) gets nothing at once, even with a valid access token. `CallerAccess` wraps a CASL ability and is built once per request.
+- Global `PermissionsGuard` after the CSRF guard: a logged-in route needs `@Can(module, action)` or `@Authenticated()`; with neither it is refused (403 `forbidden`). `/me` is `@Authenticated()`.
+- Handlers narrow queries with `scopeWhere(access, action, module, prefix => where)` (`{}` for the whole society, an OR of path prefixes otherwise, an empty OR when nothing is allowed) and check single rows with `access.can(action, module, { path })`. Out-of-scope rows should answer 404, like missing ones.
+- `GET /me` adds `access: { fullAccess, grants[] }` (scoped grants on society-wide modules are left out). The login response is unchanged.
+- Global `AuditInterceptor`: every successful POST/PUT/PATCH/DELETE by a logged-in user writes an `audit_logs` row (action from the method or `@AuditEntity(type, action)`, id from the response or `:id`). `@SkipAudit()` for handlers that record their own row; the auth routes do.
+
+**Web**
+- `/dashboard` layout: the mockup's `.dash` frame (1440 px) with the `DNAV` sidebar: 248 px with groups above 1180 px, icons only from 861 to 1180 px, a sideways strip at 860 px and below. Only items the user may `view` appear (`components/dashboard/nav.ts`).
+- `/dashboard` (overview placeholder), `/dashboard/[section]` (the mockup placeholder card; 404 when the user may not open it), `/dashboard/account` (who is logged in, change password). The header shows the user (links to the account page) and log out.
+- `getMe()` is cached per request and returns `MeWithAccess`.
+
+**Tests**
+- Unit: `CallerAccess` (system role, scoped and unscoped grants, adding up roles, unresolved scopes, unknown catalogue rows, regex-safe paths), `scopeWhere`, the guard's default deny and per-request caching, the audit interceptor.
+- e2e (`test/permissions.e2e-spec.ts`, with a test-only controller): a Block C user sees Block C and below but not Block D (list and single row); an unscoped user and the system role see all; a scope or role from another society grants nothing; a disabled user is cut off; a route without `@Can` is refused even for full access; `/me` lists the grants; writes leave audit rows and refused writes don't; the seeded catalogue equals the shared constants.
+
+**Not in this step:** role and user admin screens (Step 6), real dashboard pages, overview figures (milestone 2), a mobile drawer (the phone layout is the mockup's scrolling strip).
 
 ## Step 6: Roles and users admin — Planned
 

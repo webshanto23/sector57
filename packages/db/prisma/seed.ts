@@ -43,6 +43,8 @@ const LEVELS: { depth: number; name_bn: string; name_en: string; is_unit_level?:
 ];
 
 // Same for every society. Actions must match the check constraint on permissions.action.
+// Keep both lists equal to PERMISSION_ACTIONS / PERMISSION_MODULES in @s57/shared
+// (the API's permissions e2e test fails when they drift apart).
 const ACTIONS = ["view", "create", "edit", "approve", "delete", "export"] as const;
 const MODULES = [
   "settings",
