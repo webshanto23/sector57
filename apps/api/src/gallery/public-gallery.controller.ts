@@ -7,6 +7,7 @@ import { createDto } from '../common/create-dto.js';
 import { CurrentSociety } from '../society/current-society.decorator.js';
 import type { SocietyContext } from '../society/society.service.js';
 import { GalleryService } from './gallery.service.js';
+import { Public } from '../auth/auth.decorators.js';
 
 export class AlbumDto extends createDto(albumSchema) {}
 export class AlbumListDto extends createDto(albumListSchema) {}
@@ -14,6 +15,7 @@ export class AlbumListQueryDto extends createDto(albumListQuery) {}
 export class AlbumIdParamDto extends createDto(z.object({ id: uuid })) {}
 
 /** Photo gallery of the public website. */
+@Public()
 @Controller('public/gallery')
 // Called by the Next.js server, so every visitor shares one IP here; per-visitor limits belong in Nginx.
 @SkipThrottle()

@@ -8,6 +8,8 @@ export type ErrorBody = {
   code: string;
   message: string;
   issues?: { path: string; message: string }[];
+  /** Extra facts the client needs, such as `attemptsLeft` after a wrong password. */
+  details?: Record<string, unknown>;
 };
 
 // Prisma error codes we expect from normal use; anything else is a 500.
@@ -49,10 +51,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const statusCode = exception.getStatus();
       const res = exception.getResponse();
       const fromResponse = typeof res === 'object' && res !== null ? (res as Record<string, unknown>) : {};
+      const details = fromResponse['details'];
       return {
         statusCode,
         code: typeof fromResponse['code'] === 'string' ? fromResponse['code'] : codeFromStatus(statusCode),
         message: statusCode >= 500 ? 'Internal server error' : exception.message,
+        ...(statusCode < 500 && details && typeof details === 'object' ? { details: details as Record<string, unknown> } : {}),
       };
     }
 

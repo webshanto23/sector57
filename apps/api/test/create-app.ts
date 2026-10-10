@@ -13,7 +13,17 @@ export async function createTestApp(): Promise<INestApplication<App>> {
   const moduleFixture = await Test.createTestingModule({ imports: [AppModule] })
     .overrideProvider(ENV)
     // No media storage in tests: stored keys resolve to null, absolute URLs pass through.
-    .useValue(loadEnv({ ...process.env, NODE_ENV: 'test', LOG_LEVEL: 'warn', MEDIA_BASE_URL: '' }))
+    .useValue(
+      loadEnv({
+        ...process.env,
+        NODE_ENV: 'test',
+        LOG_LEVEL: 'warn',
+        MEDIA_BASE_URL: '',
+        WEB_ORIGIN: 'http://localhost:3000',
+        // Tests sign and check their own tokens; they never need the real secret (CI has none).
+        JWT_SECRET: 'e2e-test-secret-that-is-long-enough-123',
+      }),
+    )
     .compile();
 
   const app = moduleFixture.createNestApplication<INestApplication<App>>();

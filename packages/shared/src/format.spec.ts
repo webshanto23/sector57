@@ -43,6 +43,11 @@ describe('formatDate', () => {
     expect(formatDate('2026-11-01T20:00:00Z', 'en')).toBe('02 November 2026');
   });
 
+  it('formats a clock time in Dhaka', () => {
+    expect(formatDate('2026-10-10T09:45:00Z', 'en', 'time')).toBe('15:45');
+    expect(formatDate('2026-10-10T09:45:00Z', 'bn', 'time')).toMatch(/^৩:৪৫/);
+  });
+
   it('keeps plain dates on their calendar day', () => {
     expect(formatDate('2026-12-21', 'en', 'day')).toBe('21');
     expect(formatDate('2026-12-21', 'en', 'month')).toBe('Dec');

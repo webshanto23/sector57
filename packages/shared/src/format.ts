@@ -62,6 +62,8 @@ const DATE_STYLES = {
   month: { month: 'short' },
   // Committee term: ২০২৫ / 2025
   year: { year: 'numeric' },
+  // Clock time, e.g. when a locked login opens again: বিকাল ৩:৪৫ / 3:45 pm
+  time: { hour: 'numeric', minute: '2-digit' },
 } as const satisfies Record<string, Intl.DateTimeFormatOptions>;
 
 /**

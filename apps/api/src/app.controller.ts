@@ -6,7 +6,9 @@ import { CurrentSociety } from './society/current-society.decorator.js';
 import { NoSociety } from './society/society-context.guard.js';
 import { SocietyDto } from './society/society.dto.js';
 import type { SocietyContext } from './society/society.service.js';
+import { Public } from './auth/auth.decorators.js';
 
+@Public()
 @Controller()
 export class AppController {
   constructor(private readonly prisma: PrismaService) {}

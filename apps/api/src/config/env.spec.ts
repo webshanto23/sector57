@@ -1,6 +1,6 @@
 import { loadEnv } from './env.js';
 
-const base = { DATABASE_URL: 'postgresql://u:p@localhost:5432/db' };
+const base = { DATABASE_URL: 'postgresql://u:p@localhost:5432/db', JWT_SECRET: 'x'.repeat(32) };
 
 describe('loadEnv', () => {
   it('applies defaults', () => {
@@ -22,6 +22,11 @@ describe('loadEnv', () => {
 
   it('fails fast and names every bad variable', () => {
     expect(() => loadEnv({ PORT: 'abc' })).toThrow(/PORT[\s\S]*DATABASE_URL/);
+  });
+
+  it('requires a JWT_SECRET of at least 32 characters', () => {
+    expect(() => loadEnv({ ...base, JWT_SECRET: undefined })).toThrow(/JWT_SECRET/);
+    expect(() => loadEnv({ ...base, JWT_SECRET: 'short' })).toThrow(/JWT_SECRET/);
   });
 
   it('treats an empty MEDIA_BASE_URL as unset and rejects a non-http one', () => {
