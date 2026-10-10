@@ -8,3 +8,4 @@ export * from './permissions.js';
 export * from './roles.js';
 export * from './users.js';
 export * from './media.js';
+export * from './property.js';

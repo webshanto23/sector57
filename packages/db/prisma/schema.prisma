@@ -318,8 +318,12 @@ model locations {
   user_roles       user_roles[]
 
   @@unique([society_id, parent_id, name])
+  @@unique([society_id, path], map: "locations_path_uq")
+  @@unique([society_id, name], map: "locations_root_name_uq", where: raw("(parent_id IS NULL)"))
+  @@unique([society_id, code], map: "locations_code_uq", where: raw("(code IS NOT NULL)"))
   @@index([parent_id], map: "locations_parent_idx")
   @@index([society_id, path], map: "locations_path_idx")
+  @@index([name(ops: raw("gin_trgm_ops"))], map: "locations_name_trgm", type: Gin)
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.

@@ -500,6 +500,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/location-levels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LevelsController_list"];
+        put: operations["LevelsController_replace"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LocationsController_top"];
+        put?: never;
+        post: operations["LocationsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/locations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LocationsController_view"];
+        put?: never;
+        post?: never;
+        delete: operations["LocationsController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["LocationsController_update"];
+        trace?: never;
+    };
+    "/locations/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["LocationsController_bulk"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UnitsController_list"];
+        put?: never;
+        post: operations["UnitsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UnitsController_get"];
+        put?: never;
+        post?: never;
+        delete: operations["UnitsController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["UnitsController_update"];
+        trace?: never;
+    };
+    "/units/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UnitsController_bulk"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -942,6 +1054,185 @@ export interface components {
         };
         PasswordResetDto_Output: {
             temporaryPassword: string;
+        };
+        LocationLevelListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                depth: number;
+                nameBn: string;
+                nameEn: string | null;
+                isUnitLevel: boolean;
+                locationCount: number;
+            }[];
+        };
+        LevelsInputDto: {
+            levels: {
+                id: string | null;
+                nameBn: string;
+                nameEn?: string | null;
+            }[];
+        };
+        LocationViewDto_Output: {
+            location: {
+                /** Format: uuid */
+                id: string;
+                parentId: string | null;
+                name: string;
+                code: string | null;
+                /** Format: uuid */
+                levelId: string;
+                depth: number;
+                levelBn: string;
+                levelEn: string | null;
+                isUnit: boolean;
+                isActive: boolean;
+                childCount: number;
+                unitCount: number;
+            } | null;
+            breadcrumb: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                levelBn: string;
+                levelEn: string | null;
+                open: boolean;
+            }[];
+            children: {
+                /** Format: uuid */
+                id: string;
+                parentId: string | null;
+                name: string;
+                code: string | null;
+                /** Format: uuid */
+                levelId: string;
+                depth: number;
+                levelBn: string;
+                levelEn: string | null;
+                isUnit: boolean;
+                isActive: boolean;
+                childCount: number;
+                unitCount: number;
+            }[];
+            can: {
+                create: boolean;
+                createUnit: boolean;
+                edit: boolean;
+                delete: boolean;
+            };
+        };
+        LocationCreateDto: {
+            parentId: string | null;
+            /** Format: uuid */
+            levelId: string;
+            name: string;
+            code?: string | null;
+        };
+        LocationBulkDto: {
+            parentId: string | null;
+            /** Format: uuid */
+            levelId: string;
+            names: string[];
+        };
+        BulkResultDto_Output: {
+            created: number;
+        };
+        LocationUpdateDto: {
+            name?: string;
+            code?: string | null;
+            isActive?: boolean;
+        };
+        UnitListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                parentId: string;
+                name: string;
+                code: string | null;
+                address: string[];
+                /** @enum {string} */
+                unitType: "residential" | "shop" | "office" | "warehouse" | "other";
+                sizeSqft: string | null;
+                /** @enum {string} */
+                billTo: "owner" | "renter";
+                /** @enum {string} */
+                occupancy: "owner_occupied" | "rented" | "vacant";
+                isActive: boolean;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                total: number;
+                owner_occupied: number;
+                rented: number;
+                vacant: number;
+            };
+        };
+        UnitDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            parentId: string;
+            name: string;
+            code: string | null;
+            address: string[];
+            /** @enum {string} */
+            unitType: "residential" | "shop" | "office" | "warehouse" | "other";
+            sizeSqft: string | null;
+            /** @enum {string} */
+            billTo: "owner" | "renter";
+            /** @enum {string} */
+            occupancy: "owner_occupied" | "rented" | "vacant";
+            isActive: boolean;
+            breadcrumb: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                levelBn: string;
+                levelEn: string | null;
+                open: boolean;
+            }[];
+            can: {
+                edit: boolean;
+                delete: boolean;
+            };
+        };
+        UnitCreateDto: {
+            /** Format: uuid */
+            parentId: string;
+            name: string;
+            code?: string | null;
+            /** @enum {string} */
+            unitType: "residential" | "shop" | "office" | "warehouse" | "other";
+            sizeSqft?: string | null;
+            /** @enum {string} */
+            billTo: "owner" | "renter";
+            /** @enum {string} */
+            occupancy: "owner_occupied" | "rented" | "vacant";
+        };
+        UnitBulkDto: {
+            /** Format: uuid */
+            parentId: string;
+            names: string[];
+            /** @enum {string} */
+            unitType: "residential" | "shop" | "office" | "warehouse" | "other";
+            sizeSqft?: string | null;
+            /** @enum {string} */
+            billTo: "owner" | "renter";
+        };
+        UnitUpdateDto: {
+            name?: string;
+            code?: string | null;
+            isActive?: boolean;
+            /** @enum {string} */
+            unitType?: "residential" | "shop" | "office" | "warehouse" | "other";
+            sizeSqft?: string | null;
+            /** @enum {string} */
+            billTo?: "owner" | "renter";
+            /** @enum {string} */
+            occupancy?: "owner_occupied" | "rented" | "vacant";
         };
     };
     responses: never;
@@ -1998,6 +2289,315 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PasswordResetDto_Output"];
+                };
+            };
+        };
+    };
+    LevelsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationLevelListDto_Output"];
+                };
+            };
+        };
+    };
+    LevelsController_replace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LevelsInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationLevelListDto_Output"];
+                };
+            };
+        };
+    };
+    LocationsController_top: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationViewDto_Output"];
+                };
+            };
+        };
+    };
+    LocationsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocationCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationViewDto_Output"];
+                };
+            };
+        };
+    };
+    LocationsController_view: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationViewDto_Output"];
+                };
+            };
+        };
+    };
+    LocationsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LocationsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocationUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationViewDto_Output"];
+                };
+            };
+        };
+    };
+    LocationsController_bulk: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocationBulkDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResultDto_Output"];
+                };
+            };
+        };
+    };
+    UnitsController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                areaId?: string;
+                unitType?: "residential" | "shop" | "office" | "warehouse" | "other";
+                occupancy?: "owner_occupied" | "rented" | "vacant";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitListDto_Output"];
+                };
+            };
+        };
+    };
+    UnitsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnitCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitDetailDto_Output"];
+                };
+            };
+        };
+    };
+    UnitsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitDetailDto_Output"];
+                };
+            };
+        };
+    };
+    UnitsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UnitsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnitUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitDetailDto_Output"];
+                };
+            };
+        };
+    };
+    UnitsController_bulk: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnitBulkDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResultDto_Output"];
                 };
             };
         };

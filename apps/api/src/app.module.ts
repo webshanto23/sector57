@@ -18,6 +18,7 @@ import { NoticesModule } from './notices/notices.module.js';
 import { PermissionsGuard } from './permissions/permissions.guard.js';
 import { PermissionsModule } from './permissions/permissions.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { PropertyModule } from './property/property.module.js';
 import { RolesModule } from './roles/roles.module.js';
 import { SitePagesModule } from './site-pages/site-pages.module.js';
 import { SocietyContextGuard } from './society/society-context.guard.js';
@@ -53,6 +54,7 @@ import { UsersModule } from './users/users.module.js';
     PermissionsModule,
     RolesModule,
     UsersModule,
+    PropertyModule,
   ],
   controllers: [AppController],
   providers: [

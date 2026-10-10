@@ -26,7 +26,7 @@ Schema changes are additive and need Anis's approval first.
 | 5 | Permissions engine and dashboard shell | Built, awaiting Codex review | `step/05-permissions` |
 | 6 | Roles and users admin | Built, awaiting Codex review | `step/06-roles-users` |
 | 7 | Content CMS and file storage | Built, awaiting Codex review | `step/07-cms` |
-| 9 | Property: location tree and units | Planned | `step/09-property` |
+| 9 | Property: location tree and units | Built, awaiting Codex review | `step/09-property` |
 | 10 | Members | Planned | `step/10-members` |
 | 3 + 8 | Public member forms and office review | Planned (last in milestone 1) | `step/03-forms` |
 | M2 | Billing, cash collection, receipts, finance | Later | — |
@@ -250,13 +250,50 @@ Branch `step/07-cms`, branched from `step/06-roles-users`. Scope confirmed by An
 
 **Not in this step:** SMS sending and `send_sms`, notice audience by area (after Step 9), the `documents` attachments UI, a Spaces driver, drag-and-drop ordering, rich text, page titles (fixed per page), cleaning up orphaned files left by a crash between upload and save.
 
-## Step 9: Property — Planned
+## Step 9: Property — Built, awaiting Codex review
 
-- Location levels config per society (`location_levels`).
-- Location tree browser and editor (the mockup's `property` view): sector > block > road > plot > building > storey > unit.
-- Units list and editor (`units`, the mockup's `units` view).
+Branch `step/09-property`, branched from `step/07-cms`. Scope confirmed by Anis on 2026-10-10.
 
-**Open decision:** bulk import of the existing blocks, roads and plots (CSV or spreadsheet), or enter them by hand?
+**Decisions (Anis, 2026-10-10)**
+- No spreadsheet import (there is no Excel data yet). Instead an "add many" generator: a name prefix, a number range and optional letters (`Road 1` to `Road 24`, `Flat 1A` to `Flat 6D`), in Bangla or ASCII digits, up to 300 at a time.
+- Levels may be skipped: a location may sit at any level deeper than its parent (a plot can hold units directly, a building can hold flats without storeys).
+- Migration `3_property` approved: unique `(society_id, path)`; unique top-level names per society (the old unique let null parents repeat); unique holding `code` per society when set; trigram index on `locations.name`.
+- Moving a branch to another parent comes later (it changes who can see it, since scope is by path).
+
+**Schema (migration `3_property`)**
+- The four indexes above, plus an ICU collation `natural_sort` (`und-u-kn`) on `locations.name`, so `ORDER BY name` gives রোড ১, রোড ২, রোড ১০ (and Road 2 before Road 10). The collation is deterministic, so the unique indexes still work. For Anis: this changes the column's collation (not in the approved list); it needs a Postgres built with ICU (FlyEnv and the Docker image both are).
+- `prisma migrate dev` cannot create a shadow database with the dev user, so the SQL was written by hand and applied with `migrate deploy`; `prisma migrate diff` against the schema shows no drift.
+
+**Rules**
+- The last level always holds the units. Locations of that level are managed only through `/units` (a `locations` row plus a `units` row, written in one transaction); `/locations` refuses them (404 on change, 400 `invalid_level` on create).
+- A new location's level must be deeper than its parent's and not the unit level. Nothing goes under a unit or an inactive location (409 `parent_inactive`).
+- Names are unique under one parent (409 `location_name_taken`; a bulk add names the clashes in `details.names` and adds nothing); holding codes are unique in the society (409 `location_code_taken`).
+- Delete only an empty location that nothing refers to: 409 `location_has_children`, or `location_in_use` when a role scope, ownership, tenancy, bill or notice points at it. Otherwise make it inactive.
+- Levels: names can change; a level in use can't be removed or moved past another level in use; the unit level stays last while it holds units (409 `level_in_use`). Unused levels can be added, removed and moved.
+- Scope: a scoped caller's top of the map is their own areas. Breadcrumbs name the ancestors above their area but don't link them. Adding at the top needs `locations.create` for the whole society. Out-of-scope or other-society rows answer 404.
+- Unit addresses leave out the society's top-level location when there is exactly one, since every address would start with it.
+
+**Shared (`contracts/property.ts`)**
+- `UNIT_TYPES`, `BILL_TO`, `OCCUPANCIES`; level, location node, breadcrumb, location view, create/update/bulk schemas; unit create/update/bulk/list/detail schemas with occupancy counts; `sizeSqftSchema` (decimal string, Bangla digits allowed); `nameRangeSchema` + `expandNames` (the generator); `digitVariants` (search either digit form).
+- `Property` messages and the new error codes in `bn.json` / `en.json`.
+
+**API (module `property`; services write their own audit rows with before and after; a bulk add writes one `bulk_create` row on the parent)**
+- `GET /location-levels` (any logged-in user), `PUT /location-levels` (`settings.edit`, the whole list).
+- `GET /locations` (the top), `GET /locations/:id` (node with counts, breadcrumb, children, what the caller may do there), `POST /locations`, `POST /locations/bulk`, `PATCH /locations/:id`, `DELETE /locations/:id` (`locations.*`).
+- `GET /units` (paged; `q` on name or code in either digit form, `areaId`, `unitType`, `occupancy`; `counts` by occupancy ignoring the occupancy filter), `GET /units/:id`, `POST /units`, `POST /units/bulk` (new units start vacant), `PATCH /units/:id`, `DELETE /units/:id` (`units.*`).
+
+**Web**
+- `/dashboard/property` and `/dashboard/property/[id]`: breadcrumb, details (name, holding number, active, delete), the children as cards with counts, and the add panel (one or many; locations or units; a preview marks names that already exist and leaves them out). "See its units" links to the filtered units list.
+- `/dashboard/property/levels` (`settings.edit`): rename, add, remove and reorder levels.
+- `/dashboard/units`: occupancy stat cards, search and filters (a plain GET form), a table that becomes cards on phones, paging, an area filter chip. `/dashboard/units/[id]`: breadcrumb and the unit form. Units are added from the map, inside a location.
+
+**Tests**
+- Shared: the generator (prefix, letters, Bangla digits and letters, limits), size parsing, NFC names, bulk duplicates, level input rules, digit variants.
+- e2e (`test/property.e2e-spec.ts`): paths and counts, natural order, bulk all-or-none with the clashing names, level depth rules and skipping, unique names and codes, delete refused with children or a role scope, inactive parent, units created and listed with counts and Bangla/ASCII search, unit edit and delete with audit rows, no unit under a unit, Block C manager vs Block D (top, single rows, create, edit, units), another society's rows and levels, permissions, and the level rules (through the service on a separate society, so the shared levels never change while other test files run).
+
+**Checked:** `pnpm check` and the whole e2e suite pass. On the dev database through the web proxy: a sector, two blocks, three roads and three flats added in bulk, then every page loaded in Bangla and English with the data in natural order; the test rows were deleted afterwards. The forms were not clicked through in a browser; that and the 375/820/1440 checks are part of the deferred visual pass.
+
+**Not in this step:** moving a branch, spreadsheet import, location attributes (land area, storeys; the `attributes` column stays `{}`), owners and renters (Step 10, which will also derive occupancy), notice audience by area, live counts on the public home page, the public address dropdowns (Step 3).
 
 ## Step 10: Members — Planned
 

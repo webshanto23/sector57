@@ -87,6 +87,11 @@
   - `MEDIA_DIR`, `MEDIA_SERVE` and `MEDIA_BASE_URL` configure storage; dev needs `MEDIA_BASE_URL=http://localhost:3000/api/media`. On the droplet Nginx serves `MEDIA_DIR` at `/media/`.
   - Dashboard saves that change public content call `refreshPublicSite()` (via `components/cms/use-save.ts`), so the site updates at once.
   - Editable site pages are listed in `EDITABLE_PAGES` / `pageContentSchemas` (shared); a new page needs an entry there and an editor under `components/cms/pages`.
+- Step 9 (property: location tree and units) is built on `step/09-property`, branched from `step/07-cms`, awaiting Codex review. Rules for later steps:
+  - Module `src/property`: `TreeService` reads the tree (`visible`, `parentFor`, `nodes` with counts, `breadcrumb`). Call `parentFor(access, societyId, parentId, module)` before adding anything under a location.
+  - The deepest level holds units: a `locations` row plus a `units` row, written together only through `UnitsService`. A location may sit at any level deeper than its parent (levels can be skipped).
+  - `locations.name` uses the ICU collation `natural_sort` (migration `3_property`), so ordering by name is natural for Bangla and ASCII digits. Holding codes and top-level names are unique per society.
+  - Searches over names should try both digit forms (`digitVariants` in shared).
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
 
 ## Reference material
