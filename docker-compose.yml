@@ -24,6 +24,8 @@ services:
     environment:
       DATABASE_URL: postgresql://sector57:sector57@db:5432/sector57_dev
       DEFAULT_SOCIETY_SLUG: sector57
+      # Signs login tokens. Put JWT_SECRET (32+ random characters) in a .env file next to this one.
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET (32+ random characters) in .env next to docker-compose.yml}
       LOG_LEVEL: info
       NODE_ENV: production
       PORT: 4000

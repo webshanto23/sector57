@@ -5,8 +5,10 @@ import { CurrentSociety } from '../society/current-society.decorator.js';
 import type { SocietyContext } from '../society/society.service.js';
 import { NoticeDto, NoticeIdParamDto, NoticeListDto, NoticeListQueryDto } from './notices.dto.js';
 import { NoticesService } from './notices.service.js';
+import { Public } from '../auth/auth.decorators.js';
 
 /** Notice board of the public website: no login, read-only. */
+@Public()
 @Controller('public/notices')
 // Called by the Next.js server, so every visitor shares one IP here; per-visitor limits belong in Nginx.
 @SkipThrottle()

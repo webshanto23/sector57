@@ -18,3 +18,5 @@ next-env.d.ts
 # OS / editor
 .DS_Store
 Thumbs.db
+
+.docs

@@ -43,15 +43,16 @@
 - Docker setup (Anis, 2026-10-08): `Dockerfile` (`api` and web targets), `docker-compose.yml` (Postgres 18, API on 4000, web on 3000) and `.dockerignore`. While the compose stack runs, it holds ports 3000 and 4000, so local `pnpm dev` servers fall back to other ports or fail to bind.
 - CI: `.github/workflows/ci.yml` is a draft that Anis owns and is finishing; don't change it unless asked. Until it works, run `pnpm check` before pushing; a `deploy.sh` script is planned.
 
-## Current state (2026-10-08)
+## Current state (2026-10-10)
 
-- Step 0 (Foundations) is committed and pushed (`step/00-foundations`). Step 1 (public site shell, home, notices) is built on `step/01-public-site`, awaiting Codex review. Visual checks at 375/820/1440 are deferred for both. Headless Chrome won't go below about 500 px wide, so use CDP viewport emulation, not `--window-size`.
+- The full step list with status and open decisions is in `docs/steps.md`; keep it updated as steps move.
+- Steps 0, 1 and 2 are merged into `main` (GitHub remote `origin`). Visual checks at 375/820/1440 are deferred for all of them. Headless Chrome won't go below about 500 px wide, so use CDP viewport emulation, not `--window-size`.
 - Step 1 adds:
   - API: `GET /public/notices` (paged, `?category=`), `GET /public/notices/:id` and `GET /public/pages/:slug` (modules `notices`, `site-pages`; public, read-only, `@SkipThrottle` because every call comes from the Next server). Migration `1_notices_public_idx`.
   - Seed: the `home` and `site` pages are created only if missing, so later edits are never overwritten. Demo notices are seeded only outside production.
   - Web: `(site)` route group with header, nav and footer; pages are cached with `revalidate = 60`.
 - Step order changed: after Step 2 comes Step 4 (auth), then 5, 6, 7, 9, 10. Public forms (Step 3) and form review (Step 8) ship together last, once the real location tree exists. Until then `/forms` is a "coming soon" page showing the office contact details from the `site` page.
-- Step 2 (committee, developments, gallery) is committed on `step/02-committee-gallery`, awaiting Codex review. It adds:
+- Step 2 (committee, developments, gallery) adds:
   - API: `GET /public/committee` (today's members in Dhaka time; only name, position and photo leave the API), `GET /public/gallery` and `GET /public/gallery/:id`.
   - `MEDIA_BASE_URL` (optional) turns stored file keys into URLs. When it's unset they resolve to null, and the site draws `art()` placeholders (`components/site/art.tsx`, all mockup scenes).
   - `@s57/db` now also exports the `Prisma` namespace, for `satisfies Prisma.xSelect`.
@@ -59,12 +60,21 @@
 - Developments are JSON in `site_pages` slug `developments` (`developmentsContentSchema`), bilingual per field, with money as decimal strings. The home page reads ongoing projects from it. They need a real `projects` table if they are ever tied to expenses.
 - Pages prerendered at build time must not fail when the API is down (`next build` in Docker has no API): fall back while `NEXT_PHASE === "phase-production-build"`, and throw at runtime so ISR keeps the last good page.
 - Notice categories are fixed keys (`NOTICE_CATEGORIES` in shared); labels live in i18n, and colour and icon in `components/site/notice-category.ts`. Home and footer content is JSON in `site_pages` (`homeContentSchema` and `siteInfoSchema` in shared), stored as `{bn, en?}`.
-- API: helmet, nestjs-pino, nestjs-zod global pipe, throttler, cookie-parser and swagger (dev only, `/docs`, JSON at `/docs/json`) are wired up. The env is validated at startup (`src/config/env.ts`), there is a global exception filter, and a `SocietyContext` guard and decorator resolve the society from `DEFAULT_SOCIETY_SLUG`. Routes: `GET /health`, `GET /society`. Auth, RBAC and feature modules are not built yet; CASL and argon2 are installed but unused.
-- Web: `next-intl` routing (`bn` at `/`, `en` at `/en/`, via `src/proxy.ts`), local Noto Bengali fonts, a theme toggle (saved in `localStorage` key `s57-theme`, otherwise follows the system), a locale switch, mockup components in `src/components/kit`, a dev-only gallery at `/dev/components`, and a typed `openapi-fetch` client (`src/lib/api`). Regenerate its types with `pnpm --filter @s57/web api:types` while the API runs. React Query, react-hook-form and TanStack Table are not used yet.
+- API: helmet, nestjs-pino, nestjs-zod global pipe, throttler, cookie-parser and swagger (dev only, `/docs`, JSON at `/docs/json`) are wired up. The env is validated at startup (`src/config/env.ts`), there is a global exception filter, and a `SocietyContext` guard and decorator resolve the society from `DEFAULT_SOCIETY_SLUG`. Routes: `GET /health`, `GET /society`. CASL is installed but unused until Step 5.
+- Web: `next-intl` routing (`bn` at `/`, `en` at `/en/`, via `src/proxy.ts`), local Noto Bengali fonts, a theme toggle (saved in `localStorage` key `s57-theme`, otherwise follows the system), a locale switch, mockup components in `src/components/kit`, a dev-only gallery at `/dev/components`, and a typed `openapi-fetch` client (`src/lib/api`). Regenerate its types with `pnpm --filter @s57/web api:types` while the API runs. react-hook-form (with `@hookform/resolvers/zod` and the shared schemas) is used by the auth forms; React Query and TanStack Table are not used yet.
 - `packages/shared`: `bn.json`/`en.json` messages, NFC helper, Bangla digits and `৳` formatting, `pick(bn, en)`, zod basics (phone, uuid, pagination) and the society contract, all with Vitest tests.
 - Setup gaps fixed on 2026-10-08: `.gitignore` (one pattern per line, `.env.example` kept), `migration_lock.toml`, an idempotent `prisma/seed.ts` (society, location levels, permission catalogue, starter roles; no users), `--config prisma7.config.ts` baked into the db scripts, `typecheck` scripts in every package, Bangla site metadata. `pnpm check` passes.
-- Git initialised 2026-10-08 (no remote yet). `packages/db/generated` is git-ignored, so a fresh clone must run `pnpm --filter @s57/db generate` before building.
-- Still open: no first super-admin user (to be created by the auth slice, not the seed). On an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
+- Git initialised 2026-10-08. `packages/db/generated` is git-ignored, so a fresh clone must run `pnpm --filter @s57/db generate` before building.
+- Step 4 (auth) is built on `step/04-auth`, awaiting Codex review. It adds:
+  - Migration `2_auth`: `user_sessions` (refresh tokens stored as SHA-256 hashes) and `users.failed_login_count` / `locked_until`.
+  - API `auth` module: `POST /auth/login`, `/auth/refresh`, `/auth/logout`, `GET /me`, `POST /me/password`. Access JWT 60 min (`jose`, HS256, `JWT_SECRET` ≥ 32 chars, required), refresh token 7 days and rotated on every use (an old token coming back revokes the whole family). 4 wrong passwords lock the account for 60 min; unknown phones get identical answers.
+  - Every route needs a login unless marked `@Public()` (global `AuthGuard`). The global `CsrfGuard` checks `Origin` against `WEB_ORIGIN` and a double-submit token (`s57_csrf` cookie echoed in `X-CSRF-Token`) on every unsafe method; `@SkipCsrf()` is for pre-login forms only. Cookie and header names are in `AUTH_COOKIES` / `CSRF_HEADER` in shared.
+  - Passwords: Node's built-in `crypto.argon2` (argon2id, PHC string format); the `argon2` npm package was removed because it doesn't build on Windows with Node 24.
+  - `AuditService` (`src/audit`) writes `audit_logs`. Login events are logged; Step 5 adds the interceptor for all writes.
+  - CLI (after `pnpm --filter @s57/api build`): `create-admin` (first super admin, granted the role with `is_system`) and `reset-password` (random 10-character password, logs the user out everywhere). Both prompt, so no secrets end up in the repo.
+  - Web: `/login` page, placeholder `/dashboard` (change password, log out). `src/proxy.ts` refreshes an expired session for `/dashboard` before rendering, or redirects to `/login?next=`. The browser API client adds the CSRF header and retries once after a refresh.
+- `turbo.exe` is currently blocked by Windows ("Permission denied"), so `pnpm check` fails to start. Until that's fixed, run `pnpm -r --if-present run lint`, `typecheck` and `test` instead.
+- Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
 
 ## Reference material
 

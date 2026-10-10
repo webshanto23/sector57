@@ -127,5 +127,46 @@
     "comingSoonTitle": "Online applications are coming soon",
     "comingSoonBody": "Membership, renter registration and other requests will soon be available here. Until then, please apply at the society office.",
     "office": "Society office"
+  },
+  "Auth": {
+    "loginTitle": "Log in",
+    "loginSub": "For the committee, office staff and members. Log in with your mobile number and password.",
+    "phone": "Mobile number",
+    "phonePlaceholder": "017XXXXXXXX",
+    "password": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "submit": "Log in",
+    "submitting": "Checking…",
+    "forgot": "Forgot your password? Contact the society office and they will give you a new one.",
+    "errors": {
+      "invalidCredentials": "Wrong mobile number or password. {count, plural, one {# attempt} other {# attempts}} left.",
+      "lastAttempt": "Wrong mobile number or password. One attempt left; after that the account is locked for 60 minutes.",
+      "locked": "This account is locked for a while after too many wrong passwords. Try again after {time}.",
+      "tooMany": "Too many tries. Wait a minute and try again.",
+      "invalidPhone": "Enter a valid mobile number (11 digits, starting with 01).",
+      "passwordRequired": "Enter your password.",
+      "passwordTooShort": "The password must be at least 8 characters.",
+      "passwordUnchanged": "The new password must be different from the current one.",
+      "passwordMismatch": "The two passwords do not match.",
+      "wrongPassword": "The current password is wrong.",
+      "sessionExpired": "Your session has ended. Please log in again.",
+      "network": "Cannot reach the server. Check your internet connection and try again."
+    }
+  },
+  "Account": {
+    "title": "Dashboard",
+    "sub": "Your account",
+    "signedInAs": "Logged in as",
+    "comingSoon": "Pages for members, property and website content will appear here in the next steps.",
+    "logout": "Log out",
+    "changePassword": "Change password",
+    "changePasswordSub": "Changing your password logs you out on all your other devices.",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Repeat the new password",
+    "savePassword": "Save password",
+    "saving": "Saving…",
+    "passwordChanged": "Your password has been changed."
   }
 }

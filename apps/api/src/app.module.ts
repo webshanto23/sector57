@@ -4,6 +4,9 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 import { AppController } from './app.controller.js';
+import { AuthGuard } from './auth/auth.guard.js';
+import { AuthModule } from './auth/auth.module.js';
+import { CsrfGuard } from './auth/csrf.guard.js';
 import { CommitteeModule } from './committee/committee.module.js';
 import { AllExceptionsFilter } from './common/all-exceptions.filter.js';
 import { ConfigModule } from './config/config.module.js';
@@ -37,6 +40,7 @@ import { SocietyModule } from './society/society.module.js';
     SitePagesModule,
     CommitteeModule,
     GalleryModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [
@@ -44,9 +48,11 @@ import { SocietyModule } from './society/society.module.js';
     // Responses declared with @ZodResponse are parsed by their schema, so unlisted fields never leak.
     { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
-    // Order matters: rate limit first, then attach the society.
+    // Order matters: rate limit, attach the society, check the login (default deny), then CSRF.
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useExisting: SocietyContextGuard },
+    { provide: APP_GUARD, useExisting: AuthGuard },
+    { provide: APP_GUARD, useExisting: CsrfGuard },
   ],
 })
 export class AppModule {}

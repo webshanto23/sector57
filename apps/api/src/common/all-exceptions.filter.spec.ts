@@ -1,4 +1,9 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { createZodDto, ZodValidationPipe } from 'nestjs-zod';
 import { z } from 'zod';
 import { AllExceptionsFilter } from './all-exceptions.filter.js';
@@ -28,6 +33,12 @@ describe('AllExceptionsFilter', () => {
       code: 'society_not_found',
       message: 'Society not found',
     });
+  });
+
+  it('passes details through on client errors only', () => {
+    const body = { code: 'invalid_credentials', message: 'Wrong phone or password', details: { attemptsLeft: 2 } };
+    expect(filter.toBody(new UnauthorizedException(body))).toEqual({ statusCode: 401, ...body });
+    expect(filter.toBody(new InternalServerErrorException({ details: { secret: 1 } }))).not.toHaveProperty('details');
   });
 
   it('derives a code from the status', () => {

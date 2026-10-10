@@ -563,6 +563,7 @@ model societies {
   society_settings        society_settings[]
   tenancies               tenancies[]
   units                   units[]
+  user_sessions           user_sessions[]
   users                   users[]
   vendors                 vendors[]
 }
@@ -646,6 +647,8 @@ model users {
   status                                  String             @default("invited")
   last_login_at                           DateTime?          @db.Timestamptz(6)
   created_at                              DateTime           @default(now()) @db.Timestamptz(6)
+  failed_login_count                      Int                @default(0) @db.SmallInt
+  locked_until                            DateTime?          @db.Timestamptz(6)
   audit_logs                              audit_logs[]
   charge_schedules                        charge_schedules[]
   documents                               documents[]
@@ -658,10 +661,30 @@ model users {
   payments                                payments[]
   user_roles_user_roles_granted_byTousers user_roles[]       @relation("user_roles_granted_byTousers")
   user_roles_user_roles_user_idTousers    user_roles[]       @relation("user_roles_user_idTousers")
+  user_sessions                           user_sessions[]
   persons                                 persons?           @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   societies                               societies          @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([society_id, phone])
+}
+
+model user_sessions {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id   String    @db.Uuid
+  user_id      String    @db.Uuid
+  family_id    String    @db.Uuid
+  token_hash   String    @unique
+  expires_at   DateTime  @db.Timestamptz(6)
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  last_used_at DateTime? @db.Timestamptz(6)
+  ip_address   String?   @db.Inet
+  user_agent   String?
+  revoked_at   DateTime? @db.Timestamptz(6)
+  societies    societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users        users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([family_id], map: "user_sessions_family_idx")
+  @@index([user_id], map: "user_sessions_user_idx", where: raw("(revoked_at IS NULL)"))
 }
 
 model vendors {

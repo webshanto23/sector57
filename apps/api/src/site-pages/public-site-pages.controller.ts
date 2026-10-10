@@ -7,11 +7,13 @@ import { createDto } from '../common/create-dto.js';
 import { CurrentSociety } from '../society/current-society.decorator.js';
 import type { SocietyContext } from '../society/society.service.js';
 import { SitePagesService } from './site-pages.service.js';
+import { Public } from '../auth/auth.decorators.js';
 
 export class SitePageDto extends createDto(sitePageSchema) {}
 export class PageSlugParamDto extends createDto(z.object({ slug: pageSlug })) {}
 
 /** Published CMS pages for the public website (home, site footer, developments ...). */
+@Public()
 @Controller('public/pages')
 // Called by the Next.js server, so every visitor shares one IP here; per-visitor limits belong in Nginx.
 @SkipThrottle()
