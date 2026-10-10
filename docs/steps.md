@@ -25,7 +25,7 @@ Schema changes are additive and need Anis's approval first.
 | 4 | Auth (phone + password) | Pushed, awaiting Codex review and merge | `step/04-auth` |
 | 5 | Permissions engine and dashboard shell | Built, awaiting Codex review | `step/05-permissions` |
 | 6 | Roles and users admin | Built, awaiting Codex review | `step/06-roles-users` |
-| 7 | Content CMS and file storage | Planned | `step/07-cms` |
+| 7 | Content CMS and file storage | Built, awaiting Codex review | `step/07-cms` |
 | 9 | Property: location tree and units | Planned | `step/09-property` |
 | 10 | Members | Planned | `step/10-members` |
 | 3 + 8 | Public member forms and office review | Planned (last in milestone 1) | `step/03-forms` |
@@ -206,15 +206,49 @@ Branch `step/06-roles-users`, branched from `step/05-permissions`. Scope confirm
 
 **Not in this step:** invites, forced password change, a user's session list, the audit log viewer, bulk import of users. The area picker lists nothing until Step 9 builds the location tree.
 
-## Step 7: Content CMS and file storage — Planned
+## Step 7: Content CMS and file storage — Built, awaiting Codex review
 
-- Storage interface: local disk now, DigitalOcean Spaces later. Sets `MEDIA_BASE_URL` for real.
-- Notices CRUD with publish date and public flag.
-- Site page editor (home, site info, developments), Bangla and English.
-- Committee terms and members.
-- Gallery albums and photo upload (resizing, file type and size limits).
+Branch `step/07-cms`, branched from `step/06-roles-users`. Scope confirmed by Anis on 2026-10-10. No schema change.
 
-**Open decision:** keep developments as JSON, or give them a `projects` table now? A table is needed if projects will ever be tied to expenses in milestone 2.
+**Decisions (Anis, 2026-10-10)**
+- Developments stay JSON in `site_pages` (slug `developments`). A `projects` table comes in milestone 2 if projects are tied to expenses; the JSON can be migrated then.
+- One branch for the whole step.
+- New dependency `sharp` (image processing, prebuilt for Windows and Linux). `docker-compose.yml` gets a `media` volume.
+
+**File storage (API `src/storage`)**
+- `FileStorage` interface (`put`, `delete`) with a local-disk driver under `MEDIA_DIR` (default `apps/api/media`, git-ignored and Docker-ignored). A Spaces driver only needs to implement the interface.
+- `MediaService.saveImage`: the upload is checked from its bytes (JPEG, PNG or WebP; anything else 415 `unsupported_image`), turned upright, stripped of EXIF (no GPS position is ever published), resized to at most 1600 px and saved as WebP, plus a 480 px thumbnail `<key>.thumb.webp`. Keys are `<society id>/<gallery|people>/<uuid>.webp`, so they can't collide or be guessed, and only keys starting with the caller's society are ever deleted.
+- Uploads are multipart field `file`, one per request, at most 10 MB (413), kept in memory (`IMAGE_UPLOAD` in shared). The permission guard runs before the file is read.
+- Serving: the API serves `MEDIA_DIR` at `/media/` when `MEDIA_SERVE` is on (default: on outside production; on in Docker). On the droplet Nginx should serve the folder at `/media/` and `MEDIA_SERVE=false`. `MEDIA_BASE_URL` is now real: `http://localhost:3000/api/media` in dev and Docker (through the web app's `/api` proxy), `https://<domain>/media` on the droplet.
+- When a photo is replaced or deleted (including a whole album), its files and thumbnail are deleted after the database change commits. A failed delete is logged, never an error.
+
+**API (all writes record their own audit rows with before and after)**
+- Notices (`notices.*`): `GET /notices` (paged; `q` title search, `category`, `status` = `published`/`scheduled`/`internal`), `GET /notices/:id`, `POST /notices`, `PUT /notices/:id` (whole notice), `DELETE /notices/:id`. The body is plain text (line breaks kept, `
+` made `
+`), never HTML. A future `publishAt` schedules a public notice; `is_public` false keeps it off the website.
+- Site pages (`site.view`, `site.edit`): `GET /site-pages/:slug` and `PUT /site-pages/:slug` for `home`, `site` and `developments` only (`EDITABLE_PAGES`). The content is NFC-normalised and trimmed, then checked against the page's schema (400 `validation_failed` with paths like `content.bn.phone`). Saving publishes the page and creates it when missing.
+- Committee (`committee.*`): `GET /committee/members` (every term), `GET`, `POST`, `PUT`, `DELETE /committee/members/:id`, `POST` / `DELETE /committee/members/:id/photo`. Adding reuses the society's person with the same phone (their stored names are kept) or creates one; editing changes the linked person's names; removing a seat keeps the person. The portrait is `persons.photo_url`.
+- Gallery (`gallery.*`): `GET /gallery/albums` (drafts too), `GET`, `POST`, `PUT`, `DELETE /gallery/albums/:id`; `POST /gallery/albums/:id/photos` (needs `gallery.create`; optional `captionBn`/`captionEn` fields; 409 `album_full` past 300); `PUT /gallery/albums/:id/photo-order` (every photo once, else 400 `invalid_order`); `PATCH` / `DELETE /gallery/photos/:id`. Photos belong to a society through their album. The public album cover now uses the thumbnail.
+
+**Web**
+- `/dashboard/notices`: search, category and status filters, the table that becomes cards on phones, paging. `/dashboard/notices/new` and `/dashboard/notices/[id]`: Bangla and English cards, category, "show on the website", publish time in Dhaka time (`datetime-local`), delete.
+- `/dashboard/website` with tabs (each shown only with its module's `view`; the sidebar item shows for any of `site`, `committee`, `gallery`):
+  - Pages: cards for the three pages, and `/dashboard/website/pages/[slug]` editors. Home and site details have a Bangla card and an English card behind "Add an English version" (English starts as a copy of the Bangla); lists (figures, events, emergency numbers, projects) have add, remove, move up and down. Stored content that no longer matches its schema opens empty with a warning.
+  - Committee: seats grouped by term (current and upcoming marked), add and edit inline, standard position or a custom title, portrait upload and removal.
+  - Gallery: album cards with cover and draft/published chip, new album inline; the album page has details, delete, and the photo grid (multi-select upload sent one file at a time with progress, captions, move earlier/later, delete; the first photo is the cover).
+- After every save a server action (`lib/actions/public-site.ts`) revalidates the `[locale]` layout, so the public site shows the change at once instead of within 60 seconds.
+- `lib/api/upload.ts` sends multipart uploads with the CSRF header and the same refresh-and-retry as the typed client. Files are checked for type and size in the browser first.
+- Dates and times: the dashboard's `stamp` date style is 24-hour, so Bangla shows `১৬:৩০` rather than "PM".
+
+**Tests**
+- Unit: storage keys and path traversal, the local driver, image processing (formats, resizing, no enlarging, EXIF and orientation, fake and truncated files), `MediaService` (thumbnail clean-up, only own keys deleted), `thumbKey`, the env settings, the shared contracts (`cms.spec.ts`).
+- e2e (`test/cms.e2e-spec.ts`, uploads into a temporary folder): a scheduled notice stays off the website until its time; an internal one never shows; per-action permissions; another society's notices, seats, albums and photos answer 404 and stay untouched; page content is NFC-normalised, validated with field paths, and shown publicly; seats reuse a person by phone; portraits are stored, replaced and deleted with their files; non-images 415, missing file 400, over 10 MB 413; an upload without permission is refused; albums go from draft to published with ordered, captioned photos and are deleted with their files; audit rows for every write.
+
+**Checked:** `pnpm check`, the e2e suite (92 tests) and `next build` pass. All new pages render with real data in Bangla and English (curl as the dev admin). An upload through the web proxy was resized to 1600 px, stored without EXIF, served at `/api/media/...` and deleted with its album. The forms were not clicked through in a browser; that and the 375/820/1440 checks are part of the deferred visual pass.
+
+**To do on each machine:** add `MEDIA_BASE_URL=http://localhost:3000/api/media` to `apps/api/.env` (see `.env.example`), or uploaded photos show as placeholders.
+
+**Not in this step:** SMS sending and `send_sms`, notice audience by area (after Step 9), the `documents` attachments UI, a Spaces driver, drag-and-drop ordering, rich text, page titles (fixed per page), cleaning up orphaned files left by a crash between upload and save.
 
 ## Step 9: Property — Planned
 

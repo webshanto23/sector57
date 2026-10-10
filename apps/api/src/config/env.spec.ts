@@ -37,4 +37,12 @@ describe('loadEnv', () => {
   it('rejects a non-postgres database url', () => {
     expect(() => loadEnv({ DATABASE_URL: 'mysql://localhost/db' })).toThrow(/DATABASE_URL/);
   });
+
+  it('reads the media settings', () => {
+    expect(loadEnv(base).MEDIA_DIR).toBe('media');
+    expect(loadEnv(base).MEDIA_SERVE).toBeUndefined();
+    expect(loadEnv({ ...base, MEDIA_SERVE: 'false' }).MEDIA_SERVE).toBe(false);
+    expect(loadEnv({ ...base, MEDIA_SERVE: 'true', MEDIA_DIR: '/srv/media' })).toMatchObject({ MEDIA_SERVE: true, MEDIA_DIR: '/srv/media' });
+    expect(() => loadEnv({ ...base, MEDIA_SERVE: 'maybe' })).toThrow(/MEDIA_SERVE/);
+  });
 });

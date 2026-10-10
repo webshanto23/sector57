@@ -22,6 +22,7 @@ import { RolesModule } from './roles/roles.module.js';
 import { SitePagesModule } from './site-pages/site-pages.module.js';
 import { SocietyContextGuard } from './society/society-context.guard.js';
 import { SocietyModule } from './society/society.module.js';
+import { StorageModule } from './storage/storage.module.js';
 import { UsersModule } from './users/users.module.js';
 
 @Module({
@@ -41,6 +42,7 @@ import { UsersModule } from './users/users.module.js';
     // Global default; sensitive routes (login, forms) set tighter limits with @Throttle.
     ThrottlerModule.forRoot({ throttlers: [{ name: 'default', ttl: 60_000, limit: 120 }] }),
     PrismaModule,
+    StorageModule,
     SocietyModule,
     NoticesModule,
     SitePagesModule,

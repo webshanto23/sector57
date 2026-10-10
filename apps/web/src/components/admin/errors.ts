@@ -8,6 +8,12 @@ const KNOWN = [
   "last_admin",
   "phone_taken",
   "invalid_assignment",
+  "validation_failed",
+  "unsupported_image",
+  "file_required",
+  "payload_too_large",
+  "album_full",
+  "invalid_order",
 ] as const;
 type KnownCode = (typeof KNOWN)[number];
 
@@ -21,6 +27,8 @@ export function errorMessageKey(error: unknown): `Admin.errors.${KnownCode}` | "
 
 /** The message key for a zod issue on a form field (the shared schemas use these codes). */
 export function fieldMessageKey(message: string | undefined) {
-  if (message === "invalid_phone" || message === "invalid_email") return `Admin.errors.${message}` as const;
+  if (message === "invalid_phone" || message === "invalid_email" || message === "term_end_before_start") {
+    return `Admin.errors.${message}` as const;
+  }
   return "Admin.errors.required" as const;
 }

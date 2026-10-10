@@ -68,6 +68,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/notices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["NoticesController_list"];
+        put?: never;
+        post: operations["NoticesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notices/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["NoticesController_get"];
+        put: operations["NoticesController_update"];
+        post?: never;
+        delete: operations["NoticesController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/public/pages/{slug}": {
         parameters: {
             query?: never;
@@ -77,6 +109,22 @@ export interface paths {
         };
         get: operations["PublicSitePagesController_get"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/site-pages/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SitePagesController_get"];
+        put: operations["SitePagesController_save"];
         post?: never;
         delete?: never;
         options?: never;
@@ -95,6 +143,54 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/committee/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CommitteeController_list"];
+        put?: never;
+        post: operations["CommitteeController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/committee/members/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CommitteeController_get"];
+        put: operations["CommitteeController_update"];
+        post?: never;
+        delete: operations["CommitteeController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/committee/members/{id}/photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CommitteeController_setPhoto"];
+        delete: operations["CommitteeController_removePhoto"];
         options?: never;
         head?: never;
         patch?: never;
@@ -130,6 +226,86 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/gallery/albums": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GalleryController_list"];
+        put?: never;
+        post: operations["GalleryController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/gallery/albums/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GalleryController_get"];
+        put: operations["GalleryController_update"];
+        post?: never;
+        delete: operations["GalleryController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/gallery/albums/{id}/photos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["GalleryController_addPhoto"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/gallery/albums/{id}/photo-order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["GalleryController_reorder"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/gallery/photos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["GalleryController_removePhoto"];
+        options?: never;
+        head?: never;
+        patch: operations["GalleryController_updatePhoto"];
         trace?: never;
     };
     "/auth/login": {
@@ -365,6 +541,54 @@ export interface components {
             /** Format: date-time */
             publishAt: string;
         };
+        NoticeAdminListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                titleBn: string;
+                titleEn: string | null;
+                bodyBn: string;
+                bodyEn: string | null;
+                /** @enum {string} */
+                category: "billing" | "maintenance" | "agm" | "security" | "development" | "general";
+                /** Format: date-time */
+                publishAt: string;
+                isPublic: boolean;
+                /** @enum {string} */
+                status: "published" | "scheduled" | "internal";
+                createdByName: string | null;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+        };
+        NoticeAdminDto_Output: {
+            /** Format: uuid */
+            id: string;
+            titleBn: string;
+            titleEn: string | null;
+            bodyBn: string;
+            bodyEn: string | null;
+            /** @enum {string} */
+            category: "billing" | "maintenance" | "agm" | "security" | "development" | "general";
+            /** Format: date-time */
+            publishAt: string;
+            isPublic: boolean;
+            /** @enum {string} */
+            status: "published" | "scheduled" | "internal";
+            createdByName: string | null;
+        };
+        NoticeInputDto: {
+            titleBn: string;
+            titleEn?: string | null;
+            bodyBn: string;
+            bodyEn?: string | null;
+            /** @enum {string} */
+            category: "billing" | "maintenance" | "agm" | "security" | "development" | "general";
+            isPublic: boolean;
+            /** Format: date-time */
+            publishAt: string;
+        };
         SitePageDto_Output: {
             slug: string;
             titleBn: string;
@@ -374,6 +598,19 @@ export interface components {
             };
             /** Format: date-time */
             updatedAt: string;
+        };
+        SitePageAdminDto_Output: {
+            /** @enum {string} */
+            slug: "home" | "site" | "developments";
+            content: {
+                [key: string]: unknown;
+            } | null;
+            updatedAt: string | null;
+        };
+        SitePageInputDto: {
+            content: {
+                [key: string]: unknown;
+            };
         };
         CommitteeDto_Output: {
             termStart: string | null;
@@ -386,6 +623,57 @@ export interface components {
                 position: string;
                 photoUrl: string | null;
             }[];
+        };
+        CommitteeSeatListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                personId: string;
+                nameBn: string;
+                nameEn: string | null;
+                phone: string | null;
+                position: string;
+                sortOrder: number;
+                /** Format: date */
+                termStart: string;
+                termEnd: string | null;
+                photoUrl: string | null;
+            }[];
+        };
+        CommitteeSeatDto_Output: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            personId: string;
+            nameBn: string;
+            nameEn: string | null;
+            phone: string | null;
+            position: string;
+            sortOrder: number;
+            /** Format: date */
+            termStart: string;
+            termEnd: string | null;
+            photoUrl: string | null;
+        };
+        CommitteeSeatCreateDto: {
+            nameBn: string;
+            nameEn?: string | null;
+            position: string;
+            sortOrder: number;
+            /** Format: date */
+            termStart: string;
+            termEnd?: string | null;
+            phone?: string | null;
+        };
+        CommitteeSeatUpdateDto: {
+            nameBn: string;
+            nameEn?: string | null;
+            position: string;
+            sortOrder: number;
+            /** Format: date */
+            termStart: string;
+            termEnd?: string | null;
         };
         AlbumListDto_Output: {
             items: {
@@ -416,6 +704,60 @@ export interface components {
                 captionBn: string | null;
                 captionEn: string | null;
             }[];
+        };
+        AlbumAdminListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                titleBn: string;
+                titleEn: string | null;
+                eventDate: string | null;
+                photoCount: number;
+                coverUrl: string | null;
+                isPublished: boolean;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+        };
+        AlbumAdminDto_Output: {
+            /** Format: uuid */
+            id: string;
+            titleBn: string;
+            titleEn: string | null;
+            eventDate: string | null;
+            photoCount: number;
+            coverUrl: string | null;
+            isPublished: boolean;
+            photos: {
+                /** Format: uuid */
+                id: string;
+                url: string | null;
+                captionBn: string | null;
+                captionEn: string | null;
+                thumbUrl: string | null;
+            }[];
+        };
+        AlbumInputDto: {
+            titleBn: string;
+            titleEn?: string | null;
+            eventDate?: string | null;
+            isPublished: boolean;
+        };
+        PhotoAdminDto_Output: {
+            /** Format: uuid */
+            id: string;
+            url: string | null;
+            captionBn: string | null;
+            captionEn: string | null;
+            thumbUrl: string | null;
+        };
+        PhotoOrderDto: {
+            photoIds: string[];
+        };
+        PhotoCaptionDto: {
+            captionBn?: string | null;
+            captionEn?: string | null;
         };
         LoginDto: {
             phone: string;
@@ -690,6 +1032,119 @@ export interface operations {
             };
         };
     };
+    NoticesController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                category?: "billing" | "maintenance" | "agm" | "security" | "development" | "general";
+                status?: "published" | "scheduled" | "internal";
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoticeAdminListDto_Output"];
+                };
+            };
+        };
+    };
+    NoticesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoticeInputDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoticeAdminDto_Output"];
+                };
+            };
+        };
+    };
+    NoticesController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoticeAdminDto_Output"];
+                };
+            };
+        };
+    };
+    NoticesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoticeInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoticeAdminDto_Output"];
+                };
+            };
+        };
+    };
+    NoticesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     PublicSitePagesController_get: {
         parameters: {
             query?: never;
@@ -711,6 +1166,52 @@ export interface operations {
             };
         };
     };
+    SitePagesController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: "home" | "site" | "developments";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SitePageAdminDto_Output"];
+                };
+            };
+        };
+    };
+    SitePagesController_save: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: "home" | "site" | "developments";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SitePageInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SitePageAdminDto_Output"];
+                };
+            };
+        };
+    };
     PublicCommitteeController_current: {
         parameters: {
             query?: never;
@@ -726,6 +1227,162 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CommitteeDto_Output"];
+                };
+            };
+        };
+    };
+    CommitteeController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitteeSeatListDto_Output"];
+                };
+            };
+        };
+    };
+    CommitteeController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommitteeSeatCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitteeSeatDto_Output"];
+                };
+            };
+        };
+    };
+    CommitteeController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitteeSeatDto_Output"];
+                };
+            };
+        };
+    };
+    CommitteeController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommitteeSeatUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitteeSeatDto_Output"];
+                };
+            };
+        };
+    };
+    CommitteeController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CommitteeController_setPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitteeSeatDto_Output"];
+                };
+            };
+        };
+    };
+    CommitteeController_removePhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitteeSeatDto_Output"];
                 };
             };
         };
@@ -769,6 +1426,215 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AlbumDto_Output"];
+                };
+            };
+        };
+    };
+    GalleryController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumAdminListDto_Output"];
+                };
+            };
+        };
+    };
+    GalleryController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlbumInputDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumAdminDto_Output"];
+                };
+            };
+        };
+    };
+    GalleryController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumAdminDto_Output"];
+                };
+            };
+        };
+    };
+    GalleryController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlbumInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumAdminDto_Output"];
+                };
+            };
+        };
+    };
+    GalleryController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GalleryController_addPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    captionBn?: string;
+                    captionEn?: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotoAdminDto_Output"];
+                };
+            };
+        };
+    };
+    GalleryController_reorder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhotoOrderDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumAdminDto_Output"];
+                };
+            };
+        };
+    };
+    GalleryController_removePhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GalleryController_updatePhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhotoCaptionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotoAdminDto_Output"];
                 };
             };
         };

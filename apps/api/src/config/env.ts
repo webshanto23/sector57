@@ -14,6 +14,10 @@ const envSchema = z.object({
     .pipe(z.array(z.url())),
   // Public base URL of uploaded files (DigitalOcean Spaces CDN). Unset: stored files are not linked.
   MEDIA_BASE_URL: z.preprocess((value) => (value === '' ? undefined : value), z.url({ protocol: /^https?$/ }).optional()),
+  // Folder that holds uploaded files (local-disk storage), relative to the API's working directory.
+  MEDIA_DIR: z.string().min(1).default('media'),
+  // Serve MEDIA_DIR at /media from the API. Defaults to on outside production; on the droplet Nginx serves it.
+  MEDIA_SERVE: z.preprocess((value) => (value === '' ? undefined : value), z.stringbool().optional()),
   // Signs the 60-minute access tokens. Long and random; changing it logs everyone out within the hour.
   JWT_SECRET: z.string().min(32, 'must be at least 32 characters'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),

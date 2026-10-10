@@ -66,6 +66,8 @@ const DATE_STYLES = {
   year: { year: 'numeric' },
   // Clock time, e.g. when a locked login opens again: বিকাল ৩:৪৫ / 3:45 pm
   time: { hour: 'numeric', minute: '2-digit' },
+  // Publish time in the dashboard, 24-hour so Bangla has no "PM": ১০ অক্টো, ২০২৬, ১৬:৩০ / 10 Oct 2026, 16:30
+  stamp: { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' },
 } as const satisfies Record<string, Intl.DateTimeFormatOptions>;
 
 /**

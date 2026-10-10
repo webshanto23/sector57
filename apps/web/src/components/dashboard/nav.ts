@@ -47,6 +47,8 @@ export type NavItem = {
   icon: LucideIcon;
   /** Shown when the user may `view` this module anywhere; null for the overview (everyone). */
   module: PermissionModule | null;
+  /** Other modules whose `view` also shows the item (its page has a tab for each). */
+  also?: PermissionModule[];
 };
 export type NavGroup = { key: "property" | "people" | "finance" | "community" | "records" | "admin" | null; items: NavItem[] };
 
@@ -89,14 +91,15 @@ export const DASHBOARD_NAV: NavGroup[] = [
     items: [
       { key: "roles", icon: ShieldCheck, module: "roles" },
       { key: "users", icon: UserCog, module: "users" },
-      { key: "website", icon: Globe, module: "site" },
+      { key: "website", icon: Globe, module: "site", also: ["committee", "gallery"] },
       { key: "settings", icon: Settings, module: "settings" },
       { key: "audit", icon: ScrollText, module: "audit" },
     ],
   },
 ];
 
-const allowed = (item: NavItem, access: Access) => item.module === null || canAnywhere(access, item.module);
+const allowed = (item: NavItem, access: Access) =>
+  item.module === null || [item.module, ...(item.also ?? [])].some((module) => canAnywhere(access, module));
 
 /** The nav keys this user may see, in order (empty groups dropped). Only hides links; the API checks every request. */
 export function visibleNavKeys(access: Access): NavKey[] {

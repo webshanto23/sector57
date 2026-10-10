@@ -82,6 +82,11 @@
   - Grant limits live in `apps/api/src/permissions/grant-limits.ts`: a caller grants only what they hold society-wide, assigns a role only over an area where they hold all its permissions, and changes only users they could have given every role to. Only full access touches the system role, which is read-only.
   - Services that check grant limits or write their own audit rows take an `Actor` (`@CurrentActor()`: society, user id, access, IP). Validate `:id` with `IdParamDto` (`src/common`).
   - Dashboard pages call `requirePermission(module, action)` (404 otherwise) and load data through `src/lib/api/admin.ts`; module labels for any UI are in `Admin.modules` and the matrix order in `components/admin/modules.ts` (a new module fails to compile until it is placed there).
+- Step 7 (content CMS and file storage) is built on `step/07-cms`, branched from `step/06-roles-users`, awaiting Codex review. Rules for later steps:
+  - Store uploads only through `MediaService` (`src/storage`): `saveImage(societyId, area, buffer)` checks, re-encodes (WebP, max 1600 px, no EXIF) and keys files `<society>/<area>/<uuid>.webp` with a `.thumb.webp`; `removeQuietly` deletes after the DB change commits. Routes take files with `@ImageUpload()` + `requireUpload(file)`. Non-image documents (Step 3/8) will need their own check next to `processImage`.
+  - `MEDIA_DIR`, `MEDIA_SERVE` and `MEDIA_BASE_URL` configure storage; dev needs `MEDIA_BASE_URL=http://localhost:3000/api/media`. On the droplet Nginx serves `MEDIA_DIR` at `/media/`.
+  - Dashboard saves that change public content call `refreshPublicSite()` (via `components/cms/use-save.ts`), so the site updates at once.
+  - Editable site pages are listed in `EDITABLE_PAGES` / `pageContentSchemas` (shared); a new page needs an entry there and an editor under `components/cms/pages`.
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
 
 ## Reference material

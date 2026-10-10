@@ -28,8 +28,8 @@ function nfcDeep<T>(value: T): T {
 
 const SOCIETY = {
   slug: "sector57",
-  name_bn: nfc("উত্তরা সেক্টর ৫৭ কল্যাণ সমিতি"),
-  name_en: "Uttara Sector 57 Welfare Society",
+  name_bn: nfc("উত্তরা সেক্টর ১৫ কল্যাণ সমিতি"),
+  name_en: "Uttara Sector 15 Welfare Society",
 };
 
 const LEVELS: { depth: number; name_bn: string; name_en: string; is_unit_level?: boolean }[] = [

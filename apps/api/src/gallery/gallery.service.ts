@@ -2,7 +2,7 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '@s57/db';
 import type { Album, AlbumList, AlbumSummary, Pagination } from '@s57/shared';
 import { isoDate } from '../common/dates.js';
-import { mediaUrl } from '../common/media.js';
+import { mediaUrl, thumbKey } from '../common/media.js';
 import { ENV, type Env } from '../config/env.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -39,7 +39,8 @@ export class GalleryService {
       titleEn: row.title_en,
       eventDate: row.event_date ? isoDate(row.event_date) : null,
       photoCount: row._count.gallery_photos,
-      coverUrl: mediaUrl(row.gallery_photos[0]?.file_url, this.env.MEDIA_BASE_URL),
+      // The cover is shown small: its thumbnail when it has one.
+      coverUrl: mediaUrl(thumbKey(row.gallery_photos[0]?.file_url), this.env.MEDIA_BASE_URL),
     };
   }
 
