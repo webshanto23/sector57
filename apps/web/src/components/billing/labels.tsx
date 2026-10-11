@@ -1,14 +1,6 @@
-import { formatDate, pick, type BillToSnapshot, type InvoiceRow, type InvoiceStatus, type Locale } from "@s57/shared";
-import { getTranslations } from "next-intl/server";
-import { Chip, type Tone } from "@/components/kit";
+import { formatDate, pick, type BillToSnapshot, type InvoiceRow, type Locale } from "@s57/shared";
 
-const STATUS_TONES: Record<InvoiceStatus, Tone> = { unpaid: "warn", partial: "info", paid: "good", void: "neutral" };
-
-/** Paid, unpaid, part paid or void; an open bill past its due date shows as overdue. */
-export async function InvoiceStatusChip({ row }: { row: Pick<InvoiceRow, "status" | "overdue"> }) {
-  const t = await getTranslations("Billing.status");
-  return row.overdue ? <Chip tone="bad">{t("overdue")}</Chip> : <Chip tone={STATUS_TONES[row.status]}>{t(row.status)}</Chip>;
-}
+export { InvoiceStatusChip } from "./status-chip";
 
 type Translate = (key: string, values?: Record<string, string>) => string;
 

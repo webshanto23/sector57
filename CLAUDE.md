@@ -114,6 +114,10 @@
   - Schedules (`SchedulesService`) and runs (`BillingRunsService`) live in `src/billing`; both take `lockBillingRun(tx, societyId)` first. Period maths and area rates are the pure helpers in shared `contracts/schedules.ts` (`duePeriods`, `nextRunAfter`, `resumeFrom`, `rateFor`).
   - A run writes everything in one transaction (bills via `createMany`, numbers via `NumberingService.reserve`); inside a transaction, run queries one after another and avoid nested relation selects (they load in parallel on the one connection and trip pg's deprecation warning).
   - The nightly job (`BillingRunsJob`, 02:00 Dhaka) bills `auto` schedules for every society and is off when `NODE_ENV=test`.
+- Step 14 (cash collection, receipts, handover) is built on `step/14-collection`, branched from `step/13-recurring`, awaiting Codex review. Rules for later steps:
+  - Take money only through `PaymentsService` (`src/payments`): it locks the bills `FOR UPDATE`, settles them oldest first (`allocate` in shared), writes one `in` ledger row per fund and the payer snapshot. A payment is area-scoped through `payments.unit_id`; one with no unit needs a society-wide grant.
+  - A void reverses the bills' `paid` and the ledger rows, never deletes; after the day or once handed over it needs `payments.approve`. Handovers are confirmed by someone other than the collector.
+  - Printable documents go in `PrintSheet` (`components/print`); the print CSS in `globals.css` shows only that, on A5, in light colours.
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
 
 ## Reference material

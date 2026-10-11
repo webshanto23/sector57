@@ -210,3 +210,57 @@
 @utility num {
   font-variant-numeric: tabular-nums;
 }
+
+/*
+ * Printing a receipt or a bill (A5, half an A4 sheet). The page puts the document in a
+ * `.print-portal` straight under <body> (components/print/print-sheet.tsx); printing shows
+ * only that, always in the light colours, whatever the screen theme.
+ */
+.print-portal {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A5 portrait;
+    margin: 8mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+  }
+  body > *:not(.print-portal) {
+    display: none !important;
+  }
+  .print-portal {
+    display: block;
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f1f2ee;
+    --line: #c9cfc4;
+    --fg: #111814;
+    --muted-ink: #4a544d;
+    --accent-brand: #006a4e;
+    --accent-brand-soft: #e2efe8;
+    --sun: #c42136;
+    --bad: #c42136;
+    /* Set on :root from the tokens above, so they need restating here too. */
+    --background: #ffffff;
+    --foreground: #111814;
+    --card: #ffffff;
+    --card-foreground: #111814;
+    --muted-foreground: #4a544d;
+    --primary: #006a4e;
+    --accent: #e2efe8;
+    --accent-foreground: #006a4e;
+    --border: #c9cfc4;
+    color: var(--fg);
+    font-size: 11.5pt;
+    line-height: 1.45;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .print-portal .print-break-avoid {
+    break-inside: avoid;
+  }
+}

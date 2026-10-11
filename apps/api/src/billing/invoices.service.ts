@@ -32,6 +32,7 @@ import { isoDate, todayDate } from '../common/dates.js';
 import { isUniqueViolation } from '../common/prisma-errors.js';
 import { fundClosed, toFundOption } from '../finance/funds.service.js';
 import { NumberingService } from '../finance/numbering.service.js';
+import { SettingsService } from '../finance/settings.service.js';
 import { onlySocietyWide } from '../members/parties.service.js';
 import type { CallerAccess } from '../permissions/caller-access.js';
 import type { Actor } from '../permissions/permissions.decorators.js';
@@ -56,7 +57,8 @@ type BillSpec = {
 
 const userName = { select: { phone: true, persons: { select: { full_name: true } } } } as const;
 
-const select = {
+/** What a bill row reads; `toInvoiceRow` turns it into the contract. */
+export const invoiceSelect = {
   id: true,
   invoice_no: true,
   kind: true,
@@ -86,7 +88,8 @@ const select = {
     orderBy: [{ position: 'asc' }, { id: 'asc' }],
   },
 } satisfies Prisma.invoicesSelect;
-type Row = Prisma.invoicesGetPayload<{ select: typeof select }>;
+type Row = Prisma.invoicesGetPayload<{ select: typeof invoiceSelect }>;
+const select = invoiceSelect;
 
 const nameOf = (user: { phone: string; persons: { full_name: string } | null } | null) => (user ? (user.persons?.full_name ?? user.phone) : null);
 const toKind = (kind: string): ChargeKind => ((CHARGE_KINDS as readonly string[]).includes(kind) ? (kind as ChargeKind) : 'fee');
@@ -113,6 +116,7 @@ export class InvoicesService {
     private readonly tree: TreeService,
     private readonly billTo: BillToService,
     private readonly numbering: NumberingService,
+    private readonly settings: SettingsService,
   ) {}
 
   // -------------------------------------------------------------------------
@@ -138,7 +142,7 @@ export class InvoicesService {
     const byId = new Map(rows.map((row) => [row.id, row]));
     const items = ids.flatMap(({ id }) => {
       const row = byId.get(id);
-      return row ? [toRow(row, today)] : [];
+      return row ? [toInvoiceRow(row, today)] : [];
     });
     return { items, total: count, page, pageSize, totals };
   }
@@ -147,8 +151,16 @@ export class InvoicesService {
     const row = await this.prisma.invoices.findFirst({ where: { id, society_id: actor.societyId }, select });
     if (!row || !allowed(actor.access, 'view', pathOf(row))) throw invoiceNotFound();
     const today = isoDate(todayDate());
+    const [allocations, header] = await Promise.all([
+      this.prisma.payment_allocations.findMany({
+        where: { invoice_id: id },
+        select: { amount: true, payments: { select: { id: true, receipt_no: true, received_at: true, voided_at: true } } },
+        orderBy: [{ payments: { received_at: 'asc' } }, { payment_id: 'asc' }],
+      }),
+      this.settings.receiptHeader(actor.societyId),
+    ]);
     return {
-      ...toRow(row, today),
+      ...toInvoiceRow(row, today),
       fund: toFundOption(row.funds),
       lines: row.invoice_lines.map((line) => ({
         id: line.id,
@@ -160,6 +172,14 @@ export class InvoicesService {
       createdAt: row.created_at.toISOString(),
       createdBy: nameOf(row.users),
       void: row.voided_at && row.void_reason ? { reason: row.void_reason, at: row.voided_at.toISOString(), by: nameOf(row.users_voided) } : null,
+      payments: allocations.map((allocation) => ({
+        id: allocation.payments.id,
+        receiptNo: allocation.payments.receipt_no,
+        receivedDay: isoDate(todayDate(allocation.payments.received_at)),
+        amount: allocation.amount.toFixed(2),
+        voided: allocation.payments.voided_at !== null,
+      })),
+      header,
       can: { void: row.status === 'unpaid' && row.paid.isZero() && allowed(actor.access, 'approve', pathOf(row)) },
     };
   }
@@ -355,7 +375,7 @@ export class InvoicesService {
   /** Voids a bill nothing has been paid on. The lines stay as they were; the bill no longer counts. */
   async void(actor: Actor, id: string, input: InvoiceVoidInput): Promise<InvoiceDetail> {
     await this.prisma.$transaction(async (tx) => {
-      // A payment (Step 14) locks the bill too, so it can't land between the check and the update.
+      // A payment locks the bill too, so it can't land between the check and the update.
       await tx.$queryRaw`SELECT id FROM invoices WHERE id = ${id}::uuid AND society_id = ${actor.societyId}::uuid FOR UPDATE`;
       const row = await tx.invoices.findFirst({
         where: { id, society_id: actor.societyId },
@@ -516,7 +536,7 @@ function allowed(access: CallerAccess, action: PermissionAction, path: string | 
   return path ? access.can(action, 'billing', { path }) : access.paths(action, 'billing') === 'all';
 }
 
-function toRow(row: Row, today: string): InvoiceRow {
+export function toInvoiceRow(row: Row, today: string): InvoiceRow {
   const status = toInvoiceStatus(row.status);
   const dueDate = isoDate(row.due_date);
   const charges = new Map<string, { nameBn: string; nameEn: string | null }>();

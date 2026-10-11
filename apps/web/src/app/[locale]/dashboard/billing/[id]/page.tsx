@@ -1,10 +1,11 @@
-import { canAnywhere, formatDate, formatTaka, localDigits, pick, type InvoiceLine, type Locale } from "@s57/shared";
-import { ChevronLeft } from "lucide-react";
+import { canAnywhere, canSocietyWide, formatDate, formatTaka, localDigits, pick, type InvoiceLine, type Locale } from "@s57/shared";
+import { Banknote, ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 import { Note } from "@/components/admin/form-status";
+import { BillPrint } from "@/components/billing/bill-print";
 import { billToLabel, InvoiceStatusChip, periodLabel } from "@/components/billing/labels";
 import { VoidPanel } from "@/components/billing/void-panel";
 import { Card, DataTable, PageHeader, type Column } from "@/components/kit";
@@ -41,6 +42,9 @@ export default async function InvoicePage({ params }: PageProps<"/[locale]/dashb
   const tr = t as unknown as (key: string, values?: Record<string, string>) => string;
   const { billTo } = invoice;
   const period = periodLabel(invoice, locale, tr);
+  const open = invoice.status === "unpaid" || invoice.status === "partial";
+  // A membership bill has no unit: only a society-wide collector takes it.
+  const canCollect = billTo.unit ? canAnywhere(me.access, "payments", "create") : canSocietyWide(me.access, "payments", "create");
   const columns: Column<InvoiceLine>[] = [
     {
       key: "line",
@@ -62,10 +66,13 @@ export default async function InvoicePage({ params }: PageProps<"/[locale]/dashb
           </span>
         }
         actions={
-          <Link href="/dashboard/billing" className={buttonVariants({ variant: "outline" })}>
-            <ChevronLeft aria-hidden />
-            {t("detail.back")}
-          </Link>
+          <>
+            <Link href="/dashboard/billing" className={buttonVariants({ variant: "outline" })}>
+              <ChevronLeft aria-hidden />
+              {t("detail.back")}
+            </Link>
+            <BillPrint invoice={invoice} />
+          </>
         }
       />
 
@@ -143,8 +150,39 @@ export default async function InvoicePage({ params }: PageProps<"/[locale]/dashb
               <span className="font-semibold">{t("detail.due")}</span>
               <span className="num text-lg font-bold">{formatTaka(invoice.due, locale)}</span>
             </div>
-            {invoice.status !== "void" ? <p className="text-[12.5px] text-muted-foreground">{t("detail.paymentsLater")}</p> : null}
+            {open && canCollect ? (
+              <Link
+                href={{ pathname: "/dashboard/collect", query: billTo.unit ? { unitId: billTo.unit.id } : { personId: billTo.id } }}
+                className={`${buttonVariants()} mt-1`}
+              >
+                <Banknote aria-hidden />
+                {t("detail.collect")}
+              </Link>
+            ) : null}
           </Card>
+          {canAnywhere(me.access, "payments") ? (
+            <Card className="grid gap-2">
+              <h2 className="text-[15px]">{t("detail.payments")}</h2>
+              {invoice.payments.length === 0 ? (
+                <p className="text-[13.5px] text-muted-foreground">{t("detail.noPayments")}</p>
+              ) : (
+                <ul className="grid gap-1.5">
+                  {invoice.payments.map((payment) => (
+                    <li key={payment.id} className="flex items-center justify-between gap-2 text-[13.5px]">
+                      <Link
+                        href={`/dashboard/collect/receipts/${payment.id}`}
+                        className={`font-mono font-semibold text-primary ${payment.voided ? "line-through" : ""}`}
+                      >
+                        {payment.receiptNo}
+                      </Link>
+                      <span className="text-muted-foreground">{formatDate(payment.receivedDay, locale, "short")}</span>
+                      <span className={`num ${payment.voided ? "text-muted-foreground line-through" : ""}`}>{formatTaka(payment.amount, locale)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+          ) : null}
           {invoice.can.void ? <VoidPanel id={invoice.id} /> : null}
         </div>
       </div>

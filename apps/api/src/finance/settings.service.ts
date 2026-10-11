@@ -54,6 +54,21 @@ export class SettingsService {
     };
   }
 
+  /** What receipts and printed bills show at the top. */
+  async receiptHeader(societyId: string): Promise<ReceiptHeader> {
+    const [society, row] = await Promise.all([
+      this.prisma.societies.findUniqueOrThrow({ where: { id: societyId }, select: { name_bn: true, name_en: true, address: true, phone: true } }),
+      this.prisma.society_settings.findUnique({
+        where: { society_id_key: { society_id: societyId, key: SETTING_KEYS.receiptHeader } },
+        select: { value: true },
+      }),
+    ]);
+    const header = receiptHeaderSchema.safeParse(row?.value);
+    return header.success
+      ? header.data
+      : { nameBn: society.name_bn, nameEn: society.name_en, addressBn: society.address, addressEn: null, phone: society.phone };
+  }
+
   /** Is the society keeping facility money (mosque, gym) in funds of their own? */
   async separateFunds(societyId: string, client: Pick<PrismaService, 'society_settings'> = this.prisma): Promise<boolean> {
     const row = await client.society_settings.findUnique({

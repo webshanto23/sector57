@@ -1,8 +1,10 @@
-import { BadRequestException, HttpException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@s57/db';
 import {
   addMoney,
+  addMonths,
   duePeriods,
+  MAX_BILL_AHEAD_MONTHS,
   formatDate,
   monthOfDay,
   monthStart,
@@ -13,6 +15,8 @@ import {
   rateFor,
   skippedUnitSchema,
   UNIT_TYPES,
+  type BillAheadPreview,
+  type BillAheadResult,
   type BillingRun,
   type BillingRunList,
   type BillingRunPreview,
@@ -29,7 +33,7 @@ import { isoDate, todayDate } from '../common/dates.js';
 import { NumberingService } from '../finance/numbering.service.js';
 import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { addressOf, pathIds, TreeService } from '../property/tree.service.js';
+import { addressOf, beyondPermissions, pathIds, TreeService } from '../property/tree.service.js';
 import { BillToService, type BillableUnit, type BillToChoice } from './bill-to.service.js';
 import { lockBillingRun, societyWideBilling } from './schedules.service.js';
 
@@ -72,6 +76,9 @@ type Plan = {
   names: Map<string, string>;
 };
 
+/** A run bills every unit (`auto`: only auto schedules); bill ahead bills one unit from every schedule. */
+type PlanFor = { trigger: BillingRunTrigger; unitId?: string };
+
 const skippedList = z.array(skippedUnitSchema);
 const nameOf = (user: { phone: string; persons: { full_name: string } | null } | null) => (user ? (user.persons?.full_name ?? user.phone) : null);
 
@@ -96,7 +103,7 @@ export class BillingRunsService {
   async preview(actor: Actor, month: string): Promise<BillingRunPreview> {
     societyWideBilling(actor, 'create');
     notFuture(month);
-    const plan = await this.plan(this.prisma, actor.societyId, month, 'manual');
+    const plan = await this.plan(this.prisma, actor.societyId, month, { trigger: 'manual' });
     const parties = await this.billTo.parties(plan.lines.map((line) => line.choice.payer));
     const bySchedule = new Map<string, PlannedLine[]>();
     for (const line of plan.lines) bySchedule.set(line.schedule.id, [...(bySchedule.get(line.schedule.id) ?? []), line]);
@@ -188,6 +195,97 @@ export class BillingRunsService {
   }
 
   // -------------------------------------------------------------------------
+  // Billing one unit ahead
+  // -------------------------------------------------------------------------
+
+  /** What billing one unit up to `month` would make. Writes nothing. */
+  async billAheadPreview(actor: Actor, unitId: string, month: string): Promise<BillAheadPreview> {
+    aheadRange(month);
+    await this.billableUnit(this.prisma, actor, unitId);
+    const plan = await this.plan(this.prisma, actor.societyId, month, { trigger: 'manual', unitId });
+    const first = plan.lines[0];
+    const nobody = plan.skipped.some((skip) => skip.reason === 'no_bill_to');
+    const billTo = first
+      ? ((await this.billTo.parties([first.choice.payer])).get(first.choice.payer.id)?.name ?? null)
+      : nobody
+        ? null
+        : await this.currentBillTo(actor.societyId, unitId);
+    return {
+      month,
+      billTo,
+      invoiceCount: groupInvoices(plan.lines).size,
+      total: addMoney('0', ...plan.lines.map((line) => line.amount)),
+      lines: plan.lines.map((line) => ({
+        scheduleId: line.schedule.id,
+        nameBn: line.schedule.nameBn,
+        nameEn: line.schedule.nameEn,
+        periodStart: line.periodStart,
+        periodEnd: line.periodEnd,
+        amount: line.amount,
+      })),
+    };
+  }
+
+  /**
+   * Bills one unit's schedules up to `month`, for someone paying ahead. The schedules stay
+   * where they are: a later run finds those months already billed for this unit.
+   */
+  async billAhead(actor: Actor, unitId: string, month: string): Promise<BillAheadResult> {
+    aheadRange(month);
+    const invoices = await this.prisma.$transaction(async (tx) => {
+      await lockBillingRun(tx, actor.societyId);
+      const unit = await this.billableUnit(tx, actor, unitId);
+      if (!unit.isActive) throw new BadRequestException({ code: 'unit_inactive', message: 'This unit is inactive' });
+      const plan = await this.plan(tx, actor.societyId, month, { trigger: 'manual', unitId });
+      if (plan.skipped.some((skip) => skip.reason === 'no_bill_to')) {
+        throw new BadRequestException({ code: 'no_bill_to', message: 'Nobody owns or rents this unit, so there is no one to bill' });
+      }
+      if (plan.lines.length === 0) throw new BadRequestException({ code: 'nothing_to_bill', message: 'Nothing is due for this unit up to that month' });
+      const made = await this.writeInvoices(tx, actor.societyId, plan.lines, actor.userId, null);
+      await this.audit.record(
+        {
+          societyId: actor.societyId,
+          userId: actor.userId,
+          action: 'bill_ahead',
+          entityType: 'unit',
+          entityId: unitId,
+          ip: actor.ip,
+          after: {
+            month,
+            invoices: made.map((invoice) => invoice.invoiceNo),
+            lines: plan.lines.map((line) => ({ scheduleId: line.schedule.id, periodStart: line.periodStart, amount: line.amount })),
+          },
+        },
+        tx,
+      );
+      return made;
+    });
+    return { invoices };
+  }
+
+  /** The unit, if the caller may bill it: 404 outside their billing view, 403 without create there. */
+  private async billableUnit(client: Client, actor: Actor, unitId: string): Promise<BillableUnit> {
+    const row = await client.units.findFirst({
+      where: { location_id: unitId, society_id: actor.societyId },
+      select: { location_id: true, locations: { select: { name: true, code: true, path: true, is_active: true } } },
+    });
+    if (!row || !actor.access.can('view', 'billing', { path: row.locations.path })) {
+      throw new NotFoundException({ code: 'unit_not_found', message: 'Unit not found' });
+    }
+    if (!actor.access.can('create', 'billing', { path: row.locations.path })) throw beyondPermissions();
+    return { id: row.location_id, name: row.locations.name, code: row.locations.code, path: row.locations.path, isActive: row.locations.is_active };
+  }
+
+  /** Who the unit's bills go to now, by name (for a preview with nothing to bill). */
+  private async currentBillTo(societyId: string, unitId: string): Promise<string | null> {
+    const unit = await this.prisma.locations.findFirst({ where: { id: unitId, society_id: societyId }, select: { path: true } });
+    if (!unit) return null;
+    const choice = (await this.billTo.choose(societyId, [{ id: unitId, path: unit.path }])).get(unitId);
+    if (!choice) return null;
+    return (await this.billTo.parties([choice.payer])).get(choice.payer.id)?.name ?? null;
+  }
+
+  // -------------------------------------------------------------------------
 
   /**
    * Bills what is due in one transaction and records the run. Returns the run's id, or null
@@ -200,66 +298,16 @@ export class BillingRunsService {
       return await this.prisma.$transaction(
         async (tx) => {
           await lockBillingRun(tx, societyId);
-          const plan = await this.plan(tx, societyId, month, trigger);
+          const plan = await this.plan(tx, societyId, month, { trigger });
           const billable = plan.schedules.filter((schedule) => !schedule.blocked);
           if (trigger === 'auto' && billable.length === 0) return null;
 
-          const today = isoDate(todayDate());
           const runId = randomUUID();
-          const invoices = [...groupInvoices(plan.lines).values()];
-          const snapshots = await this.billTo.snapshots(
-            tx,
-            societyId,
-            invoices.map((lines) => ({ unit: lines[0]!.unit, choice: lines[0]!.choice })),
-          );
-          const numbers = await this.numbering.reserve(tx, societyId, 'invoice', today, invoices.length);
-          const total = addMoney('0', ...plan.lines.map((line) => line.amount));
-
           await tx.billing_runs.create({
             data: { id: runId, society_id: societyId, period: day(monthStart(month)), trigger, status: 'done', started_by: userId, started_at: startedAt },
           });
-          const invoiceRows: Prisma.invoicesCreateManyInput[] = [];
-          const lineRows: Prisma.invoice_linesCreateManyInput[] = [];
-          invoices.forEach((lines, index) => {
-            const first = lines[0]!;
-            const snapshot = snapshots.get(first.unit.id)!;
-            const id = randomUUID();
-            const dueDays = Math.min(...lines.map((line) => line.schedule.dueDays));
-            invoiceRows.push({
-              id,
-              society_id: societyId,
-              invoice_no: numbers[index]!.formatted,
-              kind: 'regular',
-              unit_id: first.unit.id,
-              bill_to_person_id: snapshot.kind === 'person' ? snapshot.id : null,
-              bill_to_organisation_id: snapshot.kind === 'organisation' ? snapshot.id : null,
-              bill_to_snapshot: snapshot,
-              fund_id: first.schedule.fundId,
-              billing_run_id: runId,
-              period_start: day(lines.map((line) => line.periodStart).sort()[0]!),
-              period_end: day(lines.map((line) => line.periodEnd).sort().at(-1)!),
-              issue_date: day(today),
-              due_date: day(addDays(today, dueDays)),
-              total: new Prisma.Decimal(addMoney(...lines.map((line) => line.amount))),
-              status: 'unpaid',
-              created_by: userId,
-            });
-            lines.forEach((line, position) =>
-              lineRows.push({
-                invoice_id: id,
-                charge_type_id: line.schedule.chargeTypeId,
-                schedule_id: line.schedule.id,
-                unit_id: line.unit.id,
-                period_start: day(line.periodStart),
-                description: `${line.schedule.nameBn} (${periodLabel(line, 'bn')})`,
-                description_en: `${line.schedule.nameEn ?? line.schedule.nameBn} (${periodLabel(line, 'en')})`,
-                amount: new Prisma.Decimal(line.amount),
-                position,
-              }),
-            );
-          });
-          if (invoiceRows.length) await tx.invoices.createMany({ data: invoiceRows });
-          if (lineRows.length) await tx.invoice_lines.createMany({ data: lineRows });
+          const made = await this.writeInvoices(tx, societyId, plan.lines, userId, runId);
+          const total = addMoney('0', ...plan.lines.map((line) => line.amount));
 
           for (const schedule of billable) {
             const next = nextRunAfter(schedule, schedule.periods);
@@ -270,7 +318,7 @@ export class BillingRunsService {
           }
           await tx.billing_runs.update({
             where: { id: runId },
-            data: { invoice_count: invoiceRows.length, total: new Prisma.Decimal(total), skipped: plan.skipped, finished_at: new Date() },
+            data: { invoice_count: made.length, total: new Prisma.Decimal(total), skipped: plan.skipped, finished_at: new Date() },
           });
           await this.audit.record(
             {
@@ -283,7 +331,7 @@ export class BillingRunsService {
               after: {
                 month,
                 trigger,
-                invoices: invoiceRows.length,
+                invoices: made.length,
                 total,
                 schedules: billable.map((schedule) => ({ id: schedule.id, periods: schedule.periods })),
                 skipped: plan.skipped.length,
@@ -316,8 +364,66 @@ export class BillingRunsService {
     }
   }
 
+  /**
+   * Writes planned lines as bills: one per unit and fund, dated today and due after the
+   * smallest `due_days` among its lines, bill-to as on the day, numbers reserved as a block.
+   */
+  private async writeInvoices(tx: Tx, societyId: string, lines: PlannedLine[], userId: string | null, runId: string | null) {
+    const today = isoDate(todayDate());
+    const invoices = [...groupInvoices(lines).values()];
+    const snapshots = await this.billTo.snapshots(
+      tx,
+      societyId,
+      invoices.map((group) => ({ unit: group[0]!.unit, choice: group[0]!.choice })),
+    );
+    const numbers = await this.numbering.reserve(tx, societyId, 'invoice', today, invoices.length);
+    const invoiceRows: (Prisma.invoicesCreateManyInput & { id: string; total: Prisma.Decimal })[] = [];
+    const lineRows: Prisma.invoice_linesCreateManyInput[] = [];
+    invoices.forEach((group, index) => {
+      const first = group[0]!;
+      const snapshot = snapshots.get(first.unit.id)!;
+      const id = randomUUID();
+      const dueDays = Math.min(...group.map((line) => line.schedule.dueDays));
+      invoiceRows.push({
+        id,
+        society_id: societyId,
+        invoice_no: numbers[index]!.formatted,
+        kind: 'regular',
+        unit_id: first.unit.id,
+        bill_to_person_id: snapshot.kind === 'person' ? snapshot.id : null,
+        bill_to_organisation_id: snapshot.kind === 'organisation' ? snapshot.id : null,
+        bill_to_snapshot: snapshot,
+        fund_id: first.schedule.fundId,
+        billing_run_id: runId,
+        period_start: day(group.map((line) => line.periodStart).sort()[0]!),
+        period_end: day(group.map((line) => line.periodEnd).sort().at(-1)!),
+        issue_date: day(today),
+        due_date: day(addDays(today, dueDays)),
+        total: new Prisma.Decimal(addMoney(...group.map((line) => line.amount))),
+        status: 'unpaid',
+        created_by: userId,
+      });
+      group.forEach((line, position) =>
+        lineRows.push({
+          invoice_id: id,
+          charge_type_id: line.schedule.chargeTypeId,
+          schedule_id: line.schedule.id,
+          unit_id: line.unit.id,
+          period_start: day(line.periodStart),
+          description: `${line.schedule.nameBn} (${periodLabel(line, 'bn')})`,
+          description_en: `${line.schedule.nameEn ?? line.schedule.nameBn} (${periodLabel(line, 'en')})`,
+          amount: new Prisma.Decimal(line.amount),
+          position,
+        }),
+      );
+    });
+    if (invoiceRows.length) await tx.invoices.createMany({ data: invoiceRows });
+    if (lineRows.length) await tx.invoice_lines.createMany({ data: lineRows });
+    return invoiceRows.map((row) => ({ id: row.id, invoiceNo: row.invoice_no, total: row.total.toFixed(2) }));
+  }
+
   /** What a run for `month` would bill now, and what it would leave out. Reads only. */
-  private async plan(client: Client, societyId: string, month: string, trigger: BillingRunTrigger): Promise<Plan> {
+  private async plan(client: Client, societyId: string, month: string, { trigger, unitId }: PlanFor): Promise<Plan> {
     const upTo = monthStart(month);
     // Flat queries, one after another: inside a transaction they share one connection, and
     // nested relations would be loaded in parallel on it.
@@ -395,7 +501,7 @@ export class BillingRunsService {
     if (active.length === 0) return { month, schedules, lines: [], skipped: [], names: new Map() };
 
     const units = await client.units.findMany({
-      where: { society_id: societyId },
+      where: { society_id: societyId, ...(unitId ? { location_id: unitId } : {}) },
       select: { location_id: true, unit_type: true, locations: { select: { name: true, code: true, path: true, is_active: true } } },
       orderBy: [{ locations: { path: 'asc' } }],
     });
@@ -520,6 +626,14 @@ function periodLabel(line: Pick<PlannedLine, 'periodStart' | 'periodEnd'>, local
   const from = formatDate(line.periodStart, locale, 'monthYear');
   const to = formatDate(line.periodEnd, locale, 'monthYear');
   return from === to ? from : `${from} – ${to}`;
+}
+
+/** Bill ahead goes from this month up to `MAX_BILL_AHEAD_MONTHS` after it. */
+function aheadRange(month: string): void {
+  const thisMonth = monthOfDay(isoDate(todayDate()));
+  if (month < thisMonth || month > monthOfDay(addMonths(monthStart(thisMonth), MAX_BILL_AHEAD_MONTHS))) {
+    throw new BadRequestException({ code: 'bill_ahead_range', message: `Only this month up to ${MAX_BILL_AHEAD_MONTHS} months ahead` });
+  }
 }
 
 function notFuture(month: string): void {

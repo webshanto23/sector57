@@ -32,7 +32,7 @@ Schema changes are additive and need Anis's approval first.
 | 11 | M2: Finance setup (funds, charge types, numbering, settings) | Done | `step/11-finance-setup` |
 | 12 | M2: Bills (invoices) and opening arrears | Done | `step/12-bills` |
 | 13 | M2: Recurring charges and billing runs | Built, awaiting Codex review | `step/13-recurring` |
-| 14 | M2: Cash collection, receipts and handover | Later | `step/14-collect` |
+| 14 | M2: Cash collection, receipts and handover | Built, awaiting Codex review | `step/14-collection` |
 | 15 | M2: Donations | Later | `step/15-donations` |
 | 16 | M2: Expenses and budgets | Later | `step/16-expenses` |
 | 17 | M2: Fund ledger and finance reports | Later | `step/17-reports` |
@@ -495,20 +495,27 @@ Built 2026-10-11 on `step/13-recurring` (branched from `main` after PR #9 and #1
 - **Tests:** shared month, catch-up, resume, rate and input tests; `billing-runs.e2e-spec.ts` in a throwaway society covers permissions (scoped roles can't manage or run, but see the bills a run made in their area), rates by building and block, unit types and areas, skip reasons, one bill per unit and fund with exact paisa, running twice, two runs at once, catch-up on an automatic run, already-billed periods, a failed run leaving nothing behind, pause and resume, and the edit rules.
 - **Not done:** a voided bill keeps its schedule line, so a run won't bill that unit and period again; the office makes a manual bill instead.
 
-### Step 14: Cash collection, receipts and handover
+### Step 14: Cash collection, receipts and handover — Built, awaiting Codex review
 
-The page the office uses most; built from the mockup's `collect` view.
+Built 2026-10-11 on `step/14-collection` (branched from `step/13-recurring`). Decided by Anis: no credit or over-payment (paying ahead means billing those months first, "Bill ahead"); receipts on A5 with an office counterfoil; no SMS (its own step once a provider is chosen).
 
-- **Take a payment** (`payments.create`): find the unit or payer (either digit form); their open invoices are listed oldest first and ticked; the amount received fills in and can be lowered, settling invoices in order (the last one may end `partial`). Saving makes the payment, its allocations, updates each invoice's `paid` and status, and writes ledger rows, all in one transaction. "Collected by" is the logged-in user.
-- **Receipt:** the mockup's receipt card, with the amount in words, printed from the browser (print CSS; no PDF library). A reprint says "Duplicate / অনুলিপি".
-- **Bill print** (decided 2026-10-11, moved here from Step 12): a "Print" button on `/dashboard/billing/[id]` using the same print layout as the receipt: receipt header, bill number, dates, payer and unit from the snapshot, lines, total in figures and words, due date, "pay in cash at the office"; void bills print with a large "Void / বাতিল" mark; follows the page language.
-- **Void** with a reason: the collector the same day before handover; after that only `payments.approve`. Voiding reverses the allocations' effect on the invoices and writes reversing ledger rows; the receipt shows "Void" on reprint.
-- **Cash in hand and handover:** the mockup's stat cards (receipts today, cash in hand). "Close day and hand over" makes a `cash_handovers` row for the collector's open payments; the treasurer (`payments.approve`, not the collector) types the amount counted and confirms. A difference is recorded with a note, never hidden.
-- **API:** `GET /collect/lookup?q=`, `POST /payments`, `GET /payments` (paged; date, collector, voided), `GET /payments/:id`, `POST /payments/:id/void`, `GET /handovers`, `POST /handovers`, `POST /handovers/:id/confirm`.
-- **Decisions:**
-  - **(decide)** Advance and over-payment. Proposal: no unallocated credit in milestone 2; the amount can't exceed what is ticked. Paying months ahead means the office bills those months first ("bill ahead" on the unit page, from the unit's schedules).
-  - **(decide)** Receipt paper: A5 / half A4 with an office counterfoil (proposal), or 80 mm thermal printers.
-  - **(decide)** The mockup's SMS receipt needs an SMS provider; proposal: leave it out of Step 14 and add SMS (receipts and notices) as its own step once a provider is chosen.
+- **Migration `9_payments`:** `payments` gets `unit_id` (null only for a membership fee), `payer_snapshot`, `note`, `voided_at`, `voided_by`, `handover_id`, `print_count`. Checks: at most one payer (Step 15 donations may be anonymous); a void has its reason, time and user, and nothing else does. New `cash_handovers` (collector, payment count, expected (frozen when confirmed), counted, note, confirmed by and at); checks that nobody confirms their own and that the confirm fields come together. Indexes for cash in hand, by date, unit, payer, handover, and `payment_allocations` by bill.
+- **Rules** (pure helpers in shared `contracts/payments.ts`, unit-tested): `allocate` settles the ticked bills oldest first (due date, bill date, number), so only the last can end `partial`; more than they owe is refused (`amount_exceeds_due`, no credit), and so is an amount that doesn't reach every ticked bill (`bill_not_reached`). `statusAfterPayment`, `collectorMayVoid`.
+- **API** (module `src/payments`; `payments.*`, area-scoped through the payment's unit; a membership fee has no unit, so only a society-wide collector takes or sees it):
+  - `GET /collect/lookup?q=|unitId=|personId=` (`payments.create`): units in the caller's area by name, code, or who their open bills went to (name or phone, either digit form), and members (society-wide only, by name, phone or number), each with open bills oldest first, what is due and the possible payers (the bills' bill-tos).
+  - `GET /collect/summary`: the caller's receipts today, cash in hand, pending handovers, and the receipt header for the live preview.
+  - `POST /payments`: one unit's or one member's ticked bills, the amount (Bangla digits fine), the payer (one of the bills' bill-tos, 400 `invalid_payer`), a note. One transaction: bills locked `FOR UPDATE` in id order and checked again (409 `invoice_changed` if one was paid or voided meanwhile), allocations, `paid` and status, `RC-NNNNN`, payer snapshot, one `in` ledger row per fund (`cash`), audit. Only `cash`.
+  - `GET /payments` (paged; `from`/`to` Dhaka days, `collectorId` or `me`, `status`, `unitId`, `personId`, `invoiceId`, `inHand`, `q`; totals in SQL), `GET /payments/:id` (allocations with the bills' lines, header, `can.void`).
+  - `POST /payments/:id/print`: counts the print; the first is the original, every later one a duplicate.
+  - `POST /payments/:id/void` (reason): the collector on the same Dhaka day while the cash is still with them; otherwise `payments.approve` there (403 `void_needs_approval`). Lowers `paid` and resets each bill's status, keeps the allocations, writes reversing ledger rows on the void day.
+  - `GET /handovers`, `GET /handovers/:id`, `POST /handovers` (all the caller's cash in hand; 400 `nothing_to_hand_over`), `POST /handovers/:id/confirm` (`payments.approve` over every payment in it; never the collector, 403 `cannot_confirm_own`; a count that differs needs a note, 400 `note_required`; freezes the expected amount and stamps `handed_over_at`). A collector sees their own handovers; an approver those whose payments all lie in their area. A void while a handover waits lowers its expected amount (the void locks the handover row).
+  - **Bill ahead** (`src/billing`, `billing.create` on the unit): `GET /units/:id/bill-ahead?month=` (preview) and `POST` (this month up to 12 ahead, 400 `bill_ahead_range`; 400 `nothing_to_bill`). Bills the unit's active schedules (manual and auto) from their `next_run_on` up to that month, one bill per fund, lines with `schedule_id`, under `lockBillingRun`. Schedules don't move on: a later run skips those months for this unit as `already_billed`. Shares the run's planning and invoice writing (`BillingRunsService.plan` with a unit, `writeInvoices`).
+  - `GET /invoices/:id` now lists its receipts and carries the receipt header for printing.
+- **Web:** `/dashboard/collect` (the mockup's split: find a unit or member, open bills ticked oldest first, amount fills in and can be lowered with the effect on each bill shown, payer, note, the live receipt; stat cards for receipts today and cash in hand; "Close day and hand over"; today's receipts; `?unitId=` / `?personId=` start there). "Save and print receipt" opens `/dashboard/collect/receipts/[id]?print=1`, which prints once. `/dashboard/collect/receipts` (filters, totals, cards on phones) and `/[id]` (receipt, settled bills, print and reprint, void). `/dashboard/collect/handovers` (waiting first; the confirm form shows the difference as it is typed). Bill pages get "Print bill", their receipts and "Take payment"; the unit's Bills panel gets "Take payment" and "Bill ahead".
+- **Printing:** `PrintSheet` portals the document under `<body>`; `@media print` in `globals.css` hides everything else, sets A5 and forces the light colours. The receipt prints the payer's copy, a cut line and the office counterfoil with signature lines, "Duplicate / অনুলিপি" from the second print and "Void / বাতিল" when void. The bill prints in the same layout with "pay in cash at the office" and a "Void" mark for void bills. Both follow the page language.
+- **Tests:** shared allocation, status, void-rule and input tests; `payments.e2e-spec.ts` in a throwaway society covers lookup scope and search, oldest-first allocation with partial, ledger rows per fund, the payer snapshot surviving a name change, exact paisa, every refusal, membership fees (society-wide only), two payments on one bill at once, gap-free concurrent receipt numbers, list scope and totals, original then duplicate prints, no delete routes, void by the collector and by an approver, handover (not your own, a difference needs a note, a void inside a pending one), the ledger matching the receipts, and bill ahead followed by a run that skips those months.
+- **For later steps:** a donation (Step 15) makes a `payments` row with no allocations and no unit, through the same numbering and receipt; its ledger row comes from the donation. Every ledger write sets `account`. Change a bill's `paid` only with the bill locked `FOR UPDATE`.
+- **Not checked yet:** the A5 print preview in a real browser, and the save, print, void and handover flow clicked through by hand; the 375/820/1440 pass stays deferred.
 
 ### Step 15: Donations
 
@@ -576,9 +583,9 @@ Online payment, bank or mobile payment entry, SMS (unless the decision above add
 | Late fees | Decided: manual fine lines only | Step 12 |
 | Per square foot rates | Decided: no; fixed amounts with rates by area | Step 13 |
 | Mid-month units and tenancies | Decided: from the next run, no part months | Step 13 |
-| Advance payments | No credit; bill ahead first | Step 14 |
-| Receipt paper | A5 with counterfoil | Step 14 |
-| SMS receipts | Separate SMS step once a provider is chosen | Step 14 |
+| Advance payments | Decided: no credit; bill ahead first | Step 14 |
+| Receipt paper | Decided: A5 with counterfoil | Step 14 |
+| SMS receipts | Decided: separate SMS step once a provider is chosen | Step 14 |
 | Public donor list | No | Step 15 |
 | `projects` table for developments | Decide with Step 16 | Step 15 |
 | Paying more than a fund holds | Refuse | Step 16 |
