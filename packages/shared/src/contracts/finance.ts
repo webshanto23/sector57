@@ -1,0 +1,145 @@
+import { z } from 'zod';
+import { moneyOrZeroSchema, optionalMoneySchema } from '../money.js';
+import { optionalText, text } from '../schemas.js';
+import { isoDay } from './members.js';
+
+// ---------------------------------------------------------------------------
+// Society settings
+// ---------------------------------------------------------------------------
+
+/**
+ * The `society_settings` keys the API knows, by their contract name. Anything else is
+ * refused. `fiscalYearStartMonth` is not here: it is the `societies` column.
+ */
+export const SETTING_KEYS = {
+  shareRentersWithThana: 'share_renters_with_thana',
+  separateFacilityFunds: 'separate_facility_funds',
+  receiptHeader: 'receipt_header',
+} as const;
+export type SettingKey = keyof typeof SETTING_KEYS;
+
+/** What a receipt prints at the top. Starts from the society's name until the office changes it. */
+export const receiptHeaderSchema = z.object({
+  nameBn: z.string(),
+  nameEn: z.string().nullable(),
+  addressBn: z.string().nullable(),
+  addressEn: z.string().nullable(),
+  phone: z.string().nullable(),
+});
+export type ReceiptHeader = z.infer<typeof receiptHeaderSchema>;
+
+export const receiptHeaderInputSchema = z.object({
+  nameBn: text(150),
+  nameEn: optionalText(150),
+  addressBn: optionalText(300),
+  addressEn: optionalText(300),
+  phone: optionalText(60),
+});
+
+/** `GET /settings`. */
+export const societySettingsSchema = z.object({
+  shareRentersWithThana: z.boolean(),
+  separateFacilityFunds: z.boolean(),
+  fiscalYearStartMonth: z.number().int().min(1).max(12),
+  /** True once the ledger has any entry: moving the year then would split vouchers and reports. */
+  fiscalYearLocked: z.boolean(),
+  receiptHeader: receiptHeaderSchema,
+});
+export type SocietySettings = z.infer<typeof societySettingsSchema>;
+
+/** `PATCH /settings`: only the keys being changed. Unknown keys are refused. */
+export const settingsInputSchema = z
+  .object({
+    shareRentersWithThana: z.boolean(),
+    separateFacilityFunds: z.boolean(),
+    fiscalYearStartMonth: z.number().int().min(1).max(12),
+    receiptHeader: receiptHeaderInputSchema,
+  })
+  .partial()
+  .strict();
+export type SettingsInput = z.infer<typeof settingsInputSchema>;
+
+// ---------------------------------------------------------------------------
+// Funds and the ledger
+// ---------------------------------------------------------------------------
+
+/** Where money in a fund sits: the office cash box or the society's bank account. */
+export const LEDGER_ACCOUNTS = ['cash', 'bank'] as const;
+export type LedgerAccount = (typeof LEDGER_ACCOUNTS)[number];
+
+/** `ledger_entries.source_type`. */
+export const LEDGER_SOURCES = ['opening', 'payment', 'donation', 'expense', 'transfer', 'adjustment'] as const;
+export type LedgerSource = (typeof LEDGER_SOURCES)[number];
+
+const amounts = z.object({ cash: z.string(), bank: z.string(), total: z.string() });
+
+export const fundSchema = z.object({
+  id: z.uuid(),
+  nameBn: z.string(),
+  nameEn: z.string().nullable(),
+  isDefault: z.boolean(),
+  closedAt: z.string().nullable(),
+  /** Decimal strings, from the ledger. */
+  balance: amounts,
+  /** The balance the fund started with, null until entered. */
+  opening: z.object({ date: z.string(), cash: z.string(), bank: z.string() }).nullable(),
+  /** The opening can be corrected only until the fund has any other entry. */
+  openingEditable: z.boolean(),
+});
+export type Fund = z.infer<typeof fundSchema>;
+
+/** `GET /funds`. With separate funds off, only the default fund exists for new bills. */
+export const fundListSchema = z.object({ items: z.array(fundSchema), separateFunds: z.boolean() });
+export type FundList = z.infer<typeof fundListSchema>;
+
+/** `POST /funds`, `PUT /funds/:id`. */
+export const fundInputSchema = z.object({ nameBn: text(100), nameEn: optionalText(100) });
+export type FundInput = z.infer<typeof fundInputSchema>;
+
+/**
+ * `PUT /funds/:id/opening`: what the fund held on the day the society started using the
+ * system, in cash and at the bank. Zero is allowed. Each change reverses the earlier rows.
+ */
+export const openingInputSchema = z.object({ date: isoDay, cash: moneyOrZeroSchema, bank: moneyOrZeroSchema });
+export type OpeningInput = z.infer<typeof openingInputSchema>;
+
+/** A fund to pick in a form. */
+export const fundOptionSchema = z.object({ id: z.uuid(), nameBn: z.string(), nameEn: z.string().nullable(), isDefault: z.boolean() });
+export type FundOption = z.infer<typeof fundOptionSchema>;
+
+// ---------------------------------------------------------------------------
+// Charge types
+// ---------------------------------------------------------------------------
+
+/** What a bill line can be. Labels live in i18n (`Finance.chargeKind.*`). Donations have their own records. */
+export const CHARGE_KINDS = ['due', 'fee', 'fine'] as const;
+export type ChargeKind = (typeof CHARGE_KINDS)[number];
+
+export const chargeTypeSchema = z.object({
+  id: z.uuid(),
+  nameBn: z.string(),
+  nameEn: z.string().nullable(),
+  kind: z.enum(CHARGE_KINDS),
+  fund: fundOptionSchema,
+  defaultAmount: z.string().nullable(),
+  archived: z.boolean(),
+});
+export type ChargeType = z.infer<typeof chargeTypeSchema>;
+
+/** `GET /charge-types`: with the open funds to choose from. */
+export const chargeTypeListSchema = z.object({
+  items: z.array(chargeTypeSchema),
+  funds: z.array(fundOptionSchema),
+  separateFunds: z.boolean(),
+});
+export type ChargeTypeList = z.infer<typeof chargeTypeListSchema>;
+
+/** `POST /charge-types`, `PUT /charge-types/:id`. With separate funds off, the fund must be the default one. */
+export const chargeTypeInputSchema = z.object({
+  nameBn: text(100),
+  nameEn: optionalText(100),
+  kind: z.enum(CHARGE_KINDS),
+  fundId: z.uuid(),
+  defaultAmount: optionalMoneySchema,
+});
+export type ChargeTypeInput = z.infer<typeof chargeTypeInputSchema>;

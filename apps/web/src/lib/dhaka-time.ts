@@ -27,3 +27,8 @@ export function fromDhakaInput(value: string): string {
 }
 
 export const DHAKA_INPUT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+
+/** Today's calendar date in Dhaka, `YYYY-MM-DD` (the value of a `date` input). */
+export function todayInDhaka(now = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: TIME_ZONE }).format(now);
+}

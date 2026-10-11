@@ -101,6 +101,11 @@
   - Documents that must not be public (deeds, NID copies, later expense vouchers) go through `PrivateFilesService` (`src/storage`) into `PRIVATE_MEDIA_DIR`, which must stay outside `MEDIA_DIR`, with a `documents` row; serve them only from a permission-checked route, never statically.
   - Approvals that create members data run in one transaction through `TenanciesService.insert` / `OwnershipsService.insert` and `PartiesService.resolvePerson`; change a submission's status only with a conditional update on the open statuses (`form_closed` otherwise).
   - A registered member is a `memberships` row (numbered per society, one active per person); owners, renters and residents are not members.
+- Step 11 (finance setup, first milestone 2 step) is built on `step/11-finance-setup`, branched from `step/03-forms`, awaiting Codex review. Rules for later steps:
+  - `ledger_entries` is append-only (trigger, migration `6_finance_setup`): correct with a reversing row (`reverses_id`), never update or delete. Each row records its `account` (`cash` or `bank`). E2e tests that write ledger rows use a throwaway society (`createTestApp([], { DEFAULT_SOCIETY_SLUG })`), since only a society delete can remove them.
+  - Draw invoice, receipt and voucher numbers only with `NumberingService.next(tx, ...)` inside the transaction that saves the record.
+  - Money crosses the API as decimal strings (`moneySchema` in shared), is written as `Prisma.Decimal` and read with `toFixed(2)`; add it with the paisa helpers (`addMoney`), never JS numbers.
+  - Society settings are typed keys (`SETTING_KEYS`); read separate funds with `SettingsService.separateFunds`. Charge type changes need a society-wide billing grant.
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
 
 ## Reference material

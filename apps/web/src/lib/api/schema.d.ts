@@ -1012,6 +1012,150 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SettingsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["SettingsController_update"];
+        trace?: never;
+    };
+    "/funds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FundsController_list"];
+        put?: never;
+        post: operations["FundsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/funds/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["FundsController_rename"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/funds/{id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["FundsController_close"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/funds/{id}/opening": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["FundsController_setOpening"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/charge-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ChargeTypesController_list"];
+        put?: never;
+        post: operations["ChargeTypesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/charge-types/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ChargeTypesController_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/charge-types/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ChargeTypesController_archive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/charge-types/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ChargeTypesController_restore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2464,6 +2608,135 @@ export interface components {
         };
         FormRejectDto: {
             note: string;
+        };
+        SocietySettingsDto_Output: {
+            shareRentersWithThana: boolean;
+            separateFacilityFunds: boolean;
+            fiscalYearStartMonth: number;
+            fiscalYearLocked: boolean;
+            receiptHeader: {
+                nameBn: string;
+                nameEn: string | null;
+                addressBn: string | null;
+                addressEn: string | null;
+                phone: string | null;
+            };
+        };
+        SettingsInputDto: {
+            shareRentersWithThana?: boolean;
+            separateFacilityFunds?: boolean;
+            fiscalYearStartMonth?: number;
+            receiptHeader?: {
+                nameBn: string;
+                nameEn?: string | null;
+                addressBn?: string | null;
+                addressEn?: string | null;
+                phone?: string | null;
+            };
+        };
+        FundListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+                isDefault: boolean;
+                closedAt: string | null;
+                balance: {
+                    cash: string;
+                    bank: string;
+                    total: string;
+                };
+                opening: {
+                    date: string;
+                    cash: string;
+                    bank: string;
+                } | null;
+                openingEditable: boolean;
+            }[];
+            separateFunds: boolean;
+        };
+        FundInputDto: {
+            nameBn: string;
+            nameEn?: string | null;
+        };
+        FundDto_Output: {
+            /** Format: uuid */
+            id: string;
+            nameBn: string;
+            nameEn: string | null;
+            isDefault: boolean;
+            closedAt: string | null;
+            balance: {
+                cash: string;
+                bank: string;
+                total: string;
+            };
+            opening: {
+                date: string;
+                cash: string;
+                bank: string;
+            } | null;
+            openingEditable: boolean;
+        };
+        OpeningInputDto: {
+            /** Format: date */
+            date: string;
+            cash: string;
+            bank: string;
+        };
+        ChargeTypeListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+                /** @enum {string} */
+                kind: "due" | "fee" | "fine";
+                fund: {
+                    /** Format: uuid */
+                    id: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                    isDefault: boolean;
+                };
+                defaultAmount: string | null;
+                archived: boolean;
+            }[];
+            funds: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+                isDefault: boolean;
+            }[];
+            separateFunds: boolean;
+        };
+        ChargeTypeInputDto: {
+            nameBn: string;
+            nameEn?: string | null;
+            /** @enum {string} */
+            kind: "due" | "fee" | "fine";
+            /** Format: uuid */
+            fundId: string;
+            defaultAmount?: string | null;
+        };
+        ChargeTypeDto_Output: {
+            /** Format: uuid */
+            id: string;
+            nameBn: string;
+            nameEn: string | null;
+            /** @enum {string} */
+            kind: "due" | "fee" | "fine";
+            fund: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+                isDefault: boolean;
+            };
+            defaultAmount: string | null;
+            archived: boolean;
         };
     };
     responses: never;
@@ -4597,6 +4870,270 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FormDetailDto_Output"];
+                };
+            };
+        };
+    };
+    SettingsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocietySettingsDto_Output"];
+                };
+            };
+        };
+    };
+    SettingsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettingsInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SocietySettingsDto_Output"];
+                };
+            };
+        };
+    };
+    FundsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FundListDto_Output"];
+                };
+            };
+        };
+    };
+    FundsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FundInputDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FundDto_Output"];
+                };
+            };
+        };
+    };
+    FundsController_rename: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FundInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FundDto_Output"];
+                };
+            };
+        };
+    };
+    FundsController_close: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FundDto_Output"];
+                };
+            };
+        };
+    };
+    FundsController_setOpening: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OpeningInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FundDto_Output"];
+                };
+            };
+        };
+    };
+    ChargeTypesController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChargeTypeListDto_Output"];
+                };
+            };
+        };
+    };
+    ChargeTypesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChargeTypeInputDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChargeTypeDto_Output"];
+                };
+            };
+        };
+    };
+    ChargeTypesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChargeTypeInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChargeTypeDto_Output"];
+                };
+            };
+        };
+    };
+    ChargeTypesController_archive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChargeTypeDto_Output"];
+                };
+            };
+        };
+    };
+    ChargeTypesController_restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChargeTypeDto_Output"];
                 };
             };
         };

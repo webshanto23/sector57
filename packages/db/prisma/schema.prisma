@@ -1,7 +1,7 @@
 generator client {
-  provider        = "prisma-client"
-  output          = "../generated/prisma"
-  previewFeatures = ["partialIndexes"]
+  provider            = "prisma-client"
+  output              = "../generated/prisma"
+  previewFeatures     = ["partialIndexes"]
   importFileExtension = "ts"
 }
 
@@ -72,6 +72,7 @@ model charge_types {
   kind             String
   fund_id          String             @db.Uuid
   default_amount   Decimal?           @db.Decimal(14, 2)
+  archived_at      DateTime?          @db.Timestamptz(6)
   charge_schedules charge_schedules[]
   funds            funds              @relation(fields: [fund_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   societies        societies          @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -165,11 +166,11 @@ model expenses {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model form_submissions {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  society_id   String    @db.Uuid
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id   String        @db.Uuid
   form_key     String
   data         Json
-  status       String    @default("new")
+  status       String        @default("new")
   reviewed_by  String?       @db.Uuid
   submitted_at DateTime      @default(now()) @db.Timestamptz(6)
   location_id  String?       @db.Uuid
@@ -220,6 +221,8 @@ model funds {
   name_en        String?
   location_id    String?          @db.Uuid
   is_default     Boolean          @default(false)
+  closed_at      DateTime?        @db.Timestamptz(6)
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
   charge_types   charge_types[]
   donations      donations[]
   expenses       expenses[]
@@ -228,6 +231,7 @@ model funds {
   ledger_entries ledger_entries[]
 
   @@unique([society_id, name_bn])
+  @@unique([society_id], map: "funds_one_default_uq", where: raw("is_default"))
 }
 
 model gallery_albums {
@@ -300,21 +304,43 @@ model invoices {
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// Append-only: a trigger (migration 6_finance_setup) refuses UPDATE, DELETE and TRUNCATE. Correct a row with a reversing entry.
 model ledger_entries {
-  id          BigInt    @id @default(autoincrement())
-  society_id  String    @db.Uuid
-  fund_id     String    @db.Uuid
-  entry_date  DateTime  @db.Date
+  id          BigInt          @id @default(autoincrement())
+  society_id  String          @db.Uuid
+  fund_id     String          @db.Uuid
+  entry_date  DateTime        @db.Date
   direction   String
-  amount      Decimal   @db.Decimal(14, 2)
+  amount      Decimal         @db.Decimal(14, 2)
   source_type String
-  source_id   String    @db.Uuid
+  source_id   String          @db.Uuid
   memo        String?
-  created_at  DateTime  @default(now()) @db.Timestamptz(6)
-  funds       funds     @relation(fields: [fund_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  societies   societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  created_at  DateTime        @default(now()) @db.Timestamptz(6)
+  account     String          @default("cash")
+  created_by  String?         @db.Uuid
+  reverses_id BigInt?
+  funds       funds           @relation(fields: [fund_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies   societies       @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users       users?          @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reverses    ledger_entries? @relation("ledger_reversal", fields: [reverses_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reversed_by ledger_entries? @relation("ledger_reversal")
 
+  @@unique([reverses_id], map: "ledger_reverses_uq", where: raw("(reverses_id IS NOT NULL)"))
   @@index([fund_id, entry_date], map: "ledger_fund_date_idx")
+  @@index([source_type, source_id], map: "ledger_source_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// Gap-free document numbers: increment only through the API's NumberingService, inside the saving transaction.
+model document_sequences {
+  society_id String    @db.Uuid
+  kind       String
+  period     String
+  next_no    Int       @default(1)
+  societies  societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([society_id, kind, period])
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -575,21 +601,22 @@ model site_pages {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model societies {
-  id                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                      String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name_bn                 String
   name_en                 String?
-  slug                    String              @unique
+  slug                    String               @unique
   logo_url                String?
   address                 String?
   phone                   String?
-  fiscal_year_start_month Int                 @default(7) @db.SmallInt
-  status                  String              @default("active")
-  created_at              DateTime            @default(now()) @db.Timestamptz(6)
+  fiscal_year_start_month Int                  @default(7) @db.SmallInt
+  status                  String               @default("active")
+  created_at              DateTime             @default(now()) @db.Timestamptz(6)
   audit_logs              audit_logs[]
   budgets                 budgets[]
   charge_schedules        charge_schedules[]
   charge_types            charge_types[]
   committee_members       committee_members[]
+  document_sequences      document_sequences[]
   documents               documents[]
   donations               donations[]
   expense_heads           expense_heads[]
@@ -707,6 +734,7 @@ model users {
   expenses_expenses_requested_byTousers   expenses[]         @relation("expenses_requested_byTousers")
   form_submissions                        form_submissions[]
   invoices                                invoices[]
+  ledger_entries                          ledger_entries[]
   move_events                             move_events[]
   notices                                 notices[]
   payments                                payments[]

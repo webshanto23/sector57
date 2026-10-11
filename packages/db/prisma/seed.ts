@@ -1,6 +1,6 @@
 // Idempotent seed: the Sector 57 society, its location levels, the permission
-// catalogue, the starter roles and the public website pages (plus demo notices,
-// committee, developments and gallery outside production). Safe to run
+// catalogue, the starter roles, the default fund and the public website pages (plus
+// demo notices, committee, developments, gallery and charge types outside production). Safe to run
 // repeatedly; it never deletes rows.
 // Users are not seeded here: the first super admin is created separately so no
 // password ever lives in source control.
@@ -94,6 +94,15 @@ const SETTINGS: Record<string, unknown> = {
   separate_facility_funds: false,
 };
 
+const DEFAULT_FUND = { name_bn: "সাধারণ তহবিল", name_en: "General fund" };
+
+// Examples for trying out billing; a real society types its own. Amounts are decimal strings, never floats.
+const DEMO_CHARGE_TYPES = [
+  { name_bn: "সার্ভিস চার্জ", name_en: "Service charge", kind: "due", default_amount: "2500.00" },
+  { name_bn: "জেনারেটর ফি", name_en: "Generator fee", kind: "fee", default_amount: "500.00" },
+  { name_bn: "সদস্য ফি", name_en: "Membership fee", kind: "fee", default_amount: "1200.00" },
+];
+
 async function main() {
   const society = await prisma.societies.upsert({
     where: { slug: SOCIETY.slug },
@@ -147,6 +156,14 @@ async function main() {
     });
   }
 
+  // Every society has one default fund; it may have been renamed since, so match on the flag.
+  const defaultFund =
+    (await prisma.funds.findFirst({ where: { society_id: society.id, is_default: true }, select: { id: true } })) ??
+    (await prisma.funds.create({
+      data: { society_id: society.id, name_bn: nfc(DEFAULT_FUND.name_bn), name_en: DEFAULT_FUND.name_en, is_default: true },
+      select: { id: true },
+    }));
+
   // Starting content only: never overwrite what the committee has edited since.
   for (const page of SITE_PAGES) {
     await prisma.site_pages.upsert({
@@ -161,12 +178,21 @@ async function main() {
   // Demo content never reaches a production database. Everything is matched by a
   // natural key (title, name, slug), so reruns add nothing.
   if (process.env["NODE_ENV"] !== "production") {
-    console.log(`Demo content: ${JSON.stringify(await seedDemo(society.id))} new rows.`);
+    console.log(`Demo content: ${JSON.stringify(await seedDemo(society.id, defaultFund.id))} new rows.`);
   }
 }
 
-async function seedDemo(societyId: string) {
-  const added = { notices: 0, committee: 0, albums: 0 };
+async function seedDemo(societyId: string, defaultFundId: string) {
+  const added = { notices: 0, committee: 0, albums: 0, chargeTypes: 0 };
+
+  for (const charge of DEMO_CHARGE_TYPES) {
+    const name_bn = nfc(charge.name_bn);
+    const exists = await prisma.charge_types.findFirst({ where: { society_id: societyId, name_bn }, select: { id: true } });
+    if (!exists) {
+      await prisma.charge_types.create({ data: { ...charge, name_bn, society_id: societyId, fund_id: defaultFundId } });
+      added.chargeTypes++;
+    }
+  }
 
   for (const notice of demoNotices().map(nfcDeep)) {
     const exists = await prisma.notices.findFirst({

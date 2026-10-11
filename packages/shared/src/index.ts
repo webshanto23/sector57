@@ -2,4 +2,7 @@ export * from './locale.js';
 export * from './text.js';
 export * from './format.js';
 export * from './schemas.js';
+export * from './money.js';
+export * from './words.js';
+export * from './fiscal.js';
 export * from './contracts/index.js';
