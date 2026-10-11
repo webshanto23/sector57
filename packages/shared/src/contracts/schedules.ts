@@ -275,3 +275,43 @@ export const billingRunListSchema = z.object({
   pageSize: z.number().int().min(1),
 });
 export type BillingRunList = z.infer<typeof billingRunListSchema>;
+
+// ---------------------------------------------------------------------------
+// Billing one unit ahead
+// ---------------------------------------------------------------------------
+
+/** How far ahead a unit can be billed, in months after this one. */
+export const MAX_BILL_AHEAD_MONTHS = 12;
+
+/**
+ * `GET /units/:id/bill-ahead?month=`, `POST /units/:id/bill-ahead`: bills one unit's
+ * schedules up to `month` (this month up to 12 months ahead), for someone paying ahead. The
+ * schedules don't move on; a later run finds those months already billed for this unit.
+ */
+export const billAheadInputSchema = z.object({ month });
+export type BillAheadInput = z.infer<typeof billAheadInputSchema>;
+
+export const billAheadPreviewSchema = z.object({
+  month,
+  /** Who the bills would go to; null when nobody owns or rents the unit. */
+  billTo: z.string().nullable(),
+  invoiceCount: z.number().int().min(0),
+  total: z.string(),
+  lines: z.array(
+    z.object({
+      scheduleId: z.uuid(),
+      nameBn: z.string(),
+      nameEn: z.string().nullable(),
+      periodStart: isoDay,
+      periodEnd: isoDay,
+      amount: z.string(),
+    }),
+  ),
+});
+export type BillAheadPreview = z.infer<typeof billAheadPreviewSchema>;
+
+/** The bills made. */
+export const billAheadResultSchema = z.object({
+  invoices: z.array(z.object({ id: z.uuid(), invoiceNo: z.string(), total: z.string() })),
+});
+export type BillAheadResult = z.infer<typeof billAheadResultSchema>;

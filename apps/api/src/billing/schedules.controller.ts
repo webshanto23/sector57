@@ -1,5 +1,8 @@
 import { Body, Controller, Get, HttpCode, Param, Post, Put, Query } from '@nestjs/common';
 import {
+  billAheadInputSchema,
+  billAheadPreviewSchema,
+  billAheadResultSchema,
   billingRunInputSchema,
   billingRunListQuery,
   billingRunListSchema,
@@ -25,6 +28,9 @@ export class BillingRunListDto extends createDto(billingRunListSchema) {}
 export class BillingRunListQueryDto extends createDto(billingRunListQuery) {}
 export class BillingRunPreviewDto extends createDto(billingRunPreviewSchema) {}
 export class BillingRunInputDto extends createDto(billingRunInputSchema) {}
+export class BillAheadInputDto extends createDto(billAheadInputSchema) {}
+export class BillAheadPreviewDto extends createDto(billAheadPreviewSchema) {}
+export class BillAheadResultDto extends createDto(billAheadResultSchema) {}
 
 /**
  * Recurring charges. Anyone who may view bills may read them; changes need a society-wide
@@ -110,5 +116,28 @@ export class BillingRunsController {
   @ZodResponse({ status: 201, type: BillingRunDto })
   run(@CurrentActor() actor: Actor, @Body() body: BillingRunInputDto) {
     return this.runs.runManual(actor, body.month);
+  }
+}
+
+/** Billing one unit ahead from its schedules, for someone paying months in advance. `billing.create` on the unit. */
+@Controller('units')
+@SkipAudit()
+export class BillAheadController {
+  constructor(private readonly runs: BillingRunsService) {}
+
+  /** What billing the unit up to `month` would make. Writes nothing. */
+  @Get(':id/bill-ahead')
+  @Can('billing', 'create')
+  @ZodResponse({ status: 200, type: BillAheadPreviewDto })
+  preview(@CurrentActor() actor: Actor, @Param() { id }: IdParamDto, @Query() query: BillAheadInputDto) {
+    return this.runs.billAheadPreview(actor, id, query.month);
+  }
+
+  /** 400 `nothing_to_bill` when every month up to `month` is billed already. */
+  @Post(':id/bill-ahead')
+  @Can('billing', 'create')
+  @ZodResponse({ status: 201, type: BillAheadResultDto })
+  billAhead(@CurrentActor() actor: Actor, @Param() { id }: IdParamDto, @Body() body: BillAheadInputDto) {
+    return this.runs.billAhead(actor, id, body.month);
   }
 }

@@ -77,6 +77,20 @@ const KNOWN = [
   "schedule_ended",
   "schedule_not_found",
   "future_month",
+  "amount_exceeds_due",
+  "bill_not_reached",
+  "invoice_changed",
+  "invoice_not_for_account",
+  "invalid_payer",
+  "payment_not_found",
+  "void_needs_approval",
+  "nothing_to_hand_over",
+  "handover_not_found",
+  "already_confirmed",
+  "cannot_confirm_own",
+  "note_required",
+  "nothing_to_bill",
+  "bill_ahead_range",
 ] as const;
 type KnownCode = (typeof KNOWN)[number];
 

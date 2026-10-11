@@ -556,6 +556,29 @@ model payment_allocations {
   payments   payments @relation(fields: [payment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([payment_id, invoice_id])
+  @@index([invoice_id], map: "payment_allocations_invoice_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// A collector's cash handed to the treasurer; confirmed by someone else (never the collector).
+model cash_handovers {
+  id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id      String     @db.Uuid
+  collector_id    String     @db.Uuid
+  created_at      DateTime   @default(now()) @db.Timestamptz(6)
+  payment_count   Int
+  amount_expected Decimal?   @db.Decimal(14, 2)
+  amount_counted  Decimal?   @db.Decimal(14, 2)
+  note            String?
+  confirmed_by    String?    @db.Uuid
+  confirmed_at    DateTime?  @db.Timestamptz(6)
+  payments        payments[]
+  collector       users      @relation("cash_handovers_collector_idTousers", fields: [collector_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  confirmer       users?     @relation("cash_handovers_confirmed_byTousers", fields: [confirmed_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies       societies  @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([society_id, created_at(sort: Desc)], map: "cash_handovers_society_idx")
+  @@index([society_id], map: "cash_handovers_pending_idx", where: raw("(confirmed_at IS NULL)"))
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -571,14 +594,29 @@ model payments {
   received_at           DateTime              @default(now()) @db.Timestamptz(6)
   handed_over_at        DateTime?             @db.Timestamptz(6)
   void_reason           String?
+  unit_id               String?               @db.Uuid
+  payer_snapshot        Json?
+  note                  String?
+  voided_at             DateTime?             @db.Timestamptz(6)
+  voided_by             String?               @db.Uuid
+  handover_id           String?               @db.Uuid
+  print_count           Int                   @default(0)
   donations             donations[]
   payment_allocations   payment_allocations[]
+  cash_handovers        cash_handovers?       @relation(fields: [handover_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   organisations         organisations?        @relation(fields: [payer_organisation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   persons               persons?              @relation(fields: [payer_person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users                 users                 @relation(fields: [received_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users                 users                 @relation("payments_received_byTousers", fields: [received_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_voided          users?                @relation("payments_voided_byTousers", fields: [voided_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   societies             societies             @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  units                 units?                @relation(fields: [unit_id], references: [location_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([society_id, receipt_no])
+  @@index([society_id, received_by], map: "payments_in_hand_idx", where: raw("((handover_id IS NULL) AND (voided_at IS NULL))"))
+  @@index([society_id, received_at(sort: Desc)], map: "payments_received_idx")
+  @@index([unit_id], map: "payments_unit_idx", where: raw("(unit_id IS NOT NULL)"))
+  @@index([payer_person_id], map: "payments_person_idx", where: raw("(payer_person_id IS NOT NULL)"))
+  @@index([handover_id], map: "payments_handover_idx", where: raw("(handover_id IS NOT NULL)"))
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -678,6 +716,7 @@ model societies {
   budgets                 budgets[]
   charge_schedules        charge_schedules[]
   billing_runs            billing_runs[]
+  cash_handovers          cash_handovers[]
   charge_types            charge_types[]
   committee_members       committee_members[]
   document_sequences      document_sequences[]
@@ -756,6 +795,7 @@ model units {
   occupancy     String          @default("vacant")
   invoice_lines invoice_lines[]
   invoices      invoices[]
+  payments      payments[]
   occupants     occupants[]
   tenancies     tenancies[]
   locations     locations       @relation(fields: [location_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -803,7 +843,10 @@ model users {
   ledger_entries                          ledger_entries[]
   move_events                             move_events[]
   notices                                 notices[]
-  payments                                payments[]
+  payments                                payments[]         @relation("payments_received_byTousers")
+  payments_voided                         payments[]         @relation("payments_voided_byTousers")
+  handovers_collected                     cash_handovers[]   @relation("cash_handovers_collector_idTousers")
+  handovers_confirmed                     cash_handovers[]   @relation("cash_handovers_confirmed_byTousers")
   user_roles_user_roles_granted_byTousers user_roles[]       @relation("user_roles_granted_byTousers")
   user_roles_user_roles_user_idTousers    user_roles[]       @relation("user_roles_user_idTousers")
   user_sessions                           user_sessions[]

@@ -46,8 +46,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # The seed is idempotent: it adds the society, levels, permissions, starter roles and the
+    # default fund only when missing (finance needs the fund), so it is safe on every start.
     command: >
       sh -c "pnpm --filter @s57/db migrate:deploy &&
+      pnpm --filter @s57/db seed &&
       pnpm --filter @s57/api start:prod"
     healthcheck:
       test:

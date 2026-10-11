@@ -1348,6 +1348,166 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/units/{id}/bill-ahead": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BillAheadController_preview"];
+        put?: never;
+        post: operations["BillAheadController_billAhead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/collect/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CollectController_lookup"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/collect/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CollectController_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PaymentsController_list"];
+        put?: never;
+        post: operations["PaymentsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PaymentsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payments/{id}/print": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PaymentsController_print"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payments/{id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PaymentsController_void"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/handovers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["HandoversController_list"];
+        put?: never;
+        post: operations["HandoversController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/handovers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["HandoversController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/handovers/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["HandoversController_confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3058,6 +3218,22 @@ export interface components {
                 at: string;
                 by: string | null;
             } | null;
+            payments: {
+                /** Format: uuid */
+                id: string;
+                receiptNo: string;
+                /** Format: date */
+                receivedDay: string;
+                amount: string;
+                voided: boolean;
+            }[];
+            header: {
+                nameBn: string;
+                nameEn: string | null;
+                addressBn: string | null;
+                addressEn: string | null;
+                phone: string | null;
+            };
             can: {
                 void: boolean;
             };
@@ -3352,6 +3528,317 @@ export interface components {
                 scheduleId: string;
             }[];
             error: string | null;
+        };
+        BillAheadPreviewDto_Output: {
+            month: string;
+            billTo: string | null;
+            invoiceCount: number;
+            total: string;
+            lines: {
+                /** Format: uuid */
+                scheduleId: string;
+                nameBn: string;
+                nameEn: string | null;
+                /** Format: date */
+                periodStart: string;
+                /** Format: date */
+                periodEnd: string;
+                amount: string;
+            }[];
+        };
+        BillAheadInputDto: {
+            month: string;
+        };
+        BillAheadResultDto_Output: {
+            invoices: {
+                /** Format: uuid */
+                id: string;
+                invoiceNo: string;
+                total: string;
+            }[];
+        };
+        CollectLookupDto_Output: {
+            accounts: {
+                /** @enum {string} */
+                kind: "unit" | "member";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                code: string | null;
+                address: string[];
+                memberNo: number | null;
+                bills: {
+                    /** Format: uuid */
+                    id: string;
+                    invoiceNo: string;
+                    /** @enum {string} */
+                    kind: "regular" | "opening" | "membership";
+                    /** @enum {string} */
+                    status: "unpaid" | "partial" | "paid" | "void";
+                    overdue: boolean;
+                    /** Format: date */
+                    issueDate: string;
+                    /** Format: date */
+                    dueDate: string;
+                    periodStart: string | null;
+                    periodEnd: string | null;
+                    total: string;
+                    paid: string;
+                    due: string;
+                    billTo: {
+                        /** @enum {string} */
+                        kind: "person" | "organisation";
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                        nameEn: string | null;
+                        phone: string | null;
+                        /** @enum {string} */
+                        role: "owner" | "renter" | "member";
+                        memberNo: number | null;
+                        unit: {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            code: string | null;
+                            address: string[];
+                        } | null;
+                    };
+                    charges: {
+                        nameBn: string;
+                        nameEn: string | null;
+                    }[];
+                }[];
+                due: string;
+                payers: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                }[];
+            }[];
+        };
+        CollectSummaryDto_Output: {
+            today: {
+                count: number;
+                amount: string;
+            };
+            inHand: {
+                count: number;
+                amount: string;
+            };
+            pending: {
+                count: number;
+                amount: string;
+            };
+            header: {
+                nameBn: string;
+                nameEn: string | null;
+                addressBn: string | null;
+                addressEn: string | null;
+                phone: string | null;
+            };
+        };
+        PaymentListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                receiptNo: string;
+                /** Format: date-time */
+                receivedAt: string;
+                /** Format: date */
+                receivedDay: string;
+                amount: string;
+                payer: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    memberNo: number | null;
+                    unit: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                        code: string | null;
+                        address: string[];
+                    } | null;
+                };
+                collectedBy: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                };
+                voided: boolean;
+                handover: {
+                    /** Format: uuid */
+                    id: string;
+                    confirmed: boolean;
+                } | null;
+                invoiceNos: string[];
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            totals: {
+                count: number;
+                amount: string;
+                voidCount: number;
+            };
+        };
+        PaymentDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            receiptNo: string;
+            /** Format: date-time */
+            receivedAt: string;
+            /** Format: date */
+            receivedDay: string;
+            amount: string;
+            payer: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                memberNo: number | null;
+                unit: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    code: string | null;
+                    address: string[];
+                } | null;
+            };
+            collectedBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            };
+            voided: boolean;
+            handover: {
+                /** Format: uuid */
+                id: string;
+                confirmed: boolean;
+            } | null;
+            invoiceNos: string[];
+            note: string | null;
+            allocations: {
+                /** Format: uuid */
+                invoiceId: string;
+                invoiceNo: string;
+                /** Format: date */
+                issueDate: string;
+                periodStart: string | null;
+                periodEnd: string | null;
+                total: string;
+                amount: string;
+                lines: {
+                    description: string;
+                    descriptionEn: string | null;
+                    amount: string;
+                }[];
+            }[];
+            printCount: number;
+            void: {
+                reason: string;
+                /** Format: date-time */
+                at: string;
+                by: string | null;
+            } | null;
+            header: {
+                nameBn: string;
+                nameEn: string | null;
+                addressBn: string | null;
+                addressEn: string | null;
+                phone: string | null;
+            };
+            can: {
+                void: boolean;
+            };
+        };
+        PaymentCreateDto: {
+            unitId?: string | null;
+            personId?: string | null;
+            invoiceIds: string[];
+            amount: string;
+            payer: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+            };
+            note?: string | null;
+        };
+        PaymentPrintDto_Output: {
+            /** @enum {string} */
+            copy: "original" | "duplicate";
+            printCount: number;
+        };
+        PaymentVoidDto: {
+            reason: string;
+        };
+        HandoverListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                collector: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                };
+                /** Format: date-time */
+                createdAt: string;
+                /** @enum {string} */
+                status: "pending" | "confirmed";
+                paymentCount: number;
+                expected: string;
+                counted: string | null;
+                difference: string | null;
+                note: string | null;
+                confirmedBy: string | null;
+                confirmedAt: string | null;
+                can: {
+                    confirm: boolean;
+                };
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+        };
+        HandoverDto_Output: {
+            /** Format: uuid */
+            id: string;
+            collector: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            };
+            /** Format: date-time */
+            createdAt: string;
+            /** @enum {string} */
+            status: "pending" | "confirmed";
+            paymentCount: number;
+            expected: string;
+            counted: string | null;
+            difference: string | null;
+            note: string | null;
+            confirmedBy: string | null;
+            confirmedAt: string | null;
+            can: {
+                confirm: boolean;
+            };
+        };
+        HandoverConfirmDto: {
+            amountCounted: string;
+            note?: string | null;
         };
     };
     responses: never;
@@ -6089,6 +6576,305 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BillingRunPreviewDto_Output"];
+                };
+            };
+        };
+    };
+    BillAheadController_preview: {
+        parameters: {
+            query: {
+                month: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillAheadPreviewDto_Output"];
+                };
+            };
+        };
+    };
+    BillAheadController_billAhead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillAheadInputDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillAheadResultDto_Output"];
+                };
+            };
+        };
+    };
+    CollectController_lookup: {
+        parameters: {
+            query?: {
+                q?: string;
+                unitId?: string;
+                personId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectLookupDto_Output"];
+                };
+            };
+        };
+    };
+    CollectController_summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectSummaryDto_Output"];
+                };
+            };
+        };
+    };
+    PaymentsController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                from?: string;
+                to?: string;
+                collectorId?: string | "me";
+                status?: "valid" | "void";
+                unitId?: string;
+                personId?: string;
+                invoiceId?: string;
+                inHand?: "true" | "false";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentListDto_Output"];
+                };
+            };
+        };
+    };
+    PaymentsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentDetailDto_Output"];
+                };
+            };
+        };
+    };
+    PaymentsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentDetailDto_Output"];
+                };
+            };
+        };
+    };
+    PaymentsController_print: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentPrintDto_Output"];
+                };
+            };
+        };
+    };
+    PaymentsController_void: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentVoidDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaymentDetailDto_Output"];
+                };
+            };
+        };
+    };
+    HandoversController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                status?: "pending" | "confirmed";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandoverListDto_Output"];
+                };
+            };
+        };
+    };
+    HandoversController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandoverDto_Output"];
+                };
+            };
+        };
+    };
+    HandoversController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandoverDto_Output"];
+                };
+            };
+        };
+    };
+    HandoversController_confirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HandoverConfirmDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HandoverDto_Output"];
                 };
             };
         };
