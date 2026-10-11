@@ -60,6 +60,17 @@ const KNOWN = [
   "invalid_fund",
   "charge_type_name_taken",
   "charge_type_not_found",
+  "no_bill_to",
+  "mixed_funds",
+  "charge_type_archived",
+  "invalid_charge_type",
+  "due_before_issue",
+  "unit_inactive",
+  "no_membership",
+  "opening_exists",
+  "already_void",
+  "invoice_has_payments",
+  "invoice_not_found",
 ] as const;
 type KnownCode = (typeof KNOWN)[number];
 
@@ -84,6 +95,7 @@ const FIELD_CODES = [
   "invalid_amount",
   "shares_over_100",
   "end_before_start",
+  "invalid_period",
 ] as const;
 type FieldCode = (typeof FIELD_CODES)[number];
 

@@ -28,9 +28,9 @@ Schema changes are additive and need Anis's approval first.
 | 7 | Content CMS and file storage | Done | `step/07-cms` |
 | 9 | Property: location tree and units | Done | `step/09-property` |
 | 10 | Members | Done | `step/10-members` |
-| 3 + 8 | Public member forms and office review | Built, awaiting Codex review | `step/03-forms` |
-| 11 | M2: Finance setup (funds, charge types, numbering, settings) | Built, awaiting Codex review | `step/11-finance-setup` |
-| 12 | M2: Bills (invoices) and opening arrears | Later | `step/12-bills` |
+| 3 + 8 | Public member forms and office review | Done | `step/03-forms` |
+| 11 | M2: Finance setup (funds, charge types, numbering, settings) | Done | `step/11-finance-setup` |
+| 12 | M2: Bills (invoices) and opening arrears | Built, awaiting Codex review | `step/12-bills` |
 | 13 | M2: Recurring charges and billing runs | Later | `step/13-recurring` |
 | 14 | M2: Cash collection, receipts and handover | Later | `step/14-collect` |
 | 15 | M2: Donations | Later | `step/15-donations` |
@@ -353,7 +353,7 @@ Branch `step/10-members`, branched from `step/09-property`. Scope confirmed by A
 
 **Not in this step:** bulk import, the move-in/out checklist and resident directory (follow-up), picking an existing person from a search box (the phone or NID finds them), owner approval of renters (`owner_approved_at`) and the thana-sharing export, deed and NID document uploads, changing an organisation's contact person after creation.
 
-## Steps 3 + 8: Public member forms and office review — Built, awaiting Codex review
+## Steps 3 + 8: Public member forms and office review — Done
 
 Branch `step/03-forms`, branched from `step/10-members`. Scope confirmed by Anis on 2026-10-11.
 
@@ -448,7 +448,7 @@ The tables in `0_init` are a good base. Reviewing them against the screens shows
 
 `payments.method` keeps its check, but the API accepts only `cash` in milestone 2 (online payment is out of scope).
 
-### Step 11: Finance setup — Built, awaiting Codex review
+### Step 11: Finance setup — Done
 
 Built 2026-10-11 on `step/11-finance-setup` (branched from `step/03-forms`). Decided by Anis: the number formats below, and ledger rows record the account (`cash` or `bank`).
 
@@ -463,17 +463,24 @@ Built 2026-10-11 on `step/11-finance-setup` (branched from `step/03-forms`). Dec
 - **Tests:** shared money, words, fiscal year and number tests; `finance.e2e-spec.ts` runs in a throwaway society of its own (ledger rows can't be deleted) and covers the society boundary, area scope, exact paisa (`0.10 + 0.20`), the trigger, concurrent and rolled-back numbering, and no `DELETE` routes.
 - **For later steps:** draw numbers only through `NumberingService` inside the saving transaction; write money as `Prisma.Decimal` from decimal strings and read it with `toFixed(2)`; a fund's balance per account is the sum of its `in` minus `out` rows; correct a ledger row only with a reversing row (`reverses_id`). Rows from Steps 14–17 set `account` (cash at the counter is `cash`).
 
-### Step 12: Bills (invoices) and opening arrears
+### Step 12: Bills (invoices) and opening arrears — Built, awaiting Codex review
 
-- **Bill-to rule** (shared, tested): if the unit's `bill_to` is `renter` and it has an `active` or `moving_out` tenancy, the renter (person or organisation). Otherwise the current owners of the unit, else of the nearest location above it that has owners; among co-owners the largest share, then the earliest start. Nobody found: the invoice can't be made (400 `no_bill_to`), and the billing run lists the unit as skipped.
-- **Manual invoice** (`billing.create`): unit (or a person, for the membership fee), lines from charge types with amount and period, due date. Lines are fixed once issued; a wrong invoice is voided (only while nothing is paid on it, `billing.approve`) and a new one made.
-- **Opening arrears:** dues from before the system, entered per unit as an invoice with one "previous dues" line, dated before go-live and marked so reports can tell them apart.
-- **Membership fee:** a bill for a person with an active membership (Steps 3 + 8), no unit.
-- **API:** `GET /invoices` (paged; `q` on invoice number, unit name or code, bill-to name, either digit form; `status` including derived `overdue`; `areaId`; `period`; counts and totals for the stat cards), `GET /invoices/:id`, `POST /invoices`, `POST /invoices/:id/void`. `GET /units/:id/bills` for the unit page.
-- **Web:** `/dashboard/billing` exactly like the mockup: four stat cards (billed, collected, outstanding, earlier arrears), search and status filter, table that becomes cards on phones. `/dashboard/billing/new`, `/dashboard/billing/[id]` (lines, payments against it, void). A Bills panel on `/dashboard/units/[id]` and the person page.
-- **Decisions:**
-  - **(decide)** How opening arrears get in: typed per unit on the unit page (proposal), or a spreadsheet import if the office has a list by then.
-  - **(decide)** Late fees: none automatic in milestone 2 (proposal); the office adds a `fine` line by hand.
+Built 2026-10-11 on `step/12-bills` (branched from `main` after PR #8). Decided by Anis: earlier arrears are typed per unit; late fees are manual `fine` lines only.
+
+- **Migration `7_bills`:** `invoices` gets `kind` (`regular`, `opening`, `membership`), `fund_id` (required; earlier rows get the default fund), `membership_id`, `bill_to_snapshot jsonb`, `void_reason`, `voided_at`, `voided_by`. Checks: exactly one payer (person or organisation); a membership bill has a membership and no unit, every other bill a unit; a void bill has its reason, time and user, and nothing else does. At most one non-void opening bill per unit (partial unique index). `invoice_lines` gets `description_en` and `position` (line order on the bill). `billing_run_id` waits for Step 13.
+- **Bill-to rule** (`pickBillTo` in shared, unit-tested): the renter when the unit bills its renter and the tenancy is `active` or `moving_out`; otherwise the current owners of the unit, else of the nearest location above that has any; among co-owners the largest share, then the earliest start. Nobody: 400 `no_bill_to`. The API side is `BillToService` (`src/billing`), batched for lists.
+- **API** (`billing.*`, area-scoped through the unit's path; membership bills have no unit, so only a society-wide billing role sees or makes them):
+  - `GET /invoices`: paged, newest first. `q` matches the bill number, unit name or code, or bill-to name (snapshot), in either digit form. Filters: `status` (stored statuses or derived `overdue`), `kind`, `areaId`, `month` (issue month), `unitId`, `personId`, `organisationId`. `totals` for the stat cards (billed and count, collected, outstanding, overdue count, earlier arrears and units), summed in SQL within the caller's area and the area, month, unit and payer filters; earlier arrears ignore the month.
+  - `GET /invoices/:id` (lines, fund, who made it, the void, `can.void`).
+  - `POST /invoices`: `unitId` or `personId` (membership fee, needs an active membership: 400 `no_membership`), due date, optional months covered (`periodFrom`, `periodTo`), 1 to 20 lines. Dated today (Dhaka). All lines must pay into one fund (400 `mixed_funds`); archived charge types are refused (400 `charge_type_archived`); a blank line description takes the charge type's name. Inactive units are refused (400 `unit_inactive`).
+  - `POST /invoices/opening`: unit, `asOf` (today or earlier), charge type, amount, optional note. One line "আগের বকেয়া / Earlier arrears", dated and due on `asOf`, so it is overdue at once. 409 `opening_exists` while a non-void one exists.
+  - `POST /invoices/:id/void` (`billing.approve` on the unit, a reason): only while `unpaid` with nothing paid (409 `invoice_has_payments`, `already_void`). The row is locked first, so a Step 14 payment can't slip in between.
+  - `GET /billing/lookup?q=|unitId=` (`billing.create`): units in the caller's create area with who the bill would go to and whether earlier arrears exist, plus active members for society-wide callers.
+  - The planned `GET /units/:id/bills` became the `unitId` / `personId` / `organisationId` filters on `GET /invoices`, so the scope rules live in one query.
+  - Numbers come from `NumberingService` (`INV-YYMM-NNNN`, by the bill's date). Every write records its own audit row. No `DELETE` routes.
+- **Web:** `/dashboard/billing` as in the mockup (four stat cards, search, status, kind and month filters, table that becomes cards on phones); `/dashboard/billing/new` (find a unit or member, see who the bill goes to, lines with the charge types' usual amounts, months, due date; `?unitId=` starts with that unit); `/dashboard/billing/[id]` (bill-to and unit as billed, lines, totals, void with a reason). A Bills panel on the unit, person and organisation pages; on a unit page it also offers "Bill this unit" and the earlier-arrears form.
+- **Tests:** shared bill-to, overdue, period and input tests; `billing.e2e-spec.ts` runs in a throwaway society and covers the society boundary, Block C / Block D scope (list, read, create, void, lookup), co-owner choice, renter billing, the owner above, `no_bill_to`, exact paisa and Bangla digits, the snapshot surviving a name change, funds, membership bills, concurrent numbering, opening arrears once per unit, totals against the rows, voiding rules and the database void check.
+- **For later steps:** a payment (Step 14) locks the bills it settles (`FOR UPDATE`), raises `paid` and moves the status to `partial` or `paid`; it never touches lines. Bills are never deleted; a billing run (Step 13) sets `kind = 'regular'` and fills `schedule_id` on lines.
 
 ### Step 13: Recurring charges and billing runs
 
@@ -491,6 +498,7 @@ The page the office uses most; built from the mockup's `collect` view.
 
 - **Take a payment** (`payments.create`): find the unit or payer (either digit form); their open invoices are listed oldest first and ticked; the amount received fills in and can be lowered, settling invoices in order (the last one may end `partial`). Saving makes the payment, its allocations, updates each invoice's `paid` and status, and writes ledger rows, all in one transaction. "Collected by" is the logged-in user.
 - **Receipt:** the mockup's receipt card, with the amount in words, printed from the browser (print CSS; no PDF library). A reprint says "Duplicate / অনুলিপি".
+- **Bill print** (decided 2026-10-11, moved here from Step 12): a "Print" button on `/dashboard/billing/[id]` using the same print layout as the receipt: receipt header, bill number, dates, payer and unit from the snapshot, lines, total in figures and words, due date, "pay in cash at the office"; void bills print with a large "Void / বাতিল" mark; follows the page language.
 - **Void** with a reason: the collector the same day before handover; after that only `payments.approve`. Voiding reverses the allocations' effect on the invoices and writes reversing ledger rows; the receipt shows "Void" on reprint.
 - **Cash in hand and handover:** the mockup's stat cards (receipts today, cash in hand). "Close day and hand over" makes a `cash_handovers` row for the collector's open payments; the treasurer (`payments.approve`, not the collector) types the amount counted and confirms. A difference is recorded with a note, never hidden.
 - **API:** `GET /collect/lookup?q=`, `POST /payments`, `GET /payments` (paged; date, collector, voided), `GET /payments/:id`, `POST /payments/:id/void`, `GET /handovers`, `POST /handovers`, `POST /handovers/:id/confirm`.
@@ -561,8 +569,8 @@ Online payment, bank or mobile payment entry, SMS (unless the decision above add
 |---|---|---|
 | Number formats | Decided: `INV-YYMM-NNNN`, `RC-NNNNN`, `EXP-YY-NNNN` | Step 11 |
 | Track cash vs bank as well as funds | Decided: yes, `account` on ledger rows | Step 11 |
-| Opening arrears entry | Typed per unit | Step 12 |
-| Late fees | Manual fine lines only | Step 12 |
+| Opening arrears entry | Decided: typed per unit | Step 12 |
+| Late fees | Decided: manual fine lines only | Step 12 |
 | Per square foot rates | No, per unit only | Step 13 |
 | Mid-month units and tenancies | From the next run, no part months | Step 13 |
 | Advance payments | No credit; bill ahead first | Step 14 |

@@ -208,6 +208,7 @@ model memberships {
   persons          persons           @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   locations        locations?        @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   form_submissions form_submissions? @relation(fields: [submission_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  invoices         invoices[]
 
   @@unique([society_id, member_no], map: "memberships_member_no_uq")
   @@unique([person_id], map: "memberships_active_person_uq", where: raw("(status = 'active'::text)"))
@@ -226,6 +227,7 @@ model funds {
   charge_types   charge_types[]
   donations      donations[]
   expenses       expenses[]
+  invoices       invoices[]
   locations      locations?       @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   societies      societies        @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   ledger_entries ledger_entries[]
@@ -265,12 +267,15 @@ model invoice_lines {
   period_start     DateTime?         @db.Date
   description      String
   amount           Decimal           @db.Decimal(14, 2)
+  description_en   String?
+  position         Int               @default(0) @db.SmallInt
   charge_types     charge_types      @relation(fields: [charge_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   invoices         invoices          @relation(fields: [invoice_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   charge_schedules charge_schedules? @relation(fields: [schedule_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   units            units?            @relation(fields: [unit_id], references: [location_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([schedule_id, unit_id, period_start], map: "invoice_lines_once_uq", where: raw("(schedule_id IS NOT NULL)"))
+  @@index([invoice_id], map: "invoice_lines_invoice_idx")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -290,17 +295,32 @@ model invoices {
   status                  String                @default("unpaid")
   created_by              String?               @db.Uuid
   created_at              DateTime              @default(now()) @db.Timestamptz(6)
+  kind                    String                @default("regular")
+  fund_id                 String                @db.Uuid
+  membership_id           String?               @db.Uuid
+  bill_to_snapshot        Json?
+  void_reason             String?
+  voided_at               DateTime?             @db.Timestamptz(6)
+  voided_by               String?               @db.Uuid
   invoice_lines           invoice_lines[]
+  funds                   funds                 @relation(fields: [fund_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  memberships             memberships?          @relation(fields: [membership_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   organisations           organisations?        @relation(fields: [bill_to_organisation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   persons                 persons?              @relation(fields: [bill_to_person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users                   users?                @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users                   users?                @relation("invoices_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_voided            users?                @relation("invoices_voided_byTousers", fields: [voided_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   societies               societies             @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   units                   units?                @relation(fields: [unit_id], references: [location_id], onDelete: NoAction, onUpdate: NoAction)
   payment_allocations     payment_allocations[]
 
   @@unique([society_id, invoice_no])
+  @@unique([unit_id], map: "invoices_one_opening_uq", where: raw("((kind = 'opening'::text) AND (status <> 'void'::text))"))
   @@index([society_id, status, due_date], map: "invoices_status_idx")
   @@index([unit_id, status], map: "invoices_unit_idx")
+  @@index([society_id, issue_date], map: "invoices_issue_idx")
+  @@index([bill_to_person_id], map: "invoices_person_idx", where: raw("(bill_to_person_id IS NOT NULL)"))
+  @@index([bill_to_organisation_id], map: "invoices_organisation_idx", where: raw("(bill_to_organisation_id IS NOT NULL)"))
+  @@index([membership_id], map: "invoices_membership_idx", where: raw("(membership_id IS NOT NULL)"))
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -733,7 +753,8 @@ model users {
   expenses_expenses_approved_byTousers    expenses[]         @relation("expenses_approved_byTousers")
   expenses_expenses_requested_byTousers   expenses[]         @relation("expenses_requested_byTousers")
   form_submissions                        form_submissions[]
-  invoices                                invoices[]
+  invoices                                invoices[]         @relation("invoices_created_byTousers")
+  invoices_voided                         invoices[]         @relation("invoices_voided_byTousers")
   ledger_entries                          ledger_entries[]
   move_events                             move_events[]
   notices                                 notices[]

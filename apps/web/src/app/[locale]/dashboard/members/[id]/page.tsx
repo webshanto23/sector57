@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Note } from "@/components/admin/form-status";
+import { BillsPanel } from "@/components/billing/bills-panel";
 import { Chip, PageHeader } from "@/components/kit";
 import { PersonEditor } from "@/components/members/person-editor";
 import { HouseholdTable, OwnershipTable, TenancyTable } from "@/components/members/record-tables";
@@ -58,6 +59,7 @@ export default async function PersonPage({ params }: PageProps<"/[locale]/dashbo
         <OwnershipTable rows={person.ownerships} locale={locale} open={open} />
         <TenancyTable rows={person.tenancies} locale={locale} open={open} />
         <HouseholdTable rows={person.households} open={open} />
+        <BillsPanel access={me.access} locale={locale} personId={person.id} />
       </div>
     </>
   );

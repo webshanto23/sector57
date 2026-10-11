@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Note } from "@/components/admin/form-status";
+import { BillsPanel } from "@/components/billing/bills-panel";
 import { Card, PageHeader } from "@/components/kit";
 import { PartyLink } from "@/components/members/labels";
 import { OrganisationEditor } from "@/components/members/organisation-editor";
@@ -59,6 +60,7 @@ export default async function OrganisationPage({ params }: PageProps<"/[locale]/
         </Card>
         <OwnershipTable rows={organisation.ownerships} locale={locale} open={open} />
         <TenancyTable rows={organisation.tenancies} locale={locale} open={open} />
+        <BillsPanel access={me.access} locale={locale} organisationId={organisation.id} />
       </div>
     </>
   );

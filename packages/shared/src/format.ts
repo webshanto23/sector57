@@ -62,6 +62,8 @@ const DATE_STYLES = {
   day: { day: '2-digit' },
   // Date tile: ডিসেম্বর / Dec
   month: { month: 'short' },
+  // Billing period: অক্টো, ২০২৬ / Oct 2026
+  monthYear: { month: 'short', year: 'numeric' },
   // Committee term: ২০২৫ / 2025
   year: { year: 'numeric' },
   // Clock time, e.g. when a locked login opens again: বিকাল ৩:৪৫ / 3:45 pm

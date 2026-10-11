@@ -1156,6 +1156,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["InvoicesController_list"];
+        put?: never;
+        post: operations["InvoicesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invoices/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["InvoicesController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invoices/opening": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["InvoicesController_createOpening"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invoices/{id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["InvoicesController_void"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BillingLookupController_lookup"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2737,6 +2817,202 @@ export interface components {
             };
             defaultAmount: string | null;
             archived: boolean;
+        };
+        InvoiceListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                invoiceNo: string;
+                /** @enum {string} */
+                kind: "regular" | "opening" | "membership";
+                /** @enum {string} */
+                status: "unpaid" | "partial" | "paid" | "void";
+                overdue: boolean;
+                /** Format: date */
+                issueDate: string;
+                /** Format: date */
+                dueDate: string;
+                periodStart: string | null;
+                periodEnd: string | null;
+                total: string;
+                paid: string;
+                due: string;
+                billTo: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    /** @enum {string} */
+                    role: "owner" | "renter" | "member";
+                    memberNo: number | null;
+                    unit: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                        code: string | null;
+                        address: string[];
+                    } | null;
+                };
+                charges: {
+                    nameBn: string;
+                    nameEn: string | null;
+                }[];
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            totals: {
+                billed: string;
+                billedCount: number;
+                collected: string;
+                outstanding: string;
+                overdueCount: number;
+                earlierArrears: string;
+                earlierArrearsUnits: number;
+            };
+        };
+        InvoiceDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            invoiceNo: string;
+            /** @enum {string} */
+            kind: "regular" | "opening" | "membership";
+            /** @enum {string} */
+            status: "unpaid" | "partial" | "paid" | "void";
+            overdue: boolean;
+            /** Format: date */
+            issueDate: string;
+            /** Format: date */
+            dueDate: string;
+            periodStart: string | null;
+            periodEnd: string | null;
+            total: string;
+            paid: string;
+            due: string;
+            billTo: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                /** @enum {string} */
+                role: "owner" | "renter" | "member";
+                memberNo: number | null;
+                unit: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    code: string | null;
+                    address: string[];
+                } | null;
+            };
+            charges: {
+                nameBn: string;
+                nameEn: string | null;
+            }[];
+            fund: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+                isDefault: boolean;
+            };
+            lines: {
+                /** Format: uuid */
+                id: string;
+                chargeType: {
+                    nameBn: string;
+                    nameEn: string | null;
+                    /** Format: uuid */
+                    id: string;
+                    /** @enum {string} */
+                    kind: "due" | "fee" | "fine";
+                };
+                description: string;
+                descriptionEn: string | null;
+                amount: string;
+            }[];
+            /** Format: date-time */
+            createdAt: string;
+            createdBy: string | null;
+            void: {
+                reason: string;
+                /** Format: date-time */
+                at: string;
+                by: string | null;
+            } | null;
+            can: {
+                void: boolean;
+            };
+        };
+        InvoiceCreateDto: {
+            unitId?: string | null;
+            personId?: string | null;
+            /** Format: date */
+            dueDate: string;
+            periodFrom?: string | null;
+            periodTo?: string | null;
+            lines: {
+                /** Format: uuid */
+                chargeTypeId: string;
+                amount: string;
+                description?: string | null;
+                descriptionEn?: string | null;
+            }[];
+        };
+        OpeningArrearsDto: {
+            /** Format: uuid */
+            unitId: string;
+            /** Format: date */
+            asOf: string;
+            /** Format: uuid */
+            chargeTypeId: string;
+            amount: string;
+            note?: string | null;
+        };
+        InvoiceVoidDto: {
+            reason: string;
+        };
+        BillingLookupDto_Output: {
+            units: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                code: string | null;
+                address: string[];
+                isActive: boolean;
+                billTo: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                    /** @enum {string} */
+                    role: "owner" | "renter";
+                } | null;
+                hasOpening: boolean;
+            }[];
+            members: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                photoUrl: string | null;
+                verified: boolean | null;
+                memberNo: number;
+            }[];
         };
     };
     responses: never;
@@ -5134,6 +5410,150 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChargeTypeDto_Output"];
+                };
+            };
+        };
+    };
+    InvoicesController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                status?: "unpaid" | "partial" | "paid" | "void" | "overdue";
+                kind?: "regular" | "opening" | "membership";
+                areaId?: string;
+                month?: string;
+                unitId?: string;
+                personId?: string;
+                organisationId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceListDto_Output"];
+                };
+            };
+        };
+    };
+    InvoicesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvoiceCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceDetailDto_Output"];
+                };
+            };
+        };
+    };
+    InvoicesController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceDetailDto_Output"];
+                };
+            };
+        };
+    };
+    InvoicesController_createOpening: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OpeningArrearsDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceDetailDto_Output"];
+                };
+            };
+        };
+    };
+    InvoicesController_void: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvoiceVoidDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvoiceDetailDto_Output"];
+                };
+            };
+        };
+    };
+    BillingLookupController_lookup: {
+        parameters: {
+            query?: {
+                q?: string;
+                unitId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingLookupDto_Output"];
                 };
             };
         };
