@@ -11,7 +11,11 @@ export type UnitType = (typeof UNIT_TYPES)[number];
 export const BILL_TO = ['owner', 'renter'] as const;
 export type BillTo = (typeof BILL_TO)[number];
 
-/** `units.occupancy`. Set by hand until Step 10 derives it from tenancies. */
+/**
+ * `units.occupancy`, derived by the API (never typed in): `rented` while a tenancy is active or
+ * moving out, else `owner_occupied` when the unit or a location above it has a current owner,
+ * else `vacant`.
+ */
 export const OCCUPANCIES = ['owner_occupied', 'rented', 'vacant'] as const;
 export type Occupancy = (typeof OCCUPANCIES)[number];
 
@@ -218,7 +222,6 @@ const unitFields = {
   unitType: z.enum(UNIT_TYPES),
   sizeSqft: sizeSqftSchema,
   billTo: z.enum(BILL_TO),
-  occupancy: z.enum(OCCUPANCIES),
 };
 
 /** `POST /units`: a unit under a location (any level above the unit level). */
@@ -238,11 +241,10 @@ export const unitUpdateSchema = z.object({
   unitType: unitFields.unitType.optional(),
   sizeSqft: sizeSqftSchema.optional(),
   billTo: unitFields.billTo.optional(),
-  occupancy: unitFields.occupancy.optional(),
 });
 export type UnitUpdateInput = z.infer<typeof unitUpdateSchema>;
 
-/** `POST /units/bulk`: many units with the same facts under one parent, all or none. They start vacant. */
+/** `POST /units/bulk`: many units with the same facts under one parent, all or none. */
 export const unitBulkSchema = z.object({
   parentId: z.uuid(),
   names: bulkNames,

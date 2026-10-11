@@ -79,7 +79,7 @@ describe('Property: location tree and units (e2e)', () => {
 
   async function addUnit(parent: keyof typeof tree, name: string, extra: Record<string, unknown> = {}) {
     const res = await send('post', '/units', admin.cookie)
-      .send({ parentId: tree[parent].id, name, code: null, unitType: 'residential', sizeSqft: null, billTo: 'owner', occupancy: 'vacant', ...extra })
+      .send({ parentId: tree[parent].id, name, code: null, unitType: 'residential', sizeSqft: null, billTo: 'owner', ...extra })
       .expect(201);
     return unitDetailSchema.parse(res.body);
   }
@@ -217,14 +217,17 @@ describe('Property: location tree and units (e2e)', () => {
 
   describe('units', () => {
     it('creates the location and unit rows together and lists them with counts', async () => {
+      // Occupancy is derived (members e2e); a typed one is ignored.
       const unit = await addUnit('road9', 'ফ্ল্যাট ৪বি', { sizeSqft: '১২৫০.৫', occupancy: 'rented', code: `${MARK}-4B` });
-      expect(unit).toMatchObject({ name: 'ফ্ল্যাট ৪বি', sizeSqft: '1250.5', occupancy: 'rented', address: expect.arrayContaining(['ব্লক সি', 'রোড ৯']) });
+      expect(unit).toMatchObject({ name: 'ফ্ল্যাট ৪বি', sizeSqft: '1250.5', occupancy: 'vacant', address: expect.arrayContaining(['ব্লক সি', 'রোড ৯']) });
       const row = await prisma.locations.findUniqueOrThrow({ where: { id: unit.id } });
       expect(row.path).toBe(locationPath(tree.road9.path, unit.id));
 
       await send('post', '/units/bulk', admin.cookie)
         .send({ parentId: tree.road9.id, names: ['ফ্ল্যাট ১এ', 'ফ্ল্যাট ১বি'], unitType: 'residential', sizeSqft: null, billTo: 'renter' })
         .expect(201);
+      // Only to exercise the filter and counts below.
+      await prisma.units.update({ where: { location_id: unit.id }, data: { occupancy: 'rented' } });
 
       const list = unitListSchema.parse((await get(`/units?areaId=${tree.blockC.id}`, admin.cookie).expect(200)).body);
       expect(list.total).toBe(3);
@@ -246,7 +249,7 @@ describe('Property: location tree and units (e2e)', () => {
     it('edits and deletes a unit with audit rows', async () => {
       const unit = await addUnit('blockD', 'দোকান ১', { unitType: 'shop' });
       const edited = await send('patch', `/units/${unit.id}`, admin.cookie).send({ occupancy: 'owner_occupied', billTo: 'renter' }).expect(200);
-      expect(unitDetailSchema.parse(edited.body)).toMatchObject({ occupancy: 'owner_occupied', billTo: 'renter', unitType: 'shop' });
+      expect(unitDetailSchema.parse(edited.body)).toMatchObject({ occupancy: 'vacant', billTo: 'renter', unitType: 'shop' });
 
       // A unit is not a tree location: /locations does not change it.
       await send('patch', `/locations/${unit.id}`, admin.cookie).send({ name: 'x' }).expect(404);
@@ -260,7 +263,7 @@ describe('Property: location tree and units (e2e)', () => {
     it('refuses a unit under a unit', async () => {
       const unit = await addUnit('blockD', 'অফিস ১', { unitType: 'office' });
       const res = await send('post', '/units', admin.cookie)
-        .send({ parentId: unit.id, name: 'x', code: null, unitType: 'other', sizeSqft: null, billTo: 'owner', occupancy: 'vacant' })
+        .send({ parentId: unit.id, name: 'x', code: null, unitType: 'other', sizeSqft: null, billTo: 'owner' })
         .expect(400);
       expect(res.body.code).toBe('invalid_level');
     });
@@ -306,7 +309,7 @@ describe('Property: location tree and units (e2e)', () => {
       await send('post', '/units/bulk', manager.cookie)
         .send({ parentId: tree.blockD.id, names: ['x'], unitType: 'residential', sizeSqft: null, billTo: 'owner' })
         .expect(404);
-      await send('patch', `/units/${unitInD}`, manager.cookie).send({ occupancy: 'rented' }).expect(404);
+      await send('patch', `/units/${unitInD}`, manager.cookie).send({ billTo: 'renter' }).expect(404);
       // No locations:delete, even inside the block.
       await send('delete', `/locations/${tree.road9.id}`, manager.cookie).expect(403);
     });
@@ -333,7 +336,7 @@ describe('Property: location tree and units (e2e)', () => {
       await send('delete', `/locations/${foreignLocation.id}`, admin.cookie).expect(404);
       await send('post', '/locations', admin.cookie).send({ parentId: foreignLocation.id, levelId: level(2), name: 'x', code: null }).expect(404);
       await send('post', '/units', admin.cookie)
-        .send({ parentId: foreignLocation.id, name: 'x', code: null, unitType: 'other', sizeSqft: null, billTo: 'owner', occupancy: 'vacant' })
+        .send({ parentId: foreignLocation.id, name: 'x', code: null, unitType: 'other', sizeSqft: null, billTo: 'owner' })
         .expect(404);
       const units = unitListSchema.parse((await get(`/units?areaId=${foreignLocation.id}`, admin.cookie).expect(200)).body);
       expect(units.total).toBe(0);

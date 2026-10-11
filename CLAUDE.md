@@ -43,7 +43,7 @@
 - Docker setup (Anis, 2026-10-08): `Dockerfile` (`api` and web targets), `docker-compose.yml` (Postgres 18, API on 4000, web on 3000) and `.dockerignore`. While the compose stack runs, it holds ports 3000 and 4000, so local `pnpm dev` servers fall back to other ports or fail to bind.
 - CI: `.github/workflows/ci.yml` is a draft that Anis owns and is finishing; don't change it unless asked. Until it works, run `pnpm check` before pushing; a `deploy.sh` script is planned.
 
-## Current state (2026-10-10)
+## Current state (2026-10-11)
 
 - The full step list with status and open decisions is in `docs/steps.md`; keep it updated as steps move.
 - Steps 0, 1 and 2 are merged into `main` (GitHub remote `origin`). Visual checks at 375/820/1440 are deferred for all of them. Headless Chrome won't go below about 500 px wide, so use CDP viewport emulation, not `--window-size`.
@@ -92,9 +92,16 @@
   - The deepest level holds units: a `locations` row plus a `units` row, written together only through `UnitsService`. A location may sit at any level deeper than its parent (levels can be skipped).
   - `locations.name` uses the ICU collation `natural_sort` (migration `3_property`), so ordering by name is natural for Bangla and ASCII digits. Holding codes and top-level names are unique per society.
   - Searches over names should try both digit forms (`digitVariants` in shared).
+- Step 10 (members) is built on `step/10-members`, branched from `step/09-property`, awaiting Codex review. Rules for later steps:
+  - `units.occupancy` is derived, never typed: call `OccupancyService.refresh(societyId, path, tx)` (property module) in the same transaction as any change to units, ownerships or tenancies.
+  - Add people through `PartiesService.resolve` / `resolvePerson` (reuse by phone, then NID), not `persons.create`. A person's area is where they own, rent or live now (`PartiesService.currentPaths`); check it with `canOnParty`.
+  - Never send an NID to a caller who can't edit the person, and never put one in an audit row (`hasNid` only).
+  - A renter who is a person is added as a resident (`occupants`, head) when the tenancy is created; owners become residents through "Lives here" (`POST /occupants` with `personId`, allowed only for a current owner at or above the unit, or the tenancy's renter).
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
 
 ## Reference material
+
+- `docs/glossary.md`: what Person, Owner, Renter, Resident and Member mean, in Bangla and English. User-facing text must follow it ("Member" is reserved for registered society members).
 
 - `docs/schema-phase1.sql`: the full phase-1 schema with design notes in its comments. Read the header before changing the data model.
 - `docs/Sector 57 Production UI.html`: the UI mockup. Match its layout and components when building screens.

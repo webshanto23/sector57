@@ -24,7 +24,8 @@ import { scopeWhere } from '../permissions/caller-access.js';
 import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { definedOnly, inUse, takenError } from './locations.service.js';
-import { beyondPermissions, codeTaken, nameTaken, pathIds, TreeService } from './tree.service.js';
+import { OccupancyService } from './occupancy.service.js';
+import { addressOf, beyondPermissions, codeTaken, nameTaken, TreeService } from './tree.service.js';
 
 const select = {
   location_id: true,
@@ -40,14 +41,13 @@ type UnitRow = Prisma.unitsGetPayload<{ select: typeof select }>;
 const unitNotFound = () => new NotFoundException({ code: 'unit_not_found', message: 'Unit not found' });
 
 /** What an audit row keeps of a unit. */
-const snapshot = (unit: Omit<UnitSummary, 'id' | 'parentId' | 'address'>) => ({
+const snapshot = (unit: Omit<UnitSummary, 'id' | 'parentId' | 'address' | 'occupancy'>) => ({
   name: unit.name,
   code: unit.code,
   isActive: unit.isActive,
   unitType: unit.unitType,
   sizeSqft: unit.sizeSqft,
   billTo: unit.billTo,
-  occupancy: unit.occupancy,
 });
 
 /**
@@ -60,6 +60,7 @@ export class UnitsService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly tree: TreeService,
+    private readonly occupancy: OccupancyService,
   ) {}
 
   async list(actor: Actor, query: UnitListQuery): Promise<UnitList> {
@@ -108,7 +109,7 @@ export class UnitsService {
       counts.total += count;
       if ((OCCUPANCIES as readonly string[]).includes(group.occupancy)) counts[toOccupancy(group.occupancy)] += count;
     }
-    const names = await this.addressNames(actor.societyId, rows.map((row) => row.locations.path));
+    const names = await this.tree.addressNames(actor.societyId, rows.map((row) => row.locations.path));
     return { items: rows.map((row) => toSummary(row, names)), total, page, pageSize, counts };
   }
 
@@ -116,7 +117,7 @@ export class UnitsService {
     const row = await this.visibleRow(actor, id);
     const located = { path: row.locations.path };
     const [names, breadcrumb] = await Promise.all([
-      this.addressNames(actor.societyId, [row.locations.path]),
+      this.tree.addressNames(actor.societyId, [row.locations.path]),
       this.tree.breadcrumb(actor.access, actor.societyId, row.locations.path, 'locations'),
     ]);
     return {
@@ -146,6 +147,8 @@ export class UnitsService {
           },
         });
         await tx.units.create({ data: { location_id: id, society_id: actor.societyId, ...unitData(input) } });
+        // An owner of a location above already owns the new unit.
+        await this.occupancy.refresh(actor.societyId, locationPath(parent.path, id), tx);
         await this.audit.record(
           { ...auditOf(actor, 'create', id), after: { parentId: parent.id, ...snapshot({ ...input, isActive: true }) } },
           tx,
@@ -157,7 +160,7 @@ export class UnitsService {
     return this.get(actor, id);
   }
 
-  /** Many units with the same facts under one parent, all or none. They start vacant. */
+  /** Many units with the same facts under one parent, all or none. */
   async bulk(actor: Actor, input: UnitBulkInput): Promise<BulkResult> {
     const parent = (await this.tree.parentFor(actor.access, actor.societyId, input.parentId, 'units'))!;
     const levelId = await this.unitLevel(actor.societyId);
@@ -165,7 +168,7 @@ export class UnitsService {
     if (taken.length > 0) throw takenError(taken);
 
     const ids = input.names.map(() => randomUUID());
-    const facts = unitData({ ...input, occupancy: 'vacant' });
+    const facts = unitData(input);
     try {
       await this.prisma.$transaction(async (tx) => {
         await tx.locations.createMany({
@@ -179,6 +182,7 @@ export class UnitsService {
           })),
         });
         await tx.units.createMany({ data: ids.map((id) => ({ location_id: id, society_id: actor.societyId, ...facts })) });
+        await this.occupancy.refresh(actor.societyId, parent.path, tx);
         await this.audit.record(
           {
             ...auditOf(actor, 'bulk_create', parent.id),
@@ -240,20 +244,6 @@ export class UnitsService {
     if (!level) throw new BadRequestException({ code: 'invalid_level', message: 'The society has no unit level' });
     return level.id;
   }
-
-  /**
-   * Names of every location above the given paths, by id. When the society has a
-   * single top-level location (the sector), it is left out: every address would start with it.
-   */
-  private async addressNames(societyId: string, paths: string[]): Promise<Map<string, string>> {
-    const ids = [...new Set(paths.flatMap((path) => pathIds(path).slice(0, -1)))];
-    if (ids.length === 0) return new Map();
-    const [rows, roots] = await Promise.all([
-      this.prisma.locations.findMany({ where: { id: { in: ids }, society_id: societyId }, select: { id: true, name: true, parent_id: true } }),
-      this.prisma.locations.count({ where: { society_id: societyId, parent_id: null } }),
-    ]);
-    return new Map(rows.filter((row) => roots > 1 || row.parent_id !== null).map((row) => [row.id, row.name]));
-  }
 }
 
 function toSummary(row: UnitRow, names: Map<string, string>): UnitSummary {
@@ -262,9 +252,7 @@ function toSummary(row: UnitRow, names: Map<string, string>): UnitSummary {
     parentId: row.locations.parent_id!,
     name: row.locations.name,
     code: row.locations.code,
-    address: pathIds(row.locations.path)
-      .slice(0, -1)
-      .flatMap((id) => names.get(id) ?? []),
+    address: addressOf(row.locations.path, names),
     unitType: toUnitType(row.unit_type),
     sizeSqft: row.size_sqft?.toString() ?? null,
     billTo: toBillTo(row.bill_to),
@@ -273,8 +261,9 @@ function toSummary(row: UnitRow, names: Map<string, string>): UnitSummary {
   };
 }
 
-function unitData(input: Pick<UnitSummary, 'unitType' | 'sizeSqft' | 'billTo' | 'occupancy'>) {
-  return { unit_type: input.unitType, size_sqft: input.sizeSqft, bill_to: input.billTo, occupancy: input.occupancy };
+/** The typed facts of a unit; `occupancy` is derived (`OccupancyService`). */
+function unitData(input: Pick<UnitSummary, 'unitType' | 'sizeSqft' | 'billTo'>) {
+  return { unit_type: input.unitType, size_sqft: input.sizeSqft, bill_to: input.billTo };
 }
 
 const auditOf = (actor: Actor, action: string, entityId: string) => ({

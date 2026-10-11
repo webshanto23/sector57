@@ -1,19 +1,20 @@
 "use client";
 
-import { BILL_TO, OCCUPANCIES, UNIT_TYPES, type BillTo, type Occupancy, type UnitDetail, type UnitType } from "@s57/shared";
+import { BILL_TO, UNIT_TYPES, type BillTo, type UnitDetail, type UnitType } from "@s57/shared";
 import { Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { ConfirmButton } from "@/components/admin/confirm-button";
 import { FormStatus } from "@/components/admin/form-status";
 import { CheckField, TextField } from "@/components/cms/fields";
-import { Card, Field, inputClass } from "@/components/kit";
+import { Card, Chip, Field, inputClass } from "@/components/kit";
+import { OCCUPANCY_TONES } from "./occupancy";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
 import { api } from "@/lib/api/client";
 import { useSubmit } from "./use-submit";
 
-/** One unit's facts: name, holding number, type, size, who is billed, occupancy, active. */
+/** One unit's facts: name, holding number, type, size, who is billed, active. Occupancy is shown, not edited (it is derived). */
 export function UnitForm({ unit }: { unit: UnitDetail }) {
   const t = useTranslations("Property");
   const router = useRouter();
@@ -24,7 +25,6 @@ export function UnitForm({ unit }: { unit: UnitDetail }) {
     unitType: unit.unitType as UnitType,
     sizeSqft: unit.sizeSqft ?? "",
     billTo: unit.billTo as BillTo,
-    occupancy: unit.occupancy as Occupancy,
     isActive: unit.isActive,
   });
   const set = <K extends keyof typeof values>(key: K, value: (typeof values)[K]) => setValues({ ...values, [key]: value });
@@ -71,24 +71,11 @@ export function UnitForm({ unit }: { unit: UnitDetail }) {
                 </select>
               </Field>
               <div className="grid gap-[5px]">
-                <Field label={t("occupancyLabel")} htmlFor="unit-occupancy">
-                  <select
-                    id="unit-occupancy"
-                    className={inputClass}
-                    aria-describedby="unit-occupancy-hint"
-                    value={values.occupancy}
-                    onChange={(e) => set("occupancy", e.target.value as Occupancy)}
-                  >
-                    {OCCUPANCIES.map((value) => (
-                      <option key={value} value={value}>
-                        {t(`occupancy.${value}`)}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <p id="unit-occupancy-hint" className="text-[12.5px] text-muted-foreground">
-                  {t("occupancyHint")}
-                </p>
+                <span className="text-[13px] font-semibold">{t("occupancyLabel")}</span>
+                <span>
+                  <Chip tone={OCCUPANCY_TONES[unit.occupancy]}>{t(`occupancy.${unit.occupancy}`)}</Chip>
+                </span>
+                <p className="text-[12.5px] text-muted-foreground">{t("occupancyHint")}</p>
               </div>
             </div>
             <CheckField

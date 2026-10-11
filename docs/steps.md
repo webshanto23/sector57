@@ -1,6 +1,6 @@
 # Sector 57 build steps
 
-Status of every step, what it contains, and the decisions still open. Updated 2026-10-10.
+Status of every step, what it contains, and the decisions still open. Updated 2026-10-11.
 
 Status key: **Done** (merged to `main`) · **Next** · **Planned** · **Later** (after milestone 1).
 
@@ -27,7 +27,7 @@ Schema changes are additive and need Anis's approval first.
 | 6 | Roles and users admin | Built, awaiting Codex review | `step/06-roles-users` |
 | 7 | Content CMS and file storage | Built, awaiting Codex review | `step/07-cms` |
 | 9 | Property: location tree and units | Built, awaiting Codex review | `step/09-property` |
-| 10 | Members | Planned | `step/10-members` |
+| 10 | Members | Built, awaiting Codex review | `step/10-members` |
 | 3 + 8 | Public member forms and office review | Planned (last in milestone 1) | `step/03-forms` |
 | M2 | Billing, cash collection, receipts, finance | Later | — |
 
@@ -295,13 +295,55 @@ Branch `step/09-property`, branched from `step/07-cms`. Scope confirmed by Anis 
 
 **Not in this step:** moving a branch, spreadsheet import, location attributes (land area, storeys; the `attributes` column stays `{}`), owners and renters (Step 10, which will also derive occupancy), notice audience by area, live counts on the public home page, the public address dropdowns (Step 3).
 
-## Step 10: Members — Planned
+## Step 10: Members — Built, awaiting Codex review
 
-- Persons, ownerships (with history), tenancies and occupants.
-- The mockup's `members` view: stats, trigram search, filters, and a table that becomes cards on phones.
-- If time allows: the `moves` (move-in and move-out) and `directory` (resident directory) views.
+Branch `step/10-members`, branched from `step/09-property`. Scope confirmed by Anis on 2026-10-11.
 
-**Open decision:** bulk import of the current member list?
+**Decisions (Anis, 2026-10-11)**
+- No bulk import (there is no member list yet).
+- The move-in/move-out checklist (`moves`) and the resident directory (`directory`) are a follow-up step.
+- Migration `4_members` approved (below).
+- Occupancy is derived: `rented` while a tenancy is active or moving out; otherwise `owner_occupied` when the unit or a location above it has a current owner; otherwise `vacant`. A pending tenancy (not moved in) doesn't make a unit rented. Household rows don't count. Occupancy can no longer be typed in.
+
+**Words (Anis, 2026-10-11, see `docs/glossary.md`)**
+- The page and menu item are "Owners & renters / মালিক ও ভাড়াটিয়া"; people who live in a unit are "Residents / বাসিন্দা"; "Member / সদস্য" is kept for registered society members (Steps 3 + 8) and is not used in the dashboard until then. Code names (`members` module, route and URL) are unchanged.
+- A renter who is a person is added as a resident (head of the renter's household) when the tenancy is created. An owner of the unit or a place above it becomes a resident with "Lives here" (`POST /occupants` with `personId`; any other person by id is 400 `invalid_person`). In the list, an owner or renter who heads that household is shown once.
+
+**Schema (migration `4_members`)**
+- `persons.updated_at`; trigram indexes on `persons.full_name_en` and `organisations.name`; a check constraint on `occupants.relation` (fixed keys, labels in i18n); a partial unique index `tenancies_open_unit_uq` (one open tenancy per unit), which replaces the plain `tenancies_unit_idx` on the same rows. Applied with `migrate deploy`; `prisma migrate diff` shows no drift.
+
+**Rules**
+- People are stored once per society. Adding an owner, renter or household member types the person; the API reuses the society's person with the same phone, or else the same NID, and keeps their stored details. A phone and NID of two different people is 409 `person_conflict`. Organisations are reused by trade licence, or else by exact name.
+- A person has no location. A scoped caller sees a person (or organisation) while they own, rent or live somewhere inside the caller's area (current rows only), and on their page only the rows inside it. Whole-society callers see everyone, including people not linked anywhere (committee, users). `POST /persons` (someone not linked anywhere) is for whole-society roles only (403 otherwise).
+- Permissions: people and households use `members`, owners `ownerships`, renters `tenancies`, each checked at the location. Verification needs `members.approve`. The NID number is only sent to callers who may edit the person; the list only says whether one is on file; audit rows record `hasNid` / `nidChanged`, never the number.
+- Ownerships sit on any location. Current co-owners' shares add up to at most 100% (409 `shares_over_100`); the same owner twice is 409 `already_owner`. A transfer ends every current row on the date and starts the new owners (history kept). Changes to one location's owners or tenancy lock that location row, so they run one at a time.
+- A unit has at most one open tenancy (409 `tenancy_open_exists`). Ending a tenancy ends its household rows. Tenancies and households only sit on units (400 `not_a_unit`). Deleting is for mistakes (a tenancy with household rows is 409 `tenancy_has_occupants`); otherwise end the row.
+
+**Shared (`contracts/members.ts`)**
+- `RENTER_TYPES`, `TENANCY_STATUSES`, `OCCUPANT_RELATIONS`, `GENDERS`, `MEMBER_ROLES`; person, organisation and party inputs; NID, share, rent and date parsing (Bangla digits allowed, blank is null); row, list, detail and location-people schemas. `canSocietyWide` in `permissions.ts` (`canGrant` uses it). `Members` messages and the new error codes in `bn.json` / `en.json`.
+
+**API (module `members`; services write their own audit rows with before and after)**
+- `GET /members` (paged; `q` fuzzy on names and on phone, NID or licence in either digit form; `role`, `verification`, `areaId`; counts of owners, renter households, bachelor renters and pending verification).
+- `POST /persons`, `GET`, `PATCH`, `DELETE /persons/:id`, `PUT /persons/:id/verified`, `POST` / `DELETE /persons/:id/photo`.
+- `GET`, `PATCH`, `DELETE /organisations/:id`.
+- `POST /ownerships`, `POST /ownerships/transfer`, `PATCH /ownerships/:id`, `POST /ownerships/:id/end`, `DELETE /ownerships/:id`.
+- `POST /tenancies`, `PATCH /tenancies/:id`, `POST /tenancies/:id/end`, `DELETE /tenancies/:id`.
+- `POST /occupants`, `PATCH /occupants/:id`, `POST /occupants/:id/end`, `DELETE /occupants/:id`.
+- `GET /locations/:id/people`: owners (with history), current owners of the places above (inside the caller's area), and a unit's tenancies and household, with what the caller may do.
+- `OccupancyService` (property module) re-derives occupancy in the same transaction as every unit, ownership and tenancy change. `TreeService.addressNames` moved there from `UnitsService`.
+
+**Web**
+- `/dashboard/members`: the mockup's four stat cards, search, role and verification filters, area chip, the table that becomes cards on phones, paging. "Add member" only for whole-society roles.
+- `/dashboard/members/[id]`: details form, verification, photo, delete, and their ownerships, tenancies and households. `/dashboard/members/new`. `/dashboard/members/organisations/[id]`.
+- A People panel on `/dashboard/units/[id]` (owners, owners above, the tenancy with status and police form, household; add, transfer, end, delete) and an owners panel on `/dashboard/property/[id]`. The unit form shows occupancy as a chip instead of a select.
+
+**Tests**
+- Shared: NID, person cleaning, shares, transfer totals, rent, party kinds, blank dates, a resident by person or id.
+- e2e (`test/members.e2e-spec.ts`): occupancy derived from a plot owner, a new unit under an owned plot, an owner marked as living in a flat (and a stranger refused by id), the renter added as a resident and moved out with the tenancy, pending vs active tenancy, ending tenancy and ownership; co-owner shares and duplicates; transfer history and owners above; reuse by phone or by NID in Bangla digits, and the conflict; list search (Bangla, English, phone in Bangla digits with a dash), filters and counts, verification; edit, unique phone, NID kept out of the audit log, delete only when unlinked; Block C manager vs Block D (list, person, location people, tenancy, ownership; no transfer without `ownerships.edit`; no unlinked add); NID only for editors; another society's person and unit; route permissions. The Step 9 tests now expect derived occupancy.
+
+**Checked:** `pnpm check` and the whole e2e suite (121 tests) pass. On the dev servers as the admin: a plot with an owner and a flat with a renter and spouse, then the members list (Bangla and English, area filter), the person page, the unit page and the plot page all rendered with the data; the test rows were deleted afterwards. The forms were not clicked through in a browser; that and the 375/820/1440 checks are part of the deferred visual pass.
+
+**Not in this step:** bulk import, the move-in/out checklist and resident directory (follow-up), picking an existing person from a search box (the phone or NID finds them), owner approval of renters (`owner_approved_at`) and the thana-sharing export, deed and NID document uploads, changing an organisation's contact person after creation.
 
 ## Steps 3 + 8: Public member forms and office review — Planned (last)
 

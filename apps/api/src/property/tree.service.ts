@@ -186,4 +186,24 @@ export class TreeService {
     });
     return row !== null;
   }
+
+  /**
+   * Names of every location above the given paths, by id. When the society has a
+   * single top-level location (the sector), it is left out: every address would start with it.
+   */
+  async addressNames(societyId: string, paths: string[]): Promise<Map<string, string>> {
+    const ids = [...new Set(paths.flatMap((path) => pathIds(path).slice(0, -1)))];
+    if (ids.length === 0) return new Map();
+    const [rows, roots] = await Promise.all([
+      this.prisma.locations.findMany({ where: { id: { in: ids }, society_id: societyId }, select: { id: true, name: true, parent_id: true } }),
+      this.prisma.locations.count({ where: { society_id: societyId, parent_id: null } }),
+    ]);
+    return new Map(rows.filter((row) => roots > 1 || row.parent_id !== null).map((row) => [row.id, row.name]));
+  }
 }
+
+/** The names above a path, top first, from `TreeService.addressNames`. */
+export const addressOf = (path: string, names: Map<string, string>): string[] =>
+  pathIds(path)
+    .slice(0, -1)
+    .flatMap((id) => names.get(id) ?? []);

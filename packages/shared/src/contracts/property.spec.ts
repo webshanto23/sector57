@@ -52,7 +52,7 @@ describe('property schemas', () => {
   });
 
   it('normalises unit names and requires one', () => {
-    const base = { parentId: uuid, code: '', unitType: 'residential', billTo: 'owner', occupancy: 'vacant', sizeSqft: null };
+    const base = { parentId: uuid, code: '', unitType: 'residential', billTo: 'owner', sizeSqft: null };
     expect(unitCreateSchema.parse({ ...base, name: ' ফ্ল্যাট ৪বি ' }).name).toBe('ফ্ল্যাট ৪বি'.normalize('NFC'));
     expect(unitCreateSchema.parse({ ...base, name: 'A' }).code).toBeNull();
     expect(unitCreateSchema.safeParse({ ...base, name: '  ' }).success).toBe(false);

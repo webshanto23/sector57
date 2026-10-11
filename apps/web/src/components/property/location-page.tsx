@@ -1,8 +1,18 @@
-import { canAnywhere, localDigits, type Locale, type LocationLevel, type LocationNode, type LocationView, type MeWithAccess } from "@s57/shared";
+import {
+  canAnywhere,
+  localDigits,
+  type Locale,
+  type LocationLevel,
+  type LocationNode,
+  type LocationPeople,
+  type LocationView,
+  type MeWithAccess,
+} from "@s57/shared";
 import { Building2, Layers, MapPin } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Note } from "@/components/admin/form-status";
 import { Card, Chip, IconBox, PageHeader } from "@/components/kit";
+import { PeoplePanel } from "@/components/members/people-panel";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { AddPanel } from "./add-panel";
@@ -41,8 +51,23 @@ async function ChildCard({ node, locale, unitsOpen }: { node: LocationNode; loca
   );
 }
 
-/** The property map at one place: where it sits, its details, what is inside, and adding more. */
-export async function LocationPage({ view, levels, me, locale }: { view: LocationView; levels: LocationLevel[]; me: MeWithAccess; locale: Locale }) {
+/**
+ * The property map at one place: where it sits, its details, its owners (when the caller
+ * may see them), what is inside, and adding more.
+ */
+export async function LocationPage({
+  view,
+  levels,
+  people = null,
+  me,
+  locale,
+}: {
+  view: LocationView;
+  levels: LocationLevel[];
+  people?: LocationPeople | null;
+  me: MeWithAccess;
+  locale: Locale;
+}) {
   const [t, tNav] = await Promise.all([getTranslations("Property"), getTranslations("Dashboard.nav")]);
   const { location, children, can } = view;
   const unitsOpen = canAnywhere(me.access, "units");
@@ -80,6 +105,8 @@ export async function LocationPage({ view, levels, me, locale }: { view: Locatio
             <LocationEditor key={location.id} location={location} canEdit={can.edit} canDelete={can.delete} />
           </Card>
         ) : null}
+
+        {people ? <PeoplePanel key={`people-${people.location.id}`} people={people} /> : null}
 
         <section className="grid gap-3" aria-labelledby="children-title">
           <div className="flex flex-wrap items-end justify-between gap-3">

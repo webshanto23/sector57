@@ -82,3 +82,8 @@ export type Access = z.infer<typeof accessSchema>;
 /** True when the caller may `action` on `module` anywhere (in the whole society or in some area). */
 export const canAnywhere = (access: Access, module: PermissionModule, action: PermissionAction = 'view'): boolean =>
   access.fullAccess || access.grants.some((grant) => grant.module === module && grant.action === action);
+
+/** True when the caller may `action` on `module` for the whole society, not just in an area. */
+export const canSocietyWide = (access: Access, module: PermissionModule, action: PermissionAction = 'view'): boolean =>
+  access.fullAccess ||
+  access.grants.some((grant) => grant.module === module && grant.action === action && grant.scopeLocationId === null);

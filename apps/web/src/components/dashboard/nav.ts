@@ -1,15 +1,20 @@
 import { canAnywhere, type Access, type PermissionModule } from "@s57/shared";
 import {
+  Archive,
   ArrowRightLeft,
   Banknote,
   Bell,
   BookUser,
+  Briefcase,
   Building2,
+  Coins,
   FolderOpen,
   Globe,
   HandHeart,
+  House,
   LayoutDashboard,
   Map,
+  Megaphone,
   Receipt,
   Repeat,
   ScrollText,
@@ -17,6 +22,7 @@ import {
   ShieldCheck,
   UserCog,
   UserRound,
+  Users,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
@@ -50,7 +56,14 @@ export type NavItem = {
   /** Other modules whose `view` also shows the item (its page has a tab for each). */
   also?: PermissionModule[];
 };
-export type NavGroup = { key: "property" | "people" | "finance" | "community" | "records" | "admin" | null; items: NavItem[] };
+export type NavGroup =
+  | { key: null; icon?: undefined; items: NavItem[] }
+  | {
+      key: "property" | "people" | "finance" | "community" | "records" | "admin";
+      /** Shown before the group name; kept apart from the item icons. */
+      icon: LucideIcon;
+      items: NavItem[];
+    };
 
 /**
  * The mockup's `DNAV`, in its order. Items whose module is not in the permission
@@ -61,6 +74,7 @@ export const DASHBOARD_NAV: NavGroup[] = [
   { key: null, items: [{ key: "overview", icon: LayoutDashboard, module: null }] },
   {
     key: "property",
+    icon: House,
     items: [
       { key: "property", icon: Map, module: "locations" },
       { key: "units", icon: Building2, module: "units" },
@@ -68,6 +82,7 @@ export const DASHBOARD_NAV: NavGroup[] = [
   },
   {
     key: "people",
+    icon: Users,
     items: [
       { key: "members", icon: UserRound, module: "members" },
       { key: "moves", icon: ArrowRightLeft, module: "tenancies" },
@@ -76,6 +91,7 @@ export const DASHBOARD_NAV: NavGroup[] = [
   },
   {
     key: "finance",
+    icon: Coins,
     items: [
       { key: "billing", icon: Receipt, module: "billing" },
       { key: "collect", icon: Banknote, module: "payments" },
@@ -84,10 +100,11 @@ export const DASHBOARD_NAV: NavGroup[] = [
       { key: "expenses", icon: Wallet, module: "expenses" },
     ],
   },
-  { key: "community", items: [{ key: "notices", icon: Bell, module: "notices" }] },
-  { key: "records", items: [{ key: "documents", icon: FolderOpen, module: "documents" }] },
+  { key: "community", icon: Megaphone, items: [{ key: "notices", icon: Bell, module: "notices" }] },
+  { key: "records", icon: Archive, items: [{ key: "documents", icon: FolderOpen, module: "documents" }] },
   {
     key: "admin",
+    icon: Briefcase,
     items: [
       { key: "roles", icon: ShieldCheck, module: "roles" },
       { key: "users", icon: UserCog, module: "users" },

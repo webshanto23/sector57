@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { optionalText, text } from '../schemas.js';
-import { PERMISSION_ACTIONS, PERMISSION_MODULES, type Access, type PermissionAction, type PermissionModule } from './permissions.js';
+import { canSocietyWide, PERMISSION_ACTIONS, PERMISSION_MODULES, type Access, type PermissionAction, type PermissionModule } from './permissions.js';
 
 /** One cell of the permission matrix. */
 export const permissionRefSchema = z.object({
@@ -45,5 +45,4 @@ export type RoleInput = z.infer<typeof roleInputSchema>;
  * society (or everything, with full access). The API checks the same rule.
  */
 export const canGrant = (access: Access, module: PermissionModule, action: PermissionAction): boolean =>
-  access.fullAccess ||
-  access.grants.some((grant) => grant.module === module && grant.action === action && grant.scopeLocationId === null);
+  canSocietyWide(access, module, action);

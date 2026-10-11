@@ -24,6 +24,28 @@ const KNOWN = [
   "invalid_level",
   "level_in_use",
   "level_name_taken",
+  "person_conflict",
+  "person_phone_taken",
+  "person_nid_taken",
+  "person_in_use",
+  "person_not_found",
+  "organisation_in_use",
+  "organisation_not_found",
+  "shares_over_100",
+  "already_owner",
+  "duplicate_owner",
+  "location_inactive",
+  "tenancy_open_exists",
+  "tenancy_has_occupants",
+  "not_a_unit",
+  "invalid_tenancy",
+  "already_occupant",
+  "end_before_start",
+  "already_ended",
+  "ownership_not_found",
+  "tenancy_not_found",
+  "occupant_not_found",
+  "invalid_person",
 ] as const;
 type KnownCode = (typeof KNOWN)[number];
 
@@ -43,6 +65,11 @@ const FIELD_CODES = [
   "duplicate_name",
   "range_reversed",
   "too_many",
+  "invalid_nid",
+  "invalid_share",
+  "invalid_amount",
+  "shares_over_100",
+  "end_before_start",
 ] as const;
 type FieldCode = (typeof FIELD_CODES)[number];
 

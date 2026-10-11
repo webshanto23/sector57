@@ -5,10 +5,12 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Note } from "@/components/admin/form-status";
 import { PageHeader } from "@/components/kit";
+import { PeoplePanel } from "@/components/members/people-panel";
 import { OccupancyChip, PropertyBreadcrumb } from "@/components/property/labels";
 import { UnitForm } from "@/components/property/unit-form";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { getLocationPeople } from "@/lib/api/members";
 import { getUnit } from "@/lib/api/property";
 import { requirePermission } from "@/lib/api/session";
 
@@ -19,13 +21,13 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/dashboar
   return unit ? { title: unit.name } : {};
 }
 
-/** One unit: where it is and its facts. */
+/** One unit: where it is, its facts, and who owns, rents and lives in it. */
 export default async function UnitPage({ params }: PageProps<"/[locale]/dashboard/units/[id]">) {
   const { locale, id } = await params;
   setRequestLocale(locale as Locale);
 
   const me = await requirePermission("units");
-  const [t, unit] = await Promise.all([getTranslations("Property"), getUnit(id)]);
+  const [t, unit, people] = await Promise.all([getTranslations("Property"), getUnit(id), getLocationPeople(id)]);
   if (!unit) notFound();
 
   return (
@@ -49,6 +51,7 @@ export default async function UnitPage({ params }: PageProps<"/[locale]/dashboar
       <div className="grid gap-3.5">
         {!unit.can.edit ? <Note>{t("readOnly")}</Note> : null}
         <UnitForm key={unit.id} unit={unit} />
+        {people ? <PeoplePanel key={`people-${unit.id}`} people={people} /> : null}
       </div>
     </>
   );

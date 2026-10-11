@@ -612,6 +612,278 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MembersController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/persons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PersonsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/persons/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PersonsController_get"];
+        put?: never;
+        post?: never;
+        delete: operations["PersonsController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["PersonsController_update"];
+        trace?: never;
+    };
+    "/persons/{id}/verified": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["PersonsController_verify"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/persons/{id}/photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PersonsController_setPhoto"];
+        delete: operations["PersonsController_removePhoto"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organisations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OrganisationsController_get"];
+        put?: never;
+        post?: never;
+        delete: operations["OrganisationsController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["OrganisationsController_update"];
+        trace?: never;
+    };
+    "/ownerships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OwnershipsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ownerships/transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OwnershipsController_transfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ownerships/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["OwnershipsController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["OwnershipsController_update"];
+        trace?: never;
+    };
+    "/ownerships/{id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OwnershipsController_end"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenancies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TenanciesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenancies/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["TenanciesController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["TenanciesController_update"];
+        trace?: never;
+    };
+    "/tenancies/{id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TenanciesController_end"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/occupants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OccupantsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/occupants/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["OccupantsController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["OccupantsController_update"];
+        trace?: never;
+    };
+    "/occupants/{id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OccupantsController_end"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/locations/{id}/people": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LocationPeopleController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1209,8 +1481,6 @@ export interface components {
             sizeSqft?: string | null;
             /** @enum {string} */
             billTo: "owner" | "renter";
-            /** @enum {string} */
-            occupancy: "owner_occupied" | "rented" | "vacant";
         };
         UnitBulkDto: {
             /** Format: uuid */
@@ -1231,8 +1501,676 @@ export interface components {
             sizeSqft?: string | null;
             /** @enum {string} */
             billTo?: "owner" | "renter";
+        };
+        MemberListDto_Output: {
+            items: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                photoUrl: string | null;
+                verified: boolean | null;
+                hasId: boolean;
+                links: ({
+                    /** @constant */
+                    role: "owner";
+                } | {
+                    /** @constant */
+                    role: "renter";
+                    /** @enum {string} */
+                    renterType: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+                } | {
+                    /** @constant */
+                    role: "occupant";
+                    /** @enum {string} */
+                    relation: "head" | "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
+                    renter: boolean;
+                })[];
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                } | null;
+                otherPlaces: number;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                owners: number;
+                renterHouseholds: number;
+                bachelorRenters: number;
+                pendingVerification: number;
+            };
+        };
+        PersonInputDto: {
+            fullName: string;
+            fullNameEn?: string | null;
+            phone?: string | null;
+            email?: string | null;
+            nid?: string | null;
+            dateOfBirth?: string | null;
+            gender?: ("male" | "female" | "other") | null;
+        };
+        PersonDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            fullName: string;
+            fullNameEn: string | null;
+            phone: string | null;
+            email: string | null;
+            nid: string | null;
+            hasNid: boolean;
+            dateOfBirth: string | null;
+            gender: ("male" | "female" | "other") | null;
+            photoUrl: string | null;
+            verifiedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            ownerships: {
+                /** Format: uuid */
+                id: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                owner: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                };
+                sharePercent: string;
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+            }[];
+            tenancies: {
+                /** Format: uuid */
+                id: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                renter: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                } | null;
+                /** @enum {string} */
+                renterType: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+                /** @enum {string} */
+                status: "pending" | "active" | "moving_out" | "ended";
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+                monthlyRent: string | null;
+                policeFormSubmitted: boolean;
+            }[];
+            households: {
+                /** Format: uuid */
+                id: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                person: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                };
+                tenancyId: string | null;
+                /** @enum {string} */
+                relation: "head" | "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+            }[];
+            can: {
+                edit: boolean;
+                verify: boolean;
+                delete: boolean;
+            };
+        };
+        PersonUpdateDto: {
+            fullName: string;
+            fullNameEn?: string | null;
+            phone?: string | null;
+            email?: string | null;
+            nid?: string | null;
+            dateOfBirth?: string | null;
+            gender?: ("male" | "female" | "other") | null;
+        };
+        PersonVerifyDto: {
+            verified: boolean;
+        };
+        OrganisationDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            tradeLicence: string | null;
+            contact: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                photoUrl: string | null;
+                verified: boolean | null;
+            } | null;
+            /** Format: date-time */
+            createdAt: string;
+            ownerships: {
+                /** Format: uuid */
+                id: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                owner: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                };
+                sharePercent: string;
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+            }[];
+            tenancies: {
+                /** Format: uuid */
+                id: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                renter: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                } | null;
+                /** @enum {string} */
+                renterType: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+                /** @enum {string} */
+                status: "pending" | "active" | "moving_out" | "ended";
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+                monthlyRent: string | null;
+                policeFormSubmitted: boolean;
+            }[];
+            can: {
+                edit: boolean;
+                delete: boolean;
+            };
+        };
+        OrganisationUpdateDto: {
+            name: string;
+            tradeLicence?: string | null;
+        };
+        OwnershipCreateDto: {
+            /** Format: uuid */
+            locationId: string;
+            owner: {
+                /** @constant */
+                kind: "person";
+                person: {
+                    fullName: string;
+                    fullNameEn?: string | null;
+                    phone?: string | null;
+                    email?: string | null;
+                    nid?: string | null;
+                    dateOfBirth?: string | null;
+                    gender?: ("male" | "female" | "other") | null;
+                };
+            } | {
+                /** @constant */
+                kind: "organisation";
+                organisation: {
+                    name: string;
+                    tradeLicence?: string | null;
+                    contact?: {
+                        fullName: string;
+                        fullNameEn?: string | null;
+                        phone?: string | null;
+                        email?: string | null;
+                        nid?: string | null;
+                        dateOfBirth?: string | null;
+                        gender?: ("male" | "female" | "other") | null;
+                    } | null;
+                };
+            };
+            sharePercent?: string;
+            /** Format: date */
+            startDate: string;
+        };
+        OwnershipDto_Output: {
+            /** Format: uuid */
+            id: string;
+            place: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string[];
+                isUnit: boolean;
+            };
+            owner: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                photoUrl: string | null;
+                verified: boolean | null;
+            };
+            sharePercent: string;
+            /** Format: date */
+            startDate: string;
+            endDate: string | null;
+        };
+        OwnershipTransferDto: {
+            /** Format: uuid */
+            locationId: string;
+            /** Format: date */
+            date: string;
+            owners: {
+                owner: {
+                    /** @constant */
+                    kind: "person";
+                    person: {
+                        fullName: string;
+                        fullNameEn?: string | null;
+                        phone?: string | null;
+                        email?: string | null;
+                        nid?: string | null;
+                        dateOfBirth?: string | null;
+                        gender?: ("male" | "female" | "other") | null;
+                    };
+                } | {
+                    /** @constant */
+                    kind: "organisation";
+                    organisation: {
+                        name: string;
+                        tradeLicence?: string | null;
+                        contact?: {
+                            fullName: string;
+                            fullNameEn?: string | null;
+                            phone?: string | null;
+                            email?: string | null;
+                            nid?: string | null;
+                            dateOfBirth?: string | null;
+                            gender?: ("male" | "female" | "other") | null;
+                        } | null;
+                    };
+                };
+                sharePercent?: string;
+            }[];
+        };
+        OwnershipListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                owner: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                };
+                sharePercent: string;
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+            }[];
+        };
+        OwnershipUpdateDto: {
+            sharePercent?: string;
+            /** Format: date */
+            startDate?: string;
+        };
+        EndDto: {
+            /** Format: date */
+            endDate: string;
+        };
+        TenancyCreateDto: {
+            /** Format: uuid */
+            unitId: string;
+            renter: {
+                /** @constant */
+                kind: "person";
+                person: {
+                    fullName: string;
+                    fullNameEn?: string | null;
+                    phone?: string | null;
+                    email?: string | null;
+                    nid?: string | null;
+                    dateOfBirth?: string | null;
+                    gender?: ("male" | "female" | "other") | null;
+                };
+            } | {
+                /** @constant */
+                kind: "organisation";
+                organisation: {
+                    name: string;
+                    tradeLicence?: string | null;
+                    contact?: {
+                        fullName: string;
+                        fullNameEn?: string | null;
+                        phone?: string | null;
+                        email?: string | null;
+                        nid?: string | null;
+                        dateOfBirth?: string | null;
+                        gender?: ("male" | "female" | "other") | null;
+                    } | null;
+                };
+            };
             /** @enum {string} */
-            occupancy?: "owner_occupied" | "rented" | "vacant";
+            renterType: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+            /**
+             * @default active
+             * @enum {string}
+             */
+            status: "pending" | "active";
+            /** Format: date */
+            startDate: string;
+            monthlyRent?: string | null;
+            /** @default false */
+            policeFormSubmitted: boolean;
+        };
+        TenancyDto_Output: {
+            /** Format: uuid */
+            id: string;
+            place: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string[];
+                isUnit: boolean;
+            };
+            renter: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                photoUrl: string | null;
+                verified: boolean | null;
+            } | null;
+            /** @enum {string} */
+            renterType: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+            /** @enum {string} */
+            status: "pending" | "active" | "moving_out" | "ended";
+            /** Format: date */
+            startDate: string;
+            endDate: string | null;
+            monthlyRent: string | null;
+            policeFormSubmitted: boolean;
+        };
+        TenancyUpdateDto: {
+            /** @enum {string} */
+            renterType?: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+            /** @enum {string} */
+            status?: "pending" | "active" | "moving_out";
+            /** Format: date */
+            startDate?: string;
+            monthlyRent?: string | null;
+            policeFormSubmitted?: boolean;
+        };
+        OccupantCreateDto: {
+            /** Format: uuid */
+            unitId: string;
+            tenancyId: string | null;
+            person?: {
+                fullName: string;
+                fullNameEn?: string | null;
+                phone?: string | null;
+                email?: string | null;
+                nid?: string | null;
+                dateOfBirth?: string | null;
+                gender?: ("male" | "female" | "other") | null;
+            };
+            /** Format: uuid */
+            personId?: string;
+            /** @enum {string} */
+            relation: "head" | "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
+            /** Format: date */
+            startDate: string;
+        };
+        OccupantDto_Output: {
+            /** Format: uuid */
+            id: string;
+            place: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string[];
+                isUnit: boolean;
+            };
+            person: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                photoUrl: string | null;
+                verified: boolean | null;
+            };
+            tenancyId: string | null;
+            /** @enum {string} */
+            relation: "head" | "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
+            /** Format: date */
+            startDate: string;
+            endDate: string | null;
+        };
+        OccupantUpdateDto: {
+            /** @enum {string} */
+            relation?: "head" | "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
+            /** Format: date */
+            startDate?: string;
+        };
+        LocationPeopleDto_Output: {
+            location: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                isUnit: boolean;
+            };
+            owners: {
+                /** Format: uuid */
+                id: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                owner: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                };
+                sharePercent: string;
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+            }[] | null;
+            ownersAbove: {
+                /** Format: uuid */
+                id: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                owner: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                };
+                sharePercent: string;
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+            }[] | null;
+            tenancies: {
+                /** Format: uuid */
+                id: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                renter: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                } | null;
+                /** @enum {string} */
+                renterType: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+                /** @enum {string} */
+                status: "pending" | "active" | "moving_out" | "ended";
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+                monthlyRent: string | null;
+                policeFormSubmitted: boolean;
+            }[] | null;
+            occupants: {
+                /** Format: uuid */
+                id: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                person: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                };
+                tenancyId: string | null;
+                /** @enum {string} */
+                relation: "head" | "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+            }[] | null;
+            can: {
+                ownerships: {
+                    create: boolean;
+                    edit: boolean;
+                    delete: boolean;
+                };
+                tenancies: {
+                    create: boolean;
+                    edit: boolean;
+                    delete: boolean;
+                };
+                occupants: {
+                    create: boolean;
+                    edit: boolean;
+                    delete: boolean;
+                };
+            };
         };
     };
     responses: never;
@@ -2598,6 +3536,579 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BulkResultDto_Output"];
+                };
+            };
+        };
+    };
+    MembersController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                role?: "owner" | "renter" | "occupant";
+                verification?: "pending" | "verified";
+                areaId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberListDto_Output"];
+                };
+            };
+        };
+    };
+    PersonsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonInputDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonDetailDto_Output"];
+                };
+            };
+        };
+    };
+    PersonsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonDetailDto_Output"];
+                };
+            };
+        };
+    };
+    PersonsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PersonsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonDetailDto_Output"];
+                };
+            };
+        };
+    };
+    PersonsController_verify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonVerifyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonDetailDto_Output"];
+                };
+            };
+        };
+    };
+    PersonsController_setPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonDetailDto_Output"];
+                };
+            };
+        };
+    };
+    PersonsController_removePhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonDetailDto_Output"];
+                };
+            };
+        };
+    };
+    OrganisationsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganisationDetailDto_Output"];
+                };
+            };
+        };
+    };
+    OrganisationsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrganisationsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganisationUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganisationDetailDto_Output"];
+                };
+            };
+        };
+    };
+    OwnershipsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OwnershipCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnershipDto_Output"];
+                };
+            };
+        };
+    };
+    OwnershipsController_transfer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OwnershipTransferDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnershipListDto_Output"];
+                };
+            };
+        };
+    };
+    OwnershipsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OwnershipsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OwnershipUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnershipDto_Output"];
+                };
+            };
+        };
+    };
+    OwnershipsController_end: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EndDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnershipDto_Output"];
+                };
+            };
+        };
+    };
+    TenanciesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TenancyCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenancyDto_Output"];
+                };
+            };
+        };
+    };
+    TenanciesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TenanciesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TenancyUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenancyDto_Output"];
+                };
+            };
+        };
+    };
+    TenanciesController_end: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EndDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenancyDto_Output"];
+                };
+            };
+        };
+    };
+    OccupantsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OccupantCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OccupantDto_Output"];
+                };
+            };
+        };
+    };
+    OccupantsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OccupantsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OccupantUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OccupantDto_Output"];
+                };
+            };
+        };
+    };
+    OccupantsController_end: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EndDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OccupantDto_Output"];
+                };
+            };
+        };
+    };
+    LocationPeopleController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationPeopleDto_Output"];
                 };
             };
         };

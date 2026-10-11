@@ -1,10 +1,10 @@
 import { pick, type Crumb, type Locale, type Occupancy } from "@s57/shared";
 import { ChevronRight } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import { Chip, type Tone } from "@/components/kit";
+import { Chip } from "@/components/kit";
 import { Link } from "@/i18n/navigation";
+import { OCCUPANCY_TONES } from "./occupancy";
 
-const OCCUPANCY_TONES: Record<Occupancy, Tone> = { owner_occupied: "good", rented: "info", vacant: "neutral" };
 
 export async function OccupancyChip({ occupancy }: { occupancy: Occupancy }) {
   const t = await getTranslations("Property.occupancy");

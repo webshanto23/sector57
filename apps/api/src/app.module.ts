@@ -14,6 +14,7 @@ import { AllExceptionsFilter } from './common/all-exceptions.filter.js';
 import { ConfigModule } from './config/config.module.js';
 import { ENV, type Env } from './config/env.js';
 import { GalleryModule } from './gallery/gallery.module.js';
+import { MembersModule } from './members/members.module.js';
 import { NoticesModule } from './notices/notices.module.js';
 import { PermissionsGuard } from './permissions/permissions.guard.js';
 import { PermissionsModule } from './permissions/permissions.module.js';
@@ -55,6 +56,7 @@ import { UsersModule } from './users/users.module.js';
     RolesModule,
     UsersModule,
     PropertyModule,
+    MembersModule,
   ],
   controllers: [AppController],
   providers: [
