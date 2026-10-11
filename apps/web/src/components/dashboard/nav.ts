@@ -8,6 +8,7 @@ import {
   Briefcase,
   Building2,
   Coins,
+  FilePen,
   FolderOpen,
   Globe,
   HandHeart,
@@ -35,6 +36,7 @@ export type NavKey =
   | "members"
   | "moves"
   | "directory"
+  | "forms"
   | "billing"
   | "collect"
   | "recurring"
@@ -87,6 +89,7 @@ export const DASHBOARD_NAV: NavGroup[] = [
       { key: "members", icon: UserRound, module: "members" },
       { key: "moves", icon: ArrowRightLeft, module: "tenancies" },
       { key: "directory", icon: BookUser, module: "members" },
+      { key: "forms", icon: FilePen, module: "forms" },
     ],
   },
   {

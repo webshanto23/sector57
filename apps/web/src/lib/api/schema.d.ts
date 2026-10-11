@@ -884,6 +884,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/public/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicFormsController_places"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/forms/{formKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublicFormsController_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FormsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FormsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/{id}/files/{fileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FormsController_file"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["FormsController_review"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["FormsController_approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["FormsController_reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1657,6 +1785,14 @@ export interface components {
                 startDate: string;
                 endDate: string | null;
             }[];
+            membership: {
+                memberNo: number;
+                /** @enum {string} */
+                status: "active" | "lapsed" | "cancelled";
+                /** Format: date */
+                joinedOn: string;
+                endedOn: string | null;
+            } | null;
             can: {
                 edit: boolean;
                 verify: boolean;
@@ -2171,6 +2307,163 @@ export interface components {
                     delete: boolean;
                 };
             };
+        };
+        PublicPlaceListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                levelBn: string;
+                levelEn: string | null;
+                isUnit: boolean;
+                hasChildren: boolean;
+            }[];
+        };
+        FormReceiptDto_Output: {
+            reference: string;
+            /** @enum {string} */
+            formKey: "membership" | "renter_registration";
+            /** Format: date-time */
+            submittedAt: string;
+        };
+        FormListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                reference: string;
+                /** @enum {string} */
+                formKey: "membership" | "renter_registration";
+                /** @enum {string} */
+                status: "new" | "in_review" | "approved" | "rejected";
+                name: string;
+                phone: string | null;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                } | null;
+                /** Format: date-time */
+                submittedAt: string;
+                files: number;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                new: number;
+                in_review: number;
+                approved: number;
+                rejected: number;
+            };
+        };
+        FormDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            reference: string;
+            /** @enum {string} */
+            formKey: "membership" | "renter_registration";
+            /** @enum {string} */
+            status: "new" | "in_review" | "approved" | "rejected";
+            /** Format: date-time */
+            submittedAt: string;
+            reviewedAt: string | null;
+            reviewNote: string | null;
+            reviewerName: string | null;
+            place: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string[];
+                isUnit: boolean;
+            } | null;
+            membership: {
+                applicant: {
+                    fullName: string;
+                    fullNameEn: string | null;
+                    phone: string;
+                    email: string | null;
+                    nid: string | null;
+                };
+                /** Format: uuid */
+                locationId: string;
+                livesHere: boolean;
+            } | null;
+            renter: {
+                renter: {
+                    fullName: string;
+                    fullNameEn: string | null;
+                    phone: string;
+                    email: string | null;
+                    nid: string | null;
+                };
+                occupation: string | null;
+                permanentAddress: string | null;
+                /** @enum {string} */
+                renterType: "family" | "bachelor";
+                /** Format: uuid */
+                unitId: string;
+                /** Format: date */
+                moveInDate: string;
+                owner: {
+                    name: string;
+                    phone: string | null;
+                };
+                household: {
+                    fullName: string;
+                    /** @enum {string} */
+                    relation: "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
+                }[];
+            } | null;
+            nidHidden: boolean;
+            files: {
+                /** Format: uuid */
+                id: string;
+                fileName: string;
+                docType: string;
+                isImage: boolean;
+            }[];
+            matches: {
+                /** Format: uuid */
+                personId: string;
+                name: string;
+                by: ("phone" | "nid")[];
+                open: boolean;
+            }[];
+            person: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                photoUrl: string | null;
+                verified: boolean | null;
+            } | null;
+            memberNo: number | null;
+            can: {
+                review: boolean;
+                approve: boolean;
+                reject: boolean;
+                addOwnership: boolean;
+            };
+        };
+        FormReviewDto: {
+            note?: string | null;
+        };
+        FormApproveDto: {
+            note?: string | null;
+            /** @default false */
+            addOwnership: boolean;
+            sharePercent?: string;
+            /** Format: date */
+            startDate?: string;
+            monthlyRent?: string | null;
+        };
+        FormRejectDto: {
+            note: string;
         };
     };
     responses: never;
@@ -4109,6 +4402,201 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LocationPeopleDto_Output"];
+                };
+            };
+        };
+    };
+    PublicFormsController_places: {
+        parameters: {
+            query?: {
+                parentId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicPlaceListDto_Output"];
+                };
+            };
+        };
+    };
+    PublicFormsController_submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                formKey: "membership" | "renter_registration";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** @description The answers, as JSON */
+                    data: string;
+                    /** @description Leave empty */
+                    website?: string;
+                    /** Format: binary */
+                    file?: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormReceiptDto_Output"];
+                };
+            };
+        };
+    };
+    FormsController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                status?: "new" | "in_review" | "approved" | "rejected";
+                formKey?: "membership" | "renter_registration";
+                areaId?: string;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormListDto_Output"];
+                };
+            };
+        };
+    };
+    FormsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormDetailDto_Output"];
+                };
+            };
+        };
+    };
+    FormsController_file: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                fileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FormsController_review: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FormReviewDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormDetailDto_Output"];
+                };
+            };
+        };
+    };
+    FormsController_approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FormApproveDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormDetailDto_Output"];
+                };
+            };
+        };
+    };
+    FormsController_reject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FormRejectDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormDetailDto_Output"];
                 };
             };
         };

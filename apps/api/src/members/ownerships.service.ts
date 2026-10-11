@@ -79,30 +79,36 @@ export class OwnershipsService {
   async create(actor: Actor, input: OwnershipCreateInput): Promise<Ownership> {
     const location = await this.location(actor, input.locationId, 'create');
     if (!location.isActive) throw locationInactive();
-    const id = await this.prisma.$transaction(async (tx) => {
-      await lockLocation(tx, location.id);
-      const party = await this.parties.resolve(tx, actor.societyId, input.owner);
-      const current = await this.current(tx, location.id);
-      if (current.some((row) => sameParty(row, party))) throw alreadyOwner();
-      const held = current.reduce((sum, row) => sum + shareHundredths(row.share_percent.toString()), 0);
-      if (held + shareHundredths(input.sharePercent) > 10000) throw sharesOver();
-
-      const row = await tx.ownerships.create({
-        data: {
-          society_id: actor.societyId,
-          location_id: location.id,
-          person_id: party.personId,
-          organisation_id: party.organisationId,
-          share_percent: input.sharePercent,
-          start_date: dayOf(input.startDate),
-        },
-        select: rowSelect,
-      });
-      await this.occupancy.refresh(actor.societyId, location.path, tx);
-      await this.audit.record({ ...auditOf(actor, 'ownership', 'create', row.id), after: { ...snapshot(row), reusedParty: party.reused } }, tx);
-      return row.id;
-    });
+    const id = await this.prisma.$transaction((tx) => this.insert(tx, actor, location, input));
     return this.get(actor, id);
+  }
+
+  /**
+   * Adds the owner inside the caller's transaction, after the location checks (`create` there, active).
+   * Also used when the office approves a membership application.
+   */
+  async insert(tx: Tx, actor: Actor, location: LocationRow, input: OwnershipCreateInput): Promise<string> {
+    await lockLocation(tx, location.id);
+    const party = await this.parties.resolve(tx, actor.societyId, input.owner);
+    const current = await this.current(tx, location.id);
+    if (current.some((row) => sameParty(row, party))) throw alreadyOwner();
+    const held = current.reduce((sum, row) => sum + shareHundredths(row.share_percent.toString()), 0);
+    if (held + shareHundredths(input.sharePercent) > 10000) throw sharesOver();
+
+    const row = await tx.ownerships.create({
+      data: {
+        society_id: actor.societyId,
+        location_id: location.id,
+        person_id: party.personId,
+        organisation_id: party.organisationId,
+        share_percent: input.sharePercent,
+        start_date: dayOf(input.startDate),
+      },
+      select: rowSelect,
+    });
+    await this.occupancy.refresh(actor.societyId, location.path, tx);
+    await this.audit.record({ ...auditOf(actor, 'ownership', 'create', row.id), after: { ...snapshot(row), reusedParty: party.reused } }, tx);
+    return row.id;
   }
 
   /** On `date` the current owners stop and the listed owners start. */

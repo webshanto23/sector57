@@ -45,5 +45,7 @@ import { TenanciesService } from './tenancies.service.js';
     OccupantsService,
     LocationPeopleService,
   ],
+  // The office review (forms module) approves applications through these.
+  exports: [PartiesService, MemberRowsService, TenanciesService, OwnershipsService],
 })
 export class MembersModule {}

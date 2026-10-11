@@ -366,6 +366,20 @@ export const memberListSchema = z.object({
 });
 export type MemberList = z.infer<typeof memberListSchema>;
 
+/** `memberships.status`. A registered member of the society (see docs/glossary.md: "Member"). */
+export const MEMBERSHIP_STATUSES = ['active', 'lapsed', 'cancelled'] as const;
+export type MembershipStatus = (typeof MEMBERSHIP_STATUSES)[number];
+export const toMembershipStatus = oneOf(MEMBERSHIP_STATUSES, 'cancelled');
+
+/** A person's society membership, on their page. */
+export const membershipSchema = z.object({
+  memberNo: z.number().int(),
+  status: z.enum(MEMBERSHIP_STATUSES),
+  joinedOn: isoDay,
+  endedOn: isoDay.nullable(),
+});
+export type Membership = z.infer<typeof membershipSchema>;
+
 /**
  * `GET /persons/:id`. `nid` is null unless the caller may edit the person (`hasNid` says
  * whether one is on file). The ownerships, tenancies and households are those in the caller's area.
@@ -386,10 +400,11 @@ export const personDetailSchema = z.object({
   ownerships: z.array(ownershipSchema),
   tenancies: z.array(tenancySchema),
   households: z.array(occupantSchema),
+  /** Their current or latest society membership, if any. */
+  membership: membershipSchema.nullable(),
   can: z.object({ edit: z.boolean(), verify: z.boolean(), delete: z.boolean() }),
 });
 export type PersonDetail = z.infer<typeof personDetailSchema>;
-
 
 /** `GET /organisations/:id`. */
 export const organisationDetailSchema = z.object({

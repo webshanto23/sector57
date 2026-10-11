@@ -1,6 +1,6 @@
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import type { Prisma } from '@s57/db';
-import { toGender, type PermissionAction, type PersonDetail, type PersonInput, type PersonUpdateInput } from '@s57/shared';
+import { toGender, toMembershipStatus, type PermissionAction, type PersonDetail, type PersonInput, type PersonUpdateInput } from '@s57/shared';
 import { AuditService } from '../audit/audit.service.js';
 import { isoDate } from '../common/dates.js';
 import { mediaUrl } from '../common/media.js';
@@ -73,10 +73,16 @@ export class PersonsService {
     const can = (action: PermissionAction) => canOnParty(actor.access, action, paths);
     const at = (module: 'ownerships' | 'tenancies' | 'members') =>
       scopeWhere(actor.access, 'view', module, (prefix) => ({ path: { startsWith: prefix } }));
-    const [ownerships, tenancies, households] = await Promise.all([
+    const [ownerships, tenancies, households, membership] = await Promise.all([
       this.rows.ownerships(actor.societyId, { person_id: id, locations: at('ownerships') }),
       this.rows.tenancies(actor.societyId, { primary_person_id: id, units: { locations: at('tenancies') } }),
       this.rows.occupants(actor.societyId, { person_id: id, units: { locations: at('members') } }),
+      // The active membership, else the latest one.
+      this.prisma.memberships.findFirst({
+        where: { person_id: id, society_id: actor.societyId },
+        orderBy: [{ status: 'asc' }, { joined_on: 'desc' }],
+        select: { member_no: true, status: true, joined_on: true, ended_on: true },
+      }),
     ]);
     const mayEdit = can('edit');
     return {
@@ -95,6 +101,14 @@ export class PersonsService {
       ownerships,
       tenancies,
       households,
+      membership: membership
+        ? {
+            memberNo: membership.member_no,
+            status: toMembershipStatus(membership.status),
+            joinedOn: isoDate(membership.joined_on),
+            endedOn: membership.ended_on ? isoDate(membership.ended_on) : null,
+          }
+        : null,
       can: { edit: mayEdit, verify: can('approve'), delete: can('delete') },
     };
   }

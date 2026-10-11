@@ -124,9 +124,79 @@
   "Forms": {
     "title": "Member services",
     "sub": "Apply online. The society office reviews every request.",
-    "comingSoonTitle": "Online applications are coming soon",
-    "comingSoonBody": "Membership, renter registration and other requests will soon be available here. Until then, please apply at the society office.",
-    "office": "Society office"
+    "office": "Society office",
+    "kinds": {
+      "membership": "Membership application",
+      "renter_registration": "Renter registration",
+      "vehicle_sticker": "Vehicle sticker request",
+      "facility_booking": "Facility booking request",
+      "noc": "NOC or clearance request",
+      "complaint": "Complaint or suggestion"
+    },
+    "kindHints": {
+      "membership": "For plot and flat owners",
+      "renter_registration": "Required for all renters",
+      "vehicle_sticker": "Car and motorbike stickers",
+      "facility_booking": "Hall, playground, gym",
+      "noc": "For sale, rent or utility",
+      "complaint": "Roads, security, cleaning"
+    },
+    "comingSoon": "Coming soon",
+    "comingSoonHint": "Services marked 'Coming soon' can't be requested online yet. Please contact the society office for these.",
+    "intro": {
+      "membership": "Takes about 3 minutes. The office checks it and contacts you on your mobile.",
+      "renter_registration": "Required for all renters. The office checks it and contacts you on your mobile."
+    },
+    "fullName": "Full name",
+    "fullNameEn": "Name in English (optional)",
+    "phone": "Mobile number",
+    "email": "Email (optional)",
+    "nid": "NID number",
+    "nidOptional": "NID number (optional)",
+    "nidHint": "10, 13 or 17 digits",
+    "choose": "Choose",
+    "placeHint": {
+      "membership": "Choose the plot, building or flat you own. If you own the whole plot, stop at the plot.",
+      "renter_registration": "Choose the flat you rent or will rent."
+    },
+    "placesFailed": "Could not load the address list. Please reload the page.",
+    "iAm": "I am",
+    "livesHere": "Owner, living here",
+    "livesElsewhere": "Owner, living elsewhere",
+    "deed": "Ownership document",
+    "nidCopy": "Copy of NID (optional)",
+    "fileHint": "Photo or PDF, up to 5 MB",
+    "fileTooLarge": "The file is larger than 5 MB.",
+    "fileWrongType": "Use a photo (JPEG, PNG, WebP) or a PDF.",
+    "renterType": "Renter type",
+    "moveInDate": "Move-in date",
+    "occupation": "Occupation (optional)",
+    "permanentAddress": "Permanent address (optional)",
+    "ownerName": "Name of the flat's owner",
+    "ownerPhone": "Owner's mobile (optional)",
+    "household": "Others in the household",
+    "householdHint": "Everyone besides you who will live in the flat.",
+    "name": "Name",
+    "relation": "Relation",
+    "addPerson": "Add another person",
+    "removePerson": "Remove",
+    "householdFull": "You can add up to {max} people.",
+    "privacy": "Only the society office can see your details and documents.",
+    "submit": "Submit application",
+    "submitting": "Sending…",
+    "doneTitle": "Application received",
+    "doneBody": "Your reference number is <ref>{reference}</ref>. Quote it when you contact the office.",
+    "another": "Make another application",
+    "errors": {
+      "already_submitted": "This application has already been sent and is waiting for the office.",
+      "too_many_submissions": "Too many applications came from this mobile number today. Try again tomorrow or contact the office.",
+      "too_many_requests": "Too many attempts in a short time. Please try again in a few minutes.",
+      "invalid_place": "Choose the address from the list.",
+      "unsupported_document": "Use a photo (JPEG, PNG, WebP) or a PDF.",
+      "file_required": "Attach a photo or PDF of the deed.",
+      "payload_too_large": "The file is larger than 5 MB.",
+      "validation_failed": "Please correct the fields marked in red."
+    }
   },
   "Auth": {
     "loginTitle": "Log in",
@@ -184,6 +254,7 @@
       "members": "Owners & renters",
       "moves": "Move in-out",
       "directory": "Residents",
+      "forms": "Applications",
       "billing": "Bills",
       "collect": "Collections",
       "recurring": "Subscriptions",
@@ -384,7 +455,12 @@
       "invalid_nid": "An NID has 10, 13 or 17 digits.",
       "invalid_share": "Enter a share above 0 and up to 100, e.g. 50 or 33.33.",
       "invalid_amount": "Enter an amount in taka, e.g. 25000.",
-      "invalid_person": "This person is not a current owner or the renter of this unit. Reload the page."
+      "invalid_person": "This person is not a current owner or the renter of this unit. Reload the page.",
+      "form_closed": "This application has already been decided. Reload the page.",
+      "already_member": "This person is already a member of the society.",
+      "form_not_found": "Application not found.",
+      "file_not_found": "File not found.",
+      "unsupported_document": "Use a photo (JPEG, PNG, WebP) or a PDF."
     }
   },
   "Cms": {
@@ -877,6 +953,89 @@
       "livesHere": "Lives here",
       "livesHereHint": "If an owner lives in this unit, press “Lives here” to add them as a resident.",
       "renterIsResident": "A renter who is a person is added as a resident (head of household) automatically."
-    }
+    },
+    "memberNo": "Society member · no. {no}",
+    "membershipStatus": {
+      "active": "Membership active",
+      "lapsed": "Membership lapsed",
+      "cancelled": "Membership cancelled"
+    },
+    "memberSince": "since {date}"
+  },
+  "FormsAdmin": {
+    "sub": "Check and approve applications sent from the website",
+    "status": {
+      "new": "New",
+      "in_review": "In review",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "allForms": "All kinds",
+    "allStatuses": "All statuses",
+    "col": {
+      "reference": "Reference",
+      "form": "Application",
+      "name": "Applicant",
+      "place": "Address",
+      "phone": "Mobile",
+      "submitted": "Submitted",
+      "status": "Status"
+    },
+    "searchLabel": "Search applications",
+    "searchPlaceholder": "Reference, name or mobile",
+    "filter": "Show",
+    "inArea": "Applications in {name}",
+    "inSomeArea": "Applications in one area",
+    "clearArea": "All areas",
+    "empty": "No applications",
+    "files": "Attached documents",
+    "fileCount": "{count, plural, =0 {No documents} one {# document} other {# documents}}",
+    "back": "All applications",
+    "submittedOn": "Submitted {date}",
+    "answers": "Application details",
+    "applicant": "Applicant",
+    "renter": "Renter",
+    "place": "Address",
+    "ownerStatus": "Owner's status",
+    "household": "Others in the household",
+    "noHousehold": "Nobody else",
+    "nidHidden": "An NID number was given, but you can't see it.",
+    "noFiles": "No documents attached.",
+    "docTypes": {
+      "deed": "Ownership document",
+      "nid_copy": "Copy of NID"
+    },
+    "openFile": "Open",
+    "downloadFile": "Download",
+    "matches": "Already on record",
+    "matchBy": {
+      "phone": "Same mobile",
+      "nid": "Same NID"
+    },
+    "matchHint": "Approving uses this person's record: nobody new is added and their stored details stay as they are.",
+    "decision": "Decision",
+    "decidedBy": "{name} on {date}",
+    "note": "Note",
+    "notePlaceholder": "Note for the office (optional)",
+    "markReview": "Start review",
+    "approve": "Approve",
+    "reject": "Reject",
+    "rejectReason": "Reason for rejecting",
+    "rejectReasonHint": "Write the reason to tell the applicant.",
+    "confirmReject": "Reject this application?",
+    "approveHint": {
+      "membership": "Approving makes the applicant a member of the society with the next member number.",
+      "renter_registration": "Approving opens a pending tenancy of the flat with the whole household. Once they move in, set the tenancy to active on the unit page."
+    },
+    "addOwnership": "Also record as owner",
+    "addOwnershipHint": "Tick once the deed has been checked. The current owners' shares of this place can't add up to more than 100%.",
+    "sharePercent": "Share (%)",
+    "ownershipStart": "Ownership start date",
+    "tenancyStart": "Tenancy start date",
+    "monthlyRent": "Monthly rent (optional)",
+    "noApproveRight": "You don't have the permissions needed to approve in this area.",
+    "memberNo": "Member no. {no}",
+    "openPerson": "Person's page",
+    "openPlace": "Address page"
   }
 }

@@ -8,6 +8,7 @@ coverage
 next-env.d.ts
 # Uploaded files stay on the host (compose mounts a volume)
 apps/api/media
+apps/api/private-media
 
 .git
 .github

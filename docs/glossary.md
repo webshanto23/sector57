@@ -11,7 +11,8 @@ One word, one meaning, everywhere: menus, page titles, buttons, messages (Bangla
 | **Owners & renters** | মালিক ও ভাড়াটিয়া | The register of everyone with a property record: owners, renters and residents (plus, for whole-society roles, people not linked to a unit yet). | `/dashboard/members` page and its menu item |
 | **Resident** | বাসিন্দা | Someone who lives in a unit now (`occupants`, current rows). A renter who is a person becomes one automatically; an owner becomes one when marked "Lives here". An owner who lives elsewhere is not a resident. | Residents list on each unit; the resident directory (later) |
 | **Household** | পরিবার | The residents of one unit under one owner or one tenancy ("owner's household", "renter's household"). | Resident rows |
-| **Member** | সদস্য | A registered member of the society: applied, approved, can vote and pays the membership fee. Being an owner, renter or resident does not make someone a member. Reserved for Steps 3 + 8; until then the dashboard does not use the word. | Membership form (public site), membership approval |
+| **Member** | সদস্য | A registered member of the society: applied, approved, can vote and pays the membership fee. Being an owner, renter or resident does not make someone a member. A `memberships` row (numbered, active, lapsed or cancelled), made when the office approves a membership application. | Membership form (public site), membership approval, "Society member · no. N" on a person's page |
+| **Application** | আবেদন | A request sent from the public website (membership application, renter registration) that the office reviews: new, in review, approved or rejected. | `/forms` on the site, `/dashboard/forms` |
 | **Committee member** | কমিটির সদস্য | Someone holding a committee seat for a term. Always written in full, never just "member". | Committee pages |
 
 ## In code

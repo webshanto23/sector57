@@ -14,6 +14,7 @@ function setup(failOn?: (key: string) => boolean) {
     delete: vi.fn(async (key: string) => {
       files.delete(key);
     }),
+    read: vi.fn(async (key: string) => files.get(key)!),
   };
   return { files, storage, media: new MediaService(storage) };
 }

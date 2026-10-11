@@ -21,15 +21,23 @@ Schema changes are additive and need Anis's approval first.
 | 0 | Foundations | Done | `step/00-foundations` |
 | 1 | Public site shell, home and notices | Done | `step/01-public-site` |
 | 2 | Committee, developments and gallery | Done | `step/02-committee-gallery` |
-| – | Docker, CI draft, localhost-only ports | Done (`fix/compose-local-ports` not merged yet) | `fix/compose-local-ports` |
-| 4 | Auth (phone + password) | Pushed, awaiting Codex review and merge | `step/04-auth` |
-| 5 | Permissions engine and dashboard shell | Built, awaiting Codex review | `step/05-permissions` |
-| 6 | Roles and users admin | Built, awaiting Codex review | `step/06-roles-users` |
-| 7 | Content CMS and file storage | Built, awaiting Codex review | `step/07-cms` |
-| 9 | Property: location tree and units | Built, awaiting Codex review | `step/09-property` |
-| 10 | Members | Built, awaiting Codex review | `step/10-members` |
-| 3 + 8 | Public member forms and office review | Planned (last in milestone 1) | `step/03-forms` |
-| M2 | Billing, cash collection, receipts, finance | Later | — |
+| – | Docker, CI draft, localhost-only ports | Done | `fix/compose-local-ports` |
+| 4 | Auth (phone + password) | Done | `step/04-auth` |
+| 5 | Permissions engine and dashboard shell | Done | `step/05-permissions` |
+| 6 | Roles and users admin | Done | `step/06-roles-users` |
+| 7 | Content CMS and file storage | Done | `step/07-cms` |
+| 9 | Property: location tree and units | Done | `step/09-property` |
+| 10 | Members | Done | `step/10-members` |
+| 3 + 8 | Public member forms and office review | Built, awaiting Codex review | `step/03-forms` |
+| 11 | M2: Finance setup (funds, charge types, numbering, settings) | Later | `step/11-finance-setup` |
+| 12 | M2: Bills (invoices) and opening arrears | Later | `step/12-bills` |
+| 13 | M2: Recurring charges and billing runs | Later | `step/13-recurring` |
+| 14 | M2: Cash collection, receipts and handover | Later | `step/14-collect` |
+| 15 | M2: Donations | Later | `step/15-donations` |
+| 16 | M2: Expenses and budgets | Later | `step/16-expenses` |
+| 17 | M2: Fund ledger and finance reports | Later | `step/17-reports` |
+| 18 | M2: Overview dashboard | Later | `step/18-overview` |
+| 19 | M2 (optional): Resident bills view | Later, needs a decision | `step/19-my-bills` |
 
 The step numbers are names, not the build order. Order changed on 2026-10-08: Steps 3 and 8 moved to the end so the forms use the real location tree (Step 9) and the file storage from Step 7, and residents submit while the office reviews in the same release.
 
@@ -62,11 +70,11 @@ The step numbers are names, not the build order. Order changed on 2026-10-08: St
 
 - `Dockerfile` (`api` and web targets), `docker-compose.yml` (Postgres 18, API 4000, web 3000), `.dockerignore`.
 - `.github/workflows/ci.yml` is a draft Anis owns.
-- `fix/compose-local-ports`: binds the API and database ports to localhost only. Pushed, not merged.
+- `fix/compose-local-ports`: binds the API and database ports to localhost only. Merged (PR #4).
 
 ---
 
-## Step 4: Auth (phone + password) — Built, awaiting Codex review
+## Step 4: Auth (phone + password) — Done
 
 Branch `step/04-auth`. Scope confirmed by Anis on 2026-10-10 and built the same day. Two changes from the scope note:
 - The secret is `JWT_SECRET` (the name `.env.example` already used), not `AUTH_JWT_SECRET`.
@@ -131,7 +139,7 @@ Branch `step/04-auth`. Scope confirmed by Anis on 2026-10-10 and built the same 
 - In Docker, the API sees the web container's address instead of the visitor's, so the per-IP login limit is shared by everyone. On the droplet (Nginx → Next → API on loopback) it sees the real visitor.
 - The web proxy helpers (`src/lib/session-proxy.ts`, `src/lib/safe-next.ts`) have no unit tests because the web app has no test runner yet; the flow was checked end to end with curl.
 
-## Step 5: Permissions engine and dashboard shell — Built, awaiting Codex review
+## Step 5: Permissions engine and dashboard shell — Done
 
 Branch `step/05-permissions`, branched from `step/04-auth`. Scope confirmed by Anis on 2026-10-10. No schema change.
 
@@ -162,7 +170,7 @@ Branch `step/05-permissions`, branched from `step/04-auth`. Scope confirmed by A
 
 **Not in this step:** role and user admin screens (Step 6), real dashboard pages, overview figures (milestone 2), a mobile drawer (the phone layout is the mockup's scrolling strip).
 
-## Step 6: Roles and users admin — Built, awaiting Codex review
+## Step 6: Roles and users admin — Done
 
 Branch `step/06-roles-users`, branched from `step/05-permissions`. Scope confirmed by Anis on 2026-10-10. No schema change.
 
@@ -206,7 +214,7 @@ Branch `step/06-roles-users`, branched from `step/05-permissions`. Scope confirm
 
 **Not in this step:** invites, forced password change, a user's session list, the audit log viewer, bulk import of users. The area picker lists nothing until Step 9 builds the location tree.
 
-## Step 7: Content CMS and file storage — Built, awaiting Codex review
+## Step 7: Content CMS and file storage — Done
 
 Branch `step/07-cms`, branched from `step/06-roles-users`. Scope confirmed by Anis on 2026-10-10. No schema change.
 
@@ -250,7 +258,7 @@ Branch `step/07-cms`, branched from `step/06-roles-users`. Scope confirmed by An
 
 **Not in this step:** SMS sending and `send_sms`, notice audience by area (after Step 9), the `documents` attachments UI, a Spaces driver, drag-and-drop ordering, rich text, page titles (fixed per page), cleaning up orphaned files left by a crash between upload and save.
 
-## Step 9: Property — Built, awaiting Codex review
+## Step 9: Property — Done
 
 Branch `step/09-property`, branched from `step/07-cms`. Scope confirmed by Anis on 2026-10-10.
 
@@ -295,7 +303,7 @@ Branch `step/09-property`, branched from `step/07-cms`. Scope confirmed by Anis 
 
 **Not in this step:** moving a branch, spreadsheet import, location attributes (land area, storeys; the `attributes` column stays `{}`), owners and renters (Step 10, which will also derive occupancy), notice audience by area, live counts on the public home page, the public address dropdowns (Step 3).
 
-## Step 10: Members — Built, awaiting Codex review
+## Step 10: Members — Done
 
 Branch `step/10-members`, branched from `step/09-property`. Scope confirmed by Anis on 2026-10-11.
 
@@ -306,7 +314,7 @@ Branch `step/10-members`, branched from `step/09-property`. Scope confirmed by A
 - Occupancy is derived: `rented` while a tenancy is active or moving out; otherwise `owner_occupied` when the unit or a location above it has a current owner; otherwise `vacant`. A pending tenancy (not moved in) doesn't make a unit rented. Household rows don't count. Occupancy can no longer be typed in.
 
 **Words (Anis, 2026-10-11, see `docs/glossary.md`)**
-- The page and menu item are "Owners & renters / মালিক ও ভাড়াটিয়া"; people who live in a unit are "Residents / বাসিন্দা"; "Member / সদস্য" is kept for registered society members (Steps 3 + 8) and is not used in the dashboard until then. Code names (`members` module, route and URL) are unchanged.
+- The page and menu item are "Owners & renters / মালিক ও ভাড়াটিয়া"; people who live in a unit are "Residents / বাসিন্দা"; "Member / সদস্য" is kept for registered society members (Steps 3 + 8: the membership form and approval, and the "Society member" chip on a person's page). Code names (`members` module, route and URL) are unchanged.
 - A renter who is a person is added as a resident (head of the renter's household) when the tenancy is created. An owner of the unit or a place above it becomes a resident with "Lives here" (`POST /occupants` with `personId`; any other person by id is 400 `invalid_person`). In the list, an owner or renter who heads that household is shown once.
 
 **Schema (migration `4_members`)**
@@ -345,28 +353,229 @@ Branch `step/10-members`, branched from `step/09-property`. Scope confirmed by A
 
 **Not in this step:** bulk import, the move-in/out checklist and resident directory (follow-up), picking an existing person from a search box (the phone or NID finds them), owner approval of renters (`owner_approved_at`) and the thana-sharing export, deed and NID document uploads, changing an organisation's contact person after creation.
 
-## Steps 3 + 8: Public member forms and office review — Planned (last)
+## Steps 3 + 8: Public member forms and office review — Built, awaiting Codex review
 
-- **Step 3, public submit:** membership and renter registration (the mockup's `forms` view). Block > road > plot > flat dropdowns from `locations`. Saved to `form_submissions`, validated with a shared zod schema, rate-limited, NFC-normalised. Uploads use the Step 7 storage. Replaces the "coming soon" page.
-- **Step 8, office review:** a queue of `new`, `in_review`, `approved`, `rejected` in the mockup's "Needs approval" style. Approving a membership request creates or links the person.
+Branch `step/03-forms`, branched from `step/10-members`. Scope confirmed by Anis on 2026-10-11.
 
-**Open decisions:**
-- Spam protection on the public form (captcha, phone OTP, or rate limit only).
-- Does the president's "share renter data with thana" setting (`society_settings`) need an export in this step?
+**Decisions (Anis, 2026-10-11)**
+- Spam protection: rate limits and a honeypot only (no captcha, no OTP; there is no SMS gateway).
+- No thana export in this step; `share_renters_with_thana` stays unused.
+- Migration `5_forms` approved, including the `memberships` table.
+- The four other services on the mockup (vehicle sticker, facility booking, NOC, complaint) are shown as "coming soon".
+
+**Schema (migration `5_forms`)**
+- `form_submissions`: `location_id` (area scope), `reference` (unique per society, e.g. `M-7KQ3XP2A`), `phone`, `person_id` (set on approval), `review_note`, `reviewed_at`, `updated_at`; a check on `form_key` (`membership`, `renter_registration`); indexes for the queue, the phone checks and the location.
+- `memberships`: `person_id`, `location_id` (the property it was granted for), `member_no` (unique per society), `status` (`active`, `lapsed`, `cancelled`), `joined_on`, `ended_on`, `submission_id`. At most one active membership per person (partial unique index). Applied with `migrate deploy`; `prisma migrate diff` shows no drift.
+
+**Rules**
+- **Private files.** Deeds and NID copies go to `PRIVATE_MEDIA_DIR` (default `private-media`, git-ignored, its own compose volume), never under `MEDIA_DIR`; the API refuses to start if one folder is inside the other. `PrivateFilesService` (`src/storage`) checks the bytes: photos are re-encoded like any image, a PDF must start with `%PDF-`, end with `%%EOF` and carry no active content (`/JavaScript`, `/Launch`, embedded files and so on; a basic filter). Files are only read back through `GET /forms/:id/files/:fileId` after a permission check: photos inline, PDFs as a download, `no-store`, and each read is audited. Each file is a `documents` row (`entity_type` `form_submission`, visibility `office`). Milestone 2 expense vouchers can reuse it.
+- **Public submit.** No login and no CSRF token (`@SkipCsrf`); the Origin check still runs. The answers are a JSON `data` field checked against the shared schemas (NFC, Bangla digits). A renter must pick an active flat; a member any active place below the whole society. Limits: 5 posts per address per 10 minutes, 3 submissions per phone per day (429 `too_many_submissions`), and the same open application (form, phone, place) only once (409 `already_submitted`). A filled honeypot gets a receipt and nothing is saved. The audit row records the form, reference and place, never the applicant's details.
+- **Review.** Module `forms` (location-scoped): `view` for the queue and files, `edit` to start a review (`new` → `in_review`), `approve` to approve or reject. Approving also needs `members.create` (membership) or `tenancies.create` (renter) at the place, and "also record as owner" needs `ownerships.create`. Status changes only happen if the row is still open (409 `form_closed`), so two people can't decide one application twice. The NID only reaches callers with `forms.edit` or `forms.approve`, and the "already on record" matches show NID matches only to them.
+- **Approving a membership** finds or adds the person (`PartiesService.resolvePerson`, by phone then NID), refuses someone who is already a member (409 `already_member`), and gives the next member number (per-society transaction lock). With "also record as owner" it adds the ownership through `OwnershipsService.insert` in the same transaction.
+- **Approving a renter registration** opens a **pending** tenancy through `TenanciesService.insert` (the renter becomes head of the household), adds the listed household members as new people and residents, and leaves occupancy alone until the office sets the tenancy to active. A flat with an open tenancy refuses it (409 `tenancy_open_exists`). Everything rolls back together on any error.
+- `TenanciesService.create` and `OwnershipsService.create` now call `insert(tx, actor, place, input)`, which runs inside a caller's transaction after the place checks.
+
+**Shared (`contracts/forms.ts`)**
+- `FORM_KEYS`, `UPCOMING_FORMS`, `FORM_STATUSES`, `HOUSEHOLD_RELATIONS`, `PUBLIC_RENTER_TYPES`, `DOCUMENT_UPLOAD`, `FORM_HONEYPOT`; `membershipFormSchema`, `renterFormSchema`, the receipt, the public place list, the queue, the detail and the review inputs. `MEMBERSHIP_STATUSES` and `membershipSchema` are in `members.ts`; `personDetailSchema` has `membership`. `Forms` messages rewritten, new `FormsAdmin` namespace, `Dashboard.nav.forms`, new error codes.
+
+**API (module `forms`)**
+- Public: `GET /public/locations?parentId=` (active children: names and levels only), `POST /public/forms/:formKey` (multipart).
+- Office: `GET /forms` (paged; `status`, `formKey`, `areaId`, `q` on reference, name or phone in either digit form; counts per status in the caller's area), `GET /forms/:id`, `GET /forms/:id/files/:fileId`, `POST /forms/:id/review`, `/approve`, `/reject` (a reason is required).
+
+**Web**
+- `/forms` replaces the "coming soon" page: the mockup's split view with the six services (two online, four "coming soon"), the chosen form, the receipt with its reference, and the office's contact card. Address dropdowns load level by level from the real tree (a single top place is skipped); the household list adds and removes rows; documents are checked in the browser first. react-hook-form with the shared schemas, and server errors land on their fields.
+- `/dashboard/forms`: four status cards, search, status and form filters, area chip, the table that becomes cards on phones, paging. "Applications / আবেদন" sits in the People group of the nav.
+- `/dashboard/forms/[id]`: the answers, attached documents (photos shown, PDFs downloaded), people already on record, and the decision panel (start review; approve with owner share and date, or tenancy start and rent; reject with a reason).
+- The person page shows "Society member · no. N" when they hold a membership.
+
+**Tests**
+- Shared: the two form schemas (NFC, Bangla digits, required NID, no "head" in the household, the household limit) and the review inputs.
+- Unit: `processDocument` (PDF kept, photo re-encoded, active PDFs, cut-off PDFs, HTML, SVG, zip), `PRIVATE_MEDIA_DIR` kept apart from `MEDIA_DIR`.
+- e2e (`test/forms.e2e-spec.ts`, 21 tests): the dropdowns (natural order, inactive and other-society places hidden); submit with the deed in private storage only, a photo re-encoded, required fields, bad JSON, wrong place kinds, other society's place, bad files saving nothing, the honeypot, duplicate and per-phone limits, the per-address limit, a foreign Origin; the queue, search by reference and Bangla-digit phone, filters; Block C vs Block D (list, detail, file, approve), another society's row, no `forms.view`; NID hidden from viewers; file headers and 401/404; review once; membership approval with owner record and the person page; member numbers in order and a second membership refused with the application left open; renter approval as a pending tenancy with the household, and the open-tenancy conflict rolling back; approve needing the side permission, reject needing a reason, the audit row.
+
+**Checked:** `pnpm check` and the whole e2e suite pass. On the dev servers (API build on 4000, the running web dev server on 3000): `/forms` rendered in Bangla with the six services; a renter registration with a PDF went through the `/api` proxy as multipart (Bangla-digit phone accepted) and a foreign Origin got 403; as the admin, the queue, its filters and the detail page (Bangla and English) rendered; the PDF came back as a `no-store` download (401 without a session); start review and reject worked through the proxy, and reject without the CSRF header was 403. The test rows and file were deleted afterwards. The forms were not clicked through in a browser, and the 375/820/1440 checks are part of the deferred visual pass.
+
+**Not in this step:** SMS to applicants, an applicant status lookup, the other four services, membership fees (milestone 2), the thana export, copying an approved deed onto the person's documents (it stays on the submission, linked through `person_id`), cancelling or lapsing a membership from the dashboard, picking the person to link by hand when the phone and NID match two different people (approval answers 409 `person_conflict`).
 
 ---
 
-## Later: milestone 2 and beyond
+## Milestone 2: finance — Later
 
-These are in the mockup's dashboard nav but not in milestone 1. Each needs its own plan.
+Draft plan, 2026-10-11. Nothing here is confirmed: each step still gets its own scope note, and the decisions marked **(decide)** need Anis before that step starts. The mockup screens are `overview`, `billing`, `collect` (form plus receipt) and the resident app's bills tab; `recurring`, `donations` and `expenses` have no mockup yet, so they follow the `billing` list and `collect` form patterns.
 
-**Milestone 2: finance** (cash only, receipts issued, money as `numeric(14,2)`, no hard deletes)
-- Overview dashboard (`overview`)
-- Bills and invoices (`billing`)
-- Cash collection and receipts (`collect`)
-- Recurring charges (`recurring`)
-- Donations (`donations`)
-- Expenses and budget (`expenses`), including separate facility funds if the president turns that on
+### Goal
+
+The office bills every unit, takes cash at the counter, hands each payer a printed receipt, and the treasurer can show where every taka came from, which fund it sits in and where it went. Built so that the numbers can't be quietly changed afterwards.
+
+### Before milestone 2 starts
+
+- Milestone 1 finished: Steps 3 + 8 merged (Steps 4–10 are, PR #5 and #6), and the deferred 375/820/1440 pass done.
+- **Before real money is recorded:** the droplet deploy script, a nightly `pg_dump` copied off the droplet, and one restore tried on a scratch database. Finance rows are the one thing the society can't re-type.
+- Steps 3 + 8 add `memberships`; the membership fee (Step 12) bills those.
+
+### Rules for every finance step
+
+- **Money.** `numeric(14,2)` in the database, `Prisma.Decimal` in the API, decimal strings in the shared contracts (`moneySchema`: positive, at most two decimals, Bangla digits allowed, NFC). Never a JS `number`. Totals are summed in SQL. The web formats with the existing `৳` helper.
+- **Nothing is deleted.** Finance routes have no `DELETE`. A mistake is voided with a reason, who and when, and the void writes a reversing ledger row. `ledger_entries` is append-only, enforced by a trigger that rejects `UPDATE` and `DELETE` (the migration adds it; a test proves it).
+- **Numbers without gaps.** Invoice, receipt and voucher numbers come from a per-society counter row locked in the same transaction as the record, so a failed save gives the number back and two collectors never get the same one.
+- **Snapshots.** An invoice stores who it was billed to and the unit address as they were on the day; a receipt stores the payer and what it was for. A reprint years later matches the paper even after the owner changes.
+- **Dates.** Calendar dates are Dhaka dates. Billing periods are whole months. The fiscal year starts at `societies.fiscal_year_start_month` (July) and is written `2026-27`.
+- **Overdue is derived**, never stored: `unpaid` or `partial` with `due_date` before today in Dhaka.
+- **Area scope.** `billing` and `payments` are already location-scoped: an invoice is in scope through its unit's path, and a payment when all the invoices it settles are. A Block C collector neither sees nor collects for Block D. `donations`, `expenses`, `budgets` and `ledger` are society-wide.
+- **Two people for money going out.** Nobody approves their own expense (403 `cannot_approve_own`), and a collector's cash handover is confirmed by someone else.
+- **Concurrency.** Taking a payment locks the invoices it settles (`FOR UPDATE`); the existing `paid <= total` check is the backstop. A test runs two payments on one invoice at once.
+- **Funds.** With `separate_facility_funds` off, only the default fund exists and the UI hides every fund picker. One invoice belongs to one fund (a billing run makes one invoice per unit per fund), so a payment always lands in exactly one fund without splitting.
+- **Audit.** Every write records its own audit row with before and after, as in Steps 6–10.
+- **Permissions.** The modules already exist (`billing`, `payments`, `donations`, `expenses`, `budgets`, `ledger`, `settings`); no new module is planned. `approve` is used for handover confirmation, expense approval and voids after handover; `export` for CSV downloads.
+
+### What the phase-1 finance schema is missing
+
+The tables in `0_init` are a good base. Reviewing them against the screens shows these gaps; each step's migration adds only its own part, all additive.
+
+| Gap | Proposed addition | Step |
+|---|---|---|
+| No safe way to number invoices, receipts, vouchers | `document_sequences (society_id, kind, period, next_no)` | 11 |
+| Fund balances need an opening figure | `ledger_entries.source_type` gets `opening`; `created_by`; `reverses_id` (points at the row a void reverses) | 11 |
+| No record of moving money between funds | `fund_transfers` (from, to, amount, date, memo, by); two ledger rows each | 17 |
+| Invoices lose who and where they were billed to | `invoices.bill_to_snapshot jsonb`, `fund_id`, `billing_run_id`, `void_reason`, `voided_at`, `voided_by` | 12 |
+| Invoice lines are Bangla-only | `invoice_lines.description_en` (`description` stays the Bangla text) | 12 |
+| Billing runs can't be listed or explained | `billing_runs` (period, started by, auto or manual, counts and totals, skipped units) | 13 |
+| Schedules can't set a due date or a name | `charge_schedules.name_bn`, `name_en`, `due_days` | 13 |
+| Voided payments aren't traceable; payments have no unit | `payments.voided_at`, `voided_by`, `unit_id`, `payer_snapshot`, `note`, `handover_id` | 14 |
+| `handed_over_at` can't hold a count, a difference or who confirmed | `cash_handovers` (collector, amount expected, amount counted, confirmed by, confirmed at, note) | 14 |
+| Expenses can't be paid, voided or numbered | `expenses.voucher_no`, `created_at`, `paid_at`, `paid_by`, `reject_reason`, `voided_at`, `voided_by`, `void_reason`; status `void` | 16 |
+| Donations have no receipt of their own | none: a donation creates a `payments` row (the receipt) with no allocations; the ledger row comes from the donation, not the payment, so it isn't counted twice | 15 |
+
+`payments.method` keeps its check, but the API accepts only `cash` in milestone 2 (online payment is out of scope).
+
+### Step 11: Finance setup
+
+The ground the other steps stand on; small screens, mostly rules.
+
+- **Settings page** (`/dashboard/settings`, `settings.edit`): the president toggles from `society_settings` (`separate_facility_funds`, `share_renters_with_thana`), fiscal year start month, receipt header (society name, address, phone, as printed). Each setting is a typed key in shared, so the API refuses unknown keys.
+- **Funds** (`ledger.*`): the default fund is seeded; more funds (mosque, gym) only while separate funds are on, optionally tied to a facility location. A fund is never deleted, only closed with a zero balance. **Opening balance** per fund, entered once, as an `opening` ledger row.
+- **Charge types** (`billing.*`): name in Bangla and English, kind (`due`, `fee`, `fine`), fund, default amount. Seed examples outside production (service charge, generator fee, membership fee).
+- **Shared:** `moneySchema`, money parsing and adding in whole paisa (`bigint`) for the web; **amount in words** in Bangla and English with lakh and crore ("চার হাজার পাঁচশত টাকা মাত্র", "Taka four thousand five hundred only", paisa when present), with many tests; fiscal-year helpers; number formats.
+- **API:** `NumberingService.next(tx, societyId, kind, date)`.
+- **Decisions:**
+  - **(decide)** Number formats. Proposal from the mockup: `INV-YYMM-NNNN` (restarts monthly), `RC-NNNNN` (never restarts), `EXP-YY-NNNN` (restarts each fiscal year).
+  - **(decide)** Track *where* money sits (cash box vs bank account) as well as *which fund*? A real treasurer deposits cash at a bank. Proposal: add an `account` column (`cash`, `bank`) on ledger rows now, and "deposit to bank" / "withdraw" as transfers in Step 17. Adding it later means rewriting history, so it has to be settled here.
+
+### Step 12: Bills (invoices) and opening arrears
+
+- **Bill-to rule** (shared, tested): if the unit's `bill_to` is `renter` and it has an `active` or `moving_out` tenancy, the renter (person or organisation). Otherwise the current owners of the unit, else of the nearest location above it that has owners; among co-owners the largest share, then the earliest start. Nobody found: the invoice can't be made (400 `no_bill_to`), and the billing run lists the unit as skipped.
+- **Manual invoice** (`billing.create`): unit (or a person, for the membership fee), lines from charge types with amount and period, due date. Lines are fixed once issued; a wrong invoice is voided (only while nothing is paid on it, `billing.approve`) and a new one made.
+- **Opening arrears:** dues from before the system, entered per unit as an invoice with one "previous dues" line, dated before go-live and marked so reports can tell them apart.
+- **Membership fee:** a bill for a person with an active membership (Steps 3 + 8), no unit.
+- **API:** `GET /invoices` (paged; `q` on invoice number, unit name or code, bill-to name, either digit form; `status` including derived `overdue`; `areaId`; `period`; counts and totals for the stat cards), `GET /invoices/:id`, `POST /invoices`, `POST /invoices/:id/void`. `GET /units/:id/bills` for the unit page.
+- **Web:** `/dashboard/billing` exactly like the mockup: four stat cards (billed, collected, outstanding, earlier arrears), search and status filter, table that becomes cards on phones. `/dashboard/billing/new`, `/dashboard/billing/[id]` (lines, payments against it, void). A Bills panel on `/dashboard/units/[id]` and the person page.
+- **Decisions:**
+  - **(decide)** How opening arrears get in: typed per unit on the unit page (proposal), or a spreadsheet import if the office has a list by then.
+  - **(decide)** Late fees: none automatic in milestone 2 (proposal); the office adds a `fine` line by hand.
+
+### Step 13: Recurring charges and billing runs
+
+- **Schedules** (`/dashboard/recurring`, `billing.*`): charge type, amount, every 1/3/6/12 months or once, area (whole society or a branch), unit types, start and end, due after N days, auto or manual, pause and end.
+- **Run:** for one month, every active schedule that is due makes one invoice per unit per fund, with one line per schedule. **Preview first**: units to bill, total by charge, units skipped and why (no bill-to, inactive, already billed). Confirming creates the invoices and a `billing_runs` row. Running twice never bills twice (`invoice_lines_once_uq`, a test proves it).
+- **Auto runs:** a daily job (`@nestjs/schedule`, 02:00 Dhaka) runs schedules marked auto whose `next_run_on` has come, under a Postgres advisory lock so a second API process can't run it at the same time. A failed run is logged and shown on the page; nothing half-made is kept (one transaction per run).
+- **Web:** schedule list and form; run history with totals; the mockup's "Generate manually" button opens the preview.
+- **Decisions:**
+  - **(decide)** Amount per unit only (proposal), or also per square foot (`units.size_sqft`)?
+  - **(decide)** A unit added or a tenancy started mid-month: billed from the next run (proposal), no part-month amounts.
+
+### Step 14: Cash collection, receipts and handover
+
+The page the office uses most; built from the mockup's `collect` view.
+
+- **Take a payment** (`payments.create`): find the unit or payer (either digit form); their open invoices are listed oldest first and ticked; the amount received fills in and can be lowered, settling invoices in order (the last one may end `partial`). Saving makes the payment, its allocations, updates each invoice's `paid` and status, and writes ledger rows, all in one transaction. "Collected by" is the logged-in user.
+- **Receipt:** the mockup's receipt card, with the amount in words, printed from the browser (print CSS; no PDF library). A reprint says "Duplicate / অনুলিপি".
+- **Void** with a reason: the collector the same day before handover; after that only `payments.approve`. Voiding reverses the allocations' effect on the invoices and writes reversing ledger rows; the receipt shows "Void" on reprint.
+- **Cash in hand and handover:** the mockup's stat cards (receipts today, cash in hand). "Close day and hand over" makes a `cash_handovers` row for the collector's open payments; the treasurer (`payments.approve`, not the collector) types the amount counted and confirms. A difference is recorded with a note, never hidden.
+- **API:** `GET /collect/lookup?q=`, `POST /payments`, `GET /payments` (paged; date, collector, voided), `GET /payments/:id`, `POST /payments/:id/void`, `GET /handovers`, `POST /handovers`, `POST /handovers/:id/confirm`.
+- **Decisions:**
+  - **(decide)** Advance and over-payment. Proposal: no unallocated credit in milestone 2; the amount can't exceed what is ticked. Paying months ahead means the office bills those months first ("bill ahead" on the unit page, from the unit's schedules).
+  - **(decide)** Receipt paper: A5 / half A4 with an office counterfoil (proposal), or 80 mm thermal printers.
+  - **(decide)** The mockup's SMS receipt needs an SMS provider; proposal: leave it out of Step 14 and add SMS (receipts and notices) as its own step once a provider is chosen.
+
+### Step 15: Donations
+
+- **Record a donation** (`donations.create`): donor (person, organisation or anonymous), fund, purpose, amount. It issues a receipt (a `payments` row with no invoices, same numbering and printing as Step 14) and an `in` ledger row in that fund. Void as in Step 14.
+- **List** with totals by fund and purpose, and a donor's history on their person page.
+- **Decisions:**
+  - **(decide)** A public donor list on the website (opt-in per donation)? Proposal: not in milestone 2.
+  - **(decide)** Tie donations and expenses to the development projects? That needs the `projects` table noted in Step 7 (developments are JSON today). Proposal: decide together with Step 16; until then `purpose` is free text.
+
+### Step 16: Expenses and budgets
+
+- **Expense heads and vendors** (`expenses.edit`): simple lists; vendor names stored as typed.
+- **Expense flow:** request (`expenses.create`: head, fund, vendor, description, amount, date, voucher photo or PDF through `PrivateFilesService` from Steps 3 + 8, stored as a `documents` row) → approve or reject with a reason (`expenses.approve`, never your own) → pay (`expenses.edit`: voucher number, paid from the fund, `out` ledger row). A paid expense is only voided, with a reversing row.
+- **Fund balance check:** paying more than the fund holds is refused (409 `fund_insufficient`), so a fund never goes below zero. **(decide)** refuse (proposal) or only warn.
+- **Budgets** (`budgets.*`): an amount per expense head per fiscal year; the page shows budget, approved, paid and remaining, with the overspent heads marked. Over budget warns, never blocks.
+- **Web:** `/dashboard/expenses` (tabs: expenses, budget, heads and vendors); the overview's "Needs approval" card links here.
+- **Decisions:**
+  - **(decide)** Approval limits by amount (for example above ৳50,000 needs the president). Roles are data, so a limit would be a per-role setting; proposal: not in milestone 2, one approver is enough.
+
+### Step 17: Fund ledger and finance reports
+
+- **Ledger** (`ledger.view`): balances per fund (and per account if Step 11 says so), a statement for a date range (opening, in, out, closing), each row linking to its receipt, donation or expense. **Fund transfers** and bank deposits (`ledger.create`, two rows each).
+- **Reports** (`/dashboard/reports`, each behind its module's `view`; CSV with `export`, UTF-8 with BOM so Excel reads Bangla):
+  - Day book: every receipt and payment for a day, by collector.
+  - Collection by area (the mockup's "Collection by block"): billed, collected and percentage per top-level area.
+  - Arrears: units with overdue bills, aged 0–30, 31–90, 90+ days; printable as a door-to-door list for one road.
+  - Income and expenditure by charge type and expense head for a fiscal year; budget against actual.
+- **Decisions:**
+  - **(decide)** Add the audit log viewer (`audit.view`) here? Finance is where the committee will want to see who changed what. Proposal: yes, read-only, filters by user, entity and date.
+
+### Step 18: Overview dashboard
+
+Replaces the placeholder `/dashboard` with the mockup's `overview`, each card shown only with its module's `view` and limited to the caller's area:
+- Stat cards: collected this month (and % of billed), arrears (units overdue), occupied units of all (from Step 10's derived occupancy).
+- Billed against collected, last six months (inline SVG bar chart, token colours, no chart library).
+- Collection by area.
+- Needs approval: pending expenses, unconfirmed handovers, forms waiting for review (Step 8).
+- The mockup's helpdesk and "this week" cards stay hidden until those modules exist; "Open tickets" is replaced by "Pending forms".
+- Figures come from one `GET /overview` built from SQL sums, cached briefly; the test checks them against the rows.
+
+### Step 19 (optional): Resident bills
+
+The resident app's bills tab: a logged-in owner or renter sees their own bills and receipts, read-only. It needs residents to have accounts (Step 6 makes users only by hand) and a self-access rule ("bills billed to me or my units") rather than a module grant.
+- **(decide)** In milestone 2, or with the rest of the member app later (proposal: later, unless the office wants to stop answering "how much do I owe" calls).
+
+### Tests every finance step adds
+
+- The society boundary and the Block C / Block D area scope on every new route.
+- Exact money: sums with paisa, Bangla digit input, no float anywhere (a test pushes `0.10 + 0.20`-style amounts through the API).
+- Nothing deletable: no finance `DELETE` routes; the ledger trigger refuses updates and deletes.
+- Ledger agrees with the records: after each e2e file, each fund's ledger sum equals receipts plus donations minus paid expenses plus transfers.
+- Numbering: concurrent saves get distinct, gap-free numbers.
+
+### Not in milestone 2
+
+Online payment, bank or mobile payment entry, SMS (unless the decision above adds it), automatic late fees, part-month amounts, credit balances, approval limits, the member app beyond Step 19, accounting exports to other software.
+
+### Open decisions, in one place
+
+| Decision | Proposal | Needed before |
+|---|---|---|
+| Number formats | `INV-YYMM-NNNN`, `RC-NNNNN`, `EXP-YY-NNNN` | Step 11 |
+| Track cash vs bank as well as funds | Yes, `account` on ledger rows | Step 11 |
+| Opening arrears entry | Typed per unit | Step 12 |
+| Late fees | Manual fine lines only | Step 12 |
+| Per square foot rates | No, per unit only | Step 13 |
+| Mid-month units and tenancies | From the next run, no part months | Step 13 |
+| Advance payments | No credit; bill ahead first | Step 14 |
+| Receipt paper | A5 with counterfoil | Step 14 |
+| SMS receipts | Separate SMS step once a provider is chosen | Step 14 |
+| Public donor list | No | Step 15 |
+| `projects` table for developments | Decide with Step 16 | Step 15 |
+| Paying more than a fund holds | Refuse | Step 16 |
+| Approval limits by amount | No | Step 16 |
+| Audit log viewer | Yes, in Step 17 | Step 17 |
+| Resident bills view | Later, with the member app | Step 19 |
+
+## Later: beyond milestone 2
+
+These are in the mockup's dashboard nav but not in milestones 1 or 2. Each needs its own plan.
 
 **Operations**
 - Staff and HRM (`hrm`)
@@ -385,8 +594,8 @@ These are in the mockup's dashboard nav but not in milestone 1. Each needs its o
 - Documents (`documents`)
 - Certificates and NOC (`certs`)
 - Reports (`reports`)
-- Society settings (`settings`), the per-society president toggles
-- Audit log viewer (`audit`); the log itself is written from Step 4/5
+- Society settings (`settings`): the finance toggles come in Step 11; module on/off switches later
+- Audit log viewer (`audit`): proposed for Step 17; the log itself is written from Step 4/5
 
 **Member app:** the mockup's member-facing view (residents see their own bills, notices and requests).
 
@@ -397,6 +606,5 @@ These are in the mockup's dashboard nav but not in milestone 1. Each needs its o
 ## Pending chores
 
 - Visual checks at 375, 820 and 1440 px for Steps 0–2 (deferred; use CDP viewport emulation).
-- Merge `fix/compose-local-ports`.
 - Finish the CI workflow (Anis).
 - Update the "Current state" section of `CLAUDE.md`: Steps 1 and 2 are merged and the GitHub remote exists.
