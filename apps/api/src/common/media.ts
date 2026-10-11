@@ -9,3 +9,12 @@ export function mediaUrl(key: string | null | undefined, baseUrl: string | undef
   if (!baseUrl) return null;
   return `${baseUrl.replace(/\/+$/, '')}/${key.replace(/^\/+/, '')}`;
 }
+
+/**
+ * Storage key of a photo's thumbnail: `x.webp` → `x.thumb.webp`. Absolute URLs and
+ * other keys (seeded or imported files) have no thumbnail and are returned unchanged.
+ */
+export function thumbKey<T extends string | null | undefined>(key: T): T {
+  if (!key || /^https?:\/\//i.test(key) || !key.endsWith('.webp') || key.endsWith('.thumb.webp')) return key;
+  return `${key.slice(0, -'.webp'.length)}.thumb.webp` as T;
+}

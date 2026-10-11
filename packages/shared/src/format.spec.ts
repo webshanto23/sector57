@@ -45,6 +45,7 @@ describe('formatDate', () => {
 
   it('formats a clock time in Dhaka', () => {
     expect(formatDate('2026-10-10T09:45:00Z', 'en', 'time')).toBe('15:45');
+    expect(formatDate('2026-10-10T09:45:00Z', 'en', 'short')).toBe('10 Oct 2026');
     expect(formatDate('2026-10-10T09:45:00Z', 'bn', 'time')).toMatch(/^৩:৪৫/);
   });
 

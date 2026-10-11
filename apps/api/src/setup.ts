@@ -4,6 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { cleanupOpenApiDoc } from 'nestjs-zod';
+import { resolve } from 'node:path';
 import { ENV, type Env } from './config/env.js';
 
 /** Everything main.ts applies to the app, shared with the e2e tests. */
@@ -18,6 +19,23 @@ export function configureApp(app: INestApplication): Env {
   app.use(cookieParser());
   app.enableCors({ origin: env.WEB_ORIGIN, credentials: true });
   app.enableShutdownHooks();
+
+  // Uploaded files at /media/<key> (dev and Docker). On the droplet Nginx serves MEDIA_DIR instead.
+  if (env.MEDIA_SERVE ?? env.NODE_ENV !== 'production') {
+    express.useStaticAssets(resolve(env.MEDIA_DIR), {
+      prefix: '/media/',
+      index: false,
+      dotfiles: 'deny',
+      // Keys are random and never reused, so a file never changes.
+      immutable: true,
+      maxAge: '365d',
+      setHeaders: (res, path) => {
+        // Only images are stored; anything else is sent as a download, never rendered.
+        if (!path.endsWith('.webp')) res.setHeader('Content-Disposition', 'attachment');
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      },
+    });
+  }
 
   if (env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()

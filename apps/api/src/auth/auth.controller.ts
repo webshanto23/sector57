@@ -3,12 +3,15 @@ import { Throttle } from '@nestjs/throttler';
 import { AUTH_COOKIES } from '@s57/shared';
 import type { Request, Response } from 'express';
 import { ZodResponse } from 'nestjs-zod';
+import { SkipAudit } from '../audit/audit.decorators.js';
 import { ENV, type Env } from '../config/env.js';
+import type { CallerAccess } from '../permissions/caller-access.js';
+import { Authenticated, CurrentAccess } from '../permissions/permissions.decorators.js';
 import { CurrentSociety } from '../society/current-society.decorator.js';
 import type { SocietyContext } from '../society/society.service.js';
 import { clearAuthCookies, readCookie, setAuthCookies } from './auth-cookies.js';
 import { CurrentUser, Public, SkipCsrf } from './auth.decorators.js';
-import { ChangePasswordDto, LoginDto, MeDto } from './auth.dto.js';
+import { ChangePasswordDto, LoginDto, MeDto, MeWithAccessDto } from './auth.dto.js';
 import { AuthService } from './auth.service.js';
 import type { ClientMeta } from './sessions.service.js';
 import { TokensService } from './tokens.service.js';
@@ -19,9 +22,10 @@ const clientMeta = (request: Request): ClientMeta => ({
   userAgent: request.headers['user-agent'] ?? null,
 });
 
-/** Login, token refresh and logout. Tokens travel only in httpOnly cookies. */
+/** Login, token refresh and logout. Tokens travel only in httpOnly cookies. The service writes the audit rows. */
 @Controller('auth')
 @Public()
+@SkipAudit()
 export class AuthController {
   constructor(
     private readonly auth: AuthService,
@@ -79,21 +83,23 @@ export class AuthController {
   }
 }
 
-/** The logged-in user's own account. */
+/** The logged-in user's own account: open to every logged-in user, whatever their roles. */
 @Controller('me')
+@Authenticated()
 export class MeController {
   constructor(private readonly auth: AuthService) {}
 
   @Get()
-  @ZodResponse({ status: 200, type: MeDto })
-  me(@CurrentUser() user: AuthUser) {
-    return this.auth.me(user);
+  @ZodResponse({ status: 200, type: MeWithAccessDto })
+  async me(@CurrentUser() user: AuthUser, @CurrentAccess() access: CallerAccess) {
+    return { ...(await this.auth.me(user)), access: access.toJSON() };
   }
 
   /** 400 `wrong_password` when the current password is wrong. Other devices are logged out. */
   @Post('password')
   @HttpCode(204)
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @SkipAudit()
   async changePassword(@CurrentUser() user: AuthUser, @Body() body: ChangePasswordDto, @Req() request: Request): Promise<void> {
     await this.auth.changePassword(user, body, clientMeta(request));
   }

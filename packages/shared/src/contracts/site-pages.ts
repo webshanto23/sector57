@@ -100,3 +100,32 @@ export const siteInfoSchema = localized(
   }),
 );
 export type SiteInfo = z.infer<typeof siteInfoSchema>;
+
+/** Pages the dashboard edits, each with the schema its content must match. */
+export const EDITABLE_PAGES = ['home', 'site', 'developments'] as const;
+export type EditablePage = (typeof EDITABLE_PAGES)[number];
+
+export const pageContentSchemas = {
+  home: homeContentSchema,
+  site: siteInfoSchema,
+  developments: developmentsContentSchema,
+} as const satisfies Record<EditablePage, z.ZodType>;
+
+/** Content type of each editable page. */
+export type PageContent = {
+  home: HomeContent;
+  site: SiteInfo;
+  developments: DevelopmentsContent;
+};
+
+/** `GET /site-pages/:slug`. `content` is null until the page is first saved. */
+export const sitePageAdminSchema = z.object({
+  slug: z.enum(EDITABLE_PAGES),
+  content: z.record(z.string(), z.unknown()).nullable(),
+  updatedAt: z.iso.datetime({ offset: true }).nullable(),
+});
+export type SitePageAdmin = z.infer<typeof sitePageAdminSchema>;
+
+/** `PUT /site-pages/:slug`: the page's whole content, checked against the slug's schema by the API. */
+export const sitePageInputSchema = z.object({ content: z.record(z.string(), z.unknown()) });
+export type SitePageInput = z.infer<typeof sitePageInputSchema>;

@@ -68,6 +68,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/notices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["NoticesController_list"];
+        put?: never;
+        post: operations["NoticesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notices/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["NoticesController_get"];
+        put: operations["NoticesController_update"];
+        post?: never;
+        delete: operations["NoticesController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/public/pages/{slug}": {
         parameters: {
             query?: never;
@@ -77,6 +109,22 @@ export interface paths {
         };
         get: operations["PublicSitePagesController_get"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/site-pages/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SitePagesController_get"];
+        put: operations["SitePagesController_save"];
         post?: never;
         delete?: never;
         options?: never;
@@ -95,6 +143,54 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/committee/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CommitteeController_list"];
+        put?: never;
+        post: operations["CommitteeController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/committee/members/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CommitteeController_get"];
+        put: operations["CommitteeController_update"];
+        post?: never;
+        delete: operations["CommitteeController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/committee/members/{id}/photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CommitteeController_setPhoto"];
+        delete: operations["CommitteeController_removePhoto"];
         options?: never;
         head?: never;
         patch?: never;
@@ -130,6 +226,86 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/gallery/albums": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GalleryController_list"];
+        put?: never;
+        post: operations["GalleryController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/gallery/albums/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["GalleryController_get"];
+        put: operations["GalleryController_update"];
+        post?: never;
+        delete: operations["GalleryController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/gallery/albums/{id}/photos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["GalleryController_addPhoto"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/gallery/albums/{id}/photo-order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["GalleryController_reorder"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/gallery/photos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["GalleryController_removePhoto"];
+        options?: never;
+        head?: never;
+        patch: operations["GalleryController_updatePhoto"];
         trace?: never;
     };
     "/auth/login": {
@@ -212,6 +388,502 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RolesController_list"];
+        put?: never;
+        post: operations["RolesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/roles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RolesController_get"];
+        put: operations["RolesController_update"];
+        post?: never;
+        delete: operations["RolesController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UsersController_list"];
+        put?: never;
+        post: operations["UsersController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UsersController_options"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UsersController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["UsersController_update"];
+        trace?: never;
+    };
+    "/users/{id}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["UsersController_setRoles"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{id}/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UsersController_resetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/location-levels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LevelsController_list"];
+        put: operations["LevelsController_replace"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LocationsController_top"];
+        put?: never;
+        post: operations["LocationsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/locations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LocationsController_view"];
+        put?: never;
+        post?: never;
+        delete: operations["LocationsController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["LocationsController_update"];
+        trace?: never;
+    };
+    "/locations/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["LocationsController_bulk"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UnitsController_list"];
+        put?: never;
+        post: operations["UnitsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UnitsController_get"];
+        put?: never;
+        post?: never;
+        delete: operations["UnitsController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["UnitsController_update"];
+        trace?: never;
+    };
+    "/units/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UnitsController_bulk"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MembersController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/persons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PersonsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/persons/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PersonsController_get"];
+        put?: never;
+        post?: never;
+        delete: operations["PersonsController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["PersonsController_update"];
+        trace?: never;
+    };
+    "/persons/{id}/verified": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["PersonsController_verify"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/persons/{id}/photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PersonsController_setPhoto"];
+        delete: operations["PersonsController_removePhoto"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organisations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OrganisationsController_get"];
+        put?: never;
+        post?: never;
+        delete: operations["OrganisationsController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["OrganisationsController_update"];
+        trace?: never;
+    };
+    "/ownerships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OwnershipsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ownerships/transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OwnershipsController_transfer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ownerships/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["OwnershipsController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["OwnershipsController_update"];
+        trace?: never;
+    };
+    "/ownerships/{id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OwnershipsController_end"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenancies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TenanciesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tenancies/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["TenanciesController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["TenanciesController_update"];
+        trace?: never;
+    };
+    "/tenancies/{id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TenanciesController_end"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/occupants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OccupantsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/occupants/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["OccupantsController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["OccupantsController_update"];
+        trace?: never;
+    };
+    "/occupants/{id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["OccupantsController_end"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/locations/{id}/people": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LocationPeopleController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -253,6 +925,54 @@ export interface components {
             /** Format: date-time */
             publishAt: string;
         };
+        NoticeAdminListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                titleBn: string;
+                titleEn: string | null;
+                bodyBn: string;
+                bodyEn: string | null;
+                /** @enum {string} */
+                category: "billing" | "maintenance" | "agm" | "security" | "development" | "general";
+                /** Format: date-time */
+                publishAt: string;
+                isPublic: boolean;
+                /** @enum {string} */
+                status: "published" | "scheduled" | "internal";
+                createdByName: string | null;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+        };
+        NoticeAdminDto_Output: {
+            /** Format: uuid */
+            id: string;
+            titleBn: string;
+            titleEn: string | null;
+            bodyBn: string;
+            bodyEn: string | null;
+            /** @enum {string} */
+            category: "billing" | "maintenance" | "agm" | "security" | "development" | "general";
+            /** Format: date-time */
+            publishAt: string;
+            isPublic: boolean;
+            /** @enum {string} */
+            status: "published" | "scheduled" | "internal";
+            createdByName: string | null;
+        };
+        NoticeInputDto: {
+            titleBn: string;
+            titleEn?: string | null;
+            bodyBn: string;
+            bodyEn?: string | null;
+            /** @enum {string} */
+            category: "billing" | "maintenance" | "agm" | "security" | "development" | "general";
+            isPublic: boolean;
+            /** Format: date-time */
+            publishAt: string;
+        };
         SitePageDto_Output: {
             slug: string;
             titleBn: string;
@@ -262,6 +982,19 @@ export interface components {
             };
             /** Format: date-time */
             updatedAt: string;
+        };
+        SitePageAdminDto_Output: {
+            /** @enum {string} */
+            slug: "home" | "site" | "developments";
+            content: {
+                [key: string]: unknown;
+            } | null;
+            updatedAt: string | null;
+        };
+        SitePageInputDto: {
+            content: {
+                [key: string]: unknown;
+            };
         };
         CommitteeDto_Output: {
             termStart: string | null;
@@ -274,6 +1007,57 @@ export interface components {
                 position: string;
                 photoUrl: string | null;
             }[];
+        };
+        CommitteeSeatListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                personId: string;
+                nameBn: string;
+                nameEn: string | null;
+                phone: string | null;
+                position: string;
+                sortOrder: number;
+                /** Format: date */
+                termStart: string;
+                termEnd: string | null;
+                photoUrl: string | null;
+            }[];
+        };
+        CommitteeSeatDto_Output: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            personId: string;
+            nameBn: string;
+            nameEn: string | null;
+            phone: string | null;
+            position: string;
+            sortOrder: number;
+            /** Format: date */
+            termStart: string;
+            termEnd: string | null;
+            photoUrl: string | null;
+        };
+        CommitteeSeatCreateDto: {
+            nameBn: string;
+            nameEn?: string | null;
+            position: string;
+            sortOrder: number;
+            /** Format: date */
+            termStart: string;
+            termEnd?: string | null;
+            phone?: string | null;
+        };
+        CommitteeSeatUpdateDto: {
+            nameBn: string;
+            nameEn?: string | null;
+            position: string;
+            sortOrder: number;
+            /** Format: date */
+            termStart: string;
+            termEnd?: string | null;
         };
         AlbumListDto_Output: {
             items: {
@@ -305,6 +1089,60 @@ export interface components {
                 captionEn: string | null;
             }[];
         };
+        AlbumAdminListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                titleBn: string;
+                titleEn: string | null;
+                eventDate: string | null;
+                photoCount: number;
+                coverUrl: string | null;
+                isPublished: boolean;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+        };
+        AlbumAdminDto_Output: {
+            /** Format: uuid */
+            id: string;
+            titleBn: string;
+            titleEn: string | null;
+            eventDate: string | null;
+            photoCount: number;
+            coverUrl: string | null;
+            isPublished: boolean;
+            photos: {
+                /** Format: uuid */
+                id: string;
+                url: string | null;
+                captionBn: string | null;
+                captionEn: string | null;
+                thumbUrl: string | null;
+            }[];
+        };
+        AlbumInputDto: {
+            titleBn: string;
+            titleEn?: string | null;
+            eventDate?: string | null;
+            isPublished: boolean;
+        };
+        PhotoAdminDto_Output: {
+            /** Format: uuid */
+            id: string;
+            url: string | null;
+            captionBn: string | null;
+            captionEn: string | null;
+            thumbUrl: string | null;
+        };
+        PhotoOrderDto: {
+            photoIds: string[];
+        };
+        PhotoCaptionDto: {
+            captionBn?: string | null;
+            captionEn?: string | null;
+        };
         LoginDto: {
             phone: string;
             password: string;
@@ -318,9 +1156,1021 @@ export interface components {
             /** @enum {string} */
             language: "bn" | "en";
         };
+        MeWithAccessDto_Output: {
+            /** Format: uuid */
+            id: string;
+            phone: string;
+            name: string | null;
+            nameEn: string | null;
+            /** @enum {string} */
+            language: "bn" | "en";
+            access: {
+                fullAccess: boolean;
+                grants: {
+                    /** @enum {string} */
+                    module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "audit";
+                    /** @enum {string} */
+                    action: "view" | "create" | "edit" | "approve" | "delete" | "export";
+                    scopeLocationId: string | null;
+                }[];
+            };
+        };
         ChangePasswordDto: {
             currentPassword: string;
             newPassword: string;
+        };
+        RoleListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                description: string | null;
+                isSystem: boolean;
+                userCount: number;
+                permissionCount: number;
+            }[];
+        };
+        RoleDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description: string | null;
+            isSystem: boolean;
+            userCount: number;
+            permissionCount: number;
+            permissions: {
+                /** @enum {string} */
+                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "audit";
+                /** @enum {string} */
+                action: "view" | "create" | "edit" | "approve" | "delete" | "export";
+            }[];
+        };
+        RoleInputDto: {
+            name: string;
+            description?: string | null;
+            permissions: {
+                /** @enum {string} */
+                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "audit";
+                /** @enum {string} */
+                action: "view" | "create" | "edit" | "approve" | "delete" | "export";
+            }[];
+        };
+        UserListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                name: string | null;
+                nameEn: string | null;
+                phone: string;
+                email: string | null;
+                /** @enum {string} */
+                status: "invited" | "active" | "disabled";
+                /** @enum {string} */
+                language: "bn" | "en";
+                lastLoginAt: string | null;
+                lockedUntil: string | null;
+                roles: {
+                    /** Format: uuid */
+                    roleId: string;
+                    scopeLocationId: string | null;
+                    roleName: string;
+                    isSystem: boolean;
+                    scopeName: string | null;
+                }[];
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+        };
+        UserFormOptionsDto_Output: {
+            roles: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                isSystem: boolean;
+                grantable: boolean;
+            }[];
+            scopes: {
+                /** Format: uuid */
+                id: string;
+                parentId: string | null;
+                name: string;
+                levelBn: string;
+                levelEn: string | null;
+                depth: number;
+            }[];
+        };
+        UserDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            name: string | null;
+            nameEn: string | null;
+            phone: string;
+            email: string | null;
+            /** @enum {string} */
+            status: "invited" | "active" | "disabled";
+            /** @enum {string} */
+            language: "bn" | "en";
+            lastLoginAt: string | null;
+            lockedUntil: string | null;
+            roles: {
+                /** Format: uuid */
+                roleId: string;
+                scopeLocationId: string | null;
+                roleName: string;
+                isSystem: boolean;
+                scopeName: string | null;
+            }[];
+            /** Format: date-time */
+            createdAt: string;
+            isSelf: boolean;
+            canManage: boolean;
+        };
+        CreateUserDto: {
+            name: string;
+            nameEn?: string | null;
+            phone: string;
+            email?: string | null;
+            /**
+             * @default bn
+             * @enum {string}
+             */
+            language: "bn" | "en";
+            /** @default [] */
+            roles: {
+                /** Format: uuid */
+                roleId: string;
+                scopeLocationId: string | null;
+            }[];
+        };
+        CreatedUserDto_Output: {
+            /** Format: uuid */
+            id: string;
+            temporaryPassword: string;
+        };
+        UpdateUserDto: {
+            name?: string;
+            nameEn?: string | null;
+            email?: string | null;
+            /** @enum {string} */
+            language?: "bn" | "en";
+            /** @enum {string} */
+            status?: "active" | "disabled";
+        };
+        SetUserRolesDto: {
+            roles: {
+                /** Format: uuid */
+                roleId: string;
+                scopeLocationId: string | null;
+            }[];
+        };
+        PasswordResetDto_Output: {
+            temporaryPassword: string;
+        };
+        LocationLevelListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                depth: number;
+                nameBn: string;
+                nameEn: string | null;
+                isUnitLevel: boolean;
+                locationCount: number;
+            }[];
+        };
+        LevelsInputDto: {
+            levels: {
+                id: string | null;
+                nameBn: string;
+                nameEn?: string | null;
+            }[];
+        };
+        LocationViewDto_Output: {
+            location: {
+                /** Format: uuid */
+                id: string;
+                parentId: string | null;
+                name: string;
+                code: string | null;
+                /** Format: uuid */
+                levelId: string;
+                depth: number;
+                levelBn: string;
+                levelEn: string | null;
+                isUnit: boolean;
+                isActive: boolean;
+                childCount: number;
+                unitCount: number;
+            } | null;
+            breadcrumb: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                levelBn: string;
+                levelEn: string | null;
+                open: boolean;
+            }[];
+            children: {
+                /** Format: uuid */
+                id: string;
+                parentId: string | null;
+                name: string;
+                code: string | null;
+                /** Format: uuid */
+                levelId: string;
+                depth: number;
+                levelBn: string;
+                levelEn: string | null;
+                isUnit: boolean;
+                isActive: boolean;
+                childCount: number;
+                unitCount: number;
+            }[];
+            can: {
+                create: boolean;
+                createUnit: boolean;
+                edit: boolean;
+                delete: boolean;
+            };
+        };
+        LocationCreateDto: {
+            parentId: string | null;
+            /** Format: uuid */
+            levelId: string;
+            name: string;
+            code?: string | null;
+        };
+        LocationBulkDto: {
+            parentId: string | null;
+            /** Format: uuid */
+            levelId: string;
+            names: string[];
+        };
+        BulkResultDto_Output: {
+            created: number;
+        };
+        LocationUpdateDto: {
+            name?: string;
+            code?: string | null;
+            isActive?: boolean;
+        };
+        UnitListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                parentId: string;
+                name: string;
+                code: string | null;
+                address: string[];
+                /** @enum {string} */
+                unitType: "residential" | "shop" | "office" | "warehouse" | "other";
+                sizeSqft: string | null;
+                /** @enum {string} */
+                billTo: "owner" | "renter";
+                /** @enum {string} */
+                occupancy: "owner_occupied" | "rented" | "vacant";
+                isActive: boolean;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                total: number;
+                owner_occupied: number;
+                rented: number;
+                vacant: number;
+            };
+        };
+        UnitDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            parentId: string;
+            name: string;
+            code: string | null;
+            address: string[];
+            /** @enum {string} */
+            unitType: "residential" | "shop" | "office" | "warehouse" | "other";
+            sizeSqft: string | null;
+            /** @enum {string} */
+            billTo: "owner" | "renter";
+            /** @enum {string} */
+            occupancy: "owner_occupied" | "rented" | "vacant";
+            isActive: boolean;
+            breadcrumb: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                levelBn: string;
+                levelEn: string | null;
+                open: boolean;
+            }[];
+            can: {
+                edit: boolean;
+                delete: boolean;
+            };
+        };
+        UnitCreateDto: {
+            /** Format: uuid */
+            parentId: string;
+            name: string;
+            code?: string | null;
+            /** @enum {string} */
+            unitType: "residential" | "shop" | "office" | "warehouse" | "other";
+            sizeSqft?: string | null;
+            /** @enum {string} */
+            billTo: "owner" | "renter";
+        };
+        UnitBulkDto: {
+            /** Format: uuid */
+            parentId: string;
+            names: string[];
+            /** @enum {string} */
+            unitType: "residential" | "shop" | "office" | "warehouse" | "other";
+            sizeSqft?: string | null;
+            /** @enum {string} */
+            billTo: "owner" | "renter";
+        };
+        UnitUpdateDto: {
+            name?: string;
+            code?: string | null;
+            isActive?: boolean;
+            /** @enum {string} */
+            unitType?: "residential" | "shop" | "office" | "warehouse" | "other";
+            sizeSqft?: string | null;
+            /** @enum {string} */
+            billTo?: "owner" | "renter";
+        };
+        MemberListDto_Output: {
+            items: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                photoUrl: string | null;
+                verified: boolean | null;
+                hasId: boolean;
+                links: ({
+                    /** @constant */
+                    role: "owner";
+                } | {
+                    /** @constant */
+                    role: "renter";
+                    /** @enum {string} */
+                    renterType: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+                } | {
+                    /** @constant */
+                    role: "occupant";
+                    /** @enum {string} */
+                    relation: "head" | "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
+                    renter: boolean;
+                })[];
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                } | null;
+                otherPlaces: number;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                owners: number;
+                renterHouseholds: number;
+                bachelorRenters: number;
+                pendingVerification: number;
+            };
+        };
+        PersonInputDto: {
+            fullName: string;
+            fullNameEn?: string | null;
+            phone?: string | null;
+            email?: string | null;
+            nid?: string | null;
+            dateOfBirth?: string | null;
+            gender?: ("male" | "female" | "other") | null;
+        };
+        PersonDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            fullName: string;
+            fullNameEn: string | null;
+            phone: string | null;
+            email: string | null;
+            nid: string | null;
+            hasNid: boolean;
+            dateOfBirth: string | null;
+            gender: ("male" | "female" | "other") | null;
+            photoUrl: string | null;
+            verifiedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            ownerships: {
+                /** Format: uuid */
+                id: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                owner: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                };
+                sharePercent: string;
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+            }[];
+            tenancies: {
+                /** Format: uuid */
+                id: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                renter: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                } | null;
+                /** @enum {string} */
+                renterType: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+                /** @enum {string} */
+                status: "pending" | "active" | "moving_out" | "ended";
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+                monthlyRent: string | null;
+                policeFormSubmitted: boolean;
+            }[];
+            households: {
+                /** Format: uuid */
+                id: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                person: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                };
+                tenancyId: string | null;
+                /** @enum {string} */
+                relation: "head" | "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+            }[];
+            can: {
+                edit: boolean;
+                verify: boolean;
+                delete: boolean;
+            };
+        };
+        PersonUpdateDto: {
+            fullName: string;
+            fullNameEn?: string | null;
+            phone?: string | null;
+            email?: string | null;
+            nid?: string | null;
+            dateOfBirth?: string | null;
+            gender?: ("male" | "female" | "other") | null;
+        };
+        PersonVerifyDto: {
+            verified: boolean;
+        };
+        OrganisationDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            tradeLicence: string | null;
+            contact: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                photoUrl: string | null;
+                verified: boolean | null;
+            } | null;
+            /** Format: date-time */
+            createdAt: string;
+            ownerships: {
+                /** Format: uuid */
+                id: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                owner: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                };
+                sharePercent: string;
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+            }[];
+            tenancies: {
+                /** Format: uuid */
+                id: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                renter: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                } | null;
+                /** @enum {string} */
+                renterType: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+                /** @enum {string} */
+                status: "pending" | "active" | "moving_out" | "ended";
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+                monthlyRent: string | null;
+                policeFormSubmitted: boolean;
+            }[];
+            can: {
+                edit: boolean;
+                delete: boolean;
+            };
+        };
+        OrganisationUpdateDto: {
+            name: string;
+            tradeLicence?: string | null;
+        };
+        OwnershipCreateDto: {
+            /** Format: uuid */
+            locationId: string;
+            owner: {
+                /** @constant */
+                kind: "person";
+                person: {
+                    fullName: string;
+                    fullNameEn?: string | null;
+                    phone?: string | null;
+                    email?: string | null;
+                    nid?: string | null;
+                    dateOfBirth?: string | null;
+                    gender?: ("male" | "female" | "other") | null;
+                };
+            } | {
+                /** @constant */
+                kind: "organisation";
+                organisation: {
+                    name: string;
+                    tradeLicence?: string | null;
+                    contact?: {
+                        fullName: string;
+                        fullNameEn?: string | null;
+                        phone?: string | null;
+                        email?: string | null;
+                        nid?: string | null;
+                        dateOfBirth?: string | null;
+                        gender?: ("male" | "female" | "other") | null;
+                    } | null;
+                };
+            };
+            sharePercent?: string;
+            /** Format: date */
+            startDate: string;
+        };
+        OwnershipDto_Output: {
+            /** Format: uuid */
+            id: string;
+            place: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string[];
+                isUnit: boolean;
+            };
+            owner: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                photoUrl: string | null;
+                verified: boolean | null;
+            };
+            sharePercent: string;
+            /** Format: date */
+            startDate: string;
+            endDate: string | null;
+        };
+        OwnershipTransferDto: {
+            /** Format: uuid */
+            locationId: string;
+            /** Format: date */
+            date: string;
+            owners: {
+                owner: {
+                    /** @constant */
+                    kind: "person";
+                    person: {
+                        fullName: string;
+                        fullNameEn?: string | null;
+                        phone?: string | null;
+                        email?: string | null;
+                        nid?: string | null;
+                        dateOfBirth?: string | null;
+                        gender?: ("male" | "female" | "other") | null;
+                    };
+                } | {
+                    /** @constant */
+                    kind: "organisation";
+                    organisation: {
+                        name: string;
+                        tradeLicence?: string | null;
+                        contact?: {
+                            fullName: string;
+                            fullNameEn?: string | null;
+                            phone?: string | null;
+                            email?: string | null;
+                            nid?: string | null;
+                            dateOfBirth?: string | null;
+                            gender?: ("male" | "female" | "other") | null;
+                        } | null;
+                    };
+                };
+                sharePercent?: string;
+            }[];
+        };
+        OwnershipListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                owner: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                };
+                sharePercent: string;
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+            }[];
+        };
+        OwnershipUpdateDto: {
+            sharePercent?: string;
+            /** Format: date */
+            startDate?: string;
+        };
+        EndDto: {
+            /** Format: date */
+            endDate: string;
+        };
+        TenancyCreateDto: {
+            /** Format: uuid */
+            unitId: string;
+            renter: {
+                /** @constant */
+                kind: "person";
+                person: {
+                    fullName: string;
+                    fullNameEn?: string | null;
+                    phone?: string | null;
+                    email?: string | null;
+                    nid?: string | null;
+                    dateOfBirth?: string | null;
+                    gender?: ("male" | "female" | "other") | null;
+                };
+            } | {
+                /** @constant */
+                kind: "organisation";
+                organisation: {
+                    name: string;
+                    tradeLicence?: string | null;
+                    contact?: {
+                        fullName: string;
+                        fullNameEn?: string | null;
+                        phone?: string | null;
+                        email?: string | null;
+                        nid?: string | null;
+                        dateOfBirth?: string | null;
+                        gender?: ("male" | "female" | "other") | null;
+                    } | null;
+                };
+            };
+            /** @enum {string} */
+            renterType: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+            /**
+             * @default active
+             * @enum {string}
+             */
+            status: "pending" | "active";
+            /** Format: date */
+            startDate: string;
+            monthlyRent?: string | null;
+            /** @default false */
+            policeFormSubmitted: boolean;
+        };
+        TenancyDto_Output: {
+            /** Format: uuid */
+            id: string;
+            place: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string[];
+                isUnit: boolean;
+            };
+            renter: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                photoUrl: string | null;
+                verified: boolean | null;
+            } | null;
+            /** @enum {string} */
+            renterType: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+            /** @enum {string} */
+            status: "pending" | "active" | "moving_out" | "ended";
+            /** Format: date */
+            startDate: string;
+            endDate: string | null;
+            monthlyRent: string | null;
+            policeFormSubmitted: boolean;
+        };
+        TenancyUpdateDto: {
+            /** @enum {string} */
+            renterType?: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+            /** @enum {string} */
+            status?: "pending" | "active" | "moving_out";
+            /** Format: date */
+            startDate?: string;
+            monthlyRent?: string | null;
+            policeFormSubmitted?: boolean;
+        };
+        OccupantCreateDto: {
+            /** Format: uuid */
+            unitId: string;
+            tenancyId: string | null;
+            person?: {
+                fullName: string;
+                fullNameEn?: string | null;
+                phone?: string | null;
+                email?: string | null;
+                nid?: string | null;
+                dateOfBirth?: string | null;
+                gender?: ("male" | "female" | "other") | null;
+            };
+            /** Format: uuid */
+            personId?: string;
+            /** @enum {string} */
+            relation: "head" | "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
+            /** Format: date */
+            startDate: string;
+        };
+        OccupantDto_Output: {
+            /** Format: uuid */
+            id: string;
+            place: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string[];
+                isUnit: boolean;
+            };
+            person: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                photoUrl: string | null;
+                verified: boolean | null;
+            };
+            tenancyId: string | null;
+            /** @enum {string} */
+            relation: "head" | "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
+            /** Format: date */
+            startDate: string;
+            endDate: string | null;
+        };
+        OccupantUpdateDto: {
+            /** @enum {string} */
+            relation?: "head" | "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
+            /** Format: date */
+            startDate?: string;
+        };
+        LocationPeopleDto_Output: {
+            location: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                isUnit: boolean;
+            };
+            owners: {
+                /** Format: uuid */
+                id: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                owner: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                };
+                sharePercent: string;
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+            }[] | null;
+            ownersAbove: {
+                /** Format: uuid */
+                id: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                owner: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                };
+                sharePercent: string;
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+            }[] | null;
+            tenancies: {
+                /** Format: uuid */
+                id: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                renter: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                } | null;
+                /** @enum {string} */
+                renterType: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+                /** @enum {string} */
+                status: "pending" | "active" | "moving_out" | "ended";
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+                monthlyRent: string | null;
+                policeFormSubmitted: boolean;
+            }[] | null;
+            occupants: {
+                /** Format: uuid */
+                id: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                person: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                };
+                tenancyId: string | null;
+                /** @enum {string} */
+                relation: "head" | "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+            }[] | null;
+            can: {
+                ownerships: {
+                    create: boolean;
+                    edit: boolean;
+                    delete: boolean;
+                };
+                tenancies: {
+                    create: boolean;
+                    edit: boolean;
+                    delete: boolean;
+                };
+                occupants: {
+                    create: boolean;
+                    edit: boolean;
+                    delete: boolean;
+                };
+            };
         };
     };
     responses: never;
@@ -411,6 +2261,119 @@ export interface operations {
             };
         };
     };
+    NoticesController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                category?: "billing" | "maintenance" | "agm" | "security" | "development" | "general";
+                status?: "published" | "scheduled" | "internal";
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoticeAdminListDto_Output"];
+                };
+            };
+        };
+    };
+    NoticesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoticeInputDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoticeAdminDto_Output"];
+                };
+            };
+        };
+    };
+    NoticesController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoticeAdminDto_Output"];
+                };
+            };
+        };
+    };
+    NoticesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoticeInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoticeAdminDto_Output"];
+                };
+            };
+        };
+    };
+    NoticesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     PublicSitePagesController_get: {
         parameters: {
             query?: never;
@@ -432,6 +2395,52 @@ export interface operations {
             };
         };
     };
+    SitePagesController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: "home" | "site" | "developments";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SitePageAdminDto_Output"];
+                };
+            };
+        };
+    };
+    SitePagesController_save: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: "home" | "site" | "developments";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SitePageInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SitePageAdminDto_Output"];
+                };
+            };
+        };
+    };
     PublicCommitteeController_current: {
         parameters: {
             query?: never;
@@ -447,6 +2456,162 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CommitteeDto_Output"];
+                };
+            };
+        };
+    };
+    CommitteeController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitteeSeatListDto_Output"];
+                };
+            };
+        };
+    };
+    CommitteeController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommitteeSeatCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitteeSeatDto_Output"];
+                };
+            };
+        };
+    };
+    CommitteeController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitteeSeatDto_Output"];
+                };
+            };
+        };
+    };
+    CommitteeController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommitteeSeatUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitteeSeatDto_Output"];
+                };
+            };
+        };
+    };
+    CommitteeController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CommitteeController_setPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitteeSeatDto_Output"];
+                };
+            };
+        };
+    };
+    CommitteeController_removePhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitteeSeatDto_Output"];
                 };
             };
         };
@@ -490,6 +2655,215 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AlbumDto_Output"];
+                };
+            };
+        };
+    };
+    GalleryController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumAdminListDto_Output"];
+                };
+            };
+        };
+    };
+    GalleryController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlbumInputDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumAdminDto_Output"];
+                };
+            };
+        };
+    };
+    GalleryController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumAdminDto_Output"];
+                };
+            };
+        };
+    };
+    GalleryController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlbumInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumAdminDto_Output"];
+                };
+            };
+        };
+    };
+    GalleryController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GalleryController_addPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    captionBn?: string;
+                    captionEn?: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotoAdminDto_Output"];
+                };
+            };
+        };
+    };
+    GalleryController_reorder: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhotoOrderDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlbumAdminDto_Output"];
+                };
+            };
+        };
+    };
+    GalleryController_removePhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    GalleryController_updatePhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhotoCaptionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhotoAdminDto_Output"];
                 };
             };
         };
@@ -565,7 +2939,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MeDto_Output"];
+                    "application/json": components["schemas"]["MeWithAccessDto_Output"];
                 };
             };
         };
@@ -588,6 +2962,1154 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    RolesController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleListDto_Output"];
+                };
+            };
+        };
+    };
+    RolesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleInputDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleDetailDto_Output"];
+                };
+            };
+        };
+    };
+    RolesController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleDetailDto_Output"];
+                };
+            };
+        };
+    };
+    RolesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleDetailDto_Output"];
+                };
+            };
+        };
+    };
+    RolesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UsersController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                status?: "invited" | "active" | "disabled";
+                roleId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserListDto_Output"];
+                };
+            };
+        };
+    };
+    UsersController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateUserDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedUserDto_Output"];
+                };
+            };
+        };
+    };
+    UsersController_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserFormOptionsDto_Output"];
+                };
+            };
+        };
+    };
+    UsersController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserDetailDto_Output"];
+                };
+            };
+        };
+    };
+    UsersController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUserDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserDetailDto_Output"];
+                };
+            };
+        };
+    };
+    UsersController_setRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetUserRolesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserDetailDto_Output"];
+                };
+            };
+        };
+    };
+    UsersController_resetPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PasswordResetDto_Output"];
+                };
+            };
+        };
+    };
+    LevelsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationLevelListDto_Output"];
+                };
+            };
+        };
+    };
+    LevelsController_replace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LevelsInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationLevelListDto_Output"];
+                };
+            };
+        };
+    };
+    LocationsController_top: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationViewDto_Output"];
+                };
+            };
+        };
+    };
+    LocationsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocationCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationViewDto_Output"];
+                };
+            };
+        };
+    };
+    LocationsController_view: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationViewDto_Output"];
+                };
+            };
+        };
+    };
+    LocationsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LocationsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocationUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationViewDto_Output"];
+                };
+            };
+        };
+    };
+    LocationsController_bulk: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocationBulkDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResultDto_Output"];
+                };
+            };
+        };
+    };
+    UnitsController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                areaId?: string;
+                unitType?: "residential" | "shop" | "office" | "warehouse" | "other";
+                occupancy?: "owner_occupied" | "rented" | "vacant";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitListDto_Output"];
+                };
+            };
+        };
+    };
+    UnitsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnitCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitDetailDto_Output"];
+                };
+            };
+        };
+    };
+    UnitsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitDetailDto_Output"];
+                };
+            };
+        };
+    };
+    UnitsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UnitsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnitUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitDetailDto_Output"];
+                };
+            };
+        };
+    };
+    UnitsController_bulk: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnitBulkDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResultDto_Output"];
+                };
+            };
+        };
+    };
+    MembersController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                role?: "owner" | "renter" | "occupant";
+                verification?: "pending" | "verified";
+                areaId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberListDto_Output"];
+                };
+            };
+        };
+    };
+    PersonsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonInputDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonDetailDto_Output"];
+                };
+            };
+        };
+    };
+    PersonsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonDetailDto_Output"];
+                };
+            };
+        };
+    };
+    PersonsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PersonsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonDetailDto_Output"];
+                };
+            };
+        };
+    };
+    PersonsController_verify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonVerifyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonDetailDto_Output"];
+                };
+            };
+        };
+    };
+    PersonsController_setPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonDetailDto_Output"];
+                };
+            };
+        };
+    };
+    PersonsController_removePhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PersonDetailDto_Output"];
+                };
+            };
+        };
+    };
+    OrganisationsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganisationDetailDto_Output"];
+                };
+            };
+        };
+    };
+    OrganisationsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrganisationsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrganisationUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganisationDetailDto_Output"];
+                };
+            };
+        };
+    };
+    OwnershipsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OwnershipCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnershipDto_Output"];
+                };
+            };
+        };
+    };
+    OwnershipsController_transfer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OwnershipTransferDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnershipListDto_Output"];
+                };
+            };
+        };
+    };
+    OwnershipsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OwnershipsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OwnershipUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnershipDto_Output"];
+                };
+            };
+        };
+    };
+    OwnershipsController_end: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EndDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnershipDto_Output"];
+                };
+            };
+        };
+    };
+    TenanciesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TenancyCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenancyDto_Output"];
+                };
+            };
+        };
+    };
+    TenanciesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    TenanciesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TenancyUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenancyDto_Output"];
+                };
+            };
+        };
+    };
+    TenanciesController_end: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EndDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TenancyDto_Output"];
+                };
+            };
+        };
+    };
+    OccupantsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OccupantCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OccupantDto_Output"];
+                };
+            };
+        };
+    };
+    OccupantsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OccupantsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OccupantUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OccupantDto_Output"];
+                };
+            };
+        };
+    };
+    OccupantsController_end: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EndDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OccupantDto_Output"];
+                };
+            };
+        };
+    };
+    LocationPeopleController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationPeopleDto_Output"];
+                };
             };
         };
     };

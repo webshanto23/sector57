@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { bdPhone, optionalText, text } from '../schemas.js';
 
 /**
  * Standard committee positions, stored in `committee_members.position` as these
@@ -39,3 +40,55 @@ export const committeeSchema = z.object({
   members: z.array(committeeMemberSchema),
 });
 export type Committee = z.infer<typeof committeeSchema>;
+
+/** One committee seat in the dashboard, current or not. `phone` is only shown to the office. */
+export const committeeSeatSchema = z.object({
+  id: z.uuid(),
+  personId: z.uuid(),
+  nameBn: z.string(),
+  nameEn: z.string().nullable(),
+  phone: z.string().nullable(),
+  position: z.string(),
+  sortOrder: z.number().int(),
+  termStart: z.iso.date(),
+  termEnd: z.iso.date().nullable(),
+  photoUrl: z.string().nullable(),
+});
+export type CommitteeSeat = z.infer<typeof committeeSeatSchema>;
+
+/** `GET /committee/members`: every seat, newest term first, then in display order. */
+export const committeeSeatListSchema = z.object({ items: z.array(committeeSeatSchema) });
+export type CommitteeSeatList = z.infer<typeof committeeSeatListSchema>;
+
+const seatFields = z.object({
+  nameBn: text(200),
+  nameEn: optionalText(200),
+  /** A standard position key, or any other title as typed. */
+  position: text(100),
+  sortOrder: z.coerce.number().int().min(0).max(999),
+  termStart: z.iso.date(),
+  termEnd: z.iso.date().nullish().transform((value) => value ?? null),
+});
+
+const termOrder = <T extends { termStart: string; termEnd: string | null }>(seat: T) =>
+  seat.termEnd === null || seat.termEnd >= seat.termStart;
+const termIssue = { message: 'term_end_before_start', path: ['termEnd'] };
+
+/**
+ * `POST /committee/members`. The person with this phone is reused when one exists
+ * (their stored names are kept); without a phone a new person is always created.
+ */
+export const committeeSeatCreateSchema = seatFields
+  .extend({
+    phone: z
+      .string()
+      .nullish()
+      .transform((value) => (value == null || value.trim() === '' ? null : value))
+      .pipe(bdPhone.nullable()),
+  })
+  .refine(termOrder, termIssue);
+export type CommitteeSeatCreateInput = z.infer<typeof committeeSeatCreateSchema>;
+
+/** `PUT /committee/members/:id`. The names are saved on the linked person; the phone can't change here. */
+export const committeeSeatUpdateSchema = seatFields.refine(termOrder, termIssue);
+export type CommitteeSeatUpdateInput = z.infer<typeof committeeSeatUpdateSchema>;

@@ -28,8 +28,8 @@ function nfcDeep<T>(value: T): T {
 
 const SOCIETY = {
   slug: "sector57",
-  name_bn: nfc("উত্তরা সেক্টর ৫৭ কল্যাণ সমিতি"),
-  name_en: "Uttara Sector 57 Welfare Society",
+  name_bn: nfc("উত্তরা সেক্টর ১৫ কল্যাণ সমিতি"),
+  name_en: "Uttara Sector 15 Welfare Society",
 };
 
 const LEVELS: { depth: number; name_bn: string; name_en: string; is_unit_level?: boolean }[] = [
@@ -43,6 +43,8 @@ const LEVELS: { depth: number; name_bn: string; name_en: string; is_unit_level?:
 ];
 
 // Same for every society. Actions must match the check constraint on permissions.action.
+// Keep both lists equal to PERMISSION_ACTIONS / PERMISSION_MODULES in @s57/shared
+// (the API's permissions e2e test fails when they drift apart).
 const ACTIONS = ["view", "create", "edit", "approve", "delete", "export"] as const;
 const MODULES = [
   "settings",

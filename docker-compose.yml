@@ -30,6 +30,13 @@ services:
       NODE_ENV: production
       PORT: 4000
       WEB_ORIGIN: http://localhost:3000
+      # Uploaded photos live in the `media` volume; the API serves them and the browser
+      # reaches them through the web container's /api proxy.
+      MEDIA_DIR: /app/apps/api/media
+      MEDIA_SERVE: "true"
+      MEDIA_BASE_URL: http://localhost:3000/api/media
+    volumes:
+      - media:/app/apps/api/media
     # Local only: browsers reach the API through the web server's /api proxy.
     ports:
       - "127.0.0.1:4000:4000"
@@ -70,3 +77,4 @@ services:
 
 volumes:
   postgres-data:
+  media:

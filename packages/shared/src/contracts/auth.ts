@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { bdPhone } from '../schemas.js';
 import { toNFC } from '../text.js';
+import { accessSchema } from './permissions.js';
 
 /** Wrong passwords in a row before the account locks. */
 export const LOGIN_MAX_ATTEMPTS = 4;
@@ -52,6 +53,10 @@ export const meSchema = z.object({
   language: z.enum(['bn', 'en']),
 });
 export type Me = z.infer<typeof meSchema>;
+
+/** `GET /me`: the account plus what it may do (filters the dashboard nav). */
+export const meWithAccessSchema = meSchema.extend({ access: accessSchema });
+export type MeWithAccess = z.infer<typeof meWithAccessSchema>;
 
 /**
  * Error bodies of `POST /auth/login` (inside the API's `{ statusCode, code, message, details }`):

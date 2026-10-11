@@ -43,7 +43,7 @@
 - Docker setup (Anis, 2026-10-08): `Dockerfile` (`api` and web targets), `docker-compose.yml` (Postgres 18, API on 4000, web on 3000) and `.dockerignore`. While the compose stack runs, it holds ports 3000 and 4000, so local `pnpm dev` servers fall back to other ports or fail to bind.
 - CI: `.github/workflows/ci.yml` is a draft that Anis owns and is finishing; don't change it unless asked. Until it works, run `pnpm check` before pushing; a `deploy.sh` script is planned.
 
-## Current state (2026-10-10)
+## Current state (2026-10-11)
 
 - The full step list with status and open decisions is in `docs/steps.md`; keep it updated as steps move.
 - Steps 0, 1 and 2 are merged into `main` (GitHub remote `origin`). Visual checks at 375/820/1440 are deferred for all of them. Headless Chrome won't go below about 500 px wide, so use CDP viewport emulation, not `--window-size`.
@@ -73,10 +73,35 @@
   - `AuditService` (`src/audit`) writes `audit_logs`. Login events are logged; Step 5 adds the interceptor for all writes.
   - CLI (after `pnpm --filter @s57/api build`): `create-admin` (first super admin, granted the role with `is_system`) and `reset-password` (random 10-character password, logs the user out everywhere). Both prompt, so no secrets end up in the repo.
   - Web: `/login` page, placeholder `/dashboard` (change password, log out). `src/proxy.ts` refreshes an expired session for `/dashboard` before rendering, or redirects to `/login?next=`. The browser API client adds the CSRF header and retries once after a refresh.
-- `turbo.exe` is currently blocked by Windows ("Permission denied"), so `pnpm check` fails to start. Until that's fixed, run `pnpm -r --if-present run lint`, `typecheck` and `test` instead.
+- Step 4 is pushed (`step/04-auth`, awaiting Codex review and merge). Step 5 (permissions engine and dashboard shell) is built on `step/05-permissions`, branched from it, awaiting Codex review. Its rules for later steps:
+  - Every logged-in route declares `@Can(module, action)` or `@Authenticated()`; anything else is refused. Narrow queries with `scopeWhere(...)`, check single rows with `access.can(action, module, { path })`, and answer 404 for rows out of scope.
+  - `locations.path` is `/<root id>/.../<own id>/` (`locationPath` in shared); a scope covers rows whose path starts with its path. Only `LOCATION_SCOPED_MODULES` respect a scope; a scoped role grants nothing on other modules.
+  - Writes are audited by the global `AuditInterceptor`; name the entity with `@AuditEntity(...)`, or `@SkipAudit()` when the handler records its own row.
+  - New permission modules go in both `PERMISSION_MODULES` (shared) and the seed; the e2e test checks they match.
+- Step 6 (roles and users admin) is built on `step/06-roles-users`, branched from `step/05-permissions`, awaiting Codex review. Rules for later steps:
+  - Grant limits live in `apps/api/src/permissions/grant-limits.ts`: a caller grants only what they hold society-wide, assigns a role only over an area where they hold all its permissions, and changes only users they could have given every role to. Only full access touches the system role, which is read-only.
+  - Services that check grant limits or write their own audit rows take an `Actor` (`@CurrentActor()`: society, user id, access, IP). Validate `:id` with `IdParamDto` (`src/common`).
+  - Dashboard pages call `requirePermission(module, action)` (404 otherwise) and load data through `src/lib/api/admin.ts`; module labels for any UI are in `Admin.modules` and the matrix order in `components/admin/modules.ts` (a new module fails to compile until it is placed there).
+- Step 7 (content CMS and file storage) is built on `step/07-cms`, branched from `step/06-roles-users`, awaiting Codex review. Rules for later steps:
+  - Store uploads only through `MediaService` (`src/storage`): `saveImage(societyId, area, buffer)` checks, re-encodes (WebP, max 1600 px, no EXIF) and keys files `<society>/<area>/<uuid>.webp` with a `.thumb.webp`; `removeQuietly` deletes after the DB change commits. Routes take files with `@ImageUpload()` + `requireUpload(file)`. Non-image documents (Step 3/8) will need their own check next to `processImage`.
+  - `MEDIA_DIR`, `MEDIA_SERVE` and `MEDIA_BASE_URL` configure storage; dev needs `MEDIA_BASE_URL=http://localhost:3000/api/media`. On the droplet Nginx serves `MEDIA_DIR` at `/media/`.
+  - Dashboard saves that change public content call `refreshPublicSite()` (via `components/cms/use-save.ts`), so the site updates at once.
+  - Editable site pages are listed in `EDITABLE_PAGES` / `pageContentSchemas` (shared); a new page needs an entry there and an editor under `components/cms/pages`.
+- Step 9 (property: location tree and units) is built on `step/09-property`, branched from `step/07-cms`, awaiting Codex review. Rules for later steps:
+  - Module `src/property`: `TreeService` reads the tree (`visible`, `parentFor`, `nodes` with counts, `breadcrumb`). Call `parentFor(access, societyId, parentId, module)` before adding anything under a location.
+  - The deepest level holds units: a `locations` row plus a `units` row, written together only through `UnitsService`. A location may sit at any level deeper than its parent (levels can be skipped).
+  - `locations.name` uses the ICU collation `natural_sort` (migration `3_property`), so ordering by name is natural for Bangla and ASCII digits. Holding codes and top-level names are unique per society.
+  - Searches over names should try both digit forms (`digitVariants` in shared).
+- Step 10 (members) is built on `step/10-members`, branched from `step/09-property`, awaiting Codex review. Rules for later steps:
+  - `units.occupancy` is derived, never typed: call `OccupancyService.refresh(societyId, path, tx)` (property module) in the same transaction as any change to units, ownerships or tenancies.
+  - Add people through `PartiesService.resolve` / `resolvePerson` (reuse by phone, then NID), not `persons.create`. A person's area is where they own, rent or live now (`PartiesService.currentPaths`); check it with `canOnParty`.
+  - Never send an NID to a caller who can't edit the person, and never put one in an audit row (`hasNid` only).
+  - A renter who is a person is added as a resident (`occupants`, head) when the tenancy is created; owners become residents through "Lives here" (`POST /occupants` with `personId`, allowed only for a current owner at or above the unit, or the tenancy's renter).
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
 
 ## Reference material
+
+- `docs/glossary.md`: what Person, Owner, Renter, Resident and Member mean, in Bangla and English. User-facing text must follow it ("Member" is reserved for registered society members).
 
 - `docs/schema-phase1.sql`: the full phase-1 schema with design notes in its comments. Read the header before changing the data model.
 - `docs/Sector 57 Production UI.html`: the UI mockup. Match its layout and components when building screens.

@@ -6,7 +6,7 @@ import { PrismaService } from './../src/prisma/prisma.service.js';
 import { createTestApp } from './create-app.js';
 
 const DAY = 24 * 60 * 60 * 1000;
-const MARK = `e2e-${Date.now()}`;
+const MARK = `e2e-public-${Date.now()}`;
 
 // The public website must only ever show this society's public, published content.
 describe('Public website API (e2e)', () => {
