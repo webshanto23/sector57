@@ -1,5 +1,6 @@
 import {
   canAnywhere,
+  canSocietyWide,
   formatNumber,
   formatTaka,
   INVOICE_FILTERS,
@@ -9,7 +10,7 @@ import {
   toPaisa,
   type Locale,
 } from "@s57/shared";
-import { CircleCheck, Clock, Plus, Receipt, TriangleAlert, X } from "lucide-react";
+import { CircleCheck, Clock, Plus, Receipt, Repeat, TriangleAlert, X } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { BillsTable } from "@/components/billing/bills-table";
@@ -83,12 +84,20 @@ export default async function BillingPage({ params, searchParams }: PageProps<"/
         title={tNav("billing")}
         sub={t("sub")}
         actions={
-          canAnywhere(me.access, "billing", "create") ? (
-            <Link href="/dashboard/billing/new" className={buttonVariants()}>
-              <Plus aria-hidden />
-              {t("newBill")}
-            </Link>
-          ) : null
+          <>
+            {canSocietyWide(me.access, "billing", "create") ? (
+              <Link href="/dashboard/recurring/run" className={buttonVariants({ variant: "outline" })}>
+                <Repeat aria-hidden />
+                {t("generate")}
+              </Link>
+            ) : null}
+            {canAnywhere(me.access, "billing", "create") ? (
+              <Link href="/dashboard/billing/new" className={buttonVariants()}>
+                <Plus aria-hidden />
+                {t("newBill")}
+              </Link>
+            ) : null}
+          </>
         }
       />
 

@@ -486,7 +486,15 @@
       "already_void": "This bill is already void.",
       "invoice_has_payments": "Money has been paid on this bill, so it can't be voided.",
       "invoice_not_found": "The bill wasn't found.",
-      "invalid_period": "The last month can't be before the first."
+      "invalid_period": "The last month can't be before the first.",
+      "rate_outside_scope": "A rate is for a place outside the charge's area.",
+      "start_in_past": "A new recurring charge can't start in a past month. Enter earlier dues on the unit's page.",
+      "schedule_in_use": "This charge has made bills, so its charge type, frequency and start month can't change.",
+      "schedule_ended": "This recurring charge has ended.",
+      "schedule_not_found": "The recurring charge wasn't found.",
+      "future_month": "Only this month or an earlier one can be billed.",
+      "duplicate_rate": "This place already has a rate.",
+      "invalid_month": "Choose a month."
     }
   },
   "Cms": {
@@ -1279,6 +1287,131 @@
       "saved": "Earlier arrears entered.",
       "exists": "Earlier arrears are entered. If they are wrong, void that bill and enter them again.",
       "nobody": "This unit has no owner or renter; add the owner first."
+    },
+    "generate": "Generate manually"
+  },
+  "Recurring": {
+    "sub": "Charges billed every month or every few months, and the history of billing runs.",
+    "readOnly": "Only a society-wide billing role can change recurring charges and run billing.",
+    "add": "Add a recurring charge",
+    "empty": "No recurring charges yet.",
+    "runBilling": "Run billing",
+    "frequency": {
+      "1": "Every month",
+      "3": "Every 3 months",
+      "6": "Every 6 months",
+      "12": "Once a year",
+      "once": "Once"
+    },
+    "generation": {
+      "auto": "Automatically (2 am)",
+      "manual": "When run by hand"
+    },
+    "status": {
+      "active": "Active",
+      "paused": "Paused",
+      "ended": "Ended"
+    },
+    "everywhere": "Whole society",
+    "allTypes": "All unit types",
+    "amountEach": "{amount} per bill",
+    "ratesCount": "{count} area rates",
+    "nextRun": "Next bill: {month}",
+    "noNextRun": "No more bills",
+    "from": "From {month}",
+    "fromTo": "{from} to {to}",
+    "dueAfter": "Due {days} days after the bill",
+    "edit": "Edit",
+    "pause": "Pause",
+    "resume": "Resume",
+    "end": "End",
+    "endQuestion": "End this recurring charge? It won't bill again and can't be restarted.",
+    "paused": "Paused. No bills until it is resumed.",
+    "resumed": "Resumed. The paused months won't be billed.",
+    "ended": "Ended.",
+    "form": {
+      "nameBn": "Name (Bangla)",
+      "nameEn": "Name (English)",
+      "nameHint": "Bill lines show this name and the month.",
+      "chargeType": "Charge type",
+      "amount": "Usual rate, per bill (৳)",
+      "amountHint": "Every unit without an area rate below is billed this amount. For every 3 months, it is the amount for the 3 months.",
+      "frequency": "How often",
+      "generation": "How it is billed",
+      "scope": "Area",
+      "scopeAll": "Whole society",
+      "scopePick": "Choose an area",
+      "change": "Change",
+      "unitTypes": "Unit types",
+      "unitTypesHint": "None ticked means every unit type.",
+      "startMonth": "First month",
+      "endMonth": "Last month (optional)",
+      "dueDays": "Days after the bill until it is due",
+      "rates": "Rates by area",
+      "ratesHint": "For example Building 9 ৳2,000, Block D ৳1,200. A unit pays the rate of the nearest area above it; with none, the usual rate.",
+      "rateArea": "Area",
+      "rateAmount": "Rate (৳)",
+      "addRate": "Another rate",
+      "removeRate": "Remove this rate",
+      "fixedWhenBilled": "It has made bills, so its charge type, frequency and first month can't change.",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "runs": {
+      "title": "Billing runs",
+      "empty": "No billing runs yet.",
+      "month": "Month",
+      "trigger": {
+        "manual": "By hand",
+        "auto": "Automatic"
+      },
+      "by": "Run by",
+      "system": "System",
+      "when": "When",
+      "invoices": "Bills",
+      "total": "Total",
+      "skipped": "Skipped",
+      "status": {
+        "done": "Done",
+        "failed": "Failed"
+      },
+      "failedNote": "Nothing was kept. Reason: {error}"
+    },
+    "run": {
+      "title": "Run billing",
+      "sub": "Bills every recurring charge that is due, all at once. Check the preview, then confirm.",
+      "month": "Up to month",
+      "show": "Show",
+      "back": "Recurring charges",
+      "nothing": "Nothing is due up to this month.",
+      "summary": "{invoices} bills, {lines} lines, total {total}",
+      "schedules": "Charges to bill",
+      "periods": "Months",
+      "blocked": {
+        "charge_type_archived": "Charge type archived, so it won't bill",
+        "fund_closed": "Fund closed, so it won't bill"
+      },
+      "lines": "By unit",
+      "linesMore": "Showing the first {shown} of {total}.",
+      "unit": "Unit",
+      "billTo": "Bill to",
+      "charge": "Charge",
+      "period": "Period",
+      "amount": "Amount",
+      "rate": "Rate",
+      "rateFrom": "Rate of {place}",
+      "rateDefault": "Usual rate",
+      "skipped": "Not billed",
+      "skippedCounts": "No owner or renter: {no_bill_to}, inactive: {inactive}, already billed: {already_billed}",
+      "confirm": "Confirm and make the bills",
+      "confirmQuestion": "This makes {invoices} bills, total {total}. Go ahead?",
+      "done": "{invoices} bills made, total {total}.",
+      "openBills": "See the bills"
+    },
+    "skip": {
+      "no_bill_to": "No owner or renter",
+      "inactive": "Unit inactive",
+      "already_billed": "Already billed for this month"
     }
   }
 }

@@ -1236,6 +1236,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/schedules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SchedulesController_list"];
+        put?: never;
+        post: operations["SchedulesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedules/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["SchedulesController_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedules/{id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["SchedulesController_pause"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedules/{id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["SchedulesController_resume"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/schedules/{id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["SchedulesController_end"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BillingRunsController_list"];
+        put?: never;
+        post: operations["BillingRunsController_run"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/billing-runs/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BillingRunsController_preview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3013,6 +3125,233 @@ export interface components {
                 verified: boolean | null;
                 memberNo: number;
             }[];
+        };
+        ScheduleListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+                chargeType: {
+                    /** Format: uuid */
+                    id: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                    /** @enum {string} */
+                    kind: "due" | "fee" | "fine";
+                    archived: boolean;
+                };
+                fund: {
+                    /** Format: uuid */
+                    id: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                    isDefault: boolean;
+                };
+                amount: string;
+                rates: {
+                    location: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                        address: string[];
+                    };
+                    amount: string;
+                }[];
+                frequencyMonths: (1 | 3 | 6 | 12) | null;
+                /** @enum {string} */
+                generation: "auto" | "manual";
+                scope: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                } | null;
+                unitTypes: ("residential" | "shop" | "office" | "warehouse" | "other")[];
+                startMonth: string;
+                endMonth: string | null;
+                nextRunOn: string | null;
+                dueDays: number;
+                /** @enum {string} */
+                status: "active" | "paused" | "ended";
+                billed: boolean;
+            }[];
+            canEdit: boolean;
+        };
+        ScheduleInputDto: {
+            nameBn: string;
+            nameEn?: string | null;
+            /** Format: uuid */
+            chargeTypeId: string;
+            amount: string;
+            rates: {
+                /** Format: uuid */
+                locationId: string;
+                amount: string;
+            }[];
+            frequencyMonths: (1 | 3 | 6 | 12) | null;
+            /** @enum {string} */
+            generation: "auto" | "manual";
+            scopeLocationId: string | null;
+            unitTypes: ("residential" | "shop" | "office" | "warehouse" | "other")[];
+            startMonth: string;
+            endMonth: string | null;
+            dueDays: number;
+        };
+        ScheduleDto_Output: {
+            /** Format: uuid */
+            id: string;
+            nameBn: string;
+            nameEn: string | null;
+            chargeType: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+                /** @enum {string} */
+                kind: "due" | "fee" | "fine";
+                archived: boolean;
+            };
+            fund: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+                isDefault: boolean;
+            };
+            amount: string;
+            rates: {
+                location: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                };
+                amount: string;
+            }[];
+            frequencyMonths: (1 | 3 | 6 | 12) | null;
+            /** @enum {string} */
+            generation: "auto" | "manual";
+            scope: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string[];
+            } | null;
+            unitTypes: ("residential" | "shop" | "office" | "warehouse" | "other")[];
+            startMonth: string;
+            endMonth: string | null;
+            nextRunOn: string | null;
+            dueDays: number;
+            /** @enum {string} */
+            status: "active" | "paused" | "ended";
+            billed: boolean;
+        };
+        BillingRunListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                month: string;
+                /** @enum {string} */
+                trigger: "manual" | "auto";
+                /** @enum {string} */
+                status: "done" | "failed";
+                startedBy: string | null;
+                /** Format: date-time */
+                startedAt: string;
+                finishedAt: string | null;
+                invoiceCount: number;
+                total: string;
+                skipped: {
+                    /** Format: uuid */
+                    unitId: string;
+                    name: string;
+                    address: string[];
+                    /** @enum {string} */
+                    reason: "no_bill_to" | "inactive" | "already_billed";
+                    /** Format: uuid */
+                    scheduleId: string;
+                }[];
+                error: string | null;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+        };
+        BillingRunPreviewDto_Output: {
+            month: string;
+            invoiceCount: number;
+            lineCount: number;
+            total: string;
+            schedules: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+                periods: string[];
+                lines: number;
+                total: string;
+                blocked: ("charge_type_archived" | "fund_closed") | null;
+            }[];
+            lines: {
+                /** Format: uuid */
+                unitId: string;
+                unitName: string;
+                address: string[];
+                billTo: string;
+                /** Format: uuid */
+                scheduleId: string;
+                /** Format: date */
+                periodStart: string;
+                /** Format: date */
+                periodEnd: string;
+                amount: string;
+                rateFrom: string | null;
+            }[];
+            skipped: {
+                /** Format: uuid */
+                unitId: string;
+                name: string;
+                address: string[];
+                /** @enum {string} */
+                reason: "no_bill_to" | "inactive" | "already_billed";
+                /** Format: uuid */
+                scheduleId: string;
+            }[];
+            skippedCounts: {
+                no_bill_to: number;
+                inactive: number;
+                already_billed: number;
+            };
+        };
+        BillingRunInputDto: {
+            month: string;
+        };
+        BillingRunDto_Output: {
+            /** Format: uuid */
+            id: string;
+            month: string;
+            /** @enum {string} */
+            trigger: "manual" | "auto";
+            /** @enum {string} */
+            status: "done" | "failed";
+            startedBy: string | null;
+            /** Format: date-time */
+            startedAt: string;
+            finishedAt: string | null;
+            invoiceCount: number;
+            total: string;
+            skipped: {
+                /** Format: uuid */
+                unitId: string;
+                name: string;
+                address: string[];
+                /** @enum {string} */
+                reason: "no_bill_to" | "inactive" | "already_billed";
+                /** Format: uuid */
+                scheduleId: string;
+            }[];
+            error: string | null;
         };
     };
     responses: never;
@@ -5554,6 +5893,202 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BillingLookupDto_Output"];
+                };
+            };
+        };
+    };
+    SchedulesController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleListDto_Output"];
+                };
+            };
+        };
+    };
+    SchedulesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduleInputDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleDto_Output"];
+                };
+            };
+        };
+    };
+    SchedulesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduleInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleDto_Output"];
+                };
+            };
+        };
+    };
+    SchedulesController_pause: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleDto_Output"];
+                };
+            };
+        };
+    };
+    SchedulesController_resume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleDto_Output"];
+                };
+            };
+        };
+    };
+    SchedulesController_end: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleDto_Output"];
+                };
+            };
+        };
+    };
+    BillingRunsController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingRunListDto_Output"];
+                };
+            };
+        };
+    };
+    BillingRunsController_run: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillingRunInputDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingRunDto_Output"];
+                };
+            };
+        };
+    };
+    BillingRunsController_preview: {
+        parameters: {
+            query: {
+                month: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BillingRunPreviewDto_Output"];
                 };
             };
         };
