@@ -31,7 +31,7 @@ export const organisationPartySelect = {
   persons: { select: { phone: true } },
 } satisfies Prisma.organisationsSelect;
 
-const placeSelect = { id: true, name: true, path: true, location_levels: { select: { is_unit_level: true } } } satisfies Prisma.locationsSelect;
+export const placeSelect = { id: true, name: true, path: true, location_levels: { select: { is_unit_level: true } } } satisfies Prisma.locationsSelect;
 
 const ownershipSelect = {
   id: true,
@@ -108,7 +108,8 @@ export class MemberRowsService {
     return null;
   }
 
-  private async places(societyId: string, rows: PlaceRow[]): Promise<(row: PlaceRow) => Place> {
+  /** Builds `Place`s for these locations, with their addresses read in one query. */
+  async places(societyId: string, rows: PlaceRow[]): Promise<(row: PlaceRow) => Place> {
     const names = await this.tree.addressNames(
       societyId,
       rows.map((row) => row.path),

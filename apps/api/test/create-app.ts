@@ -28,6 +28,7 @@ export async function createTestApp(extraModules: (Type | DynamicModule)[] = [])
         // Uploads land in a fresh temporary folder per app; nothing is served from it.
         MEDIA_DIR: mkdtempSync(join(tmpdir(), 's57-e2e-media-')),
         MEDIA_SERVE: 'false',
+        PRIVATE_MEDIA_DIR: mkdtempSync(join(tmpdir(), 's57-e2e-private-')),
         WEB_ORIGIN: 'http://localhost:3000',
         // Tests sign and check their own tokens; they never need the real secret (CI has none).
         JWT_SECRET: 'e2e-test-secret-that-is-long-enough-123',

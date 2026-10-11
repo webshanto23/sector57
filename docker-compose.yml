@@ -35,8 +35,11 @@ services:
       MEDIA_DIR: /app/apps/api/media
       MEDIA_SERVE: "true"
       MEDIA_BASE_URL: http://localhost:3000/api/media
+      # Deeds and NID copies from the public forms: never served directly, only through the API.
+      PRIVATE_MEDIA_DIR: /app/apps/api/private-media
     volumes:
       - media:/app/apps/api/media
+      - private-media:/app/apps/api/private-media
     # Local only: browsers reach the API through the web server's /api proxy.
     ports:
       - "127.0.0.1:4000:4000"
@@ -78,3 +81,4 @@ services:
 volumes:
   postgres-data:
   media:
+  private-media:

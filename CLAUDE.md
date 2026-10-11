@@ -97,6 +97,10 @@
   - Add people through `PartiesService.resolve` / `resolvePerson` (reuse by phone, then NID), not `persons.create`. A person's area is where they own, rent or live now (`PartiesService.currentPaths`); check it with `canOnParty`.
   - Never send an NID to a caller who can't edit the person, and never put one in an audit row (`hasNid` only).
   - A renter who is a person is added as a resident (`occupants`, head) when the tenancy is created; owners become residents through "Lives here" (`POST /occupants` with `personId`, allowed only for a current owner at or above the unit, or the tenancy's renter).
+- Steps 3 + 8 (public forms and office review) are built on `step/03-forms`, branched from `step/10-members`, awaiting Codex review. Rules for later steps:
+  - Documents that must not be public (deeds, NID copies, later expense vouchers) go through `PrivateFilesService` (`src/storage`) into `PRIVATE_MEDIA_DIR`, which must stay outside `MEDIA_DIR`, with a `documents` row; serve them only from a permission-checked route, never statically.
+  - Approvals that create members data run in one transaction through `TenanciesService.insert` / `OwnershipsService.insert` and `PartiesService.resolvePerson`; change a submission's status only with a conditional update on the open statuses (`form_closed` otherwise).
+  - A registered member is a `memberships` row (numbered per society, one active per person); owners, renters and residents are not members.
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
 
 ## Reference material

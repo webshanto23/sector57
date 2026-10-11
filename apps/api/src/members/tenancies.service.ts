@@ -96,57 +96,63 @@ export class TenanciesService {
     if (!unit.isActive) throw inactiveUnit();
     let id: string;
     try {
-      id = await this.prisma.$transaction(async (tx) => {
-        await lockLocation(tx, unit.id);
-        const open = await tx.tenancies.findFirst({ where: { unit_id: unit.id, status: { in: OPEN } }, select: { id: true } });
-        if (open) throw openExists();
-        const party = await this.parties.resolve(tx, actor.societyId, input.renter);
-        const row = await tx.tenancies.create({
-          data: {
-            society_id: actor.societyId,
-            unit_id: unit.id,
-            renter_type: input.renterType,
-            primary_person_id: party.personId,
-            organisation_id: party.organisationId,
-            status: input.status,
-            start_date: dayOf(input.startDate),
-            monthly_rent: input.monthlyRent,
-            police_form_submitted: input.policeFormSubmitted,
-          },
-          select: rowSelect,
-        });
-        // A renter who is a person lives here: they become the head of the renter's household.
-        let residentAdded = false;
-        if (party.personId) {
-          const living = await tx.occupants.findFirst({
-            where: { unit_id: unit.id, person_id: party.personId, end_date: null },
-            select: { id: true },
-          });
-          if (!living) {
-            await tx.occupants.create({
-              data: {
-                society_id: actor.societyId,
-                unit_id: unit.id,
-                person_id: party.personId,
-                tenancy_id: row.id,
-                relation: 'head',
-                start_date: row.start_date,
-              },
-            });
-            residentAdded = true;
-          }
-        }
-        await this.occupancy.refresh(actor.societyId, unit.path, tx);
-        await this.audit.record(
-          { ...auditOf(actor, 'tenancy', 'create', row.id), after: { ...snapshot(row), reusedParty: party.reused, residentAdded } },
-          tx,
-        );
-        return row.id;
-      });
+      id = await this.prisma.$transaction((tx) => this.insert(tx, actor, unit, input));
     } catch (error) {
       throw isUniqueViolation(error) ? openExists() : error;
     }
     return this.get(actor, id);
+  }
+
+  /**
+   * Opens the tenancy inside the caller's transaction, after the unit checks (`unitFor`, active).
+   * Also used when the office approves a renter registration.
+   */
+  async insert(tx: Prisma.TransactionClient, actor: Actor, unit: LocationRow, input: TenancyCreateInput): Promise<string> {
+    await lockLocation(tx, unit.id);
+    const open = await tx.tenancies.findFirst({ where: { unit_id: unit.id, status: { in: OPEN } }, select: { id: true } });
+    if (open) throw openExists();
+    const party = await this.parties.resolve(tx, actor.societyId, input.renter);
+    const row = await tx.tenancies.create({
+      data: {
+        society_id: actor.societyId,
+        unit_id: unit.id,
+        renter_type: input.renterType,
+        primary_person_id: party.personId,
+        organisation_id: party.organisationId,
+        status: input.status,
+        start_date: dayOf(input.startDate),
+        monthly_rent: input.monthlyRent,
+        police_form_submitted: input.policeFormSubmitted,
+      },
+      select: rowSelect,
+    });
+    // A renter who is a person lives here: they become the head of the renter's household.
+    let residentAdded = false;
+    if (party.personId) {
+      const living = await tx.occupants.findFirst({
+        where: { unit_id: unit.id, person_id: party.personId, end_date: null },
+        select: { id: true },
+      });
+      if (!living) {
+        await tx.occupants.create({
+          data: {
+            society_id: actor.societyId,
+            unit_id: unit.id,
+            person_id: party.personId,
+            tenancy_id: row.id,
+            relation: 'head',
+            start_date: row.start_date,
+          },
+        });
+        residentAdded = true;
+      }
+    }
+    await this.occupancy.refresh(actor.societyId, unit.path, tx);
+    await this.audit.record(
+      { ...auditOf(actor, 'tenancy', 'create', row.id), after: { ...snapshot(row), reusedParty: party.reused, residentAdded } },
+      tx,
+    );
+    return row.id;
   }
 
   async update(actor: Actor, id: string, input: TenancyUpdateInput): Promise<Tenancy> {

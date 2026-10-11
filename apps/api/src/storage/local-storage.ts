@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, resolve, sep } from 'node:path';
 import { assertStorageKey, type FileStorage } from './storage.js';
 
@@ -35,5 +35,9 @@ export class LocalFileStorage implements FileStorage {
 
   async delete(key: string): Promise<void> {
     await rm(this.pathOf(key), { force: true });
+  }
+
+  read(key: string): Promise<Buffer> {
+    return readFile(this.pathOf(key));
   }
 }

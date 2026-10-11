@@ -4,9 +4,13 @@ export interface FileStorage {
   put(key: string, data: Buffer, contentType: string): Promise<void>;
   /** Removes the file; a missing file is not an error. */
   delete(key: string): Promise<void>;
+  /** The file's bytes; throws when it is missing. */
+  read(key: string): Promise<Buffer>;
 }
 
 export const FILE_STORAGE = Symbol('FILE_STORAGE');
+/** Files that are never served publicly (deeds, NID copies): `PRIVATE_MEDIA_DIR`, read only through the API. */
+export const PRIVATE_FILE_STORAGE = Symbol('PRIVATE_FILE_STORAGE');
 
 // Lower-case segments of letters, digits, dot, dash and underscore; no empty, `.` or `..` segments.
 const KEY = /^[a-z0-9][a-z0-9_-]*(\/[a-z0-9][a-z0-9._-]*)*$/;

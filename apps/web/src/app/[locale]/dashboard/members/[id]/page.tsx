@@ -1,10 +1,10 @@
-import { canAnywhere, localDigits, type Locale } from "@s57/shared";
+import { canAnywhere, formatDate, localDigits, type Locale } from "@s57/shared";
 import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Note } from "@/components/admin/form-status";
-import { PageHeader } from "@/components/kit";
+import { Chip, PageHeader } from "@/components/kit";
 import { PersonEditor } from "@/components/members/person-editor";
 import { HouseholdTable, OwnershipTable, TenancyTable } from "@/components/members/record-tables";
 import { buttonVariants } from "@/components/ui/button";
@@ -43,6 +43,16 @@ export default async function PersonPage({ params }: PageProps<"/[locale]/dashbo
         }
       />
       <div className="grid gap-3.5">
+        {person.membership ? (
+          <p className="flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
+            <Chip tone={person.membership.status === "active" ? "good" : "neutral"}>
+              {localDigits(t("memberNo", { no: person.membership.memberNo }), locale)}
+            </Chip>
+            {person.membership.status === "active"
+              ? t("memberSince", { date: formatDate(person.membership.joinedOn, locale, "short") })
+              : t(`membershipStatus.${person.membership.status}`)}
+          </p>
+        ) : null}
         {!person.can.edit ? <Note>{t("readOnly")}</Note> : null}
         <PersonEditor key={person.id} person={person} />
         <OwnershipTable rows={person.ownerships} locale={locale} open={open} />

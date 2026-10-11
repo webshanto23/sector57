@@ -34,6 +34,14 @@ describe('loadEnv', () => {
     expect(() => loadEnv({ ...base, MEDIA_BASE_URL: 'ftp://files.example' })).toThrow(/MEDIA_BASE_URL/);
   });
 
+  it('keeps private uploads apart from the public media folder', () => {
+    expect(loadEnv(base).PRIVATE_MEDIA_DIR).toBe('private-media');
+    expect(() => loadEnv({ ...base, MEDIA_DIR: 'media', PRIVATE_MEDIA_DIR: 'media/private' })).toThrow(/PRIVATE_MEDIA_DIR/);
+    expect(() => loadEnv({ ...base, MEDIA_DIR: 'files/public', PRIVATE_MEDIA_DIR: 'files' })).toThrow(/PRIVATE_MEDIA_DIR/);
+    expect(() => loadEnv({ ...base, MEDIA_DIR: 'media', PRIVATE_MEDIA_DIR: './media' })).toThrow(/PRIVATE_MEDIA_DIR/);
+    expect(loadEnv({ ...base, MEDIA_DIR: 'media', PRIVATE_MEDIA_DIR: 'media-private' }).PRIVATE_MEDIA_DIR).toBe('media-private');
+  });
+
   it('rejects a non-postgres database url', () => {
     expect(() => loadEnv({ DATABASE_URL: 'mysql://localhost/db' })).toThrow(/DATABASE_URL/);
   });
