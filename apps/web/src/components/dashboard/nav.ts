@@ -112,7 +112,7 @@ export const DASHBOARD_NAV: NavGroup[] = [
       { key: "roles", icon: ShieldCheck, module: "roles" },
       { key: "users", icon: UserCog, module: "users" },
       { key: "website", icon: Globe, module: "site", also: ["committee", "gallery"] },
-      { key: "settings", icon: Settings, module: "settings" },
+      { key: "settings", icon: Settings, module: "settings", also: ["ledger", "billing"] },
       { key: "audit", icon: ScrollText, module: "audit" },
     ],
   },

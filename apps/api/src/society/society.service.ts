@@ -32,6 +32,11 @@ export class SocietyService {
     return this.env.DEFAULT_SOCIETY_SLUG;
   }
 
+  /** Drops the cached row after the society itself changed (fiscal year start). */
+  forget(slug: string): void {
+    this.cache.delete(slug);
+  }
+
   /** Active society for the slug, or 404 / 403. Cached briefly; the row rarely changes. */
   async resolve(slug: string): Promise<SocietyContext> {
     const now = Date.now();

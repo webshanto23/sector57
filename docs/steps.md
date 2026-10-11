@@ -29,7 +29,7 @@ Schema changes are additive and need Anis's approval first.
 | 9 | Property: location tree and units | Done | `step/09-property` |
 | 10 | Members | Done | `step/10-members` |
 | 3 + 8 | Public member forms and office review | Built, awaiting Codex review | `step/03-forms` |
-| 11 | M2: Finance setup (funds, charge types, numbering, settings) | Later | `step/11-finance-setup` |
+| 11 | M2: Finance setup (funds, charge types, numbering, settings) | Built, awaiting Codex review | `step/11-finance-setup` |
 | 12 | M2: Bills (invoices) and opening arrears | Later | `step/12-bills` |
 | 13 | M2: Recurring charges and billing runs | Later | `step/13-recurring` |
 | 14 | M2: Cash collection, receipts and handover | Later | `step/14-collect` |
@@ -448,18 +448,20 @@ The tables in `0_init` are a good base. Reviewing them against the screens shows
 
 `payments.method` keeps its check, but the API accepts only `cash` in milestone 2 (online payment is out of scope).
 
-### Step 11: Finance setup
+### Step 11: Finance setup — Built, awaiting Codex review
 
-The ground the other steps stand on; small screens, mostly rules.
+Built 2026-10-11 on `step/11-finance-setup` (branched from `step/03-forms`). Decided by Anis: the number formats below, and ledger rows record the account (`cash` or `bank`).
 
-- **Settings page** (`/dashboard/settings`, `settings.edit`): the president toggles from `society_settings` (`separate_facility_funds`, `share_renters_with_thana`), fiscal year start month, receipt header (society name, address, phone, as printed). Each setting is a typed key in shared, so the API refuses unknown keys.
-- **Funds** (`ledger.*`): the default fund is seeded; more funds (mosque, gym) only while separate funds are on, optionally tied to a facility location. A fund is never deleted, only closed with a zero balance. **Opening balance** per fund, entered once, as an `opening` ledger row.
-- **Charge types** (`billing.*`): name in Bangla and English, kind (`due`, `fee`, `fine`), fund, default amount. Seed examples outside production (service charge, generator fee, membership fee).
-- **Shared:** `moneySchema`, money parsing and adding in whole paisa (`bigint`) for the web; **amount in words** in Bangla and English with lakh and crore ("চার হাজার পাঁচশত টাকা মাত্র", "Taka four thousand five hundred only", paisa when present), with many tests; fiscal-year helpers; number formats.
-- **API:** `NumberingService.next(tx, societyId, kind, date)`.
-- **Decisions:**
-  - **(decide)** Number formats. Proposal from the mockup: `INV-YYMM-NNNN` (restarts monthly), `RC-NNNNN` (never restarts), `EXP-YY-NNNN` (restarts each fiscal year).
-  - **(decide)** Track *where* money sits (cash box vs bank account) as well as *which fund*? A real treasurer deposits cash at a bank. Proposal: add an `account` column (`cash`, `bank`) on ledger rows now, and "deposit to bank" / "withdraw" as transfers in Step 17. Adding it later means rewriting history, so it has to be settled here.
+- **Migration `6_finance_setup`:** `document_sequences`; `funds.closed_at`, `created_at` and one default fund per society (partial unique index); `charge_types.archived_at`; `ledger_entries` gets `opening` as a source, `account` (`cash`/`bank`, default `cash`), `created_by` and `reverses_id` (a row is reversed at most once). A trigger refuses `UPDATE`, `DELETE` and `TRUNCATE` on `ledger_entries`; the only delete it lets through is the cascade from deleting a whole society.
+- **Settings** (`/dashboard/settings`, `GET`/`PATCH /settings`, `settings.view`/`edit`): separate facility funds, sharing renters with the thana, fiscal year start month (the `societies` column; locked once the ledger has any entry, 409 `fiscal_year_locked`), receipt header (`receipt_header`, falls back to the society's name and phone). Keys are `SETTING_KEYS` in shared; `PATCH` takes only changed keys and refuses unknown ones. Turning separate funds off needs every other fund closed (409 `funds_open`).
+- **Funds** (`/dashboard/settings/funds`, `ledger.*`): `GET /funds` (balances per account from the ledger, the live opening, `openingEditable`), `POST /funds` (only while separate funds are on), `PUT /funds/:id` (rename), `POST /funds/:id/close` (not the default fund, zero in both accounts, no active charge type), `PUT /funds/:id/opening` (date, cash, bank; zero allowed). The opening can be corrected until the fund has any other entry; a correction writes reversing rows, never edits. Not tied to a facility location yet: that comes with the facilities module.
+- **Charge types** (`/dashboard/settings/charge-types`, `billing.*`): `GET /charge-types` (with the open funds to pick from), `POST`, `PUT /:id`, `POST /:id/archive` and `/restore`. Reading needs `billing.view` anywhere; changes need a society-wide billing grant (403 `beyond_your_permissions`). With separate funds off only the default fund is accepted (400 `invalid_fund`). Kinds are `due`, `fee`, `fine`.
+- **Shared:** `moneySchema` / `moneyOrZeroSchema` / `optionalMoneySchema` (Bangla digits, commas and ৳ accepted, canonical `"4500.00"`), paisa arithmetic on `bigint` (`toPaisa`, `fromPaisa`, `addMoney`, `subtractMoney`, `compareMoney`), `amountInWords` (bn and en, lakh and crore, paisa), `fiscalYearOf` / `fiscalYearStarting`, `documentPeriod` / `formatDocumentNo`.
+- **API:** `NumberingService.next(tx, societyId, kind, day)`: `INV-YYMM-NNNN` (restarts monthly), `RC-NNNNN` (never restarts), `EXP-YY-NNNN` (YY is the fiscal year's start year; restarts each fiscal year). `lockFinanceSetup(tx, societyId)` serialises setup changes. All writes record their own audit rows.
+- **Seed:** the default fund "সাধারণ তহবিল / General fund" everywhere; service charge, generator fee and membership fee charge types outside production.
+- **Nav:** the Settings item shows with `settings`, `ledger` or `billing` view, with a tab for each.
+- **Tests:** shared money, words, fiscal year and number tests; `finance.e2e-spec.ts` runs in a throwaway society of its own (ledger rows can't be deleted) and covers the society boundary, area scope, exact paisa (`0.10 + 0.20`), the trigger, concurrent and rolled-back numbering, and no `DELETE` routes.
+- **For later steps:** draw numbers only through `NumberingService` inside the saving transaction; write money as `Prisma.Decimal` from decimal strings and read it with `toFixed(2)`; a fund's balance per account is the sum of its `in` minus `out` rows; correct a ledger row only with a reversing row (`reverses_id`). Rows from Steps 14–17 set `account` (cash at the counter is `cash`).
 
 ### Step 12: Bills (invoices) and opening arrears
 
@@ -557,8 +559,8 @@ Online payment, bank or mobile payment entry, SMS (unless the decision above add
 
 | Decision | Proposal | Needed before |
 |---|---|---|
-| Number formats | `INV-YYMM-NNNN`, `RC-NNNNN`, `EXP-YY-NNNN` | Step 11 |
-| Track cash vs bank as well as funds | Yes, `account` on ledger rows | Step 11 |
+| Number formats | Decided: `INV-YYMM-NNNN`, `RC-NNNNN`, `EXP-YY-NNNN` | Step 11 |
+| Track cash vs bank as well as funds | Decided: yes, `account` on ledger rows | Step 11 |
 | Opening arrears entry | Typed per unit | Step 12 |
 | Late fees | Manual fine lines only | Step 12 |
 | Per square foot rates | No, per unit only | Step 13 |

@@ -13,8 +13,12 @@ import { configureApp } from './../src/setup.js';
 /**
  * The full app as main.ts builds it, against TEST_DATABASE_URL (migrated and seeded).
  * `extraModules` adds test-only routes; the global guards and interceptors apply to them too.
+ * `env` overrides settings, e.g. `DEFAULT_SOCIETY_SLUG` to serve a throwaway society.
  */
-export async function createTestApp(extraModules: (Type | DynamicModule)[] = []): Promise<INestApplication<App>> {
+export async function createTestApp(
+  extraModules: (Type | DynamicModule)[] = [],
+  env: Record<string, string> = {},
+): Promise<INestApplication<App>> {
   if (process.env.TEST_DATABASE_URL) process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
   const moduleFixture = await Test.createTestingModule({ imports: [AppModule, ...extraModules] })
     .overrideProvider(ENV)
@@ -32,6 +36,7 @@ export async function createTestApp(extraModules: (Type | DynamicModule)[] = [])
         WEB_ORIGIN: 'http://localhost:3000',
         // Tests sign and check their own tokens; they never need the real secret (CI has none).
         JWT_SECRET: 'e2e-test-secret-that-is-long-enough-123',
+        ...env,
       }),
     )
     .compile();

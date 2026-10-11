@@ -46,6 +46,20 @@ const KNOWN = [
   "tenancy_not_found",
   "occupant_not_found",
   "invalid_person",
+  "fiscal_year_locked",
+  "funds_open",
+  "separate_funds_off",
+  "fund_name_taken",
+  "fund_not_found",
+  "fund_closed",
+  "fund_default",
+  "fund_not_empty",
+  "fund_in_use",
+  "opening_locked",
+  "future_date",
+  "invalid_fund",
+  "charge_type_name_taken",
+  "charge_type_not_found",
 ] as const;
 type KnownCode = (typeof KNOWN)[number];
 
