@@ -106,10 +106,14 @@
   - Draw invoice, receipt and voucher numbers only with `NumberingService.next(tx, ...)` inside the transaction that saves the record.
   - Money crosses the API as decimal strings (`moneySchema` in shared), is written as `Prisma.Decimal` and read with `toFixed(2)`; add it with the paisa helpers (`addMoney`), never JS numbers.
   - Society settings are typed keys (`SETTING_KEYS`); read separate funds with `SettingsService.separateFunds`. Charge type changes need a society-wide billing grant.
-- Step 12 (bills and opening arrears) is built on `step/12-bills`, branched from `main`, awaiting Codex review. Rules for later steps:
+- Step 12 (bills and opening arrears) is merged into `main` (PR #9). Rules for later steps:
   - Make bills only through `InvoicesService` (`src/billing`); who a unit's bill goes to is `BillToService.choose` (rule `pickBillTo` in shared). A bill keeps `bill_to_snapshot`, `fund_id` (one fund per bill) and `kind` (`regular`, `opening`, `membership`); lines carry `position`.
   - Bills are area-scoped through their unit's path; a membership bill has no unit and needs a society-wide billing grant. `overdue` is derived, never stored.
   - Lines never change after issue. A bill is voided (reason, who, when) only while nothing is paid; anything that changes `paid` locks the bill row `FOR UPDATE` first.
+- Step 13 (recurring charges and billing runs) is built on `step/13-recurring`, branched from `main`, awaiting Codex review. Rules for later steps:
+  - Schedules (`SchedulesService`) and runs (`BillingRunsService`) live in `src/billing`; both take `lockBillingRun(tx, societyId)` first. Period maths and area rates are the pure helpers in shared `contracts/schedules.ts` (`duePeriods`, `nextRunAfter`, `resumeFrom`, `rateFor`).
+  - A run writes everything in one transaction (bills via `createMany`, numbers via `NumberingService.reserve`); inside a transaction, run queries one after another and avoid nested relation selects (they load in parallel on the one connection and trip pg's deprecation warning).
+  - The nightly job (`BillingRunsJob`, 02:00 Dhaka) bills `auto` schedules for every society and is off when `NODE_ENV=test`.
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
 
 ## Reference material

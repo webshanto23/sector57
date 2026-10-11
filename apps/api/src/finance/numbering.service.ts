@@ -27,6 +27,20 @@ export class NumberingService {
     const no = row!.no;
     return { period, no, formatted: formatDocumentNo(kind, period, no) };
   }
+
+  /** `count` numbers in a row for one day (a billing run), under the same lock as `next`. */
+  async reserve(tx: Tx, societyId: string, kind: DocumentKind, day: string, count: number): Promise<DocumentNo[]> {
+    if (count <= 0) return [];
+    const society = await tx.societies.findUniqueOrThrow({ where: { id: societyId }, select: { fiscal_year_start_month: true } });
+    const period = documentPeriod(kind, day, society.fiscal_year_start_month);
+    const [row] = await tx.$queryRaw<{ first: number }[]>`
+      INSERT INTO document_sequences (society_id, kind, period, next_no)
+      VALUES (${societyId}::uuid, ${kind}, ${period}, ${count + 1}::int)
+      ON CONFLICT (society_id, kind, period) DO UPDATE SET next_no = document_sequences.next_no + ${count}::int
+      RETURNING next_no - ${count}::int AS first`;
+    const first = row!.first;
+    return Array.from({ length: count }, (_, i) => ({ period, no: first + i, formatted: formatDocumentNo(kind, period, first + i) }));
+  }
 }
 
 /**

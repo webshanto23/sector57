@@ -30,8 +30,8 @@ Schema changes are additive and need Anis's approval first.
 | 10 | Members | Done | `step/10-members` |
 | 3 + 8 | Public member forms and office review | Done | `step/03-forms` |
 | 11 | M2: Finance setup (funds, charge types, numbering, settings) | Done | `step/11-finance-setup` |
-| 12 | M2: Bills (invoices) and opening arrears | Built, awaiting Codex review | `step/12-bills` |
-| 13 | M2: Recurring charges and billing runs | Later | `step/13-recurring` |
+| 12 | M2: Bills (invoices) and opening arrears | Done | `step/12-bills` |
+| 13 | M2: Recurring charges and billing runs | Built, awaiting Codex review | `step/13-recurring` |
 | 14 | M2: Cash collection, receipts and handover | Later | `step/14-collect` |
 | 15 | M2: Donations | Later | `step/15-donations` |
 | 16 | M2: Expenses and budgets | Later | `step/16-expenses` |
@@ -463,7 +463,7 @@ Built 2026-10-11 on `step/11-finance-setup` (branched from `step/03-forms`). Dec
 - **Tests:** shared money, words, fiscal year and number tests; `finance.e2e-spec.ts` runs in a throwaway society of its own (ledger rows can't be deleted) and covers the society boundary, area scope, exact paisa (`0.10 + 0.20`), the trigger, concurrent and rolled-back numbering, and no `DELETE` routes.
 - **For later steps:** draw numbers only through `NumberingService` inside the saving transaction; write money as `Prisma.Decimal` from decimal strings and read it with `toFixed(2)`; a fund's balance per account is the sum of its `in` minus `out` rows; correct a ledger row only with a reversing row (`reverses_id`). Rows from Steps 14–17 set `account` (cash at the counter is `cash`).
 
-### Step 12: Bills (invoices) and opening arrears — Built, awaiting Codex review
+### Step 12: Bills (invoices) and opening arrears — Done
 
 Built 2026-10-11 on `step/12-bills` (branched from `main` after PR #8). Decided by Anis: earlier arrears are typed per unit; late fees are manual `fine` lines only.
 
@@ -482,15 +482,18 @@ Built 2026-10-11 on `step/12-bills` (branched from `main` after PR #8). Decided 
 - **Tests:** shared bill-to, overdue, period and input tests; `billing.e2e-spec.ts` runs in a throwaway society and covers the society boundary, Block C / Block D scope (list, read, create, void, lookup), co-owner choice, renter billing, the owner above, `no_bill_to`, exact paisa and Bangla digits, the snapshot surviving a name change, funds, membership bills, concurrent numbering, opening arrears once per unit, totals against the rows, voiding rules and the database void check.
 - **For later steps:** a payment (Step 14) locks the bills it settles (`FOR UPDATE`), raises `paid` and moves the status to `partial` or `paid`; it never touches lines. Bills are never deleted; a billing run (Step 13) sets `kind = 'regular'` and fills `schedule_id` on lines.
 
-### Step 13: Recurring charges and billing runs
+### Step 13: Recurring charges and billing runs — Built, awaiting Codex review
 
-- **Schedules** (`/dashboard/recurring`, `billing.*`): charge type, amount, every 1/3/6/12 months or once, area (whole society or a branch), unit types, start and end, due after N days, auto or manual, pause and end.
-- **Run:** for one month, every active schedule that is due makes one invoice per unit per fund, with one line per schedule. **Preview first**: units to bill, total by charge, units skipped and why (no bill-to, inactive, already billed). Confirming creates the invoices and a `billing_runs` row. Running twice never bills twice (`invoice_lines_once_uq`, a test proves it).
-- **Auto runs:** a daily job (`@nestjs/schedule`, 02:00 Dhaka) runs schedules marked auto whose `next_run_on` has come, under a Postgres advisory lock so a second API process can't run it at the same time. A failed run is logged and shown on the page; nothing half-made is kept (one transaction per run).
-- **Web:** schedule list and form; run history with totals; the mockup's "Generate manually" button opens the preview.
-- **Decisions:**
-  - **(decide)** Amount per unit only (proposal), or also per square foot (`units.size_sqft`)?
-  - **(decide)** A unit added or a tenancy started mid-month: billed from the next run (proposal), no part-month amounts.
+Built 2026-10-11 on `step/13-recurring` (branched from `main` after PR #9 and #10). Decided by Anis: fixed amounts with **rates by area** (the society's charges differ by building; rent itself stays between owner and renter and is not billed), no per-square-foot rates, units and tenancies that start mid-month are billed from the next run (no part months).
+
+- **Migration `8_billing_runs`:** `charge_schedules` gets `name_bn` (required; earlier rows take the charge type's name), `name_en`, `due_days` (0 to 365, default 15) and `updated_at`, plus an index on due active schedules. New `charge_schedule_rates` (schedule, location, amount above zero; one per schedule and location). New `billing_runs` (month as its first day, `manual` or `auto`, `done` or `failed` with the error, who started it, start and finish, bill count, total, skipped units as JSON). `invoices.billing_run_id`.
+- **Rules** (pure helpers in shared, unit-tested): periods are whole months; `next_run_on` is the first day of the next period to bill. A run for a month bills every period from `next_run_on` up to that month, oldest first (missed months are caught up), one line per period, then moves the schedule on; a one-off bills once and ends; nothing after the end month. A unit pays the rate of the nearest location on its path that has one (the unit itself first), else the schedule's amount. Resuming a paused schedule skips the paused months, keeping its rhythm.
+- **Schedules** (`/dashboard/recurring`; reading needs `billing.view`, changes a society-wide billing grant, 403 `beyond_your_permissions`): `GET /schedules`, `POST`, `PUT /:id`, `POST /:id/pause`, `/resume`, `/end`. A new schedule starts this month or later (400 `start_in_past`; dues from before are earlier arrears). The area and each rate's location must be the society's (400 `location_not_found`) and rates must sit inside the area (400 `rate_outside_scope`). Once it has made bills, its charge type, frequency and first month are fixed (409 `schedule_in_use`). Ended schedules can't change (409 `schedule_ended`). Never deleted.
+- **Runs** (society-wide billing roles): `GET /billing-runs/preview?month=` (writes nothing: bills, lines, total, per schedule its months and whether it is blocked by an archived charge type or closed fund, the first 500 lines with the bill-to and where the rate came from, and the units left out with the reason: `no_bill_to`, `inactive`, `already_billed`), `POST /billing-runs` (`month` this month or earlier, 400 `future_month`), `GET /billing-runs` (history). A run is one transaction under the society's run lock (`lockBillingRun`, also taken by schedule changes): one bill per unit and fund, one line per schedule and period (text "name (month)" in both languages), dated today and due after the smallest `due_days` among its lines, bill-to as on the day, numbers reserved as a block (`NumberingService.reserve`). A second run at the same time waits and then finds nothing due; `invoice_lines_once_uq` is the backstop. An unexpected error rolls everything back and is recorded as a failed run.
+- **Automatic runs:** `@nestjs/schedule`, every night at 02:00 Dhaka (`BillingRunsJob`), every society, only `auto` schedules, missed months included; a society with nothing due gets no run row; off in tests.
+- **Web:** `/dashboard/recurring` (schedule cards with charge, rate, area rates, frequency, area, unit types, months, next bill; add and edit form with the area picker and a rates-by-area editor; pause, resume, end; run history with failures explained) and `/dashboard/recurring/run` (month, summary, per-unit lines with their rate, units left out, confirm). The billing page's "Generate manually" opens the run page.
+- **Tests:** shared month, catch-up, resume, rate and input tests; `billing-runs.e2e-spec.ts` in a throwaway society covers permissions (scoped roles can't manage or run, but see the bills a run made in their area), rates by building and block, unit types and areas, skip reasons, one bill per unit and fund with exact paisa, running twice, two runs at once, catch-up on an automatic run, already-billed periods, a failed run leaving nothing behind, pause and resume, and the edit rules.
+- **Not done:** a voided bill keeps its schedule line, so a run won't bill that unit and period again; the office makes a manual bill instead.
 
 ### Step 14: Cash collection, receipts and handover
 
@@ -571,8 +574,8 @@ Online payment, bank or mobile payment entry, SMS (unless the decision above add
 | Track cash vs bank as well as funds | Decided: yes, `account` on ledger rows | Step 11 |
 | Opening arrears entry | Decided: typed per unit | Step 12 |
 | Late fees | Decided: manual fine lines only | Step 12 |
-| Per square foot rates | No, per unit only | Step 13 |
-| Mid-month units and tenancies | From the next run, no part months | Step 13 |
+| Per square foot rates | Decided: no; fixed amounts with rates by area | Step 13 |
+| Mid-month units and tenancies | Decided: from the next run, no part months | Step 13 |
 | Advance payments | No credit; bill ahead first | Step 14 |
 | Receipt paper | A5 with counterfoil | Step 14 |
 | SMS receipts | Separate SMS step once a provider is chosen | Step 14 |

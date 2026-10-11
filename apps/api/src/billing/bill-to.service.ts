@@ -41,18 +41,17 @@ export class BillToService {
     if (units.length === 0) return new Map();
     const unitIds = units.map((unit) => unit.id);
     const locationIds = [...new Set(units.flatMap((unit) => pathIds(unit.path)))];
-    const [settings, tenancies, ownerships] = await Promise.all([
-      client.units.findMany({ where: { location_id: { in: unitIds }, society_id: societyId }, select: { location_id: true, bill_to: true } }),
-      client.tenancies.findMany({
-        where: { society_id: societyId, unit_id: { in: unitIds }, status: { in: [...OPEN_TENANCY_STATUSES] } },
-        select: { unit_id: true, status: true, primary_person_id: true, organisation_id: true },
-      }),
-      client.ownerships.findMany({
-        where: { society_id: societyId, location_id: { in: locationIds }, end_date: null },
-        select: { location_id: true, person_id: true, organisation_id: true, share_percent: true, start_date: true },
-        orderBy: { id: 'asc' },
-      }),
-    ]);
+    // One after another: inside a transaction they share one connection.
+    const settings = await client.units.findMany({ where: { location_id: { in: unitIds }, society_id: societyId }, select: { location_id: true, bill_to: true } });
+    const tenancies = await client.tenancies.findMany({
+      where: { society_id: societyId, unit_id: { in: unitIds }, status: { in: [...OPEN_TENANCY_STATUSES] } },
+      select: { unit_id: true, status: true, primary_person_id: true, organisation_id: true },
+    });
+    const ownerships = await client.ownerships.findMany({
+      where: { society_id: societyId, location_id: { in: locationIds }, end_date: null },
+      select: { location_id: true, person_id: true, organisation_id: true, share_percent: true, start_date: true },
+      orderBy: { id: 'asc' },
+    });
 
     const owners = new Map<string, OwnerCandidate[]>();
     for (const row of ownerships) {
@@ -121,5 +120,40 @@ export class BillToService {
       memberNo,
       unit: unit ? { id: unit.id, name: unit.name, code: unit.code, address: addressOf(unit.path, names) } : null,
     };
+  }
+
+  /** `snapshot` for many units at once (a billing run): the payers and addresses in three queries. */
+  async snapshots(client: Client, societyId: string, items: { unit: BillableUnit; choice: BillToChoice }[]): Promise<Map<string, BillToSnapshot>> {
+    const personIds = [...new Set(items.filter((i) => i.choice.payer.kind === 'person').map((i) => i.choice.payer.id))];
+    const organisationIds = [...new Set(items.filter((i) => i.choice.payer.kind === 'organisation').map((i) => i.choice.payer.id))];
+    // One after another: inside a transaction they share one connection.
+    const persons = personIds.length
+      ? await client.persons.findMany({ where: { id: { in: personIds }, society_id: societyId }, select: { id: true, full_name: true, full_name_en: true, phone: true } })
+      : [];
+    const organisations = organisationIds.length
+      ? await client.organisations.findMany({
+          where: { id: { in: organisationIds }, society_id: societyId },
+          select: { id: true, name: true, persons: { select: { phone: true } } },
+        })
+      : [];
+    const names = await this.tree.addressNames(societyId, items.map((i) => i.unit.path));
+    const parties = new Map<string, { name: string; nameEn: string | null; phone: string | null }>([
+      ...persons.map((row) => [row.id, { name: row.full_name, nameEn: row.full_name_en, phone: row.phone }] as const),
+      ...organisations.map((row) => [row.id, { name: row.name, nameEn: null, phone: row.persons?.phone ?? null }] as const),
+    ]);
+    const result = new Map<string, BillToSnapshot>();
+    for (const { unit, choice } of items) {
+      const party = parties.get(choice.payer.id);
+      if (!party) continue;
+      result.set(unit.id, {
+        kind: choice.payer.kind,
+        id: choice.payer.id,
+        ...party,
+        role: choice.role,
+        memberNo: null,
+        unit: { id: unit.id, name: unit.name, code: unit.code, address: addressOf(unit.path, names) },
+      });
+    }
+    return result;
   }
 }

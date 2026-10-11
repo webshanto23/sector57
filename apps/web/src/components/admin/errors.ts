@@ -71,6 +71,12 @@ const KNOWN = [
   "already_void",
   "invoice_has_payments",
   "invoice_not_found",
+  "rate_outside_scope",
+  "start_in_past",
+  "schedule_in_use",
+  "schedule_ended",
+  "schedule_not_found",
+  "future_month",
 ] as const;
 type KnownCode = (typeof KNOWN)[number];
 
@@ -96,6 +102,8 @@ const FIELD_CODES = [
   "shares_over_100",
   "end_before_start",
   "invalid_period",
+  "duplicate_rate",
+  "invalid_month",
 ] as const;
 type FieldCode = (typeof FIELD_CODES)[number];
 
