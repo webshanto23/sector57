@@ -1,12 +1,12 @@
 import { formatDate, localDigits, pick, type Locale } from "@s57/shared";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { Card, PageHeader } from "@/components/kit";
 import { Art, sceneFor } from "@/components/site/art";
+import { FallbackImage } from "@/components/site/fallback-image";
 import { Link } from "@/i18n/navigation";
 import { getAlbum } from "@/lib/api/public";
 import { alternates } from "@/lib/metadata";
@@ -66,22 +66,25 @@ export default async function AlbumPage({ params }: PageProps<"/[locale]/gallery
           {album.photos.map((photo, index) => {
             const caption = photo.captionBn ? pick(photo.captionBn, photo.captionEn, locale) : null;
             const alt = caption ?? t("photo", { album: title, n: localDigits(index + 1, locale) });
+            const art = (
+              <Art scene={placeholder.scene} seed={placeholder.seed + index} ratio={[4, 3]} label={alt} className="rounded-[10px]" />
+            );
             return (
               <li key={photo.id}>
                 <figure className="grid gap-1.5">
                   {photo.url ? (
-                    <a href={photo.url} target="_blank" rel="noopener noreferrer">
-                      <Image
-                        src={photo.url}
-                        alt={alt}
-                        width={640}
-                        height={480}
-                        unoptimized
-                        className="aspect-[4/3] w-full rounded-[10px] object-cover"
-                      />
-                    </a>
+                    <FallbackImage
+                      src={photo.url}
+                      href={photo.url}
+                      alt={alt}
+                      width={640}
+                      height={480}
+                      unoptimized
+                      className="aspect-[4/3] w-full rounded-[10px] object-cover"
+                      fallback={art}
+                    />
                   ) : (
-                    <Art scene={placeholder.scene} seed={placeholder.seed + index} ratio={[4, 3]} label={alt} className="rounded-[10px]" />
+                    art
                   )}
                   {caption ? <figcaption className="text-xs text-muted-foreground">{caption}</figcaption> : null}
                 </figure>
