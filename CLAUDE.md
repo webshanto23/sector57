@@ -97,15 +97,19 @@
   - Add people through `PartiesService.resolve` / `resolvePerson` (reuse by phone, then NID), not `persons.create`. A person's area is where they own, rent or live now (`PartiesService.currentPaths`); check it with `canOnParty`.
   - Never send an NID to a caller who can't edit the person, and never put one in an audit row (`hasNid` only).
   - A renter who is a person is added as a resident (`occupants`, head) when the tenancy is created; owners become residents through "Lives here" (`POST /occupants` with `personId`, allowed only for a current owner at or above the unit, or the tenancy's renter).
-- Steps 3 + 8 (public forms and office review) are built on `step/03-forms`, branched from `step/10-members`, awaiting Codex review. Rules for later steps:
+- Steps 3 + 8 (public forms and office review) are merged into `main` (PR #7). Rules for later steps:
   - Documents that must not be public (deeds, NID copies, later expense vouchers) go through `PrivateFilesService` (`src/storage`) into `PRIVATE_MEDIA_DIR`, which must stay outside `MEDIA_DIR`, with a `documents` row; serve them only from a permission-checked route, never statically.
   - Approvals that create members data run in one transaction through `TenanciesService.insert` / `OwnershipsService.insert` and `PartiesService.resolvePerson`; change a submission's status only with a conditional update on the open statuses (`form_closed` otherwise).
   - A registered member is a `memberships` row (numbered per society, one active per person); owners, renters and residents are not members.
-- Step 11 (finance setup, first milestone 2 step) is built on `step/11-finance-setup`, branched from `step/03-forms`, awaiting Codex review. Rules for later steps:
+- Step 11 (finance setup, first milestone 2 step) is merged into `main` (PR #8). Rules for later steps:
   - `ledger_entries` is append-only (trigger, migration `6_finance_setup`): correct with a reversing row (`reverses_id`), never update or delete. Each row records its `account` (`cash` or `bank`). E2e tests that write ledger rows use a throwaway society (`createTestApp([], { DEFAULT_SOCIETY_SLUG })`), since only a society delete can remove them.
   - Draw invoice, receipt and voucher numbers only with `NumberingService.next(tx, ...)` inside the transaction that saves the record.
   - Money crosses the API as decimal strings (`moneySchema` in shared), is written as `Prisma.Decimal` and read with `toFixed(2)`; add it with the paisa helpers (`addMoney`), never JS numbers.
   - Society settings are typed keys (`SETTING_KEYS`); read separate funds with `SettingsService.separateFunds`. Charge type changes need a society-wide billing grant.
+- Step 12 (bills and opening arrears) is built on `step/12-bills`, branched from `main`, awaiting Codex review. Rules for later steps:
+  - Make bills only through `InvoicesService` (`src/billing`); who a unit's bill goes to is `BillToService.choose` (rule `pickBillTo` in shared). A bill keeps `bill_to_snapshot`, `fund_id` (one fund per bill) and `kind` (`regular`, `opening`, `membership`); lines carry `position`.
+  - Bills are area-scoped through their unit's path; a membership bill has no unit and needs a society-wide billing grant. `overdue` is derived, never stored.
+  - Lines never change after issue. A bill is voided (reason, who, when) only while nothing is paid; anything that changes `paid` locks the bill row `FOR UPDATE` first.
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
 
 ## Reference material

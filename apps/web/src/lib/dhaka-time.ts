@@ -32,3 +32,8 @@ export const DHAKA_INPUT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 export function todayInDhaka(now = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: TIME_ZONE }).format(now);
 }
+
+/** Today in Dhaka, `days` from now, as `YYYY-MM-DD` (a `date` input's value). */
+export function dhakaDay(days = 0): string {
+  return toDhakaInput(new Date(Date.now() + days * 86_400_000)).slice(0, 10);
+}

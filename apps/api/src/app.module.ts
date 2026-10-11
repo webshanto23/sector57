@@ -14,6 +14,7 @@ import { AllExceptionsFilter } from './common/all-exceptions.filter.js';
 import { ConfigModule } from './config/config.module.js';
 import { ENV, type Env } from './config/env.js';
 import { FinanceModule } from './finance/finance.module.js';
+import { BillingModule } from './billing/billing.module.js';
 import { FormsModule } from './forms/forms.module.js';
 import { GalleryModule } from './gallery/gallery.module.js';
 import { MembersModule } from './members/members.module.js';
@@ -61,6 +62,7 @@ import { UsersModule } from './users/users.module.js';
     MembersModule,
     FormsModule,
     FinanceModule,
+    BillingModule,
   ],
   controllers: [AppController],
   providers: [
