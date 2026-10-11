@@ -2,13 +2,13 @@
 
 import { localDigits, MAX_ALBUM_PHOTOS, type AlbumAdmin, type Locale, type PhotoAdmin } from "@s57/shared";
 import { ArrowLeft, ArrowRight, ImagePlus, Trash2 } from "lucide-react";
-import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { ConfirmButton } from "@/components/admin/confirm-button";
 import { errorMessageKey } from "@/components/admin/errors";
 import { FormStatus } from "@/components/admin/form-status";
 import { Card, inputClass } from "@/components/kit";
+import { FallbackImage } from "@/components/site/fallback-image";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api/client";
 import { uploadFile } from "@/lib/api/upload";
@@ -131,14 +131,23 @@ function PhotoCard({
   const n = localDigits(index + 1, locale);
   const changed = captionBn !== (photo.captionBn ?? "") || captionEn !== (photo.captionEn ?? "");
   const src = photo.thumbUrl ?? photo.url;
+  const noPreview = <span className="grid h-full place-items-center text-xs text-muted-foreground">{t("noPreview")}</span>;
 
   return (
     <div className="grid gap-2 rounded-[10px] border border-line bg-surface-2 p-2">
       <div className="relative aspect-[4/3] overflow-hidden rounded-[8px] bg-surface">
         {src ? (
-          <Image src={src} alt={photo.captionBn ?? t("photoN", { n })} fill unoptimized sizes="300px" className="object-cover" />
+          <FallbackImage
+            src={src}
+            alt={photo.captionBn ?? t("photoN", { n })}
+            fill
+            unoptimized
+            sizes="300px"
+            className="object-cover"
+            fallback={noPreview}
+          />
         ) : (
-          <span className="grid h-full place-items-center text-xs text-muted-foreground">{t("noPreview")}</span>
+          noPreview
         )}
         {index === 0 ? (
           <span className="absolute top-1.5 left-1.5 rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground">

@@ -1,12 +1,12 @@
 import { canAnywhere, formatDate, localDigits, pagination, pick, type Locale } from "@s57/shared";
 import { ExternalLink, ImageIcon } from "lucide-react";
 import type { Metadata } from "next";
-import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { NewAlbum } from "@/components/cms/gallery/new-album";
 import { Pager } from "@/components/cms/pager";
 import { PublishedChip } from "@/components/cms/status-chips";
 import { Card, Grid, PageHeader } from "@/components/kit";
+import { FallbackImage } from "@/components/site/fallback-image";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getAlbumsAdmin } from "@/lib/api/cms";
@@ -31,6 +31,12 @@ export default async function GalleryAdminPage({ params, searchParams }: PagePro
   const query = parsed.success ? parsed.data : { page: 1, pageSize: PAGE_SIZE };
   const [t, list] = await Promise.all([getTranslations("Cms.gallery"), getAlbumsAdmin(query)]);
 
+  const noCover = (
+    <span className="grid h-full place-items-center text-muted-foreground">
+      <ImageIcon className="size-6" aria-hidden />
+    </span>
+  );
+
   return (
     <>
       <PageHeader
@@ -54,11 +60,9 @@ export default async function GalleryAdminPage({ params, searchParams }: PagePro
                 <Card className="grid h-full content-start gap-2.5 p-2.5 transition-colors group-hover:border-primary min-[600px]:p-2.5">
                   <div className="relative aspect-[4/3] overflow-hidden rounded-[8px] bg-surface-2">
                     {album.coverUrl ? (
-                      <Image src={album.coverUrl} alt="" fill unoptimized sizes="320px" className="object-cover" />
+                      <FallbackImage src={album.coverUrl} alt="" fill unoptimized sizes="320px" className="object-cover" fallback={noCover} />
                     ) : (
-                      <span className="grid h-full place-items-center text-muted-foreground">
-                        <ImageIcon className="size-6" aria-hidden />
-                      </span>
+                      noCover
                     )}
                   </div>
                   <div className="grid gap-1 px-1">

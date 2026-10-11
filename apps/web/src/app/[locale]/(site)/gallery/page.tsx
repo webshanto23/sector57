@@ -1,10 +1,10 @@
 import { localDigits, pick, type Locale } from "@s57/shared";
 import { ChevronLeft, ChevronRight, ImageIcon } from "lucide-react";
 import type { Metadata } from "next";
-import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Card, PageHeader } from "@/components/kit";
 import { Art, sceneFor } from "@/components/site/art";
+import { FallbackImage } from "@/components/site/fallback-image";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getAlbums } from "@/lib/api/public";
@@ -46,21 +46,23 @@ export default async function GalleryPage({ params, searchParams }: PageProps<"/
           {albums.items.map((album) => {
             const title = pick(album.titleBn, album.titleEn, locale);
             const placeholder = sceneFor(album.id);
+            const art = <Art scene={placeholder.scene} seed={placeholder.seed} ratio={[4, 3]} className="rounded-[8px]" />;
             return (
               <li key={album.id}>
                 <Link href={`/gallery/${album.id}`} className="block h-full text-fg no-underline">
                   <Card className="grid h-full content-start gap-2.5 p-2.5 transition-colors hover:border-muted-foreground min-[600px]:p-2.5">
                     {album.coverUrl ? (
-                      <Image
+                      <FallbackImage
                         src={album.coverUrl}
                         alt=""
                         width={640}
                         height={480}
                         unoptimized
                         className="aspect-[4/3] w-full rounded-[8px] object-cover"
+                        fallback={art}
                       />
                     ) : (
-                      <Art scene={placeholder.scene} seed={placeholder.seed} ratio={[4, 3]} className="rounded-[8px]" />
+                      art
                     )}
                     <div className="flex items-center justify-between gap-2 px-1 pb-1">
                       <h4>{title}</h4>
