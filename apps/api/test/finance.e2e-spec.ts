@@ -5,6 +5,7 @@ import {
   CSRF_HEADER,
   chargeTypeListSchema,
   chargeTypeSchema,
+  defaultLogoMark,
   fundListSchema,
   fundSchema,
   societySettingsSchema,
@@ -146,6 +147,35 @@ describe('Finance setup (e2e)', () => {
       expect(audit.before_data).toMatchObject({ shareRentersWithThana: false, fiscalYearStartMonth: 7 });
       expect(Object.keys(audit.after_data as object).sort()).toEqual(['fiscalYearStartMonth', 'receiptHeader', 'shareRentersWithThana']);
       await setSettings({ fiscalYearStartMonth: 7 }).expect(200);
+    });
+
+    it('edits the society profile, which the public header reads', async () => {
+      const name = `সমিতি ${MARK}`;
+      const before = societySettingsSchema.parse((await get('/settings', users.viewer).expect(200)).body);
+      expect(before.profile).toEqual({ nameBn: name, nameEn: null, mark: defaultLogoMark(name), placeBn: null, placeEn: null });
+      expect((await request(server()).get('/society').expect(200)).body).toMatchObject({ nameBn: name, mark: defaultLogoMark(name) });
+
+      const profile = { nameBn: ' উত্তরা সেক্টর ১৫ কল্যাণ সমিতি ', nameEn: '', mark: '১৫', placeBn: 'উত্তরা, ঢাকা', placeEn: 'Uttara, Dhaka' };
+      await setSettings({ profile }, users.viewer).expect(403);
+      expect((await setSettings({ profile: { ...profile, mark: 'ABCD' } }).expect(400)).body.code).toBe('validation_failed');
+      const res = await setSettings({ profile }).expect(200);
+      expect(societySettingsSchema.parse(res.body).profile).toEqual({ ...profile, nameBn: 'উত্তরা সেক্টর ১৫ কল্যাণ সমিতি', nameEn: null });
+
+      // The cached society is dropped, so the website sees the change at once.
+      expect((await request(server()).get('/society').expect(200)).body).toMatchObject({
+        nameBn: 'উত্তরা সেক্টর ১৫ কল্যাণ সমিতি',
+        nameEn: null,
+        mark: '১৫',
+        placeBn: 'উত্তরা, ঢাকা',
+        placeEn: 'Uttara, Dhaka',
+      });
+      const audit = await prisma.audit_logs.findFirstOrThrow({
+        where: { society_id: societyId, entity_type: 'society_settings' },
+        orderBy: { created_at: 'desc' },
+      });
+      expect(audit.before_data).toMatchObject({ profile: { nameBn: name } });
+
+      await setSettings({ profile: { nameBn: name, mark: defaultLogoMark(name) } }).expect(200);
     });
   });
 

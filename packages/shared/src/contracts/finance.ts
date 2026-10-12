@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { moneyOrZeroSchema, optionalMoneySchema } from '../money.js';
 import { optionalText, text } from '../schemas.js';
 import { isoDay } from './members.js';
+import { brandingSchema } from './society.js';
 
 // ---------------------------------------------------------------------------
 // Society settings
@@ -15,6 +16,8 @@ export const SETTING_KEYS = {
   shareRentersWithThana: 'share_renters_with_thana',
   separateFacilityFunds: 'separate_facility_funds',
   receiptHeader: 'receipt_header',
+  /** Logo badge and place line (`brandingSchema`); the name itself is the `societies` row. */
+  branding: 'branding',
 } as const;
 export type SettingKey = keyof typeof SETTING_KEYS;
 
@@ -28,12 +31,31 @@ export const receiptHeaderSchema = z.object({
 });
 export type ReceiptHeader = z.infer<typeof receiptHeaderSchema>;
 
+/** A receipt or printed bill's header as the API sends it: the saved header plus the logo badge. */
+export const documentHeaderSchema = receiptHeaderSchema.extend({ mark: z.string() });
+export type DocumentHeader = z.infer<typeof documentHeaderSchema>;
+
 export const receiptHeaderInputSchema = z.object({
   nameBn: text(150),
   nameEn: optionalText(150),
   addressBn: optionalText(300),
   addressEn: optionalText(300),
   phone: optionalText(60),
+});
+
+/** The society's name (`societies`) and branding, as the website header shows them. */
+export const societyProfileSchema = z.object({ nameBn: z.string(), nameEn: z.string().nullable() }).extend(brandingSchema.shape);
+export type SocietyProfile = z.infer<typeof societyProfileSchema>;
+
+/** The badge holds at most three characters: it is a 22 px circle. */
+export const LOGO_MARK_MAX = 3;
+
+export const societyProfileInputSchema = z.object({
+  nameBn: text(150),
+  nameEn: optionalText(150),
+  mark: text(LOGO_MARK_MAX),
+  placeBn: optionalText(80),
+  placeEn: optionalText(80),
 });
 
 /** `GET /settings`. */
@@ -44,6 +66,7 @@ export const societySettingsSchema = z.object({
   /** True once the ledger has any entry: moving the year then would split vouchers and reports. */
   fiscalYearLocked: z.boolean(),
   receiptHeader: receiptHeaderSchema,
+  profile: societyProfileSchema,
 });
 export type SocietySettings = z.infer<typeof societySettingsSchema>;
 
@@ -54,6 +77,7 @@ export const settingsInputSchema = z
     separateFacilityFunds: z.boolean(),
     fiscalYearStartMonth: z.number().int().min(1).max(12),
     receiptHeader: receiptHeaderInputSchema,
+    profile: societyProfileInputSchema,
   })
   .partial()
   .strict();

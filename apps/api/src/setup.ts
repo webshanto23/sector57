@@ -39,7 +39,7 @@ export function configureApp(app: INestApplication): Env {
 
   if (env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
-      .setTitle('Sector 57 API')
+      .setTitle('Sector 15 API')
       .setVersion('1')
       // 3.1 so nullable fields come out as `type: [x, 'null']` for the generated client.
       .setOpenAPIVersion('3.1.0')

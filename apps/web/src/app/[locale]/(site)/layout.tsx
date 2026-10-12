@@ -1,9 +1,10 @@
-import { pick, type Locale } from "@s57/shared";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import type { Locale } from "@s57/shared";
+import { setRequestLocale } from "next-intl/server";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteNav } from "@/components/site/site-nav";
-import { getSiteInfo, getSociety } from "@/lib/api/public";
+import { getSiteInfo } from "@/lib/api/public";
+import { getBrand } from "@/lib/brand";
 
 // Public pages are cached and refreshed at most once a minute.
 export const revalidate = 60;
@@ -14,17 +15,16 @@ export default async function SiteLayout({ children, params }: LayoutProps<"/[lo
   const locale = raw as Locale;
   setRequestLocale(locale);
 
-  const [t, society, info] = await Promise.all([getTranslations("Common"), getSociety(), getSiteInfo()]);
-  const name = society ? pick(society.nameBn, society.nameEn, locale) : t("societyName");
+  const [brand, info] = await Promise.all([getBrand(locale), getSiteInfo()]);
 
   return (
     <>
-      <SiteHeader name={name} />
+      <SiteHeader brand={brand} />
       <SiteNav />
       <main id="main" className="mx-auto w-full max-w-[1180px] flex-1 px-4 py-[22px]">
         {children}
       </main>
-      <SiteFooter name={name} info={info} locale={locale} />
+      <SiteFooter name={brand.name} info={info} locale={locale} />
     </>
   );
 }

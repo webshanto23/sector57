@@ -6,6 +6,14 @@ type ResponseCookie = Parameters<NextResponse["cookies"]["set"]>[0] & object;
 /** Pages that need a login. The API makes the real decision; this only avoids rendering them for nobody. */
 export const PROTECTED_PREFIXES = ["/dashboard"];
 
+/**
+ * Query flag on `/login` meaning "the API refused this session". The proxy only
+ * checks a token's expiry, so a token that is unexpired but no longer accepted
+ * (session revoked, secret changed) would otherwise bounce between `/login` and
+ * `/dashboard` forever; with this flag the proxy clears the cookies instead.
+ */
+export const SESSION_ENDED_PARAM = "ended";
+
 /** Seconds of slack so a token that expires mid-request is refreshed first. */
 const EXPIRY_SLACK_S = 30;
 

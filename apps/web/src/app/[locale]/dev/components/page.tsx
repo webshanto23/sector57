@@ -188,7 +188,7 @@ export default async function ComponentsPage({ params }: PageProps<"/[locale]/de
                 <Avatar name={L("রফিকুল ইসলাম", "Rafiqul Islam")} size="lg" />
               </div>
               <Kantha />
-              <p className="font-display text-[26px] leading-[1.35]">{L("নিরাপদ, পরিচ্ছন্ন ও সুশৃঙ্খল সেক্টর ৫৭", "A safe, clean, orderly Sector 57")}</p>
+              <p className="font-display text-[26px] leading-[1.35]">{L("নিরাপদ, পরিচ্ছন্ন ও সুশৃঙ্খল সেক্টর ১৫", "A safe, clean, orderly Sector 15")}</p>
               <div className="flex items-center gap-2.5">
                 <UserRound className="size-[18px] text-muted-foreground" aria-hidden />
                 <span className="font-mono text-[12.5px]">RC-08813</span>

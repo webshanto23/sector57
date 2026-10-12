@@ -1,10 +1,10 @@
-import { amountInWords, formatDate, formatTaka, localDigits, pick, type Locale, type PaymentDetail, type ReceiptHeader } from "@s57/shared";
+import { amountInWords, formatDate, formatTaka, localDigits, pick, type DocumentHeader, type Locale, type PaymentDetail } from "@s57/shared";
 import { useTranslations } from "next-intl";
 import { DocumentHead, Stamp } from "@/components/print/document-head";
 
 /** What a receipt shows. The live preview fills it before there is a receipt number. */
 export type ReceiptData = {
-  header: ReceiptHeader;
+  header: DocumentHeader;
   receiptNo: string | null;
   /** A day (`YYYY-MM-DD`) or an instant. */
   date: string;

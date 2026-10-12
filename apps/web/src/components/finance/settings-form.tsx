@@ -1,13 +1,26 @@
 "use client";
 
-import { amountInWords, fiscalYearOf, formatDate, formatTaka, localDigits, type Locale, type SettingsInput, type SocietySettings } from "@s57/shared";
+import {
+  amountInWords,
+  fiscalYearOf,
+  formatDate,
+  formatTaka,
+  localDigits,
+  LOGO_MARK_MAX,
+  type Locale,
+  type SettingsInput,
+  type SocietySettings,
+} from "@s57/shared";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { FormStatus, Note } from "@/components/admin/form-status";
 import { CheckField } from "@/components/cms/fields";
 import { Card, Field, inputClass } from "@/components/kit";
+import { Logo } from "@/components/site/logo";
 import { useSubmit } from "@/components/property/use-submit";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "@/i18n/navigation";
+import { refreshPublicSite } from "@/lib/actions/public-site";
 import { api } from "@/lib/api/client";
 import { todayInDhaka } from "@/lib/dhaka-time";
 
@@ -21,24 +34,37 @@ const toHeader = (h: SocietySettings["receiptHeader"]): Header => ({
   phone: h.phone ?? "",
 });
 
+type Profile = { nameBn: string; nameEn: string; mark: string; placeBn: string; placeEn: string };
+
+const toProfile = (p: SocietySettings["profile"]): Profile => ({
+  nameBn: p.nameBn,
+  nameEn: p.nameEn ?? "",
+  mark: p.mark,
+  placeBn: p.placeBn ?? "",
+  placeEn: p.placeEn ?? "",
+});
+
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
 const SAMPLE_AMOUNT = "4500";
 
-/** The president's switches, the fiscal year start and the receipt header. Sends only what changed. */
+/** The society profile, the president's switches, the fiscal year start and the receipt header. Sends only what changed. */
 export function SettingsForm({ settings, canEdit }: { settings: SocietySettings; canEdit: boolean }) {
   const t = useTranslations("Finance.settings");
   const locale = useLocale() as Locale;
+  const router = useRouter();
   const { status, busy, run } = useSubmit();
   const [saved, setSaved] = useState(settings);
   const [thana, setThana] = useState(settings.shareRentersWithThana);
   const [separate, setSeparate] = useState(settings.separateFacilityFunds);
   const [month, setMonth] = useState(settings.fiscalYearStartMonth);
   const [header, setHeader] = useState(() => toHeader(settings.receiptHeader));
+  const [profile, setProfile] = useState(() => toProfile(settings.profile));
 
   const year = fiscalYearOf(todayInDhaka(), month);
   const monthName = (m: number) =>
     new Intl.DateTimeFormat(locale === "bn" ? "bn-BD" : "en-GB", { month: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2026, m - 1, 1)));
   const headerChanged = JSON.stringify(header) !== JSON.stringify(toHeader(saved.receiptHeader));
+  const profileChanged = JSON.stringify(profile) !== JSON.stringify(toProfile(saved.profile));
   const readOnly = !canEdit || busy;
 
   async function save() {
@@ -48,10 +74,17 @@ export function SettingsForm({ settings, canEdit }: { settings: SocietySettings;
     if (month !== saved.fiscalYearStartMonth) body.fiscalYearStartMonth = month;
     // Blank fields become null in the API.
     if (headerChanged) body.receiptHeader = header;
+    if (profileChanged) body.profile = profile;
     const result = await run(() => api.PATCH("/settings", { body }));
     if (result) {
       setSaved(result);
       setHeader(toHeader(result.receiptHeader));
+      setProfile(toProfile(result.profile));
+      if (profileChanged) {
+        // The name and badge are on every public page and in the header above.
+        await refreshPublicSite().catch(() => undefined);
+        router.refresh();
+      }
     } else if (result === undefined) {
       // Put the switches back where the server has them; the message says why.
       setSeparate(saved.separateFacilityFunds);
@@ -72,6 +105,30 @@ export function SettingsForm({ settings, canEdit }: { settings: SocietySettings;
     </Field>
   );
 
+  const profileField = (key: keyof Profile, label: string, extra: { lang?: string; required?: boolean; maxLength?: number; hint?: string } = {}) => {
+    const { hint, ...rest } = extra;
+    return (
+      <Field label={label} htmlFor={`profile-${key}`}>
+        <input
+          id={`profile-${key}`}
+          className={inputClass}
+          value={profile[key]}
+          disabled={readOnly}
+          aria-describedby={hint ? `profile-${key}-hint` : undefined}
+          onChange={(e) => setProfile({ ...profile, [key]: e.target.value })}
+          {...rest}
+        />
+        {hint ? (
+          <span id={`profile-${key}-hint`} className="text-[12.5px] text-muted-foreground">
+            {hint}
+          </span>
+        ) : null}
+      </Field>
+    );
+  };
+  const previewName = (locale === "en" && profile.nameEn.trim()) || profile.nameBn;
+  const previewPlace = (locale === "en" && profile.placeEn.trim()) || profile.placeBn;
+
   return (
     <form
       noValidate
@@ -82,6 +139,30 @@ export function SettingsForm({ settings, canEdit }: { settings: SocietySettings;
       }}
     >
       {!canEdit ? <Note>{t("readOnly")}</Note> : null}
+
+      <Card className="grid gap-3.5">
+        <div>
+          <h2 className="text-[15px]">{t("profile")}</h2>
+          <p className="text-[13px] text-muted-foreground">{t("profileHint")}</p>
+        </div>
+        <div className="grid gap-3 min-[700px]:grid-cols-2">
+          {profileField("nameBn", t("nameBn"), { required: true })}
+          {profileField("nameEn", t("nameEn"), { lang: "en" })}
+          {profileField("placeBn", t("placeBn"), { hint: t("placeHint") })}
+          {profileField("placeEn", t("placeEn"), { lang: "en" })}
+          {profileField("mark", t("mark"), { required: true, maxLength: LOGO_MARK_MAX, hint: t("markHint") })}
+        </div>
+        <div aria-label={t("preview")} className="rounded-[10px] border border-dashed border-line bg-surface-2 p-4">
+          <p className="mb-2 text-xs font-semibold text-muted-foreground uppercase">{t("preview")}</p>
+          <div className="flex items-center gap-2.5 leading-tight font-bold">
+            <Logo mark={profile.mark} />
+            <span className="min-w-0">
+              {previewName || "—"}
+              {previewPlace ? <span className="block text-xs font-medium text-muted-foreground">{previewPlace}</span> : null}
+            </span>
+          </div>
+        </div>
+      </Card>
 
       <Card className="grid gap-3.5">
         <h2 className="text-[15px]">{t("switches")}</h2>
@@ -160,7 +241,7 @@ export function SettingsForm({ settings, canEdit }: { settings: SocietySettings;
 
       <FormStatus status={status} />
       {canEdit ? (
-        <Button type="submit" disabled={busy || !header.nameBn.trim()} className="justify-self-start">
+        <Button type="submit" disabled={busy || !header.nameBn.trim() || !profile.nameBn.trim() || !profile.mark.trim()} className="justify-self-start">
           {busy ? t("saving") : t("save")}
         </Button>
       ) : null}

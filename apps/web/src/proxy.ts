@@ -2,7 +2,7 @@ import { AUTH_COOKIES } from "@s57/shared";
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "./i18n/routing";
-import { accessTokenFresh, PROTECTED_PREFIXES, refreshFromProxy } from "./lib/session-proxy";
+import { accessTokenFresh, PROTECTED_PREFIXES, refreshFromProxy, SESSION_ENDED_PARAM } from "./lib/session-proxy";
 
 const intl = createMiddleware(routing);
 
@@ -22,6 +22,12 @@ export default async function proxy(request: NextRequest) {
   const { path, prefix } = pagePath(request.nextUrl.pathname);
   const fresh = accessTokenFresh(request.cookies.get(AUTH_COOKIES.access)?.value);
 
+  // The API refused the session: drop its cookies and show the login page.
+  if (path === "/login" && request.nextUrl.searchParams.has(SESSION_ENDED_PARAM)) {
+    const response = intl(request);
+    for (const name of Object.values(AUTH_COOKIES)) response.cookies.delete(name);
+    return response;
+  }
   // Already logged in: the login page has nothing to offer.
   if (path === "/login" && fresh) {
     return NextResponse.redirect(new URL(`${prefix}/dashboard`, request.url));

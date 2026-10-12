@@ -5,8 +5,8 @@ import { SocietyService } from './society.service.js';
 const row = (status = 'active') => ({
   id: '00000000-0000-4000-8000-000000000001',
   slug: 'sector57',
-  name_bn: 'উত্তরা সেক্টর ৫৭ কল্যাণ সমিতি',
-  name_en: 'Uttara Sector 57 Welfare Society',
+  name_bn: 'উত্তরা সেক্টর ১৫ কল্যাণ সমিতি',
+  name_en: 'Uttara Sector 15 Welfare Society',
   fiscal_year_start_month: 7,
   status,
 });
@@ -29,6 +29,10 @@ describe('SocietyService', () => {
       nameBn: row().name_bn,
       nameEn: row().name_en,
       fiscalYearStartMonth: 7,
+      // Nothing saved yet: the badge comes from the number in the name.
+      mark: '১৫',
+      placeBn: null,
+      placeEn: null,
     });
     expect(findUnique).toHaveBeenCalledTimes(1);
   });

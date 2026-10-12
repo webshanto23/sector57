@@ -1,4 +1,4 @@
-# Sector 57 build steps
+# Sector 15 build steps
 
 Status of every step, what it contains, and the decisions still open. Updated 2026-10-11.
 
@@ -516,6 +516,10 @@ Built 2026-10-11 on `step/14-collection` (branched from `step/13-recurring`). De
 - **Tests:** shared allocation, status, void-rule and input tests; `payments.e2e-spec.ts` in a throwaway society covers lookup scope and search, oldest-first allocation with partial, ledger rows per fund, the payer snapshot surviving a name change, exact paisa, every refusal, membership fees (society-wide only), two payments on one bill at once, gap-free concurrent receipt numbers, list scope and totals, original then duplicate prints, no delete routes, void by the collector and by an approver, handover (not your own, a difference needs a note, a void inside a pending one), the ledger matching the receipts, and bill ahead followed by a run that skips those months.
 - **For later steps:** a donation (Step 15) makes a `payments` row with no allocations and no unit, through the same numbering and receipt; its ledger row comes from the donation. Every ledger write sets `account`. Change a bill's `paid` only with the bill locked `FOR UPDATE`.
 - **Not checked yet:** the A5 print preview in a real browser, and the save, print, void and handover flow clicked through by hand; the 375/820/1440 pass stays deferred.
+- **Also on this branch (2026-10-11, Anis):**
+  - **Society profile.** The society is Sector 15. Its name, logo badge and place line now come only from the database: `societies.name_bn/en` plus the `branding` setting (`brandingSchema`; the badge defaults to the number in the name). `GET /society` returns them, `PATCH /settings` takes `profile` (`settings.edit`; drops the society cache), and receipts and bills carry `header.mark`. Settings has a "Society profile" card with a preview. The web reads them with `getBrand(locale)` for the header, footer, tab title and home page; i18n keeps only a neutral `fallbackName` for when the API is down. The seed adds the place line "উত্তরা, ঢাকা" if missing.
+  - **Login loop.** A token that is unexpired but refused by the API (session revoked, another `JWT_SECRET`) used to bounce between `/login` and `/dashboard`. The dashboard now redirects to `/login?ended=1`, where the proxy clears the auth cookies.
+  - **Docker web build.** Turborepo's strict env mode hid the `API_URL` build arg from `next build`, so the web image proxied `/api` to itself. `turbo.json` now declares `API_URL` on `build`.
 
 ### Step 15: Donations
 
