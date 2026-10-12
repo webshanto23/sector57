@@ -263,4 +263,16 @@
   .print-portal .print-break-avoid {
     break-inside: avoid;
   }
+  /* Long lists (the door-to-door arrears list) print on A4; receipts and vouchers stay A5. */
+  @page a4 {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+  .print-portal .print-a4 {
+    page: a4;
+    font-size: 10.5pt;
+  }
+  .print-portal .print-a4 tr {
+    break-inside: avoid;
+  }
 }

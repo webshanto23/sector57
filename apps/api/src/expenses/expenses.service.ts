@@ -21,6 +21,7 @@ import {
 } from '@s57/shared';
 import { AuditService } from '../audit/audit.service.js';
 import { isoDate, todayDate } from '../common/dates.js';
+import { fundBalances } from '../finance/balances.js';
 import { fundClosed } from '../finance/funds.service.js';
 import { lockFinanceSetup, NumberingService } from '../finance/numbering.service.js';
 import { SettingsService } from '../finance/settings.service.js';
@@ -32,7 +33,6 @@ import { documentContentType } from '../storage/document.js';
 import { PrivateFilesService } from '../storage/private-files.service.js';
 
 type Tx = Prisma.TransactionClient;
-type Client = Tx | PrismaService;
 
 /** `documents.entity_type` / `doc_type` of a voucher file. */
 const VOUCHER_ENTITY = 'expense';
@@ -162,7 +162,7 @@ export class ExpensesService {
         orderBy: { uploaded_at: 'asc' },
       }),
       this.settings.receiptHeader(actor.societyId),
-      can.pay ? this.balances(this.prisma, row.funds.id) : Promise.resolve(null),
+      can.pay ? fundBalances(this.prisma, row.funds.id) : Promise.resolve(null),
       this.prisma.budgets.findUnique({
         where: { society_id_fiscal_year_expense_head_id: { society_id: actor.societyId, fiscal_year: year.label, expense_head_id: row.expense_head_id } },
         select: { amount: true },
@@ -304,10 +304,10 @@ export class ExpensesService {
       if (!actionsFor(actor, row).pay) throw beyondPermissions();
       const fund = await tx.funds.findUniqueOrThrow({ where: { id: row.fund_id }, select: { closed_at: true } });
       if (fund.closed_at) throw fundClosed();
-      const balance = (await this.balances(tx, row.fund_id))[input.account];
+      const balance = (await fundBalances(tx, row.fund_id))[input.account];
       const amount = row.amount.toFixed(2);
       if (compareMoney(balance, amount) < 0) {
-        throw new ConflictException({ code: 'fund_insufficient', message: 'The fund does not hold enough in that account', balance });
+        throw new ConflictException({ code: 'fund_insufficient', message: 'The fund does not hold enough in that account', details: { balance } });
       }
       const number = await this.numbering.next(tx, actor.societyId, 'voucher', today);
       await tx.expenses.update({
@@ -493,15 +493,6 @@ export class ExpensesService {
     if (fund.closed_at) throw fundClosed();
     if (!fund.is_default && !(await this.settings.separateFunds(societyId, tx))) throw bad('invalid_fund', 'Only the default fund is in use');
     return { fundId: fund.id };
-  }
-
-  /** What a fund holds per account: its `in` minus its `out` rows. */
-  private async balances(client: Client, fundId: string): Promise<{ cash: string; bank: string }> {
-    const rows = await client.$queryRaw<{ account: string; balance: string }[]>`
-      SELECT account, coalesce(sum(CASE WHEN direction = 'in' THEN amount ELSE -amount END), 0)::numeric(16,2)::text AS balance
-      FROM ledger_entries WHERE fund_id = ${fundId}::uuid GROUP BY account`;
-    const of = (account: LedgerAccount) => rows.find((row) => row.account === account)?.balance ?? '0.00';
-    return { cash: of('cash'), bank: of('bank') };
   }
 
   /** The stat cards: waiting, approved and unpaid, paid this month and this fiscal year. */

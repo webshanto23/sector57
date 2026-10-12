@@ -7,12 +7,14 @@ import {
   BookUser,
   Briefcase,
   Building2,
+  ChartColumn,
   Coins,
   FilePen,
   FolderOpen,
   Globe,
   HandHeart,
   House,
+  Landmark,
   LayoutDashboard,
   Map,
   Megaphone,
@@ -42,8 +44,10 @@ export type NavKey =
   | "recurring"
   | "donations"
   | "expenses"
+  | "ledger"
   | "notices"
   | "documents"
+  | "reports"
   | "roles"
   | "users"
   | "website"
@@ -70,7 +74,7 @@ export type NavGroup =
 /**
  * The mockup's `DNAV`, in its order. Items whose module is not in the permission
  * catalogue yet (staff, facilities, work orders, helpdesk, vehicles, events, voting,
- * board, certificates, reports) are left out until that module exists.
+ * board, certificates) are left out until that module exists.
  */
 export const DASHBOARD_NAV: NavGroup[] = [
   { key: null, items: [{ key: "overview", icon: LayoutDashboard, module: null }] },
@@ -101,10 +105,19 @@ export const DASHBOARD_NAV: NavGroup[] = [
       { key: "recurring", icon: Repeat, module: "billing" },
       { key: "donations", icon: HandHeart, module: "donations" },
       { key: "expenses", icon: Wallet, module: "expenses", also: ["budgets"] },
+      { key: "ledger", icon: Landmark, module: "ledger" },
     ],
   },
   { key: "community", icon: Megaphone, items: [{ key: "notices", icon: Bell, module: "notices" }] },
-  { key: "records", icon: Archive, items: [{ key: "documents", icon: FolderOpen, module: "documents" }] },
+  {
+    key: "records",
+    icon: Archive,
+    items: [
+      { key: "documents", icon: FolderOpen, module: "documents" },
+      // Each report needs its own module's view; the item shows with any of them.
+      { key: "reports", icon: ChartColumn, module: "billing", also: ["payments", "donations", "expenses", "ledger"] },
+    ],
+  },
   {
     key: "admin",
     icon: Briefcase,

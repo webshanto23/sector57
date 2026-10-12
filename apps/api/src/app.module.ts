@@ -5,6 +5,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod';
 import { AppController } from './app.controller.js';
 import { AuditInterceptor } from './audit/audit.interceptor.js';
+import { AuditLogModule } from './audit/audit-log.module.js';
 import { AuditModule } from './audit/audit.module.js';
 import { AuthGuard } from './auth/auth.guard.js';
 import { AuthModule } from './auth/auth.module.js';
@@ -18,6 +19,8 @@ import { BillingModule } from './billing/billing.module.js';
 import { PaymentsModule } from './payments/payments.module.js';
 import { DonationsModule } from './donations/donations.module.js';
 import { ExpensesModule } from './expenses/expenses.module.js';
+import { LedgerModule } from './ledger/ledger.module.js';
+import { ReportsModule } from './reports/reports.module.js';
 import { FormsModule } from './forms/forms.module.js';
 import { GalleryModule } from './gallery/gallery.module.js';
 import { MembersModule } from './members/members.module.js';
@@ -69,6 +72,9 @@ import { UsersModule } from './users/users.module.js';
     PaymentsModule,
     DonationsModule,
     ExpensesModule,
+    LedgerModule,
+    ReportsModule,
+    AuditLogModule,
   ],
   controllers: [AppController],
   providers: [

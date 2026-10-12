@@ -35,7 +35,7 @@ Schema changes are additive and need Anis's approval first.
 | 14 | M2: Cash collection, receipts and handover | Built, awaiting Codex review | `step/14-collection` |
 | 15 | M2: Donations | Built, awaiting Codex review | `step/15-donations` |
 | 16 | M2: Expenses and budgets | Built, awaiting Codex review | `step/16-expenses` |
-| 17 | M2: Fund ledger and finance reports | Later | `step/17-reports` |
+| 17 | M2: Fund ledger and finance reports | Built, awaiting Codex review | `step/17-reports` |
 | 18 | M2: Overview dashboard | Later | `step/18-overview` |
 | 19 | M2 (optional): Resident bills view | Later, needs a decision | `step/19-my-bills` |
 
@@ -553,18 +553,25 @@ Built 2026-10-12 on `step/16-expenses` (branched from `step/15-donations`). Deci
 - **Seed:** demo heads (staff salaries, repairs, electricity, cleaning) outside production.
 - **Tests:** shared flow-rule, budget and input tests; `expenses.e2e-spec.ts` in a throwaway society covers heads and vendors, request → approve → pay with the ledger row and balance, approving your own, the requester's edits, rejection, an empty account, a closed fund, other societies' heads and funds, two payments racing for one fund's money, gap-free voucher numbers, voids with and without a reversal, bad input, vouchers (PDF stored and served only to viewers, other files refused, removal rules, a late bill), list totals against the rows, the society boundary, no delete routes, budgets against the rows, the ledger matching paid expenses and the database checks.
 - **Not checked yet:** the pages clicked through in a browser and the A5 voucher print preview; the 375/820/1440 pass stays deferred.
-- **Known gap:** voiding a receipt or donation (Steps 14–15) after its cash was spent can leave a fund below zero; those voids don't check the balance. Step 17's ledger should show such a fund in red.
+- **Known gap:** voiding a receipt or donation (Steps 14–15) after its cash was spent can leave a fund below zero; those voids don't check the balance. Step 17's ledger shows such a fund in red.
 
-### Step 17: Fund ledger and finance reports
+### Step 17: Fund ledger and finance reports — Built, awaiting Codex review
 
-- **Ledger** (`ledger.view`): balances per fund (and per account if Step 11 says so), a statement for a date range (opening, in, out, closing), each row linking to its receipt, donation or expense. **Fund transfers** and bank deposits (`ledger.create`, two rows each).
-- **Reports** (`/dashboard/reports`, each behind its module's `view`; CSV with `export`, UTF-8 with BOM so Excel reads Bangla):
-  - Day book: every receipt and payment for a day, by collector.
-  - Collection by area (the mockup's "Collection by block"): billed, collected and percentage per top-level area.
-  - Arrears: units with overdue bills, aged 0–30, 31–90, 90+ days; printable as a door-to-door list for one road.
-  - Income and expenditure by charge type and expense head for a fiscal year; budget against actual.
-- **Decisions:**
-  - **(decide)** Add the audit log viewer (`audit.view`) here? Finance is where the committee will want to see who changed what. Proposal: yes, read-only, filters by user, entity and date.
+Built 2026-10-12 on `step/17-reports` (branched from `step/16-expenses`). Decided by Anis (the scope note's proposals): income is on a cash basis with a "billed" column beside it; a part-paid bill's payment settles its lines in their order (`position`); the door-to-door arrears list prints on A4; voiding a transfer needs `ledger.approve`, with no time limit; the audit log viewer ships here, in one branch.
+
+- **Migration `12_fund_transfers`:** `fund_transfers` (from fund and account, to fund and account, amount > 0, date, memo, who, void fields). Checks refuse a transfer that moves nothing and keep the void fields together; a trigger refuses deletes (except when the society goes) and any change but the one void. Two indexes on `audit_logs` (by user, by entity type, newest first) for the viewer.
+- **Transfers** (`src/ledger`, society-wide): `POST /ledger/transfers` (`ledger.create`) moves money between funds or between a fund's cash and bank (a deposit is cash → bank in one fund, a withdrawal bank → cash). It runs under `lockFinanceSetup`, refuses a closed or unknown fund (409 `fund_closed`, 400 `invalid_fund`) and more than the source holds (409 `fund_insufficient`, balance in `details.balance`), and writes an `out` and an `in` ledger row (`source_type = 'transfer'`) dated today. `POST /ledger/transfers/:id/void` (`ledger.approve`, reason) writes the two reversing rows; it is refused once void (409 `transfer_already_void`) and when the destination no longer holds the money (409 `fund_insufficient`). `GET /ledger/transfers`, `GET /ledger/transfers/:id`. No delete routes.
+- **Statement:** `GET /ledger?fundId=&account=&from=&to=` (`ledger.view`; defaults to this month): the balance before `from`, money in and out, the closing balance, and each row with its running balance (kept across pages), source, reference (the receipt, voucher or slip number), who, whether it reverses or was reversed, and a link to its receipt, donation, expense, transfer or the fund. 400 `invalid_range`.
+- **Reports** (`src/reports`, read-only; CSV at `/<report>/csv?lang=bn|en`, UTF-8 with a BOM, CRLF, formula-like text defused, behind the module's `export`):
+  - Day book `GET /reports/day-book?date=` (Dhaka day): bill receipts in the caller's `payments` area, donations, paid expenses, transfers, cash per collector, and each fund and account through the day (start, in, out, end). Each section needs its own module's `view` (null otherwise); 403 when none. The CSV holds the sections the caller may also export.
+  - Collection by area `GET /reports/collection?from=&to=&parentId=` (`billing.view`, area-scoped): regular bills of units issued in the range, billed against paid so far, per place directly under the parent (the society's one top-level place by default), with drill-down and breadcrumbs. Earlier arrears and membership fees are left out.
+  - Arrears `GET /reports/arrears?locationId=` (`billing.view`, area-scoped): units with overdue bills, aged 1–30, 31–90 and over 90 days after the due date (`arrearsBucket` in shared), who the latest overdue bill went to, in address order, at most 2,000 units (`truncated`); the places below to narrow to. Membership bills (no unit) are not listed.
+  - Income and expenditure `GET /reports/income?year=&fundId=` (`ledger.view`): built from the ledger rows dated in the fiscal year, so it agrees with the statements. Bill receipts split by charge type in line order (a voided receipt's reversal takes back the same split), donations, expenses by head; budgets per head with `budgets.view`, and only for all funds (budgets are society-wide). Transfers and opening balances are neither income nor expenditure.
+- **Audit log viewer** `GET /audit` and `GET /audit/options` (`audit.view`): newest first, filters by user, record type, record id, action and Dhaka dates; before and after data as recorded. No write routes.
+- **Web:** nav items "Fund ledger" (finance) and "Reports" (records; shown with any of billing, payments, donations, expenses or ledger `view`). `/dashboard/ledger` (fund balance cards, red below zero, statement filters, opening/in/out/closing, rows linked to their records when the user may open them), `/dashboard/ledger/transfers` (list, new transfer form with deposit / withdrawal / between-funds presets and the source's balance, detail with void). `/dashboard/reports` (cards for the reports the user may open) and one page each: day book (day picker, previous/next day), collection (date range, drill-down, progress bars), arrears (breadcrumbs, narrow-to chips, totals, A4 door-to-door print), income (year and fund, budget bars). `/dashboard/audit` replaces the placeholder. CSV buttons show only with `export`. A4 prints use the named page `a4` in `globals.css`; receipts and vouchers stay A5.
+- **Also fixed:** Step 16's 409 `fund_insufficient` on paying an expense now carries the balance in `details.balance` (it was dropped by the exception filter).
+- **Tests:** shared tests for transfers, the ledger query, `percentOf`, `daysBetween`, `addDays`, `arrearsBucket` and the audit filters; `csv.spec.ts`; `reports.e2e-spec.ts` in a throwaway society covers deposits, refusals, two transfers racing for the same cash, voids (permission, once, destination short), the trigger, the society boundary, the statement's running balance across pages, collection by area and arrears with Block C / Block D scopes, income split by line order against the ledger, the day book per section and scope, CSV files and their permissions, the audit viewer, and each fund's ledger agreeing with receipts, donations, expenses and transfers.
+- **Checked:** every new page renders (Bangla and English) against the dev API with an admin session, and the CSV downloads work through the `/api` proxy. **Not checked yet:** clicking through in a browser, the A4 print preview, and the 375/820/1440 pass (still deferred).
 
 ### Step 18: Overview dashboard
 
@@ -610,7 +617,10 @@ Online payment, bank or mobile payment entry, SMS (unless the decision above add
 | `projects` table for developments | Decided: not in milestone 2 | Step 16 |
 | Paying more than a fund holds | Decided: refuse | Step 16 |
 | Approval limits by amount | Decided: no | Step 16 |
-| Audit log viewer | Yes, in Step 17 | Step 17 |
+| Audit log viewer | Decided: yes, in Step 17, read-only | Step 17 |
+| Income basis | Decided: cash basis, with billed beside it; part payments settle lines in order | Step 17 |
+| Door-to-door arrears paper | Decided: A4 | Step 17 |
+| Who voids a transfer | Decided: `ledger.approve`, no time limit | Step 17 |
 | Resident bills view | Later, with the member app | Step 19 |
 
 ## Later: beyond milestone 2
@@ -633,9 +643,9 @@ These are in the mockup's dashboard nav but not in milestones 1 or 2. Each needs
 **Records and administration**
 - Documents (`documents`)
 - Certificates and NOC (`certs`)
-- Reports (`reports`)
+- Reports (`reports`): the finance reports came in Step 17; others (members, property) later
 - Society settings (`settings`): the finance toggles come in Step 11; module on/off switches later
-- Audit log viewer (`audit`): proposed for Step 17; the log itself is written from Step 4/5
+- Audit log viewer (`audit`): built in Step 17; the log itself is written from Step 4/5
 
 **Member app:** the mockup's member-facing view (residents see their own bills, notices and requests).
 

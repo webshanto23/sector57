@@ -25,6 +25,8 @@ model audit_logs {
 
   @@index([entity_type, entity_id], map: "audit_entity_idx")
   @@index([society_id, created_at(sort: Desc)], map: "audit_time_idx")
+  @@index([society_id, user_id, created_at(sort: Desc)], map: "audit_user_time_idx")
+  @@index([society_id, entity_type, created_at(sort: Desc)], map: "audit_type_time_idx")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -285,6 +287,32 @@ model memberships {
   @@index([location_id], map: "memberships_location_idx")
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// Money moved between funds or between a fund's cash and bank: two ledger rows each. Only voided, never changed or deleted (trigger).
+model fund_transfers {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id    String    @db.Uuid
+  from_fund_id  String    @db.Uuid
+  from_account  String
+  to_fund_id    String    @db.Uuid
+  to_account    String
+  amount        Decimal   @db.Decimal(14, 2)
+  transfer_date DateTime  @db.Date
+  memo          String?
+  created_by    String    @db.Uuid
+  created_at    DateTime  @default(now()) @db.Timestamptz(6)
+  voided_at     DateTime? @db.Timestamptz(6)
+  voided_by     String?   @db.Uuid
+  void_reason   String?
+  societies     societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  from_fund     funds     @relation("fund_transfers_from", fields: [from_fund_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  to_fund       funds     @relation("fund_transfers_to", fields: [to_fund_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_created users     @relation("fund_transfers_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_voided  users?    @relation("fund_transfers_voided_byTousers", fields: [voided_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([society_id, transfer_date(sort: Desc)], map: "fund_transfers_society_idx")
+}
+
 model funds {
   id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   society_id     String           @db.Uuid
@@ -301,6 +329,8 @@ model funds {
   locations      locations?       @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   societies      societies        @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   ledger_entries ledger_entries[]
+  transfers_out  fund_transfers[] @relation("fund_transfers_from")
+  transfers_in   fund_transfers[] @relation("fund_transfers_to")
 
   @@unique([society_id, name_bn])
   @@unique([society_id], map: "funds_one_default_uq", where: raw("is_default"))
@@ -757,6 +787,7 @@ model societies {
   expenses                expenses[]
   form_submissions        form_submissions[]
   funds                   funds[]
+  fund_transfers          fund_transfers[]
   gallery_albums          gallery_albums[]
   invoices                invoices[]
   ledger_entries          ledger_entries[]
@@ -882,6 +913,8 @@ model users {
   expenses_expenses_paid_byTousers        expenses[]         @relation("expenses_paid_byTousers")
   expenses_expenses_rejected_byTousers    expenses[]         @relation("expenses_rejected_byTousers")
   expenses_expenses_voided_byTousers      expenses[]         @relation("expenses_voided_byTousers")
+  fund_transfers_created                  fund_transfers[]   @relation("fund_transfers_created_byTousers")
+  fund_transfers_voided                   fund_transfers[]   @relation("fund_transfers_voided_byTousers")
   user_roles_user_roles_granted_byTousers user_roles[]       @relation("user_roles_granted_byTousers")
   user_roles_user_roles_user_idTousers    user_roles[]       @relation("user_roles_user_idTousers")
   user_sessions                           user_sessions[]

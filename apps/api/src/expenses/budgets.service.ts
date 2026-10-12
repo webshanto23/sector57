@@ -135,7 +135,7 @@ export class BudgetsService {
 }
 
 /** The fiscal year a label names, if it is written the way this society's years are. */
-function yearOf(label: string, startMonth: number): FiscalYear {
+export function yearOf(label: string, startMonth: number): FiscalYear {
   const year = fiscalYearStarting(Number(label.slice(0, 4)), startMonth);
   if (year.label !== label) throw invalidYear();
   return year;
