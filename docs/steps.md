@@ -36,7 +36,7 @@ Schema changes are additive and need Anis's approval first.
 | 15 | M2: Donations | Built, awaiting Codex review | `step/15-donations` |
 | 16 | M2: Expenses and budgets | Built, awaiting Codex review | `step/16-expenses` |
 | 17 | M2: Fund ledger and finance reports | Built, awaiting Codex review | `step/17-reports` |
-| 18 | M2: Overview dashboard | Later | `step/18-overview` |
+| 18 | M2: Overview dashboard | Built, awaiting Codex review | `step/18-overview` |
 | 19 | M2 (optional): Resident bills view | Later, needs a decision | `step/19-my-bills` |
 
 The step numbers are names, not the build order. Order changed on 2026-10-08: Steps 3 and 8 moved to the end so the forms use the real location tree (Step 9) and the file storage from Step 7, and residents submit while the office reviews in the same release.
@@ -573,7 +573,22 @@ Built 2026-10-12 on `step/17-reports` (branched from `step/16-expenses`). Decide
 - **Tests:** shared tests for transfers, the ledger query, `percentOf`, `daysBetween`, `addDays`, `arrearsBucket` and the audit filters; `csv.spec.ts`; `reports.e2e-spec.ts` in a throwaway society covers deposits, refusals, two transfers racing for the same cash, voids (permission, once, destination short), the trigger, the society boundary, the statement's running balance across pages, collection by area and arrears with Block C / Block D scopes, income split by line order against the ledger, the day book per section and scope, CSV files and their permissions, the audit viewer, and each fund's ledger agreeing with receipts, donations, expenses and transfers.
 - **Checked:** every new page renders (Bangla and English) against the dev API with an admin session, and the CSV downloads work through the `/api` proxy. **Not checked yet:** clicking through in a browser, the A4 print preview, and the 375/820/1440 pass (still deferred).
 
-### Step 18: Overview dashboard
+### Step 18: Overview dashboard — Built, awaiting Codex review
+
+Built 2026-10-12 on `step/18-overview` (branched from `step/17-reports`). Decided by Anis: "collected" counts bill receipts only (never donations); figures may be up to 30 seconds old.
+
+- **API `GET /overview`** (`src/overview`, `@Authenticated()`, read-only, no migration): one block per card, each null without its grant and limited to the caller's area for it.
+  - Collected this month (`payments.view`): bill receipts, not voided, by Dhaka month; "% of billed" also needs `billing.view` (bills issued this month, not void, no opening arrears; a membership bill counts only society-wide).
+  - Arrears (`billing.view`): the arrears report's totals (units' bills past due). Occupied units (`units.view`): active units by derived occupancy. Pending forms (`forms.view`): open applications.
+  - Billed against collected for six months, each series with its grant.
+  - Collection by area (`billing.view`): the collection report for this month, opened down while the caller reaches only one place (a block's coordinator sees its roads); areas with no bills are left out.
+  - Needs approval: pending expenses by others (`expenses.approve`), unconfirmed handovers by others in the caller's `payments.approve` area, open applications in their `forms.approve` area; a count and the latest three of each.
+  - Kept in memory for `OVERVIEW_CACHE_SECONDS` (default 30, 0 = live) per caller and their current grants, so a role change is never served stale.
+- **Web `/dashboard`:** greeting by Dhaka time with the user's name, the society's name and date; stat cards; an inline SVG chart (`components/overview/billed-chart.tsx`, token colours, axis in taka, thousand or lakh by `chartScale`); collection by area (red below 80%); "Needs approval" with a link to each item. "New notice" shows with `notices.create`; the mockup's Export button, helpdesk and "this week" cards are left out.
+- **Tests:** e2e (`overview.e2e-spec.ts`) checks every figure against the rows with paisa amounts, the Block C / Block D scopes, cards hidden without grants, donations and voids left out, the society boundary, and the cache (stale for 30 s, fresh after a role change). Unit tests for `lastMonths`, `chartScale` and the cache.
+- Not checked at 375/820/1440 yet (deferred, as for earlier steps).
+
+#### The original plan
 
 Replaces the placeholder `/dashboard` with the mockup's `overview`, each card shown only with its module's `view` and limited to the caller's area:
 - Stat cards: collected this month (and % of billed), arrears (units overdue), occupied units of all (from Step 10's derived occupancy).

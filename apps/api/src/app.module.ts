@@ -21,6 +21,7 @@ import { DonationsModule } from './donations/donations.module.js';
 import { ExpensesModule } from './expenses/expenses.module.js';
 import { LedgerModule } from './ledger/ledger.module.js';
 import { ReportsModule } from './reports/reports.module.js';
+import { OverviewModule } from './overview/overview.module.js';
 import { FormsModule } from './forms/forms.module.js';
 import { GalleryModule } from './gallery/gallery.module.js';
 import { MembersModule } from './members/members.module.js';
@@ -74,6 +75,7 @@ import { UsersModule } from './users/users.module.js';
     ExpensesModule,
     LedgerModule,
     ReportsModule,
+    OverviewModule,
     AuditLogModule,
   ],
   controllers: [AppController],

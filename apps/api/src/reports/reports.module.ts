@@ -11,5 +11,6 @@ import { ReportsController } from './reports.controller.js';
   imports: [PrismaModule, PropertyModule],
   controllers: [ReportsController],
   providers: [DayBookService, AreaReportsService, IncomeService],
+  exports: [AreaReportsService],
 })
 export class ReportsModule {}

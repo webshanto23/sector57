@@ -2100,6 +2100,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OverviewController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/audit": {
         parameters: {
             query?: never;
@@ -5469,6 +5485,96 @@ export interface components {
                 total: string;
             };
             surplus: string;
+        };
+        OverviewDto_Output: {
+            /** Format: date */
+            asOf: string;
+            month: string;
+            collected: {
+                amount: string;
+                billed: string | null;
+                percent: number | null;
+            } | null;
+            arrears: {
+                owed: string;
+                units: number;
+                bills: number;
+            } | null;
+            occupancy: {
+                units: number;
+                occupied: number;
+                vacant: number;
+            } | null;
+            forms: {
+                open: number;
+            } | null;
+            months: {
+                month: string;
+                billed: string | null;
+                collected: string | null;
+            }[] | null;
+            areas: {
+                parent: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                items: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    billed: string;
+                    collected: string;
+                    percent: number;
+                }[];
+            } | null;
+            approvals: {
+                expenses: {
+                    count: number;
+                    items: {
+                        /** Format: uuid */
+                        id: string;
+                        description: string;
+                        amount: string;
+                        requestedBy: {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                        } | null;
+                        /** Format: date-time */
+                        at: string;
+                    }[];
+                } | null;
+                handovers: {
+                    count: number;
+                    items: {
+                        /** Format: uuid */
+                        id: string;
+                        collector: {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                        };
+                        amount: string;
+                        payments: number;
+                        /** Format: date-time */
+                        at: string;
+                    }[];
+                } | null;
+                forms: {
+                    count: number;
+                    items: {
+                        /** Format: uuid */
+                        id: string;
+                        reference: string;
+                        /** @enum {string} */
+                        formKey: "membership" | "renter_registration";
+                        place: string | null;
+                        /** Format: date-time */
+                        at: string;
+                    }[];
+                } | null;
+            } | null;
         };
         AuditListDto_Output: {
             items: {
@@ -9494,6 +9600,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    OverviewController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OverviewDto_Output"];
+                };
             };
         };
     };

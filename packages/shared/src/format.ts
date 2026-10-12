@@ -62,6 +62,8 @@ const DATE_STYLES = {
   day: { day: '2-digit' },
   // Date tile: ডিসেম্বর / Dec
   month: { month: 'short' },
+  // Overview card: অক্টোবর / October
+  monthLong: { month: 'long' },
   // Billing period: অক্টো, ২০২৬ / Oct 2026
   monthYear: { month: 'short', year: 'numeric' },
   // Committee term: ২০২৫ / 2025

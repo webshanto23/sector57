@@ -271,8 +271,6 @@
     "placeholderTitle": "This page is built in a later step",
     "placeholderBody": "The same colours, icons and cards apply here. The list on the left shows the pages your permissions allow.",
     "overviewSub": "Today's accounts and work at a glance",
-    "overviewTitle": "The overview comes in a later step",
-    "overviewBody": "Bills, collections and expenses will show here once they are added.",
     "noAccess": "Your account has no page permissions yet. Please contact the office.",
     "notFoundTitle": "Page not found",
     "notFoundBody": "This page does not exist, or you do not have permission to see it.",
@@ -2165,5 +2163,54 @@
     "ip": "From {ip}",
     "count": "{count, plural, one {# entry} other {# entries}}",
     "empty": "No entries match."
+  },
+  "Overview": {
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "hello": "{greeting}, {name}",
+    "sub": "{society} at a glance · {date}",
+    "newNotice": "New notice",
+    "collected": "Collected in {month}",
+    "ofBilled": "{percent}% of billed",
+    "nothingBilled": "No bills issued this month",
+    "receiptsOnly": "Bill receipts, donations not included",
+    "arrears": "Arrears",
+    "unitsOverdue": "{count, plural, =0 {No units overdue} one {# unit overdue} other {# units overdue}}",
+    "occupied": "Occupied units",
+    "vacantOf": "{vacant} vacant of {units}",
+    "pendingForms": "Pending forms",
+    "pendingFormsNote": "Waiting for review",
+    "chart": {
+      "title": "Billed vs collected",
+      "unit": {
+        "taka": "৳, last 6 months",
+        "thousand": "৳ thousand, last 6 months",
+        "lakh": "৳ lakh, last 6 months"
+      },
+      "billed": "Billed",
+      "collected": "Collected",
+      "row": "{month}: billed {billed}, collected {collected}"
+    },
+    "areas": {
+      "title": "Collection by area",
+      "titleIn": "Collection in {place}",
+      "note": "This month's bills",
+      "empty": "No bills for units this month yet.",
+      "report": "Full report"
+    },
+    "approvals": {
+      "title": "Needs approval",
+      "empty": "Nothing is waiting for you.",
+      "expense": "Expense: {description}",
+      "handover": "Cash handover: {amount}",
+      "handoverNote": "{count, plural, one {# receipt} other {# receipts}}",
+      "form": "{kind}: {reference}",
+      "from": "From {name}",
+      "review": "Review",
+      "more": "{count, plural, one {# more} other {# more}}"
+    }
   }
 }

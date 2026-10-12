@@ -271,8 +271,6 @@
     "placeholderTitle": "এই পাতা পরের ধাপে তৈরি হবে",
     "placeholderBody": "একই রং, আইকন ও কার্ড এখানেও বসবে। আপনার অনুমতি অনুযায়ী বাম পাশের তালিকায় পাতাগুলো দেখা যায়।",
     "overviewSub": "আজকের হিসাব ও কাজের সারসংক্ষেপ",
-    "overviewTitle": "সারসংক্ষেপ পরের ধাপে আসবে",
-    "overviewBody": "বিল, আদায় ও খরচের হিসাব যুক্ত হলে এখানে দেখা যাবে।",
     "noAccess": "আপনার অ্যাকাউন্টে এখনো কোনো পাতার অনুমতি দেওয়া হয়নি। অফিসের সাথে যোগাযোগ করুন।",
     "notFoundTitle": "পাতাটি পাওয়া যায়নি",
     "notFoundBody": "পাতাটি নেই, অথবা এটি দেখার অনুমতি আপনার নেই।",
@@ -2165,5 +2163,54 @@
     "ip": "{ip} থেকে",
     "count": "{count}টি এন্ট্রি",
     "empty": "মিলছে এমন কোনো এন্ট্রি নেই।"
+  },
+  "Overview": {
+    "greeting": {
+      "morning": "শুভ সকাল",
+      "afternoon": "শুভ অপরাহ্ন",
+      "evening": "শুভ সন্ধ্যা"
+    },
+    "hello": "{greeting}, {name}",
+    "sub": "{society} এক নজরে · {date}",
+    "newNotice": "নতুন নোটিশ",
+    "collected": "{month}-এ আদায়",
+    "ofBilled": "বিলের {percent}%",
+    "nothingBilled": "এ মাসে কোনো বিল হয়নি",
+    "receiptsOnly": "বিলের রসিদ, অনুদান ছাড়া",
+    "arrears": "বকেয়া",
+    "unitsOverdue": "{count, plural, =0 {কোনো ইউনিট মেয়াদোত্তীর্ণ নয়} other {#টি ইউনিট মেয়াদোত্তীর্ণ}}",
+    "occupied": "বসবাসরত ইউনিট",
+    "vacantOf": "{units}টির মধ্যে {vacant}টি খালি",
+    "pendingForms": "অপেক্ষমাণ আবেদন",
+    "pendingFormsNote": "যাচাইয়ের অপেক্ষায়",
+    "chart": {
+      "title": "বিল বনাম আদায়",
+      "unit": {
+        "taka": "টাকা, গত ৬ মাস",
+        "thousand": "হাজার টাকা, গত ৬ মাস",
+        "lakh": "লাখ টাকা, গত ৬ মাস"
+      },
+      "billed": "বিল",
+      "collected": "আদায়",
+      "row": "{month}: বিল {billed}, আদায় {collected}"
+    },
+    "areas": {
+      "title": "এলাকাভিত্তিক আদায়",
+      "titleIn": "{place}-এ আদায়",
+      "note": "এ মাসের বিল",
+      "empty": "এ মাসে এখনো কোনো ইউনিটের বিল হয়নি।",
+      "report": "পুরো রিপোর্ট"
+    },
+    "approvals": {
+      "title": "অনুমোদনের অপেক্ষায়",
+      "empty": "আপনার জন্য কিছু অপেক্ষায় নেই।",
+      "expense": "খরচ: {description}",
+      "handover": "নগদ হস্তান্তর: {amount}",
+      "handoverNote": "{count, plural, other {#টি রসিদ}}",
+      "form": "{kind}: {reference}",
+      "from": "পাঠিয়েছেন {name}",
+      "review": "দেখুন",
+      "more": "{count, plural, other {আরও #টি}}"
+    }
   }
 }

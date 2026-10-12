@@ -131,6 +131,9 @@
   - Extra fields on an error (like a balance) go in `details`; the exception filter drops anything else.
   - Reports live in `src/reports`, read-only. Figures that must agree with the fund statements are built from `ledger_entries`, not from the source tables. CSV goes through `csvFile` (BOM, CRLF, formula text defused) on a `/csv` route behind the module's `export`.
   - Area reports respect the caller's `billing.view` scope; a place is reachable when the caller holds the grant there or their area lies under it (404 otherwise). Long printed lists use the `print-a4` class (named page `a4` in `globals.css`).
+- Step 18 (overview dashboard) is built on `step/18-overview`, branched from `step/17-reports`, awaiting Codex review. Rules for later steps:
+  - `GET /overview` (`src/overview`) returns one block per card, null without its grant; a new card adds a nullable block there and its sum limited with the card's grant scope. Results are cached per caller and grants for `OVERVIEW_CACHE_SECONDS` (e2e tests set it to `0`).
+  - Money charts use `chartScale` (shared) for their axis; amounts become numbers only for drawing.
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
 
 ## Reference material

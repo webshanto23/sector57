@@ -31,6 +31,8 @@ const envSchema = z.object({
   MEDIA_SERVE: z.preprocess((value) => (value === '' ? undefined : value), z.stringbool().optional()),
   // Signs the 60-minute access tokens. Long and random; changing it logs everyone out within the hour.
   JWT_SECRET: z.string().min(32, 'must be at least 32 characters'),
+  // Seconds the dashboard overview keeps a caller's figures (0: always live).
+  OVERVIEW_CACHE_SECONDS: z.coerce.number().int().min(0).max(300).default(30),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
 }).refine((env) => !isWithin(env.PRIVATE_MEDIA_DIR, env.MEDIA_DIR) && !isWithin(env.MEDIA_DIR, env.PRIVATE_MEDIA_DIR), {
   // Anything under MEDIA_DIR is public; private files must live apart from it.
