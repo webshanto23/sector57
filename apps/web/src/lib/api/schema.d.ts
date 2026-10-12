@@ -2308,6 +2308,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StaffController_list"];
+        put?: never;
+        post: operations["StaffController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StaffController_csv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StaffController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["StaffController_update"];
+        trace?: never;
+    };
+    "/staff/{id}/leave": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StaffController_leave"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/staff/{id}/rejoin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StaffController_rejoin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AttendanceController_day"];
+        put: operations["AttendanceController_save"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance/month": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AttendanceController_month"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AttendanceController_csv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/audit": {
         parameters: {
             query?: never;
@@ -2627,7 +2755,7 @@ export interface components {
                 fullAccess: boolean;
                 grants: {
                     /** @enum {string} */
-                    module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "audit";
+                    module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "audit";
                     /** @enum {string} */
                     action: "view" | "create" | "edit" | "approve" | "delete" | "export";
                     scopeLocationId: string | null;
@@ -2659,7 +2787,7 @@ export interface components {
             permissionCount: number;
             permissions: {
                 /** @enum {string} */
-                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "audit";
+                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "audit";
                 /** @enum {string} */
                 action: "view" | "create" | "edit" | "approve" | "delete" | "export";
             }[];
@@ -2669,7 +2797,7 @@ export interface components {
             description?: string | null;
             permissions: {
                 /** @enum {string} */
-                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "audit";
+                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "audit";
                 /** @enum {string} */
                 action: "view" | "create" | "edit" | "approve" | "delete" | "export";
             }[];
@@ -6007,11 +6135,11 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                entityType: "society" | "person" | "location";
+                entityType: "society" | "person" | "location" | "staff";
                 /** Format: uuid */
                 entityId: string;
                 /** @enum {string} */
-                docType: "minutes" | "agm" | "circular" | "licence" | "agreement" | "deed" | "nid" | "plan" | "other";
+                docType: "minutes" | "agm" | "circular" | "licence" | "agreement" | "deed" | "nid" | "plan" | "contract" | "other";
                 title: string;
                 /** @enum {string} */
                 kind: "pdf" | "image";
@@ -6041,11 +6169,11 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            entityType: "society" | "person" | "location";
+            entityType: "society" | "person" | "location" | "staff";
             /** Format: uuid */
             entityId: string;
             /** @enum {string} */
-            docType: "minutes" | "agm" | "circular" | "licence" | "agreement" | "deed" | "nid" | "plan" | "other";
+            docType: "minutes" | "agm" | "circular" | "licence" | "agreement" | "deed" | "nid" | "plan" | "contract" | "other";
             title: string;
             /** @enum {string} */
             kind: "pdf" | "image";
@@ -6066,7 +6194,254 @@ export interface components {
         DocumentUpdateDto: {
             title?: string;
             /** @enum {string} */
-            docType?: "minutes" | "agm" | "circular" | "licence" | "agreement" | "deed" | "nid" | "plan" | "other";
+            docType?: "minutes" | "agm" | "circular" | "licence" | "agreement" | "deed" | "nid" | "plan" | "contract" | "other";
+        };
+        StaffListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                staffNo: number;
+                person: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                };
+                designation: {
+                    bn: string;
+                    en: string | null;
+                };
+                /** @enum {string} */
+                kind: "permanent" | "contract" | "daily";
+                posted: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                /** Format: date */
+                joinedOn: string;
+                leftOn: string | null;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            current: number;
+            designations: {
+                bn: string;
+                en: string | null;
+            }[];
+            can: {
+                create: boolean;
+                export: boolean;
+            };
+        };
+        StaffDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            staffNo: number;
+            person: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                photoUrl: string | null;
+            };
+            designation: {
+                bn: string;
+                en: string | null;
+            };
+            /** @enum {string} */
+            kind: "permanent" | "contract" | "daily";
+            posted: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string[];
+                isUnit: boolean;
+            };
+            /** Format: date */
+            joinedOn: string;
+            leftOn: string | null;
+            leftReason: string | null;
+            personDetail: {
+                fullName: string;
+                fullNameEn: string | null;
+                phone: string | null;
+                email: string | null;
+                nid: string | null;
+                hasNid: boolean;
+                dateOfBirth: string | null;
+                gender: ("male" | "female" | "other") | null;
+            };
+            pay: string | null;
+            stints: {
+                /** Format: uuid */
+                id: string;
+                staffNo: number;
+                designation: {
+                    bn: string;
+                    en: string | null;
+                };
+                /** Format: date */
+                joinedOn: string;
+                leftOn: string | null;
+            }[];
+            hasLogin: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            can: {
+                edit: boolean;
+                editPerson: boolean;
+                pay: boolean;
+                leave: boolean;
+                rejoin: boolean;
+                attendance: boolean;
+                viewPerson: boolean;
+            };
+        };
+        StaffCreateDto: {
+            person: {
+                fullName: string;
+                fullNameEn?: string | null;
+                phone?: string | null;
+                email?: string | null;
+                nid?: string | null;
+                dateOfBirth?: string | null;
+                gender?: ("male" | "female" | "other") | null;
+            };
+            designationBn: string;
+            designationEn?: string | null;
+            /** @enum {string} */
+            kind: "permanent" | "contract" | "daily";
+            /** Format: uuid */
+            postedLocationId: string;
+            /** Format: date */
+            joinedOn: string;
+            pay?: string | null;
+        };
+        StaffUpdateDto: {
+            person?: {
+                fullName: string;
+                fullNameEn?: string | null;
+                phone?: string | null;
+                email?: string | null;
+                nid?: string | null;
+                dateOfBirth?: string | null;
+                gender?: ("male" | "female" | "other") | null;
+            };
+            designationBn?: string;
+            designationEn?: string | null;
+            /** @enum {string} */
+            kind?: "permanent" | "contract" | "daily";
+            /** Format: uuid */
+            postedLocationId?: string;
+            /** Format: date */
+            joinedOn?: string;
+            pay?: string | null;
+        };
+        StaffLeaveDto: {
+            /** Format: date */
+            leftOn: string;
+            reason: string;
+        };
+        StaffRejoinDto: {
+            /** Format: date */
+            joinedOn: string;
+            /** Format: uuid */
+            postedLocationId?: string;
+        };
+        AttendanceDayDto_Output: {
+            /** Format: date */
+            date: string;
+            items: {
+                staff: {
+                    /** Format: uuid */
+                    id: string;
+                    staffNo: number;
+                    name: string;
+                    nameEn: string | null;
+                    designation: {
+                        bn: string;
+                        en: string | null;
+                    };
+                    posted: string;
+                };
+                mark: {
+                    /** @enum {string} */
+                    status: "present" | "half_day" | "leave" | "absent" | "off";
+                    inTime: string | null;
+                    outTime: string | null;
+                    note: string | null;
+                    markedBy: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                    } | null;
+                    /** Format: date-time */
+                    markedAt: string;
+                } | null;
+                editable: boolean;
+            }[];
+            counts: {
+                present: number;
+                half_day: number;
+                leave: number;
+                absent: number;
+                off: number;
+                unmarked: number;
+            };
+            locked: boolean;
+        };
+        AttendanceSaveDto: {
+            /** Format: date */
+            date: string;
+            entries: {
+                /** Format: uuid */
+                staffId: string;
+                /** @enum {string} */
+                status: "present" | "half_day" | "leave" | "absent" | "off";
+                inTime?: string | null;
+                outTime?: string | null;
+                note?: string | null;
+            }[];
+        };
+        AttendanceMonthDto_Output: {
+            month: string;
+            /** Format: uuid */
+            staffId: string;
+            days: {
+                /** Format: date */
+                date: string;
+                outside: boolean;
+                mark: {
+                    /** @enum {string} */
+                    status: "present" | "half_day" | "leave" | "absent" | "off";
+                    inTime: string | null;
+                    outTime: string | null;
+                    note: string | null;
+                    markedBy: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                    } | null;
+                    /** Format: date-time */
+                    markedAt: string;
+                } | null;
+            }[];
+            counts: {
+                present: number;
+                half_day: number;
+                leave: number;
+                absent: number;
+                off: number;
+                unmarked: number;
+            };
+            daysWorked: string;
         };
         AuditListDto_Output: {
             items: {
@@ -10327,9 +10702,9 @@ export interface operations {
             query?: {
                 page?: number;
                 pageSize?: number;
-                entityType?: "society" | "person" | "location";
+                entityType?: "society" | "person" | "location" | "staff";
                 entityId?: string;
-                docType?: "minutes" | "agm" | "circular" | "licence" | "agreement" | "deed" | "nid" | "plan" | "other";
+                docType?: "minutes" | "agm" | "circular" | "licence" | "agreement" | "deed" | "nid" | "plan" | "contract" | "other";
                 q?: string;
                 archived?: string;
             };
@@ -10483,6 +10858,264 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["DocumentDto_Output"];
                 };
+            };
+        };
+    };
+    StaffController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                designation?: string;
+                kind?: "permanent" | "contract" | "daily";
+                areaId?: string;
+                state?: "current" | "left" | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffListDto_Output"];
+                };
+            };
+        };
+    };
+    StaffController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffDetailDto_Output"];
+                };
+            };
+        };
+    };
+    StaffController_csv: {
+        parameters: {
+            query?: {
+                q?: string;
+                designation?: string;
+                kind?: "permanent" | "contract" | "daily";
+                areaId?: string;
+                state?: "current" | "left" | "all";
+                lang?: "bn" | "en";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    StaffController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffDetailDto_Output"];
+                };
+            };
+        };
+    };
+    StaffController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffDetailDto_Output"];
+                };
+            };
+        };
+    };
+    StaffController_leave: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffLeaveDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffDetailDto_Output"];
+                };
+            };
+        };
+    };
+    StaffController_rejoin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffRejoinDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StaffDetailDto_Output"];
+                };
+            };
+        };
+    };
+    AttendanceController_day: {
+        parameters: {
+            query: {
+                date: string;
+                areaId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceDayDto_Output"];
+                };
+            };
+        };
+    };
+    AttendanceController_save: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttendanceSaveDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceDayDto_Output"];
+                };
+            };
+        };
+    };
+    AttendanceController_month: {
+        parameters: {
+            query: {
+                month: string;
+                staffId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttendanceMonthDto_Output"];
+                };
+            };
+        };
+    };
+    AttendanceController_csv: {
+        parameters: {
+            query: {
+                month: string;
+                areaId?: string;
+                lang?: "bn" | "en";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

@@ -141,6 +141,11 @@
 - Step 21 (documents library) is built on `step/21-documents`, branched from `step/20-moves-directory`, awaiting Codex review. Rules for later steps:
   - Library documents (society, person, location) go only through `DocumentsService` (`src/documents`); files through `PrivateFilesService` (area `documents`). Nothing is deleted; documents are archived.
   - A person's or place's documents follow the members or units/locations grant on that record as well as `documents`; NID copies only for those who may edit the person. Form files and expense vouchers stay with their own routes and are never served by `/documents`.
+- Step 22 (staff and attendance, first milestone 3 step) is built on `step/22-staff`, branched from `step/21-documents`, awaiting Codex review. Rules for later steps:
+  - Add or change staff only through `StaffService` (`src/staff`); a stint is never deleted, leaving is dated, and coming back is a new row (`rejoin`). A staff member's area is their post (`posted_location_id`) for both `staff` and `attendance`.
+  - Pay (`monthly_salary` or `daily_rate` by kind) is seen and set only with a society-wide `staff.edit` (`seesPay`). A person's details or NID change from staff pages only when the caller may edit them as a member or they are on file only as staff.
+  - Mark attendance only through `AttendanceService.save` (one row per staff and Dhaka date). Today and yesterday need `attendance.edit`; older days `attendance.approve` (`attendanceOpen` in shared). Days worked count half days at a half (`daysWorked`), which payroll (Step 26) will use.
+  - Tickets, work orders and assets (Steps 23–24) point at a `staff` row, not at a person.
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
 
 ## Reference material

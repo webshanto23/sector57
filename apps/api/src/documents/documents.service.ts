@@ -21,6 +21,7 @@ import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { locationNotFound, TreeService } from '../property/tree.service.js';
 import { documentContentType } from '../storage/document.js';
+import { staffNotFound, StaffService } from '../staff/staff.service.js';
 import { PrivateFilesService } from '../storage/private-files.service.js';
 
 const notFound = () => new NotFoundException({ code: 'document_not_found', message: 'Document not found' });
@@ -56,9 +57,10 @@ const toType = (value: string): DocumentType => ((DOCUMENT_TYPE_KEYS as readonly
  * The documents library (`documents` permission, society-wide): the society's papers, and
  * documents kept with a person or a place. A person's documents also need the right to see
  * (or, to change them, edit) that person where they live; a place's, the right on that place.
- * An NID copy is shown only to those who may edit the person. Files are private (checked and
- * stored by `PrivateFilesService`), read only through `GET /documents/:id/file`, and every
- * read is audited. Nothing is deleted: documents are archived.
+ * A staff member's papers follow the `staff` grant at their post. An NID copy is shown only
+ * to those who may edit the person. Files are private (checked and stored by
+ * `PrivateFilesService`), read only through `GET /documents/:id/file`, and every read is
+ * audited. Nothing is deleted: documents are archived.
  */
 @Injectable()
 export class DocumentsService {
@@ -68,6 +70,7 @@ export class DocumentsService {
     private readonly files: PrivateFilesService,
     private readonly parties: PartiesService,
     private readonly tree: TreeService,
+    private readonly staff: StaffService,
   ) {}
 
   async list(actor: Actor, query: DocumentListQuery): Promise<DocumentList> {
@@ -200,7 +203,9 @@ export class DocumentsService {
   }
 
   private missing(entityType: DocumentEntity) {
-    return entityType === 'person' ? personNotFound() : entityType === 'location' ? locationNotFound() : notFound();
+    if (entityType === 'person') return personNotFound();
+    if (entityType === 'location') return locationNotFound();
+    return entityType === 'staff' ? staffNotFound() : notFound();
   }
 
   private async rights(actor: Actor, entityType: DocumentEntity, entityId: string): Promise<Rights> {
@@ -215,6 +220,12 @@ export class DocumentsService {
       const sees = canOnParty(access, 'view', paths);
       const edits = canOnParty(access, 'edit', paths);
       return { view: doc.view && sees, create: doc.create && edits, edit: doc.edit && edits, nid: edits };
+    }
+
+    if (entityType === 'staff') {
+      const rights = await this.staff.paperRights(actor, entityId);
+      if (!rights) return { view: false, create: false, edit: false, nid: false };
+      return { view: doc.view && rights.view, create: doc.create && rights.edit, edit: doc.edit && rights.edit, nid: rights.nid };
     }
 
     const place = await this.tree.find(actor.societyId, entityId);
