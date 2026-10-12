@@ -1908,6 +1908,246 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ledger": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LedgerController_statement"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ledger/transfers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LedgerController_list"];
+        put?: never;
+        post: operations["LedgerController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ledger/transfers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LedgerController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ledger/transfers/{id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["LedgerController_void"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/day-book": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReportsController_getDayBook"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/day-book/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReportsController_dayBookCsv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/collection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReportsController_collection"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/collection/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReportsController_collectionCsv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/arrears": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReportsController_arrears"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/arrears/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReportsController_arrearsCsv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/income": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReportsController_getIncome"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/income/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReportsController_incomeCsv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OverviewController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AuditLogController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/audit/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AuditLogController_options"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4825,6 +5065,545 @@ export interface components {
                 /** Format: uuid */
                 headId: string;
                 amount: string;
+            }[];
+        };
+        LedgerStatementDto_Output: {
+            /** Format: date */
+            from: string;
+            /** Format: date */
+            to: string;
+            fundId: string | null;
+            account: ("cash" | "bank") | null;
+            opening: string;
+            totalIn: string;
+            totalOut: string;
+            closing: string;
+            items: {
+                id: string;
+                /** Format: date */
+                date: string;
+                fund: {
+                    /** Format: uuid */
+                    id: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                };
+                /** @enum {string} */
+                account: "cash" | "bank";
+                /** @enum {string} */
+                direction: "in" | "out";
+                amount: string;
+                /** @enum {string} */
+                source: "opening" | "payment" | "donation" | "expense" | "transfer" | "adjustment";
+                link: {
+                    /** @enum {string} */
+                    kind: "receipt" | "donation" | "expense" | "transfer" | "fund";
+                    /** Format: uuid */
+                    id: string;
+                } | null;
+                reference: string | null;
+                reversal: boolean;
+                reversed: boolean;
+                balance: string;
+                by: string | null;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            funds: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+                isDefault: boolean;
+                closed: boolean;
+            }[];
+        };
+        TransferListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "deposit" | "withdrawal" | "between_funds";
+                from: {
+                    fund: {
+                        /** Format: uuid */
+                        id: string;
+                        nameBn: string;
+                        nameEn: string | null;
+                    };
+                    /** @enum {string} */
+                    account: "cash" | "bank";
+                };
+                to: {
+                    fund: {
+                        /** Format: uuid */
+                        id: string;
+                        nameBn: string;
+                        nameEn: string | null;
+                    };
+                    /** @enum {string} */
+                    account: "cash" | "bank";
+                };
+                amount: string;
+                /** Format: date */
+                date: string;
+                memo: string | null;
+                created: {
+                    by: string | null;
+                    /** Format: date-time */
+                    at: string;
+                };
+                void: {
+                    by: string | null;
+                    /** Format: date-time */
+                    at: string;
+                    reason: string;
+                } | null;
+                can: {
+                    void: boolean;
+                };
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+        };
+        TransferDto_Output: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "deposit" | "withdrawal" | "between_funds";
+            from: {
+                fund: {
+                    /** Format: uuid */
+                    id: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                };
+                /** @enum {string} */
+                account: "cash" | "bank";
+            };
+            to: {
+                fund: {
+                    /** Format: uuid */
+                    id: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                };
+                /** @enum {string} */
+                account: "cash" | "bank";
+            };
+            amount: string;
+            /** Format: date */
+            date: string;
+            memo: string | null;
+            created: {
+                by: string | null;
+                /** Format: date-time */
+                at: string;
+            };
+            void: {
+                by: string | null;
+                /** Format: date-time */
+                at: string;
+                reason: string;
+            } | null;
+            can: {
+                void: boolean;
+            };
+        };
+        TransferInputDto: {
+            /** Format: uuid */
+            fromFundId: string;
+            /** @enum {string} */
+            fromAccount: "cash" | "bank";
+            /** Format: uuid */
+            toFundId: string;
+            /** @enum {string} */
+            toAccount: "cash" | "bank";
+            amount: string;
+            memo?: string | null;
+        };
+        TransferVoidDto: {
+            reason: string;
+        };
+        DayBookDto_Output: {
+            /** Format: date */
+            date: string;
+            receipts: {
+                items: {
+                    /** Format: uuid */
+                    id: string;
+                    receiptNo: string;
+                    /** Format: date-time */
+                    at: string;
+                    payer: string | null;
+                    unit: string[] | null;
+                    amount: string;
+                    collector: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                    };
+                    void: boolean;
+                }[];
+                total: string;
+            } | null;
+            donations: {
+                items: {
+                    /** Format: uuid */
+                    id: string;
+                    receiptNo: string;
+                    /** Format: date-time */
+                    at: string;
+                    payer: string | null;
+                    amount: string;
+                    collector: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                    };
+                    void: boolean;
+                    /** Format: uuid */
+                    donationId: string;
+                    fund: {
+                        /** Format: uuid */
+                        id: string;
+                        nameBn: string;
+                        nameEn: string | null;
+                    };
+                    purpose: string | null;
+                }[];
+                total: string;
+            } | null;
+            expenses: {
+                items: {
+                    /** Format: uuid */
+                    id: string;
+                    voucherNo: string;
+                    /** Format: date-time */
+                    at: string;
+                    head: {
+                        /** Format: uuid */
+                        id: string;
+                        nameBn: string;
+                        nameEn: string | null;
+                    };
+                    description: string;
+                    /** @enum {string} */
+                    account: "cash" | "bank";
+                    amount: string;
+                    paidBy: string | null;
+                    void: boolean;
+                }[];
+                total: string;
+            } | null;
+            transfers: {
+                items: {
+                    /** Format: uuid */
+                    id: string;
+                    from: {
+                        fund: {
+                            /** Format: uuid */
+                            id: string;
+                            nameBn: string;
+                            nameEn: string | null;
+                        };
+                        /** @enum {string} */
+                        account: "cash" | "bank";
+                    };
+                    to: {
+                        fund: {
+                            /** Format: uuid */
+                            id: string;
+                            nameBn: string;
+                            nameEn: string | null;
+                        };
+                        /** @enum {string} */
+                        account: "cash" | "bank";
+                    };
+                    amount: string;
+                    memo: string | null;
+                    void: boolean;
+                }[];
+            } | null;
+            byCollector: {
+                collector: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                };
+                receipts: number;
+                amount: string;
+            }[];
+            funds: {
+                fund: {
+                    /** Format: uuid */
+                    id: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                };
+                /** @enum {string} */
+                account: "cash" | "bank";
+                opening: string;
+                in: string;
+                out: string;
+                closing: string;
+            }[] | null;
+        };
+        CollectionReportDto_Output: {
+            /** Format: date */
+            from: string;
+            /** Format: date */
+            to: string;
+            parent: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            crumbs: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                open: boolean;
+            }[];
+            areas: {
+                bills: number;
+                billed: string;
+                collected: string;
+                outstanding: string;
+                percent: number;
+                /** Format: uuid */
+                id: string;
+                name: string;
+                isUnit: boolean;
+            }[];
+            totals: {
+                bills: number;
+                billed: string;
+                collected: string;
+                outstanding: string;
+                percent: number;
+            };
+        };
+        ArrearsReportDto_Output: {
+            /** Format: date */
+            asOf: string;
+            location: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            crumbs: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                open: boolean;
+            }[];
+            children: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            }[];
+            rows: {
+                /** Format: uuid */
+                unitId: string;
+                unit: string;
+                code: string | null;
+                address: string[];
+                billTo: {
+                    name: string;
+                    phone: string | null;
+                } | null;
+                bills: number;
+                /** Format: date */
+                oldestDue: string;
+                owed: string;
+                buckets: {
+                    d30: string;
+                    d90: string;
+                    older: string;
+                };
+            }[];
+            totals: {
+                d30: string;
+                d90: string;
+                older: string;
+                units: number;
+                bills: number;
+                owed: string;
+            };
+            truncated: boolean;
+        };
+        IncomeReportDto_Output: {
+            year: string;
+            /** Format: date */
+            start: string;
+            /** Format: date */
+            end: string;
+            years: string[];
+            fundId: string | null;
+            funds: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+                isDefault: boolean;
+            }[];
+            income: {
+                charges: {
+                    chargeType: {
+                        /** Format: uuid */
+                        id: string;
+                        nameBn: string;
+                        nameEn: string | null;
+                        /** @enum {string} */
+                        kind: "due" | "fee" | "fine";
+                    };
+                    billed: string;
+                    collected: string;
+                }[];
+                donations: string;
+                billed: string;
+                total: string;
+            };
+            expenditure: {
+                heads: {
+                    head: {
+                        /** Format: uuid */
+                        id: string;
+                        nameBn: string;
+                        nameEn: string | null;
+                    };
+                    budget: string | null;
+                    spent: string;
+                    remaining: string | null;
+                    percent: number | null;
+                    over: boolean;
+                }[];
+                budget: string | null;
+                total: string;
+            };
+            surplus: string;
+        };
+        OverviewDto_Output: {
+            /** Format: date */
+            asOf: string;
+            month: string;
+            collected: {
+                amount: string;
+                billed: string | null;
+                percent: number | null;
+            } | null;
+            arrears: {
+                owed: string;
+                units: number;
+                bills: number;
+            } | null;
+            occupancy: {
+                units: number;
+                occupied: number;
+                vacant: number;
+            } | null;
+            forms: {
+                open: number;
+            } | null;
+            months: {
+                month: string;
+                billed: string | null;
+                collected: string | null;
+            }[] | null;
+            areas: {
+                parent: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                items: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    billed: string;
+                    collected: string;
+                    percent: number;
+                }[];
+            } | null;
+            approvals: {
+                expenses: {
+                    count: number;
+                    items: {
+                        /** Format: uuid */
+                        id: string;
+                        description: string;
+                        amount: string;
+                        requestedBy: {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                        } | null;
+                        /** Format: date-time */
+                        at: string;
+                    }[];
+                } | null;
+                handovers: {
+                    count: number;
+                    items: {
+                        /** Format: uuid */
+                        id: string;
+                        collector: {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                        };
+                        amount: string;
+                        payments: number;
+                        /** Format: date-time */
+                        at: string;
+                    }[];
+                } | null;
+                forms: {
+                    count: number;
+                    items: {
+                        /** Format: uuid */
+                        id: string;
+                        reference: string;
+                        /** @enum {string} */
+                        formKey: "membership" | "renter_registration";
+                        place: string | null;
+                        /** Format: date-time */
+                        at: string;
+                    }[];
+                } | null;
+            } | null;
+        };
+        AuditListDto_Output: {
+            items: {
+                id: string;
+                /** Format: date-time */
+                at: string;
+                user: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                action: string;
+                entityType: string;
+                entityId: string | null;
+                before: unknown | null;
+                after: unknown | null;
+                ip: string | null;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+        };
+        AuditOptionsDto_Output: {
+            entityTypes: string[];
+            actions: string[];
+            users: {
+                /** Format: uuid */
+                id: string;
+                name: string;
             }[];
         };
     };
@@ -8530,6 +9309,362 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BudgetDto_Output"];
+                };
+            };
+        };
+    };
+    LedgerController_statement: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                fundId?: string;
+                account?: "cash" | "bank";
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LedgerStatementDto_Output"];
+                };
+            };
+        };
+    };
+    LedgerController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                fundId?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransferListDto_Output"];
+                };
+            };
+        };
+    };
+    LedgerController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferInputDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransferDto_Output"];
+                };
+            };
+        };
+    };
+    LedgerController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransferDto_Output"];
+                };
+            };
+        };
+    };
+    LedgerController_void: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferVoidDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransferDto_Output"];
+                };
+            };
+        };
+    };
+    ReportsController_getDayBook: {
+        parameters: {
+            query?: {
+                date?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DayBookDto_Output"];
+                };
+            };
+        };
+    };
+    ReportsController_dayBookCsv: {
+        parameters: {
+            query?: {
+                date?: string;
+                lang?: "bn" | "en";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ReportsController_collection: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                parentId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectionReportDto_Output"];
+                };
+            };
+        };
+    };
+    ReportsController_collectionCsv: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                parentId?: string;
+                lang?: "bn" | "en";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ReportsController_arrears: {
+        parameters: {
+            query?: {
+                locationId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArrearsReportDto_Output"];
+                };
+            };
+        };
+    };
+    ReportsController_arrearsCsv: {
+        parameters: {
+            query?: {
+                locationId?: string;
+                lang?: "bn" | "en";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ReportsController_getIncome: {
+        parameters: {
+            query?: {
+                year?: string;
+                fundId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomeReportDto_Output"];
+                };
+            };
+        };
+    };
+    ReportsController_incomeCsv: {
+        parameters: {
+            query?: {
+                year?: string;
+                fundId?: string;
+                lang?: "bn" | "en";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OverviewController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OverviewDto_Output"];
+                };
+            };
+        };
+    };
+    AuditLogController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                userId?: string;
+                entityType?: string;
+                entityId?: string;
+                action?: string;
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditListDto_Output"];
+                };
+            };
+        };
+    };
+    AuditLogController_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditOptionsDto_Output"];
                 };
             };
         };

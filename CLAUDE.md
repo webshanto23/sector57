@@ -126,6 +126,14 @@
 - Step 16 (expenses and budgets) is built on `step/16-expenses`, branched from `step/15-donations`, awaiting Codex review. Rules for later steps:
   - Move expenses only through `ExpensesService` (`src/expenses`); who may do what is `expenseActions` in shared. Paying takes `lockFinanceSetup`, refuses more than the fund holds in that account (409 `fund_insufficient`) and writes one `out` ledger row (`source_type = 'expense'`); a void writes the reversing `in` row.
   - Any new money-out path must take `lockFinanceSetup` and check the account's balance the same way. Expense vouchers are private files (`PrivateFilesService`, area `expenses`) served only through `GET /expenses/:id/vouchers/:documentId`.
+- Step 17 (fund ledger, transfers, finance reports, audit log viewer) is built on `step/17-reports`, branched from `step/16-expenses`, awaiting Codex review. Rules for later steps:
+  - Move money between funds or accounts only through `TransfersService` (`src/ledger`); read a fund's balance per account with `fundBalances` (`src/finance/balances.ts`). `fund_transfers` rows are only ever voided (trigger, migration `12_fund_transfers`).
+  - Extra fields on an error (like a balance) go in `details`; the exception filter drops anything else.
+  - Reports live in `src/reports`, read-only. Figures that must agree with the fund statements are built from `ledger_entries`, not from the source tables. CSV goes through `csvFile` (BOM, CRLF, formula text defused) on a `/csv` route behind the module's `export`.
+  - Area reports respect the caller's `billing.view` scope; a place is reachable when the caller holds the grant there or their area lies under it (404 otherwise). Long printed lists use the `print-a4` class (named page `a4` in `globals.css`).
+- Step 18 (overview dashboard) is built on `step/18-overview`, branched from `step/17-reports`, awaiting Codex review. Rules for later steps:
+  - `GET /overview` (`src/overview`) returns one block per card, null without its grant; a new card adds a nullable block there and its sum limited with the card's grant scope. Results are cached per caller and grants for `OVERVIEW_CACHE_SECONDS` (e2e tests set it to `0`).
+  - Money charts use `chartScale` (shared) for their axis; amounts become numbers only for drawing.
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
 
 ## Reference material

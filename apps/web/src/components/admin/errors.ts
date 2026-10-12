@@ -113,6 +113,9 @@ const KNOWN = [
   "invalid_year",
   "unsupported_document",
   "file_not_found",
+  "transfer_not_found",
+  "transfer_already_void",
+  "invalid_range",
 ] as const;
 type KnownCode = (typeof KNOWN)[number];
 
@@ -140,6 +143,7 @@ const FIELD_CODES = [
   "invalid_period",
   "duplicate_rate",
   "invalid_month",
+  "transfer_nothing_moves",
 ] as const;
 type FieldCode = (typeof FIELD_CODES)[number];
 

@@ -257,8 +257,10 @@
       "recurring": "Subscriptions",
       "donations": "Donations",
       "expenses": "Expenses",
+      "ledger": "Fund ledger",
       "notices": "Notices",
       "documents": "Documents",
+      "reports": "Reports",
       "roles": "Permissions",
       "users": "Users",
       "website": "Website content",
@@ -269,8 +271,6 @@
     "placeholderTitle": "This page is built in a later step",
     "placeholderBody": "The same colours, icons and cards apply here. The list on the left shows the pages your permissions allow.",
     "overviewSub": "Today's accounts and work at a glance",
-    "overviewTitle": "The overview comes in a later step",
-    "overviewBody": "Bills, collections and expenses will show here once they are added.",
     "noAccess": "Your account has no page permissions yet. Please contact the office.",
     "notFoundTitle": "Page not found",
     "notFoundBody": "This page does not exist, or you do not have permission to see it.",
@@ -525,7 +525,11 @@
       "too_many_vouchers": "An expense can carry at most 10 files.",
       "cannot_approve_own": "Someone else must approve or reject your request.",
       "fund_insufficient": "The fund doesn't hold enough in that account.",
-      "invalid_year": "That isn't one of the society's fiscal years."
+      "invalid_year": "That isn't one of the society's fiscal years.",
+      "transfer_not_found": "This transfer no longer exists.",
+      "transfer_already_void": "This transfer is already void.",
+      "transfer_nothing_moves": "Pick another fund or another account to move the money to.",
+      "invalid_range": "The start date is after the end date."
     }
   },
   "Cms": {
@@ -1906,6 +1910,307 @@
       "restore": "Restore",
       "archived": "Archived.",
       "restored": "Restored."
+    }
+  },
+  "Ledger": {
+    "sub": "What each fund holds, every entry with its running balance, and money moved between funds or to the bank.",
+    "tabs": {
+      "label": "Ledger sections",
+      "statement": "Statement",
+      "transfers": "Transfers and deposits"
+    },
+    "newTransfer": "Move money",
+    "balances": "Balances now",
+    "belowZero": "Below zero: a receipt or donation was voided after its cash was spent.",
+    "closedFund": "Closed",
+    "fund": "Fund",
+    "allFunds": "All funds",
+    "account": "Account",
+    "bothAccounts": "Cash and bank",
+    "from": "From",
+    "to": "To",
+    "show": "Show",
+    "opening": "Balance at the start of {date}",
+    "in": "Money in",
+    "out": "Money out",
+    "closing": "Balance at the end of {date}",
+    "empty": "No entries in these dates.",
+    "col": {
+      "date": "Date",
+      "entry": "Entry",
+      "fund": "Fund",
+      "account": "Account",
+      "in": "In",
+      "out": "Out",
+      "balance": "Balance",
+      "by": "By"
+    },
+    "source": {
+      "opening": "Opening balance",
+      "payment": "Bill receipt",
+      "donation": "Donation",
+      "expense": "Expense",
+      "transfer": "Transfer",
+      "adjustment": "Adjustment"
+    },
+    "reversal": "Reversal",
+    "reversed": "Reversed later",
+    "transfers": {
+      "title": "Transfers and deposits",
+      "empty": "No money has been moved yet.",
+      "kind": {
+        "deposit": "Bank deposit",
+        "withdrawal": "Cash withdrawal",
+        "between_funds": "Between funds"
+      },
+      "col": {
+        "date": "Date",
+        "kind": "Kind",
+        "move": "From → to",
+        "amount": "Amount",
+        "memo": "Note",
+        "status": "Status"
+      },
+      "void": "Void",
+      "done": "Done",
+      "back": "All transfers"
+    },
+    "form": {
+      "title": "Move money",
+      "sub": "A bank deposit moves a fund's cash to its bank account; a withdrawal brings it back; or move money from one fund to another. It is dated today.",
+      "preset": "What are you doing?",
+      "deposit": "Deposit cash at the bank",
+      "withdrawal": "Withdraw cash from the bank",
+      "between": "Move between funds",
+      "fromFund": "From fund",
+      "fromAccount": "From",
+      "toFund": "To fund",
+      "toAccount": "To",
+      "holds": "{account} (holds {balance})",
+      "amount": "Amount (৳)",
+      "memo": "Note (optional), e.g. deposit slip number",
+      "short": "The fund holds only {balance} there.",
+      "submit": "Move {amount}",
+      "submitPlain": "Move money",
+      "question": "Move {amount} now? Two ledger entries are written; a mistake is corrected by voiding.",
+      "saved": "Done.",
+      "cancel": "Cancel"
+    },
+    "detail": {
+      "from": "From",
+      "to": "To",
+      "amount": "Amount",
+      "date": "Date",
+      "memo": "Note",
+      "by": "Entered by",
+      "voided": "Voided by {by}, {date}. Reason: {reason}",
+      "someone": "a user",
+      "voidTitle": "Void the transfer",
+      "voidHint": "Two reversing entries put the money back where it came from. The transfer stays, marked void.",
+      "voidReason": "Reason for voiding",
+      "void": "Void transfer",
+      "voidQuestion": "Void this transfer? This can't be undone.",
+      "voidedNow": "The transfer is void.",
+      "statement": "See it in the statement"
+    }
+  },
+  "Reports": {
+    "sub": "Finance reports. Each shows only what you may see; download a CSV for Excel where you may export.",
+    "csv": "Download CSV",
+    "show": "Show",
+    "from": "From",
+    "to": "To",
+    "total": "Total",
+    "cards": {
+      "day-book": {
+        "title": "Day book",
+        "body": "Every receipt, donation, expense and transfer of one day, and cash per collector."
+      },
+      "collection": {
+        "title": "Collection by area",
+        "body": "Billed against collected for each block or road, with the percentage."
+      },
+      "arrears": {
+        "title": "Arrears",
+        "body": "Units with overdue bills, aged 1–30, 31–90 and over 90 days. Prints as a door-to-door list."
+      },
+      "income": {
+        "title": "Income and expenditure",
+        "body": "A fiscal year's income by charge type and spending by head, against the budget."
+      }
+    },
+    "dayBook": {
+      "title": "Day book",
+      "date": "Date",
+      "previous": "Previous day",
+      "next": "Next day",
+      "byCollector": "Cash by collector",
+      "receiptsCount": "{count, plural, one {# receipt} other {# receipts}}",
+      "noCash": "No cash taken this day.",
+      "receipts": "Bill receipts",
+      "donations": "Donations",
+      "expenses": "Expenses paid",
+      "transfers": "Transfers and deposits",
+      "funds": "Funds through the day",
+      "anonymous": "Anonymous",
+      "voidMark": "Void",
+      "col": {
+        "no": "No.",
+        "time": "Time",
+        "payer": "Paid by",
+        "unit": "Unit",
+        "fund": "Fund",
+        "purpose": "Purpose",
+        "head": "Head",
+        "for": "For",
+        "account": "Account",
+        "amount": "Amount",
+        "collector": "Collector",
+        "paidBy": "Paid by",
+        "move": "From → to",
+        "memo": "Note",
+        "opening": "Start of day",
+        "in": "In",
+        "out": "Out",
+        "closing": "End of day"
+      },
+      "total": "Total (void ones not counted): {amount}",
+      "empty": "Nothing this day."
+    },
+    "collection": {
+      "title": "Collection by area",
+      "sub": "Bills issued in these dates against what has been paid on them so far. Earlier arrears and membership fees are left out.",
+      "top": "All areas",
+      "col": {
+        "area": "Area",
+        "bills": "Bills",
+        "billed": "Billed",
+        "collected": "Collected",
+        "outstanding": "Outstanding",
+        "percent": "Collected"
+      },
+      "empty": "No areas to show."
+    },
+    "arrears": {
+      "title": "Arrears",
+      "sub": "Units with bills past their due date, as of {date}.",
+      "narrow": "Narrow to",
+      "everywhere": "Everywhere you can see",
+      "units": "Units owing",
+      "owed": "Total owed",
+      "d30": "1–30 days",
+      "d90": "31–90 days",
+      "older": "Over 90 days",
+      "col": {
+        "unit": "Unit",
+        "billTo": "Bill to",
+        "bills": "Bills",
+        "oldest": "Oldest due",
+        "owed": "Owed",
+        "note": "Note / signature"
+      },
+      "truncated": "Only the first {count} units are listed. Narrow the list to a block or road to see the rest.",
+      "empty": "No unit here has an overdue bill.",
+      "printTitle": "Door-to-door arrears list",
+      "printButton": "Print door-to-door list",
+      "printPlace": "Area: {place}",
+      "printDate": "As of {date}"
+    },
+    "income": {
+      "title": "Income and expenditure",
+      "sub": "Fiscal year {year}, on what was actually received and paid. Transfers and opening balances are neither.",
+      "year": "Fiscal year",
+      "fund": "Fund",
+      "allFunds": "All funds",
+      "income": "Income",
+      "expenditure": "Expenditure",
+      "surplus": "Surplus",
+      "deficit": "Deficit",
+      "donations": "Donations",
+      "col": {
+        "charge": "Charge type",
+        "billed": "Billed",
+        "collected": "Received",
+        "head": "Expense head",
+        "budget": "Budget",
+        "spent": "Spent",
+        "remaining": "Left"
+      },
+      "noBudget": "No budget",
+      "budgetHidden": "Budgets are set for the whole society, so they show only with all funds.",
+      "partNote": "A part-paid bill's money counts against its lines in their order.",
+      "emptyIncome": "No income this year.",
+      "emptyExpenditure": "No expenses paid this year."
+    }
+  },
+  "Audit": {
+    "sub": "Who changed what, and when. Read-only; the log can't be edited or deleted.",
+    "user": "User",
+    "allUsers": "Everyone",
+    "entityType": "Record type",
+    "allTypes": "All types",
+    "action": "Action",
+    "allActions": "All actions",
+    "from": "From",
+    "to": "To",
+    "show": "Show",
+    "clear": "Clear filters",
+    "history": "History of this record",
+    "system": "System",
+    "before": "Before",
+    "after": "After",
+    "noDetails": "No details were recorded.",
+    "ip": "From {ip}",
+    "count": "{count, plural, one {# entry} other {# entries}}",
+    "empty": "No entries match."
+  },
+  "Overview": {
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "hello": "{greeting}, {name}",
+    "sub": "{society} at a glance · {date}",
+    "newNotice": "New notice",
+    "collected": "Collected in {month}",
+    "ofBilled": "{percent}% of billed",
+    "nothingBilled": "No bills issued this month",
+    "receiptsOnly": "Bill receipts, donations not included",
+    "arrears": "Arrears",
+    "unitsOverdue": "{count, plural, =0 {No units overdue} one {# unit overdue} other {# units overdue}}",
+    "occupied": "Occupied units",
+    "vacantOf": "{vacant} vacant of {units}",
+    "pendingForms": "Pending forms",
+    "pendingFormsNote": "Waiting for review",
+    "chart": {
+      "title": "Billed vs collected",
+      "unit": {
+        "taka": "৳, last 6 months",
+        "thousand": "৳ thousand, last 6 months",
+        "lakh": "৳ lakh, last 6 months"
+      },
+      "billed": "Billed",
+      "collected": "Collected",
+      "row": "{month}: billed {billed}, collected {collected}"
+    },
+    "areas": {
+      "title": "Collection by area",
+      "titleIn": "Collection in {place}",
+      "note": "This month's bills",
+      "empty": "No bills for units this month yet.",
+      "report": "Full report"
+    },
+    "approvals": {
+      "title": "Needs approval",
+      "empty": "Nothing is waiting for you.",
+      "expense": "Expense: {description}",
+      "handover": "Cash handover: {amount}",
+      "handoverNote": "{count, plural, one {# receipt} other {# receipts}}",
+      "form": "{kind}: {reference}",
+      "from": "From {name}",
+      "review": "Review",
+      "more": "{count, plural, one {# more} other {# more}}"
     }
   }
 }
