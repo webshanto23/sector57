@@ -16,3 +16,4 @@ export * from './billing.js';
 export * from './schedules.js';
 export * from './payments.js';
 export * from './donations.js';
+export * from './expenses.js';

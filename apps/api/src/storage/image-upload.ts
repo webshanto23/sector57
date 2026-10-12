@@ -58,3 +58,11 @@ export const DocumentUpload = () =>
       },
     }),
   );
+
+/** One voucher file (a photo or PDF) as multipart field `file`, at most DOCUMENT_UPLOAD.maxBytes (else 413). */
+export const VoucherUpload = () =>
+  applyDecorators(
+    UseInterceptors(FileInterceptor('file', { limits: { fileSize: DOCUMENT_UPLOAD.maxBytes, files: 1, fields: 2, fieldSize: 1024, parts: 3 } })),
+    ApiConsumes('multipart/form-data'),
+    ApiBody({ schema: { type: 'object', required: ['file'], properties: { file: { type: 'string', format: 'binary' } } } }),
+  );

@@ -123,6 +123,9 @@
   - Record donations only through `DonationsService` (`src/donations`): it writes the donation, its receipt (a `payments` row with no unit and no allocations, `payer_snapshot` null when anonymous) and the one `in` ledger row (`source_type = 'donation'`). The receipt writes no ledger row.
   - A donation's receipt is voided only through `POST /donations/:id/void` (`/payments/:id/void` answers 409 `use_donation_void`); `mayVoidReceipt` (payments service) holds the collector-or-approver rule for both.
   - Anything that sums `payments` for bills must leave donation receipts out (`kind`, or join `donations`). Handovers take all of a collector's cash, bills and donations alike.
+- Step 16 (expenses and budgets) is built on `step/16-expenses`, branched from `step/15-donations`, awaiting Codex review. Rules for later steps:
+  - Move expenses only through `ExpensesService` (`src/expenses`); who may do what is `expenseActions` in shared. Paying takes `lockFinanceSetup`, refuses more than the fund holds in that account (409 `fund_insufficient`) and writes one `out` ledger row (`source_type = 'expense'`); a void writes the reversing `in` row.
+  - Any new money-out path must take `lockFinanceSetup` and check the account's balance the same way. Expense vouchers are private files (`PrivateFilesService`, area `expenses`) served only through `GET /expenses/:id/vouchers/:documentId`.
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
 
 ## Reference material

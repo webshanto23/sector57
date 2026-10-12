@@ -1604,6 +1604,310 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/expenses/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ExpensesController_options"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/expenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ExpensesController_list"];
+        put?: never;
+        post: operations["ExpensesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/expenses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ExpensesController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["ExpensesController_update"];
+        trace?: never;
+    };
+    "/expenses/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ExpensesController_approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/expenses/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ExpensesController_reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/expenses/{id}/pay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ExpensesController_pay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/expenses/{id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ExpensesController_void"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/expenses/{id}/vouchers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ExpensesController_addVoucher"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/expenses/{id}/vouchers/{documentId}/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ExpensesController_removeVoucher"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/expenses/{id}/vouchers/{documentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ExpensesController_voucher"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/expense-heads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ExpenseHeadsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/expense-heads/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ExpenseHeadsController_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/expense-heads/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ExpenseHeadsController_archive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/expense-heads/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ExpenseHeadsController_restore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vendors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["VendorsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vendors/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["VendorsController_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vendors/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["VendorsController_archive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vendors/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["VendorsController_restore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/budgets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BudgetsController_get"];
+        put: operations["BudgetsController_set"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4252,6 +4556,276 @@ export interface components {
         };
         DonationVoidDto: {
             reason: string;
+        };
+        ExpenseOptionsDto_Output: {
+            heads: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+                archived: boolean;
+                used: number;
+            }[];
+            vendors: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                phone: string | null;
+                service: string | null;
+                archived: boolean;
+                used: number;
+            }[];
+            funds: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+                isDefault: boolean;
+            }[];
+            separateFunds: boolean;
+        };
+        ExpenseListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                status: "pending" | "approved" | "rejected" | "paid" | "void";
+                head: {
+                    /** Format: uuid */
+                    id: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                };
+                fund: {
+                    /** Format: uuid */
+                    id: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                };
+                vendor: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                description: string;
+                amount: string;
+                /** Format: date */
+                spentOn: string;
+                voucherNo: string | null;
+                requestedBy: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                /** Format: date-time */
+                createdAt: string;
+                vouchers: number;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            totals: {
+                count: number;
+                amount: string;
+            };
+            summary: {
+                pending: {
+                    count: number;
+                    amount: string;
+                };
+                approved: {
+                    count: number;
+                    amount: string;
+                };
+                paidMonth: {
+                    count: number;
+                    amount: string;
+                };
+                paidYear: {
+                    count: number;
+                    amount: string;
+                    label: string;
+                };
+            };
+        };
+        ExpenseDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            status: "pending" | "approved" | "rejected" | "paid" | "void";
+            head: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+            };
+            fund: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+            };
+            vendor: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                phone: string | null;
+            } | null;
+            description: string;
+            amount: string;
+            /** Format: date */
+            spentOn: string;
+            voucherNo: string | null;
+            requestedBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            /** Format: date-time */
+            createdAt: string;
+            approved: {
+                by: string | null;
+                /** Format: date-time */
+                at: string;
+            } | null;
+            rejected: {
+                by: string | null;
+                /** Format: date-time */
+                at: string;
+                reason: string;
+            } | null;
+            paid: {
+                by: string | null;
+                /** Format: date-time */
+                at: string;
+                /** @enum {string} */
+                account: "cash" | "bank";
+            } | null;
+            void: {
+                by: string | null;
+                /** Format: date-time */
+                at: string;
+                reason: string;
+            } | null;
+            vouchers: {
+                /** Format: uuid */
+                id: string;
+                fileName: string;
+                isImage: boolean;
+                /** Format: date-time */
+                uploadedAt: string;
+                uploadedBy: string | null;
+            }[];
+            fundBalance: {
+                cash: string;
+                bank: string;
+            } | null;
+            budget: {
+                year: string;
+                amount: string;
+                used: string;
+                remaining: string;
+                over: boolean;
+            } | null;
+            header: {
+                nameBn: string;
+                nameEn: string | null;
+                addressBn: string | null;
+                addressEn: string | null;
+                phone: string | null;
+                mark: string;
+            };
+            can: {
+                edit: boolean;
+                approve: boolean;
+                reject: boolean;
+                pay: boolean;
+                void: boolean;
+                upload: boolean;
+            };
+        };
+        ExpenseInputDto: {
+            /** Format: uuid */
+            headId: string;
+            fundId?: string | null;
+            vendorId?: string | null;
+            description: string;
+            amount: string;
+            /** Format: date */
+            spentOn: string;
+        };
+        ExpenseReasonDto: {
+            reason: string;
+        };
+        ExpensePayDto: {
+            /** @enum {string} */
+            account: "cash" | "bank";
+        };
+        ExpenseHeadInputDto: {
+            nameBn: string;
+            nameEn?: string | null;
+        };
+        ExpenseHeadDto_Output: {
+            /** Format: uuid */
+            id: string;
+            nameBn: string;
+            nameEn: string | null;
+            archived: boolean;
+            used: number;
+        };
+        VendorInputDto: {
+            name: string;
+            phone?: string | null;
+            service?: string | null;
+        };
+        VendorDto_Output: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            phone: string | null;
+            service: string | null;
+            archived: boolean;
+            used: number;
+        };
+        BudgetDto_Output: {
+            year: string;
+            /** Format: date */
+            start: string;
+            /** Format: date */
+            end: string;
+            years: string[];
+            lines: {
+                head: {
+                    /** Format: uuid */
+                    id: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                    archived: boolean;
+                };
+                budget: string | null;
+                approved: string;
+                paid: string;
+                remaining: string | null;
+                percent: number | null;
+                over: boolean;
+            }[];
+            totals: {
+                budget: string;
+                approved: string;
+                paid: string;
+                remaining: string;
+            };
+            can: {
+                edit: boolean;
+            };
+        };
+        BudgetInputDto: {
+            year: string;
+            lines: {
+                /** Format: uuid */
+                headId: string;
+                amount: string;
+            }[];
         };
     };
     responses: never;
@@ -7448,6 +8022,514 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DonationDetailDto_Output"];
+                };
+            };
+        };
+    };
+    ExpensesController_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseOptionsDto_Output"];
+                };
+            };
+        };
+    };
+    ExpensesController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                status?: "pending" | "approved" | "rejected" | "paid" | "void";
+                headId?: string;
+                fundId?: string;
+                vendorId?: string;
+                from?: string;
+                to?: string;
+                requestedBy?: "me";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseListDto_Output"];
+                };
+            };
+        };
+    };
+    ExpensesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpenseInputDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseDetailDto_Output"];
+                };
+            };
+        };
+    };
+    ExpensesController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseDetailDto_Output"];
+                };
+            };
+        };
+    };
+    ExpensesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpenseInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseDetailDto_Output"];
+                };
+            };
+        };
+    };
+    ExpensesController_approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseDetailDto_Output"];
+                };
+            };
+        };
+    };
+    ExpensesController_reject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpenseReasonDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseDetailDto_Output"];
+                };
+            };
+        };
+    };
+    ExpensesController_pay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpensePayDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseDetailDto_Output"];
+                };
+            };
+        };
+    };
+    ExpensesController_void: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpenseReasonDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseDetailDto_Output"];
+                };
+            };
+        };
+    };
+    ExpensesController_addVoucher: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseDetailDto_Output"];
+                };
+            };
+        };
+    };
+    ExpensesController_removeVoucher: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseDetailDto_Output"];
+                };
+            };
+        };
+    };
+    ExpensesController_voucher: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                documentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ExpenseHeadsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpenseHeadInputDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseHeadDto_Output"];
+                };
+            };
+        };
+    };
+    ExpenseHeadsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpenseHeadInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseHeadDto_Output"];
+                };
+            };
+        };
+    };
+    ExpenseHeadsController_archive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseHeadDto_Output"];
+                };
+            };
+        };
+    };
+    ExpenseHeadsController_restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseHeadDto_Output"];
+                };
+            };
+        };
+    };
+    VendorsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VendorInputDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VendorDto_Output"];
+                };
+            };
+        };
+    };
+    VendorsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VendorInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VendorDto_Output"];
+                };
+            };
+        };
+    };
+    VendorsController_archive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VendorDto_Output"];
+                };
+            };
+        };
+    };
+    VendorsController_restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VendorDto_Output"];
+                };
+            };
+        };
+    };
+    BudgetsController_get: {
+        parameters: {
+            query?: {
+                year?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetDto_Output"];
+                };
+            };
+        };
+    };
+    BudgetsController_set: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BudgetInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetDto_Output"];
                 };
             };
         };

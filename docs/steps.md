@@ -34,7 +34,7 @@ Schema changes are additive and need Anis's approval first.
 | 13 | M2: Recurring charges and billing runs | Built, awaiting Codex review | `step/13-recurring` |
 | 14 | M2: Cash collection, receipts and handover | Built, awaiting Codex review | `step/14-collection` |
 | 15 | M2: Donations | Built, awaiting Codex review | `step/15-donations` |
-| 16 | M2: Expenses and budgets | Later | `step/16-expenses` |
+| 16 | M2: Expenses and budgets | Built, awaiting Codex review | `step/16-expenses` |
 | 17 | M2: Fund ledger and finance reports | Later | `step/17-reports` |
 | 18 | M2: Overview dashboard | Later | `step/18-overview` |
 | 19 | M2 (optional): Resident bills view | Later, needs a decision | `step/19-my-bills` |
@@ -540,15 +540,20 @@ Built 2026-10-12 on `step/15-donations` (branched from `step/14-collection`). De
 - **Not checked yet:** the pages clicked through in a browser and the A5 print preview; the 375/820/1440 pass stays deferred.
 - **For later steps:** the ledger agrees with receipts for bills (`source_type = 'payment'`) plus donations (`'donation'`); a donation receipt has no allocations, so anything that sums `payments` for billing must exclude `kind = donation` (join `donations`).
 
-### Step 16: Expenses and budgets
+### Step 16: Expenses and budgets — Built, awaiting Codex review
 
-- **Expense heads and vendors** (`expenses.edit`): simple lists; vendor names stored as typed.
-- **Expense flow:** request (`expenses.create`: head, fund, vendor, description, amount, date, voucher photo or PDF through `PrivateFilesService` from Steps 3 + 8, stored as a `documents` row) → approve or reject with a reason (`expenses.approve`, never your own) → pay (`expenses.edit`: voucher number, paid from the fund, `out` ledger row). A paid expense is only voided, with a reversing row.
-- **Fund balance check:** paying more than the fund holds is refused (409 `fund_insufficient`), so a fund never goes below zero. **(decide)** refuse (proposal) or only warn.
-- **Budgets** (`budgets.*`): an amount per expense head per fiscal year; the page shows budget, approved, paid and remaining, with the overspent heads marked. Over budget warns, never blocks.
-- **Web:** `/dashboard/expenses` (tabs: expenses, budget, heads and vendors); the overview's "Needs approval" card links here.
-- **Decisions:**
-  - **(decide)** Approval limits by amount (for example above ৳50,000 needs the president). Roles are data, so a limit would be a per-role setting; proposal: not in milestone 2, one approver is enough.
+Built 2026-10-12 on `step/16-expenses` (branched from `step/15-donations`). Decided by Anis: paying more than a fund holds is refused; no approval limits by amount; no `projects` table yet (expenses group by head, donations keep a free-text purpose); voucher numbers are drawn at payment; voucher files are optional, with a "No voucher" mark.
+
+- **Migration `11_expenses`:** heads and vendors get `archived_at` and `created_at`; `expenses` gets `created_at`, `updated_at`, `rejected_by`/`_at`/`reject_reason`, `voucher_no` (unique per society), `paid_at`, `paid_by`, `paid_account` (`cash`/`bank`), `voided_at`/`_by`/`void_reason`, and status `void`. Checks keep each status's fields together, refuse approving or rejecting your own request and payment details without a payment. `budgets` gets `updated_at`, `updated_by`.
+- **Flow** (rule `expenseActions` in shared, unit-tested): `pending` → `approved` or `rejected` (`expenses.approve`, never your own: 403 `cannot_approve_own`; a reason to reject) → `paid` (`expenses.edit`). The requester or an `edit` holder changes a pending request. Paying runs under `lockFinanceSetup` with the expense row locked: refuses a closed fund (409 `fund_closed`) or more than the fund holds in the chosen account (409 `fund_insufficient`), draws `EXP-YY-NNNN`, writes one `out` ledger row (`source_type = 'expense'`). Voiding (`expenses.approve`) takes an approved or paid expense (409 `expense_not_voidable`); a paid one gets a reversing `in` row. No `DELETE` routes.
+- **Vouchers:** photos or PDFs through `PrivateFilesService` (area `expenses`), checked by `processDocument`, stored as `documents` rows (`entity_type = 'expense'`, `doc_type = 'voucher'`), at most 10 per expense, served only from `GET /expenses/:id/vouchers/:documentId` (`expenses.view`, `private, no-store`). Added until rejected or void (a bill may arrive after payment); removed only before payment (409 `expense_voucher_locked`).
+- **API** (`src/expenses`, society-wide): `GET /expenses/options` (heads, vendors, funds; `view` or `create`), `GET /expenses` (status, head, fund, vendor, dates, `requestedBy=me`, `q` over description, vendor and voucher no.; totals without rejected and void; stat cards for pending, approved, paid this month and fiscal year), `GET /expenses/:id` (every step, vouchers, the fund's balance for whoever may pay, the head's budget line, the voucher header, `can`), `POST /expenses`, `PATCH /:id`, `POST /:id/approve`, `/reject`, `/pay`, `/void`, voucher upload and remove. Heads (`/expense-heads`) and vendors (`/vendors`): add, rename, archive, restore (`expenses.edit`; 409 `expense_head_name_taken`). Budgets: `GET /budgets?year=` and `PUT /budgets` (`budgets.*`; zero clears a head; 400 `invalid_year`).
+- **Budgets:** an expense counts in the fiscal year of the day it was spent; per head the budget, approved but unpaid, paid, what is left and the percent used (`budgetFigures` in shared). Archived heads show only with a budget or spending that year. Over budget only warns (also on the approve panel).
+- **Web:** `/dashboard/expenses` with tabs Expenses, Budget, Heads and vendors (each shown only with its permission; the nav item also shows with `budgets.view`). The list has stat cards that filter, filters, and cards on phones. `/dashboard/expenses/new` (request form), `/dashboard/expenses/[id]` (amount, head, fund, vendor, budget line, history, vouchers, edit, approve or reject, pay with each account's balance, void, and an A5 payment voucher with "Prepared by", "Approved by" and the receiver's signature). `/dashboard/expenses/budget` (year picker, totals, a bar per head, edit amounts) and `/dashboard/expenses/setup`.
+- **Seed:** demo heads (staff salaries, repairs, electricity, cleaning) outside production.
+- **Tests:** shared flow-rule, budget and input tests; `expenses.e2e-spec.ts` in a throwaway society covers heads and vendors, request → approve → pay with the ledger row and balance, approving your own, the requester's edits, rejection, an empty account, a closed fund, other societies' heads and funds, two payments racing for one fund's money, gap-free voucher numbers, voids with and without a reversal, bad input, vouchers (PDF stored and served only to viewers, other files refused, removal rules, a late bill), list totals against the rows, the society boundary, no delete routes, budgets against the rows, the ledger matching paid expenses and the database checks.
+- **Not checked yet:** the pages clicked through in a browser and the A5 voucher print preview; the 375/820/1440 pass stays deferred.
+- **Known gap:** voiding a receipt or donation (Steps 14–15) after its cash was spent can leave a fund below zero; those voids don't check the balance. Step 17's ledger should show such a fund in red.
 
 ### Step 17: Fund ledger and finance reports
 
@@ -602,9 +607,9 @@ Online payment, bank or mobile payment entry, SMS (unless the decision above add
 | Receipt paper | Decided: A5 with counterfoil | Step 14 |
 | SMS receipts | Decided: separate SMS step once a provider is chosen | Step 14 |
 | Public donor list | Decided: no | Step 15 |
-| `projects` table for developments | Decide with Step 16; purpose is free text until then | Step 16 |
-| Paying more than a fund holds | Refuse | Step 16 |
-| Approval limits by amount | No | Step 16 |
+| `projects` table for developments | Decided: not in milestone 2 | Step 16 |
+| Paying more than a fund holds | Decided: refuse | Step 16 |
+| Approval limits by amount | Decided: no | Step 16 |
 | Audit log viewer | Yes, in Step 17 | Step 17 |
 | Resident bills view | Later, with the member app | Step 19 |
 
