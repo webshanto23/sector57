@@ -240,7 +240,7 @@ describe('Cash collection, receipts and handover (e2e)', () => {
       // A later name change leaves the receipt as it was.
       await prisma.persons.update({ where: { id: ids.rahim }, data: { full_name: 'রহিম উদ্দিন আহমেদ' } });
       const again = paymentDetailSchema.parse((await get(`/payments/${payment.id}`, users.collectorC).expect(200)).body);
-      expect(again.payer.name).toBe('রহিম উদ্দিন');
+      expect(again.payer?.name).toBe('রহিম উদ্দিন');
     });
 
     it('counts exact paisa', async () => {
@@ -304,7 +304,7 @@ describe('Cash collection, receipts and handover (e2e)', () => {
       const mine = paymentListSchema.parse((await get('/payments?collectorId=me', users.collectorC).expect(200)).body);
       expect(mine.items.length).toBeGreaterThan(0);
       expect(mine.items.every((p) => p.collectedBy.id === users.collectorC.id)).toBe(true);
-      expect(mine.items.every((p) => p.payer.unit?.address[0] === 'ব্লক সি')).toBe(true);
+      expect(mine.items.every((p) => p.payer?.unit?.address[0] === 'ব্লক সি')).toBe(true);
       expect(mine.totals.amount).toBe(addMoney('0', ...mine.items.filter((p) => !p.voided).map((p) => p.amount)));
 
       const d = paymentListSchema.parse((await get('/payments', users.treasurerD).expect(200)).body);

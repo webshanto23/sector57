@@ -160,13 +160,18 @@ model donations {
   fund_id               String         @db.Uuid
   purpose               String?
   amount                Decimal        @db.Decimal(14, 2)
-  payment_id            String?        @db.Uuid
+  payment_id            String         @unique(map: "donations_payment_uq") @db.Uuid
   received_at           DateTime       @default(now()) @db.Timestamptz(6)
   organisations         organisations? @relation(fields: [donor_organisation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   persons               persons?       @relation(fields: [donor_person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   funds                 funds          @relation(fields: [fund_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  payments              payments?      @relation(fields: [payment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  payments              payments       @relation(fields: [payment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   societies             societies      @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([society_id, received_at(sort: Desc)], map: "donations_received_idx")
+  @@index([donor_person_id], map: "donations_person_idx", where: raw("(donor_person_id IS NOT NULL)"))
+  @@index([donor_organisation_id], map: "donations_organisation_idx", where: raw("(donor_organisation_id IS NOT NULL)"))
+  @@index([fund_id], map: "donations_fund_idx")
 }
 
 model expense_heads {
@@ -601,7 +606,7 @@ model payments {
   voided_by             String?               @db.Uuid
   handover_id           String?               @db.Uuid
   print_count           Int                   @default(0)
-  donations             donations[]
+  donations             donations?
   payment_allocations   payment_allocations[]
   cash_handovers        cash_handovers?       @relation(fields: [handover_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   organisations         organisations?        @relation(fields: [payer_organisation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)

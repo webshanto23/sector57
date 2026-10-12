@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, HttpCode, Param, Post, Query } from '@nestjs/common';
 import {
   collectLookupQuery,
   collectLookupSchema,
@@ -18,7 +18,8 @@ import { ZodResponse } from 'nestjs-zod';
 import { SkipAudit } from '../audit/audit.decorators.js';
 import { createDto } from '../common/create-dto.js';
 import { IdParamDto } from '../common/id-param.dto.js';
-import { Can, CurrentActor, type Actor } from '../permissions/permissions.decorators.js';
+import type { CallerAccess } from '../permissions/caller-access.js';
+import { Authenticated, Can, CurrentActor, type Actor } from '../permissions/permissions.decorators.js';
 import { HandoversService } from './handovers.service.js';
 import { PaymentsService } from './payments.service.js';
 
@@ -108,6 +109,17 @@ export class PaymentsController {
   }
 }
 
+/**
+ * Handovers take all of a collector's cash, bill payments and donations alike, so whoever may
+ * take either may hand over and follow their handovers. Reading needs `payments.view` or
+ * `donations.create`, handing over `payments.create` or `donations.create`.
+ */
+function requireCollector(access: CallerAccess, action: 'view' | 'create') {
+  if (!access.can(action, 'payments') && !access.can('create', 'donations')) {
+    throw new ForbiddenException({ code: 'forbidden', message: 'You do not have permission for this' });
+  }
+}
+
 /** Closing the day: the collector hands over, someone else confirms the count. */
 @Controller('handovers')
 @SkipAudit()
@@ -116,24 +128,27 @@ export class HandoversController {
 
   /** The caller's own handovers, and those an approver may confirm; pending first. */
   @Get()
-  @Can('payments', 'view')
+  @Authenticated()
   @ZodResponse({ status: 200, type: HandoverListDto })
   list(@CurrentActor() actor: Actor, @Query() query: HandoverListQueryDto) {
+    requireCollector(actor.access, 'view');
     return this.handovers.list(actor, query);
   }
 
   @Get(':id')
-  @Can('payments', 'view')
+  @Authenticated()
   @ZodResponse({ status: 200, type: HandoverDto })
   get(@CurrentActor() actor: Actor, @Param() { id }: IdParamDto) {
+    requireCollector(actor.access, 'view');
     return this.handovers.get(actor, id);
   }
 
   /** All the caller's cash in hand. 400 `nothing_to_hand_over`. */
   @Post()
-  @Can('payments', 'create')
+  @Authenticated()
   @ZodResponse({ status: 201, type: HandoverDto })
   create(@CurrentActor() actor: Actor) {
+    requireCollector(actor.access, 'create');
     return this.handovers.create(actor);
   }
 

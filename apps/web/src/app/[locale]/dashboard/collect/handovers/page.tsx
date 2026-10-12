@@ -1,4 +1,4 @@
-import { compareMoney, formatDate, formatNumber, formatTaka, HANDOVER_STATUSES, handoverListQuery, subtractMoney, type Locale } from "@s57/shared";
+import { canAnywhere, compareMoney, formatDate, formatNumber, formatTaka, HANDOVER_STATUSES, handoverListQuery, subtractMoney, type Locale } from "@s57/shared";
 import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -8,7 +8,8 @@ import { Card, Chip, PageHeader } from "@/components/kit";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getHandovers } from "@/lib/api/payments";
-import { requirePermission } from "@/lib/api/session";
+import { getMe } from "@/lib/api/session";
+import { notFound } from "next/navigation";
 
 const PAGE_SIZE = 20;
 
@@ -24,7 +25,10 @@ export default async function HandoversPage({ params, searchParams }: PageProps<
   const locale = raw as Locale;
   setRequestLocale(locale);
 
-  const me = await requirePermission("payments");
+  // Whoever takes bill payments or donations follows their handovers here (the API checks the same).
+  const me = await getMe();
+  if (!me || !(canAnywhere(me.access, "payments") || canAnywhere(me.access, "donations", "create"))) notFound();
+  const back = canAnywhere(me.access, "payments") ? "collect" : "donations";
   const search = await searchParams;
   const parsed = handoverListQuery.safeParse({ status: search["status"] || undefined, page: search["page"] ?? 1, pageSize: PAGE_SIZE });
   const query = parsed.success ? parsed.data : { page: 1, pageSize: PAGE_SIZE };
@@ -39,9 +43,9 @@ export default async function HandoversPage({ params, searchParams }: PageProps<
         title={t("title")}
         sub={t("sub")}
         actions={
-          <Link href="/dashboard/collect" className={buttonVariants({ variant: "outline" })}>
+          <Link href={`/dashboard/${back}`} className={buttonVariants({ variant: "outline" })}>
             <ChevronLeft aria-hidden />
-            {tNav("collect")}
+            {tNav(back)}
           </Link>
         }
       />

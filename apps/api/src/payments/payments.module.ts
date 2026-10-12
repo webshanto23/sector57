@@ -13,5 +13,6 @@ import { PaymentsService } from './payments.service.js';
   imports: [PrismaModule, AuditModule, FinanceModule, PropertyModule, BillingModule],
   controllers: [CollectController, PaymentsController, HandoversController],
   providers: [PaymentsService, HandoversService],
+  exports: [PaymentsService],
 })
 export class PaymentsModule {}

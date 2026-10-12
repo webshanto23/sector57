@@ -16,6 +16,7 @@ import { ENV, type Env } from './config/env.js';
 import { FinanceModule } from './finance/finance.module.js';
 import { BillingModule } from './billing/billing.module.js';
 import { PaymentsModule } from './payments/payments.module.js';
+import { DonationsModule } from './donations/donations.module.js';
 import { FormsModule } from './forms/forms.module.js';
 import { GalleryModule } from './gallery/gallery.module.js';
 import { MembersModule } from './members/members.module.js';
@@ -65,6 +66,7 @@ import { UsersModule } from './users/users.module.js';
     FinanceModule,
     BillingModule,
     PaymentsModule,
+    DonationsModule,
   ],
   controllers: [AppController],
   providers: [

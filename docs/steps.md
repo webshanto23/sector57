@@ -1,6 +1,6 @@
 # Sector 15 build steps
 
-Status of every step, what it contains, and the decisions still open. Updated 2026-10-11.
+Status of every step, what it contains, and the decisions still open. Updated 2026-10-12.
 
 Status key: **Done** (merged to `main`) · **Next** · **Planned** · **Later** (after milestone 1).
 
@@ -33,7 +33,7 @@ Schema changes are additive and need Anis's approval first.
 | 12 | M2: Bills (invoices) and opening arrears | Done | `step/12-bills` |
 | 13 | M2: Recurring charges and billing runs | Built, awaiting Codex review | `step/13-recurring` |
 | 14 | M2: Cash collection, receipts and handover | Built, awaiting Codex review | `step/14-collection` |
-| 15 | M2: Donations | Later | `step/15-donations` |
+| 15 | M2: Donations | Built, awaiting Codex review | `step/15-donations` |
 | 16 | M2: Expenses and budgets | Later | `step/16-expenses` |
 | 17 | M2: Fund ledger and finance reports | Later | `step/17-reports` |
 | 18 | M2: Overview dashboard | Later | `step/18-overview` |
@@ -521,13 +521,24 @@ Built 2026-10-11 on `step/14-collection` (branched from `step/13-recurring`). De
   - **Login loop.** A token that is unexpired but refused by the API (session revoked, another `JWT_SECRET`) used to bounce between `/login` and `/dashboard`. The dashboard now redirects to `/login?ended=1`, where the proxy clears the auth cookies.
   - **Docker web build.** Turborepo's strict env mode hid the `API_URL` build arg from `next build`, so the web image proxied `/api` to itself. `turbo.json` now declares `API_URL` on `build`.
 
-### Step 15: Donations
+### Step 15: Donations — Built, awaiting Codex review
 
-- **Record a donation** (`donations.create`): donor (person, organisation or anonymous), fund, purpose, amount. It issues a receipt (a `payments` row with no invoices, same numbering and printing as Step 14) and an `in` ledger row in that fund. Void as in Step 14.
-- **List** with totals by fund and purpose, and a donor's history on their person page.
-- **Decisions:**
-  - **(decide)** A public donor list on the website (opt-in per donation)? Proposal: not in milestone 2.
-  - **(decide)** Tie donations and expenses to the development projects? That needs the `projects` table noted in Step 7 (developments are JSON today). Proposal: decide together with Step 16; until then `purpose` is free text.
+Built 2026-10-12 on `step/15-donations` (branched from `step/14-collection`). Decided by Anis: no public donor list in milestone 2; `purpose` stays free text until the `projects` decision in Step 16; a walk-in donor with a name is added as a person (reused by phone).
+
+- **Migration `10_donations`:** `donations.payment_id` required and unique (every donation has its receipt); at most one donor (person or organisation; neither is anonymous); indexes by date, donor and fund. Nothing else is added: who took the cash, the donor as on the day (`payer_snapshot`), the note and the void live on the receipt.
+- **How it books:** a donation writes one `donations` row, one `payments` row as its receipt (`RC-NNNNN` from the same series, no unit, no allocations, `payer_snapshot` null when anonymous) and one `in` ledger row (`source_type = 'donation'`, `cash`). The receipt writes no ledger row, so nothing counts twice. The cash is in the collector's cash in hand and goes into their normal handover.
+- **API** (`src/donations`, `donations.*`, society-wide):
+  - `GET /donations/options` (`create`): open funds (only the default while separate funds are off), the 20 most used earlier purposes, the receipt header.
+  - `GET /donations/donors?q=` (`create`, at least 2 characters): persons by name (either digit form) or phone, organisations by name. Name and phone only.
+  - `POST /donations` (`create`): donor `person` / `organisation` (this society's, else 400 `donor_not_found`), `new` (name, optional English name and phone, through `PartiesService.resolvePerson`, so a known phone reuses that person) or `anonymous`; `fundId` (omitted: the default fund; 400 `invalid_fund`, 409 `fund_closed`); purpose (inner spaces collapsed so the same words group); amount; note.
+  - `GET /donations` (`view`): paged; `q` (receipt no., donor name or phone, purpose), `from`/`to`, `fundId`, `purpose` (exact), `personId`, `organisationId`, `status`. Totals in SQL: count, amount, void count, named donors, by fund, by purpose. `summary`: this month and this fiscal year (amount, count, donors). `cash`: the caller's own cash in hand and pending handovers.
+  - `GET /donations/:id` (`view`) with its receipt (`PaymentDetail`); `POST /donations/:id/print` counts prints like Step 14.
+  - `POST /donations/:id/void` (reason): the collector on the same Dhaka day while the cash is still with them, otherwise `donations.approve` (403 `void_needs_approval`). Voids the receipt, reverses the ledger row, lowers a pending handover's expected amount.
+- **Changes to Step 14:** receipts carry `kind` (`bills` or `donation`), a nullable `payer` (anonymous) and `donation` (id, purpose, fund). `POST /payments/:id/void` refuses a donation's receipt (409 `use_donation_void`). Handovers are open to whoever takes donations: listing and reading need `payments.view` or `donations.create`, handing over `payments.create` or `donations.create`. Confirming still needs `payments.approve`, society-wide for a handover holding donations (they have no unit). `PaymentsService.receipt` / `countPrint` serve a receipt to a page that has already checked its own permission.
+- **Web:** `/dashboard/donations` (stat cards for this month, the fiscal year and donors; the clerk's cash in hand with "Close day and hand over"; search, dates, fund and status filters; the list as cards on phones; totals by fund and by purpose that filter the list), `/dashboard/donations/new` (donor on record, new person or anonymous; fund only with separate funds; purpose with suggestions; live receipt; "Save and print receipt"; `?personId=` / `?organisationId=` start with that donor), `/dashboard/donations/[id]` (receipt, print and reprint, fund and purpose, void). A Donations panel on person and organisation pages. Receipts print "দানের রসিদ / Donation receipt" with the purpose and fund in place of bills; the receipts list tags them "Donation"; the handovers page is reachable from Donations.
+- **Tests:** shared input tests; `donations.e2e-spec.ts` in a throwaway society covers one ledger row per donation and none from the receipt, exact paisa and Bangla digits, anonymous, organisation and new donors (reused by phone), the snapshot surviving a name change, the fund rules, refusals, gap-free concurrent numbers shared with bill receipts, donor lookup (no NID, either digit form), list totals against the rows, the society boundary, receipts visible only society-wide, no void through `/payments`, prints, no delete route, void by the collector and after the day by an approver, a handover with donations (void inside it, confirm), the ledger matching the donations and the database checks.
+- **Not checked yet:** the pages clicked through in a browser and the A5 print preview; the 375/820/1440 pass stays deferred.
+- **For later steps:** the ledger agrees with receipts for bills (`source_type = 'payment'`) plus donations (`'donation'`); a donation receipt has no allocations, so anything that sums `payments` for billing must exclude `kind = donation` (join `donations`).
 
 ### Step 16: Expenses and budgets
 
@@ -590,8 +601,8 @@ Online payment, bank or mobile payment entry, SMS (unless the decision above add
 | Advance payments | Decided: no credit; bill ahead first | Step 14 |
 | Receipt paper | Decided: A5 with counterfoil | Step 14 |
 | SMS receipts | Decided: separate SMS step once a provider is chosen | Step 14 |
-| Public donor list | No | Step 15 |
-| `projects` table for developments | Decide with Step 16 | Step 15 |
+| Public donor list | Decided: no | Step 15 |
+| `projects` table for developments | Decide with Step 16; purpose is free text until then | Step 16 |
 | Paying more than a fund holds | Refuse | Step 16 |
 | Approval limits by amount | No | Step 16 |
 | Audit log viewer | Yes, in Step 17 | Step 17 |

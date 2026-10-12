@@ -4,13 +4,17 @@ import { DocumentHead, Stamp } from "@/components/print/document-head";
 
 /** What a receipt shows. The live preview fills it before there is a receipt number. */
 export type ReceiptData = {
+  /** A receipt for bills, or for a donation (titled and laid out as one). */
+  kind: "bills" | "donation";
   header: DocumentHeader;
   receiptNo: string | null;
   /** A day (`YYYY-MM-DD`) or an instant. */
   date: string;
-  payer: { name: string; nameEn: string | null; memberNo: number | null };
+  /** Null for an anonymous donor. */
+  payer: { name: string; nameEn: string | null; memberNo: number | null } | null;
   unit: { name: string; address: string[] } | null;
-  items: { key: string; label: string; invoiceNo: string; amount: string; total: string }[];
+  /** `invoiceNo` is null on a donation's line; `detail` (the fund) is printed under the label instead. */
+  items: { key: string; label: string; invoiceNo: string | null; detail?: string | null; amount: string; total: string }[];
   amount: string;
   collectedBy: string;
   note: string | null;
@@ -18,25 +22,48 @@ export type ReceiptData = {
 };
 
 /** A saved receipt as `Receipt` shows it. */
-export function receiptOf(payment: PaymentDetail, locale: Locale, mark: ReceiptData["mark"]): ReceiptData {
+export function receiptOf(
+  payment: PaymentDetail,
+  locale: Locale,
+  mark: ReceiptData["mark"],
+  donationLabel: (purpose: string | null) => string = (purpose) => purpose ?? "",
+): ReceiptData {
+  const donation = payment.donation;
   return {
+    kind: donation ? "donation" : "bills",
     header: payment.header,
     receiptNo: payment.receiptNo,
     date: payment.receivedAt,
     payer: payment.payer,
-    unit: payment.payer.unit,
-    items: payment.allocations.map((allocation) => ({
-      key: allocation.invoiceId,
-      label: allocation.lines.map((line) => pick(line.description, line.descriptionEn, locale)).join(", "),
-      invoiceNo: allocation.invoiceNo,
-      amount: allocation.amount,
-      total: allocation.total,
-    })),
+    unit: payment.payer?.unit ?? null,
+    items: donation
+      ? [
+          {
+            key: donation.id,
+            label: donationLabel(donation.purpose),
+            invoiceNo: null,
+            detail: pick(donation.fund.nameBn, donation.fund.nameEn, locale),
+            amount: payment.amount,
+            total: payment.amount,
+          },
+        ]
+      : payment.allocations.map((allocation) => ({
+          key: allocation.invoiceId,
+          label: allocation.lines.map((line) => pick(line.description, line.descriptionEn, locale)).join(", "),
+          invoiceNo: allocation.invoiceNo,
+          amount: allocation.amount,
+          total: allocation.total,
+        })),
     amount: payment.amount,
     collectedBy: payment.collectedBy.name,
     note: payment.note,
     mark: payment.voided ? "void" : mark,
   };
+}
+
+/** A donation's line on the receipt: "Donation" and its purpose, if any. */
+export function donationLine(t: (key: "donation" | "donationFor", values?: { purpose: string }) => string, purpose: string | null): string {
+  return purpose ? t("donationFor", { purpose }) : t("donation");
 }
 
 /**
@@ -48,9 +75,10 @@ export function Receipt({ data, locale, print = false }: { data: ReceiptData; lo
   const tc = useTranslations("Collect");
   const no = data.receiptNo ?? "—";
   const day = formatDate(data.date, locale);
-  const payer = pick(data.payer.name, data.payer.nameEn, locale);
+  const payer = data.payer ? pick(data.payer.name, data.payer.nameEn, locale) : t("anonymous");
   const unit = data.unit ? [data.unit.name, ...[...data.unit.address].reverse()].join(", ") : null;
-  const member = data.payer.memberNo !== null ? localDigits(tc("memberNo", { no: data.payer.memberNo }), locale) : null;
+  const member = data.payer && data.payer.memberNo !== null ? localDigits(tc("memberNo", { no: data.payer.memberNo }), locale) : null;
+  const title = data.kind === "donation" ? t("donationTitle") : t("title");
   const words = amountInWords(data.amount, locale);
   const stamp = data.mark === "void" ? <Stamp text={t("void")} tone="bad" /> : data.mark === "duplicate" ? <Stamp text={t("duplicate")} tone="muted" /> : null;
 
@@ -81,10 +109,14 @@ export function Receipt({ data, locale, print = false }: { data: ReceiptData; lo
               <li key={item.key} className="flex items-start justify-between gap-3">
                 <span className="min-w-0">
                   {item.label}
-                  <span className="block font-mono text-[11.5px] text-muted-foreground">
-                    {t("bill", { no: item.invoiceNo })}
-                    {item.amount !== item.total ? ` · ${t("part", { total: formatTaka(item.total, locale) })}` : null}
-                  </span>
+                  {item.invoiceNo ? (
+                    <span className="block font-mono text-[11.5px] text-muted-foreground">
+                      {t("bill", { no: item.invoiceNo })}
+                      {item.amount !== item.total ? ` · ${t("part", { total: formatTaka(item.total, locale) })}` : null}
+                    </span>
+                  ) : item.detail ? (
+                    <span className="block text-[11.5px] text-muted-foreground">{item.detail}</span>
+                  ) : null}
                 </span>
                 <span className="num whitespace-nowrap">{formatTaka(item.amount, locale)}</span>
               </li>
@@ -107,7 +139,7 @@ export function Receipt({ data, locale, print = false }: { data: ReceiptData; lo
   if (!print) {
     return (
       <div className="relative overflow-hidden rounded-[var(--radius)] border border-line bg-surface">
-        <DocumentHead header={data.header} locale={locale} title={t("title")} />
+        <DocumentHead header={data.header} locale={locale} title={title} />
         {body}
         {stamp}
       </div>
@@ -117,7 +149,7 @@ export function Receipt({ data, locale, print = false }: { data: ReceiptData; lo
   return (
     <div className="grid gap-0">
       <div className="print-break-avoid relative overflow-hidden rounded-[8px] border border-line">
-        <DocumentHead header={data.header} locale={locale} title={t("title")} />
+        <DocumentHead header={data.header} locale={locale} title={title} />
         {body}
         <div className="flex items-end justify-between gap-4 px-4 pb-3 text-[11.5px] text-muted-foreground">
           <span>{t("payerCopy")}</span>
@@ -144,7 +176,9 @@ export function Receipt({ data, locale, print = false }: { data: ReceiptData; lo
           </span>
           <span className="num text-right">{day}</span>
           <span className="col-span-2">{unit ?? member}</span>
-          <span className="col-span-2 font-mono text-[11px]">{data.items.map((item) => item.invoiceNo).join(", ")}</span>
+          <span className={`col-span-2 text-[11px] ${data.kind === "bills" ? "font-mono" : ""}`}>
+            {data.items.map((item) => item.invoiceNo ?? [item.label, item.detail].filter(Boolean).join(" · ")).join(", ")}
+          </span>
         </div>
         <div className="flex items-center justify-between gap-2 border-t border-dashed border-line pt-1.5 font-semibold">
           <span>{t("collectedBy", { name: data.collectedBy })}</span>

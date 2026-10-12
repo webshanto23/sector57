@@ -91,6 +91,9 @@ const KNOWN = [
   "note_required",
   "nothing_to_bill",
   "bill_ahead_range",
+  "donor_not_found",
+  "donation_not_found",
+  "use_donation_void",
 ] as const;
 type KnownCode = (typeof KNOWN)[number];
 

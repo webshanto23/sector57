@@ -142,14 +142,20 @@ export type PayerSnapshot = z.infer<typeof payerSnapshotSchema>;
 
 const userRef = z.object({ id: z.uuid(), name: z.string() });
 
+/** What a receipt is for: open bills (Step 14) or a donation (Step 15, no bills). */
+export const PAYMENT_KINDS = ['bills', 'donation'] as const;
+export type PaymentKind = (typeof PAYMENT_KINDS)[number];
+
 export const paymentRowSchema = z.object({
   id: z.uuid(),
+  kind: z.enum(PAYMENT_KINDS),
   receiptNo: z.string(),
   receivedAt: z.iso.datetime({ offset: true }),
   /** The Dhaka date it was taken. */
   receivedDay: isoDay,
   amount: z.string(),
-  payer: payerSnapshotSchema,
+  /** Null only for an anonymous donation. */
+  payer: payerSnapshotSchema.nullable(),
   collectedBy: userRef,
   voided: z.boolean(),
   handover: z.object({ id: z.uuid(), confirmed: z.boolean() }).nullable(),
@@ -204,6 +210,10 @@ export type PaymentAllocation = z.infer<typeof paymentAllocationSchema>;
 export const paymentDetailSchema = paymentRowSchema.extend({
   note: z.string().nullable(),
   allocations: z.array(paymentAllocationSchema),
+  /** Set when the receipt is a donation's (then `allocations` is empty). */
+  donation: z
+    .object({ id: z.uuid(), purpose: z.string().nullable(), fund: z.object({ nameBn: z.string(), nameEn: z.string().nullable() }) })
+    .nullable(),
   printCount: z.number().int().min(0),
   void: z.object({ reason: z.string(), at: z.iso.datetime({ offset: true }), by: z.string().nullable() }).nullable(),
   header: documentHeaderSchema,

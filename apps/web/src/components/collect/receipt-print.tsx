@@ -10,15 +10,16 @@ import { PrintSheet } from "@/components/print/print-sheet";
 import { Button } from "@/components/ui/button";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { api } from "@/lib/api/client";
-import { Receipt, receiptOf } from "./receipt";
+import { donationLine, Receipt, receiptOf } from "./receipt";
 
 /**
  * Prints the receipt on A5 with its office counterfoil. Each print is counted first: the
  * first is the original, every later one says "Duplicate". `autoPrint` (right after saving)
  * prints once without a click.
  */
-export function ReceiptPrint({ payment, autoPrint }: { payment: PaymentDetail; autoPrint: boolean }) {
+export function ReceiptPrint({ payment, autoPrint, donationId }: { payment: PaymentDetail; autoPrint: boolean; donationId?: string }) {
   const t = useTranslations("Collect.detail");
+  const tReceipt = useTranslations("Collect.receipt");
   const tAll = useTranslations();
   const locale = useLocale() as Locale;
   const router = useRouter();
@@ -31,7 +32,10 @@ export function ReceiptPrint({ payment, autoPrint }: { payment: PaymentDetail; a
     setBusy(true);
     setStatus(null);
     try {
-      const { data, response } = await api.POST("/payments/{id}/print", { params: { path: { id: payment.id } } });
+      // A donation's page counts through the donation (it needs `donations.view`, not `payments.view`).
+      const { data, response } = donationId
+        ? await api.POST("/donations/{id}/print", { params: { path: { id: donationId } } })
+        : await api.POST("/payments/{id}/print", { params: { path: { id: payment.id } } });
       if (!response.ok || !data) {
         setStatus({ ok: false, text: tAll("Common.error") });
         return;
@@ -72,7 +76,7 @@ export function ReceiptPrint({ payment, autoPrint }: { payment: PaymentDetail; a
       </p>
       <FormStatus status={status} />
       <PrintSheet>
-        <Receipt data={receiptOf(payment, locale, mark)} locale={locale} print />
+        <Receipt data={receiptOf(payment, locale, mark, (purpose) => donationLine(tReceipt, purpose))} locale={locale} print />
       </PrintSheet>
     </div>
   );

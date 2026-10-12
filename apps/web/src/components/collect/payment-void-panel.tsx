@@ -9,9 +9,14 @@ import { Card, Field, inputClass } from "@/components/kit";
 import { useSubmit } from "@/components/property/use-submit";
 import { api } from "@/lib/api/client";
 
-/** Voids a receipt with a reason. Shown only when the API says the caller may. */
-export function PaymentVoidPanel({ id }: { id: string }) {
-  const t = useTranslations("Collect.detail");
+/**
+ * Voids a receipt with a reason. Shown only when the API says the caller may. A donation's
+ * receipt is voided through the donation (`donationId`), with its own wording.
+ */
+export function PaymentVoidPanel({ id, donationId }: { id: string; donationId?: string }) {
+  const tReceipt = useTranslations("Collect.detail");
+  const tDonation = useTranslations("Donations.detail");
+  const t = (key: "voidTitle" | "voidHint" | "voidReason" | "voidButton" | "voidQuestion" | "voidedNow") => (donationId ? tDonation(key) : tReceipt(key));
   const { status, run } = useSubmit();
   const [reason, setReason] = useState("");
 
@@ -30,7 +35,8 @@ export function PaymentVoidPanel({ id }: { id: string }) {
           destructive
           disabled={reason.trim() === ""}
           onConfirm={async () => {
-            await run(() => api.POST("/payments/{id}/void", { params: { path: { id } }, body: { reason } }), t("voidedNow"));
+            if (donationId) await run(() => api.POST("/donations/{id}/void", { params: { path: { id: donationId } }, body: { reason } }), t("voidedNow"));
+            else await run(() => api.POST("/payments/{id}/void", { params: { path: { id } }, body: { reason } }), t("voidedNow"));
           }}
         />
       </div>
