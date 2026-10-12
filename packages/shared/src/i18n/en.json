@@ -529,7 +529,14 @@
       "transfer_not_found": "This transfer no longer exists.",
       "transfer_already_void": "This transfer is already void.",
       "transfer_nothing_moves": "Pick another fund or another account to move the money to.",
-      "invalid_range": "The start date is after the end date."
+      "invalid_range": "The start date is after the end date.",
+      "move_not_found": "This move was not found.",
+      "move_open": "A move is under way for this tenancy. Finish or cancel it to change the status.",
+      "move_open_exists": "This tenancy already has a move under way.",
+      "move_closed": "This move is already done or cancelled.",
+      "move_wrong_status": "A move-in needs a pending tenancy, and a move-out an active one.",
+      "invalid_check": "That checklist item is for the other kind of move.",
+      "dues_outstanding": "Bills on this unit are still unpaid. Someone with approval rights can complete the move-out anyway."
     }
   },
   "Cms": {
@@ -1021,7 +1028,14 @@
       "transferred": "Ownership transferred.",
       "livesHere": "Lives here",
       "livesHereHint": "If an owner lives in this unit, press “Lives here” to add them as a resident.",
-      "renterIsResident": "A renter who is a person is added as a resident (head of household) automatically."
+      "renterIsResident": "A renter who is a person is added as a resident (head of household) automatically.",
+      "startMoveIn": "Start move-in",
+      "startMoveOut": "Start move-out",
+      "moveUnderWay": {
+        "move_in": "Move-in under way",
+        "move_out": "Move-out under way"
+      },
+      "openMove": "Open checklist"
     },
     "memberNo": "Society member · no. {no}",
     "membershipStatus": {
@@ -2212,5 +2226,131 @@
       "review": "Review",
       "more": "{count, plural, one {# more} other {# more}}"
     }
+  },
+  "Moves": {
+    "sub": "Checklists for renters moving in and out",
+    "kind": {
+      "move_in": "Move-in",
+      "move_out": "Move-out"
+    },
+    "status": {
+      "open": "Open",
+      "done": "Done",
+      "cancelled": "Cancelled"
+    },
+    "stats": {
+      "moveIn": "Open move-ins",
+      "moveOut": "Open move-outs"
+    },
+    "allKinds": "All moves",
+    "allStatuses": "All statuses",
+    "searchLabel": "Search moves",
+    "searchPlaceholder": "Renter, phone or unit",
+    "filter": "Filter",
+    "startHint": "Start a move from the tenancy on the unit's page.",
+    "empty": "No moves match.",
+    "col": {
+      "unit": "Unit",
+      "renter": "Renter",
+      "kind": "Move",
+      "planned": "Planned",
+      "checklist": "Checklist",
+      "status": "Status"
+    },
+    "checkedOf": "{checked} of {checks}",
+    "notPlanned": "Not set",
+    "back": "Moves",
+    "title": {
+      "move_in": "Move-in: {unit}",
+      "move_out": "Move-out: {unit}"
+    },
+    "tenancy": "Tenancy",
+    "tenancyDates": "From {start}",
+    "tenancyDatesEnded": "{start} to {end}",
+    "startedBy": "Started by {name} on {date}",
+    "completedBy": "Done by {name} on {date}",
+    "cancelledBy": "Cancelled by {name} on {date}",
+    "checklist": "Checklist",
+    "check": {
+      "nid": "Renter's NID copy received",
+      "agreement": "Rental agreement received",
+      "police_form": "Police information form submitted",
+      "photo": "Photos of the household received",
+      "keys": "Keys handed back",
+      "meter": "Final meter readings taken",
+      "police_informed": "Police told of the move-out"
+    },
+    "plannedDate": "Planned date",
+    "note": "Note",
+    "save": "Save",
+    "dues": "Bills on this unit",
+    "duesNone": "Nothing is owed on this unit.",
+    "duesOwed": "{owed} still owed on {count, plural, one {# bill} other {# bills}}",
+    "duesHidden": "You can't see this unit's bills. Unpaid bills will hold the move-out back.",
+    "duesNotCleared": "Completed with bills still unpaid.",
+    "complete": {
+      "move_in": "Complete move-in",
+      "move_out": "Complete move-out"
+    },
+    "completeHint": {
+      "move_in": "The tenancy becomes active from this date and the unit shows as rented.",
+      "move_out": "The tenancy and its household end on this date."
+    },
+    "completeDate": {
+      "move_in": "Moved in on",
+      "move_out": "Moved out on"
+    },
+    "completeQuestion": {
+      "move_in": "Complete the move-in?",
+      "move_out": "Complete the move-out? The tenancy ends."
+    },
+    "overrideNote": "Bills are unpaid. You may still complete it; it will be recorded as not cleared.",
+    "completedNow": "Done.",
+    "cancel": "Cancel this move",
+    "cancelHint": {
+      "move_in": "The tenancy stays pending.",
+      "move_out": "The tenancy goes back to active."
+    },
+    "cancelQuestion": "Cancel this move?",
+    "cancelledNow": "Cancelled.",
+    "startedNow": "Move started.",
+    "duesBlock": "Bills on this unit are still unpaid. Someone with approval rights must complete this move-out.",
+    "billsLink": "See this unit's bills"
+  },
+  "Directory": {
+    "sub": "Everyone living in a unit now, in owners' and renters' households",
+    "stats": {
+      "units": "Lived-in units",
+      "residents": "Residents"
+    },
+    "searchLabel": "Search residents",
+    "searchPlaceholder": "Name, phone or unit",
+    "filter": "Search",
+    "inArea": "In {name}",
+    "inSomeArea": "In one area",
+    "clearArea": "Show all areas",
+    "empty": "No residents match.",
+    "col": {
+      "name": "Name",
+      "place": "Unit",
+      "relation": "Relation",
+      "phone": "Phone",
+      "member": "Member no.",
+      "checked": "Checked"
+    },
+    "household": {
+      "owner": "Owner's household",
+      "renter": "Renter's household"
+    },
+    "owner": "Owner",
+    "memberNo": "No. {no}",
+    "csv": "Download CSV",
+    "print": "Print list",
+    "printTitle": "Resident directory",
+    "printPlace": "Area: {place}",
+    "printDate": "As of {date}",
+    "printButton": "Print",
+    "truncated": "Only the first {count} residents are listed. Choose a smaller area.",
+    "back": "Resident directory"
   }
 }

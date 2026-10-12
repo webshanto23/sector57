@@ -18,9 +18,10 @@ import { useLocale, useTranslations } from "next-intl";
 import { useState, type ReactNode } from "react";
 import { FormStatus } from "@/components/admin/form-status";
 import { CheckField, TextField } from "@/components/cms/fields";
-import { Card, Field, inputClass } from "@/components/kit";
+import { Card, Chip, Field, inputClass } from "@/components/kit";
 import { useSubmit } from "@/components/property/use-submit";
 import { Button } from "@/components/ui/button";
+import { Link, useRouter } from "@/i18n/navigation";
 import { api } from "@/lib/api/client";
 import { DateRange, PartyLink, PlaceLink, TenancyStatusChip } from "./labels";
 import { DateField, emptyParty, PartyFields, partyBody, partyReady, RowActions, todayIso, type PartyValues } from "./party-fields";
@@ -337,7 +338,9 @@ function AddTenancyForm({ unitId, submit, onDone }: { unitId: string; submit: Su
 
 function OpenTenancy({ row, can, submit }: { row: Tenancy; can: LocationPeople["can"]["tenancies"]; submit: Submit }) {
   const t = useTranslations("Members");
+  const tMoves = useTranslations("Moves");
   const locale = useLocale() as Locale;
+  const router = useRouter();
   const patch = (body: { status?: OpenStatus; policeFormSubmitted?: boolean }) =>
     submit.run(() => api.PATCH("/tenancies/{id}", { params: { path: { id: row.id } }, body }));
 
@@ -354,7 +357,32 @@ function OpenTenancy({ row, can, submit }: { row: Tenancy; can: LocationPeople["
           {row.monthlyRent ? <span className="num"> · ৳{localDigits(row.monthlyRent, locale)}</span> : null}
           {row.renter?.phone ? <span className="num"> · {localDigits(row.renter.phone, locale)}</span> : null}
         </span>
-        {can.edit ? (
+        {row.openMove ? (
+          <span className="flex flex-wrap items-center gap-2 text-[13px]">
+            <Chip tone="warn">{t(`people.moveUnderWay.${row.openMove.kind}`)}</Chip>
+            <Link href={`/dashboard/moves/${row.openMove.id}`} className="font-semibold text-primary">
+              {t("people.openMove")}
+            </Link>
+          </span>
+        ) : can.edit && (row.status === "pending" || row.status === "active") ? (
+          <div>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={submit.busy}
+              onClick={async () => {
+                const kind = row.status === "pending" ? "move_in" : "move_out";
+                const made = await submit.run(() => api.POST("/moves", { body: { tenancyId: row.id, kind } }), tMoves("startedNow"));
+                if (made) router.push(`/dashboard/moves/${made.id}`);
+              }}
+            >
+              <ArrowRightLeft aria-hidden />
+              {t(row.status === "pending" ? "people.startMoveIn" : "people.startMoveOut")}
+            </Button>
+          </div>
+        ) : null}
+        {can.edit && !row.openMove ? (
           <div className="flex flex-wrap items-center gap-3">
             <select
               aria-label={t("statusLabel")}

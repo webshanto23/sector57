@@ -21,3 +21,5 @@ export * from './ledger.js';
 export * from './reports.js';
 export * from './audit.js';
 export * from './overview.js';
+export * from './moves.js';
+export * from './directory.js';

@@ -516,6 +516,7 @@ model locations {
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// Move-in and move-out checklists for a tenancy. One open move per tenancy (partial unique index); status, completion and cancel fields kept together by a check (migration 13_moves).
 model move_events {
   id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   society_id   String    @db.Uuid
@@ -526,9 +527,20 @@ model move_events {
   checklist    Json      @default("{}")
   completed_at DateTime? @db.Timestamptz(6)
   created_by   String?   @db.Uuid
-  users        users?    @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  status       String    @default("open")
+  note         String?
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  completed_by String?   @db.Uuid
+  cancelled_at DateTime? @db.Timestamptz(6)
+  cancelled_by String?   @db.Uuid
+  users        users?    @relation("move_events_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  completer    users?    @relation("move_events_completed_byTousers", fields: [completed_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  canceller    users?    @relation("move_events_cancelled_byTousers", fields: [cancelled_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   societies    societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   tenancies    tenancies @relation(fields: [tenancy_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([society_id, status, planned_date], map: "move_events_society_idx")
+  @@index([tenancy_id], map: "move_events_tenancy_idx")
 }
 
 model notices {
@@ -903,7 +915,9 @@ model users {
   invoices                                invoices[]         @relation("invoices_created_byTousers")
   invoices_voided                         invoices[]         @relation("invoices_voided_byTousers")
   ledger_entries                          ledger_entries[]
-  move_events                             move_events[]
+  move_events                             move_events[]      @relation("move_events_created_byTousers")
+  move_events_completed                   move_events[]      @relation("move_events_completed_byTousers")
+  move_events_cancelled                   move_events[]      @relation("move_events_cancelled_byTousers")
   notices                                 notices[]
   payments                                payments[]         @relation("payments_received_byTousers")
   payments_voided                         payments[]         @relation("payments_voided_byTousers")

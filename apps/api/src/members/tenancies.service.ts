@@ -25,11 +25,14 @@ const openExists = () => new ConflictException({ code: 'tenancy_open_exists', me
 const hasOccupants = () =>
   new ConflictException({ code: 'tenancy_has_occupants', message: 'Remove the household members of this tenancy first' });
 export const notAUnit = () => new BadRequestException({ code: 'not_a_unit', message: 'People can only rent or live in a unit' });
+const moveOpen = () =>
+  new ConflictException({ code: 'move_open', message: 'Finish or cancel the move under way to change the status' });
 const inactiveUnit = () => new ConflictException({ code: 'location_inactive', message: 'The unit is inactive' });
 
 const OPEN = [...OPEN_TENANCY_STATUSES];
 
-const rowSelect = {
+/** The tenancy's own columns: what reads and writes inside a transaction select (no nested relations there). */
+export const tenancyFlatSelect = {
   id: true,
   unit_id: true,
   renter_type: true,
@@ -40,11 +43,14 @@ const rowSelect = {
   end_date: true,
   monthly_rent: true,
   police_form_submitted: true,
+} satisfies Prisma.tenanciesSelect;
+export const tenancyRowSelect = {
+  ...tenancyFlatSelect,
   units: { select: { locations: { select: { path: true } } } },
 } satisfies Prisma.tenanciesSelect;
-type Row = Prisma.tenanciesGetPayload<{ select: typeof rowSelect }>;
+export type TenancyRow = Prisma.tenanciesGetPayload<{ select: typeof tenancyRowSelect }>;
 
-const snapshot = (row: Omit<Row, 'id' | 'units'>) => ({
+export const tenancySnapshot = (row: Prisma.tenanciesGetPayload<{ select: typeof tenancyFlatSelect }>) => ({
   unitId: row.unit_id,
   renterType: row.renter_type,
   personId: row.primary_person_id,
@@ -124,7 +130,7 @@ export class TenanciesService {
         monthly_rent: input.monthlyRent,
         police_form_submitted: input.policeFormSubmitted,
       },
-      select: rowSelect,
+      select: tenancyRowSelect,
     });
     // A renter who is a person lives here: they become the head of the renter's household.
     let residentAdded = false;
@@ -149,7 +155,7 @@ export class TenanciesService {
     }
     await this.occupancy.refresh(actor.societyId, unit.path, tx);
     await this.audit.record(
-      { ...auditOf(actor, 'tenancy', 'create', row.id), after: { ...snapshot(row), reusedParty: party.reused, residentAdded } },
+      { ...auditOf(actor, 'tenancy', 'create', row.id), after: { ...tenancySnapshot(row), reusedParty: party.reused, residentAdded } },
       tx,
     );
     return row.id;
@@ -159,6 +165,11 @@ export class TenanciesService {
     const before = await this.row(actor, id, 'edit');
     if (before.status === 'ended') throw alreadyEnded();
     await this.prisma.$transaction(async (tx) => {
+      // While a move is under way, it decides the status (complete or cancel it instead).
+      if (input.status !== undefined && input.status !== before.status) {
+        const move = await tx.move_events.findFirst({ where: { tenancy_id: id, status: 'open' }, select: { id: true } });
+        if (move) throw moveOpen();
+      }
       const after = await tx.tenancies.update({
         where: { id },
         data: {
@@ -168,10 +179,10 @@ export class TenanciesService {
           monthly_rent: input.monthlyRent,
           police_form_submitted: input.policeFormSubmitted,
         },
-        select: rowSelect,
+        select: tenancyRowSelect,
       });
       await this.occupancy.refresh(actor.societyId, before.units.locations.path, tx);
-      await this.audit.record({ ...auditOf(actor, 'tenancy', 'update', id), before: snapshot(before), after: snapshot(after) }, tx);
+      await this.audit.record({ ...auditOf(actor, 'tenancy', 'update', id), before: tenancySnapshot(before), after: tenancySnapshot(after) }, tx);
     });
     return this.get(actor, id);
   }
@@ -179,18 +190,27 @@ export class TenanciesService {
   /** The renters leave on `endDate`; their household rows end then too (or on their own start, if later). */
   async end(actor: Actor, id: string, input: EndInput): Promise<Tenancy> {
     const before = await this.row(actor, id, 'edit');
-    if (before.status === 'ended') throw alreadyEnded();
-    if (endsBeforeStart(isoDate(before.start_date), input.endDate)) throw endBeforeStart();
-    const endDate = dayOf(input.endDate);
-    await this.prisma.$transaction(async (tx) => {
-      const after = await tx.tenancies.update({ where: { id }, data: { status: 'ended', end_date: endDate }, select: rowSelect });
-      await tx.$executeRaw`
-        update occupants set end_date = greatest(start_date, ${input.endDate}::date)
-        where tenancy_id = ${id}::uuid and end_date is null`;
-      await this.occupancy.refresh(actor.societyId, before.units.locations.path, tx);
-      await this.audit.record({ ...auditOf(actor, 'tenancy', 'end', id), before: snapshot(before), after: snapshot(after) }, tx);
-    });
+    await this.prisma.$transaction((tx) => this.endIn(tx, actor, before, input.endDate));
     return this.get(actor, id);
+  }
+
+  /**
+   * Ends the tenancy inside the caller's transaction (also a completed move-out). A move still
+   * open for it is cancelled: nobody can move in or out of an ended tenancy.
+   */
+  async endIn(tx: Prisma.TransactionClient, actor: Actor, before: TenancyRow, endDate: string): Promise<void> {
+    if (before.status === 'ended') throw alreadyEnded();
+    if (endsBeforeStart(isoDate(before.start_date), endDate)) throw endBeforeStart();
+    const after = await tx.tenancies.update({ where: { id: before.id }, data: { status: 'ended', end_date: dayOf(endDate) }, select: tenancyFlatSelect });
+    await tx.$executeRaw`
+      update occupants set end_date = greatest(start_date, ${endDate}::date)
+      where tenancy_id = ${before.id}::uuid and end_date is null`;
+    await tx.move_events.updateMany({
+      where: { tenancy_id: before.id, status: 'open' },
+      data: { status: 'cancelled', cancelled_at: new Date(), cancelled_by: actor.userId },
+    });
+    await this.occupancy.refresh(actor.societyId, before.units.locations.path, tx);
+    await this.audit.record({ ...auditOf(actor, 'tenancy', 'end', before.id), before: tenancySnapshot(before), after: tenancySnapshot(after) }, tx);
   }
 
   /** For rows entered by mistake, once no household row points at it. */
@@ -198,19 +218,22 @@ export class TenanciesService {
     const before = await this.row(actor, id, 'delete');
     try {
       await this.prisma.$transaction(async (tx) => {
+        // Its move checklists go with a tenancy entered by mistake.
+        await tx.move_events.deleteMany({ where: { tenancy_id: id } });
         await tx.tenancies.delete({ where: { id } });
         await this.occupancy.refresh(actor.societyId, before.units.locations.path, tx);
-        await this.audit.record({ ...auditOf(actor, 'tenancy', 'delete', id), before: snapshot(before) }, tx);
+        await this.audit.record({ ...auditOf(actor, 'tenancy', 'delete', id), before: tenancySnapshot(before) }, tx);
       });
     } catch (error) {
       throw isForeignKeyViolation(error) ? hasOccupants() : error;
     }
   }
 
-  private async row(actor: Actor, id: string, action: PermissionAction): Promise<Row> {
+  /** The tenancy row if the caller may see it (404) and `action` on it (403). */
+  async row(actor: Actor, id: string, action: PermissionAction): Promise<TenancyRow> {
     const row = await this.prisma.tenancies.findFirst({
       where: { id, society_id: actor.societyId, units: { society_id: actor.societyId } },
-      select: rowSelect,
+      select: tenancyRowSelect,
     });
     const located = row ? { path: row.units.locations.path } : null;
     if (!row || !located || !actor.access.can('view', 'tenancies', located)) throw notFound();

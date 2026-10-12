@@ -116,6 +116,13 @@ const KNOWN = [
   "transfer_not_found",
   "transfer_already_void",
   "invalid_range",
+  "move_not_found",
+  "move_open",
+  "move_open_exists",
+  "move_closed",
+  "move_wrong_status",
+  "invalid_check",
+  "dues_outstanding",
 ] as const;
 type KnownCode = (typeof KNOWN)[number];
 
