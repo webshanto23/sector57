@@ -12,6 +12,7 @@ import { Building2, Layers, MapPin } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Note } from "@/components/admin/form-status";
 import { Card, Chip, IconBox, PageHeader } from "@/components/kit";
+import { DocumentsPanel } from "@/components/documents/documents-panel";
 import { PeoplePanel } from "@/components/members/people-panel";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
@@ -107,6 +108,7 @@ export async function LocationPage({
         ) : null}
 
         {people ? <PeoplePanel key={`people-${people.location.id}`} people={people} /> : null}
+        {view.location ? <DocumentsPanel access={me.access} entityType="location" entityId={view.location.id} /> : null}
 
         <section className="grid gap-3" aria-labelledby="children-title">
           <div className="flex flex-wrap items-end justify-between gap-3">

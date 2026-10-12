@@ -6,6 +6,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Note } from "@/components/admin/form-status";
 import { BillsPanel } from "@/components/billing/bills-panel";
 import { DonationsPanel } from "@/components/donations/donations-panel";
+import { DocumentsPanel } from "@/components/documents/documents-panel";
 import { Chip, PageHeader } from "@/components/kit";
 import { PersonEditor } from "@/components/members/person-editor";
 import { HouseholdTable, OwnershipTable, TenancyTable } from "@/components/members/record-tables";
@@ -62,6 +63,7 @@ export default async function PersonPage({ params }: PageProps<"/[locale]/dashbo
         <HouseholdTable rows={person.households} open={open} />
         <BillsPanel access={me.access} locale={locale} personId={person.id} />
         <DonationsPanel access={me.access} locale={locale} personId={person.id} />
+        <DocumentsPanel access={me.access} entityType="person" entityId={person.id} />
       </div>
     </>
   );

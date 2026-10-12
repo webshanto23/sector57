@@ -66,3 +66,23 @@ export const VoucherUpload = () =>
     ApiConsumes('multipart/form-data'),
     ApiBody({ schema: { type: 'object', required: ['file'], properties: { file: { type: 'string', format: 'binary' } } } }),
   );
+
+/** A library document: file `file` (a photo or PDF, at most DOCUMENT_UPLOAD.maxBytes, else 413) and its text fields. */
+export const LibraryUpload = () =>
+  applyDecorators(
+    UseInterceptors(FileInterceptor('file', { limits: { fileSize: DOCUMENT_UPLOAD.maxBytes, files: 1, fields: 6, fieldSize: 1024, parts: 7 } })),
+    ApiConsumes('multipart/form-data'),
+    ApiBody({
+      schema: {
+        type: 'object',
+        required: ['file', 'entityType', 'docType', 'title'],
+        properties: {
+          file: { type: 'string', format: 'binary' },
+          entityType: { type: 'string' },
+          entityId: { type: 'string' },
+          docType: { type: 'string' },
+          title: { type: 'string' },
+        },
+      },
+    }),
+  );

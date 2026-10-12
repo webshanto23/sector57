@@ -2228,6 +2228,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentsController_list"];
+        put?: never;
+        post: operations["DocumentsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/documents/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["DocumentsController_update"];
+        trace?: never;
+    };
+    "/documents/{id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DocumentsController_file"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/documents/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DocumentsController_archive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/documents/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DocumentsController_restore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/audit": {
         parameters: {
             query?: never;
@@ -5921,6 +6001,72 @@ export interface components {
                     }[];
                 } | null;
             } | null;
+        };
+        DocumentListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                entityType: "society" | "person" | "location";
+                /** Format: uuid */
+                entityId: string;
+                /** @enum {string} */
+                docType: "minutes" | "agm" | "circular" | "licence" | "agreement" | "deed" | "nid" | "plan" | "other";
+                title: string;
+                /** @enum {string} */
+                kind: "pdf" | "image";
+                uploadedBy: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                /** Format: date-time */
+                uploadedAt: string;
+                archivedAt: string | null;
+                archivedBy: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            can: {
+                create: boolean;
+                edit: boolean;
+            };
+        };
+        DocumentDto_Output: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            entityType: "society" | "person" | "location";
+            /** Format: uuid */
+            entityId: string;
+            /** @enum {string} */
+            docType: "minutes" | "agm" | "circular" | "licence" | "agreement" | "deed" | "nid" | "plan" | "other";
+            title: string;
+            /** @enum {string} */
+            kind: "pdf" | "image";
+            uploadedBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            /** Format: date-time */
+            uploadedAt: string;
+            archivedAt: string | null;
+            archivedBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+        };
+        DocumentUpdateDto: {
+            title?: string;
+            /** @enum {string} */
+            docType?: "minutes" | "agm" | "circular" | "licence" | "agreement" | "deed" | "nid" | "plan" | "other";
         };
         AuditListDto_Output: {
             items: {
@@ -10172,6 +10318,170 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OverviewDto_Output"];
+                };
+            };
+        };
+    };
+    DocumentsController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                entityType?: "society" | "person" | "location";
+                entityId?: string;
+                docType?: "minutes" | "agm" | "circular" | "licence" | "agreement" | "deed" | "nid" | "plan" | "other";
+                q?: string;
+                archived?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentListDto_Output"];
+                };
+            };
+        };
+    };
+    DocumentsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                    entityType: string;
+                    entityId?: string;
+                    docType: string;
+                    title: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDto_Output"];
+                };
+            };
+        };
+    };
+    DocumentsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDto_Output"];
+                };
+            };
+        };
+    };
+    DocumentsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocumentUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDto_Output"];
+                };
+            };
+        };
+    };
+    DocumentsController_file: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    DocumentsController_archive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDto_Output"];
+                };
+            };
+        };
+    };
+    DocumentsController_restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentDto_Output"];
                 };
             };
         };

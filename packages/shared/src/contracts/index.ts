@@ -23,3 +23,4 @@ export * from './audit.js';
 export * from './overview.js';
 export * from './moves.js';
 export * from './directory.js';
+export * from './documents.js';

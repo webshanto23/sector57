@@ -123,6 +123,12 @@ const KNOWN = [
   "move_wrong_status",
   "invalid_check",
   "dues_outstanding",
+  "document_not_found",
+  "document_archived",
+  "document_not_archived",
+  "too_many_documents",
+  "invalid_doc_type",
+  "invalid_entity",
 ] as const;
 type KnownCode = (typeof KNOWN)[number];
 

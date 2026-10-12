@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Note } from "@/components/admin/form-status";
 import { BillsPanel } from "@/components/billing/bills-panel";
+import { DocumentsPanel } from "@/components/documents/documents-panel";
 import { PageHeader } from "@/components/kit";
 import { PeoplePanel } from "@/components/members/people-panel";
 import { OccupancyChip, PropertyBreadcrumb } from "@/components/property/labels";
@@ -54,6 +55,7 @@ export default async function UnitPage({ params }: PageProps<"/[locale]/dashboar
         <UnitForm key={unit.id} unit={unit} />
         {people ? <PeoplePanel key={`people-${unit.id}`} people={people} /> : null}
         <BillsPanel access={me.access} locale={locale as Locale} unitId={unit.id} />
+        <DocumentsPanel access={me.access} entityType="location" entityId={unit.id} />
       </div>
     </>
   );

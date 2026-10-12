@@ -536,7 +536,13 @@
       "move_closed": "This move is already done or cancelled.",
       "move_wrong_status": "A move-in needs a pending tenancy, and a move-out an active one.",
       "invalid_check": "That checklist item is for the other kind of move.",
-      "dues_outstanding": "Bills on this unit are still unpaid. Someone with approval rights can complete the move-out anyway."
+      "dues_outstanding": "Bills on this unit are still unpaid. Someone with approval rights can complete the move-out anyway.",
+      "document_not_found": "This document was not found.",
+      "document_archived": "This document is already archived.",
+      "document_not_archived": "This document is not archived.",
+      "too_many_documents": "There are already 50 documents here. Archive some first.",
+      "invalid_doc_type": "That kind of document does not belong here.",
+      "invalid_entity": "Choose whose document this is."
     }
   },
   "Cms": {
@@ -2352,5 +2358,44 @@
     "printButton": "Print",
     "truncated": "Only the first {count} residents are listed. Choose a smaller area.",
     "back": "Resident directory"
+  },
+  "Documents": {
+    "sub": "The society's papers: minutes, AGM papers, circulars and licences",
+    "panelTitle": "Documents",
+    "tabCurrent": "Current",
+    "tabArchived": "Archived",
+    "searchLabel": "Search documents",
+    "searchPlaceholder": "Title",
+    "allTypes": "All kinds",
+    "filter": "Filter",
+    "none": "No documents yet.",
+    "noneArchived": "No archived documents.",
+    "type": {
+      "minutes": "Meeting minutes",
+      "agm": "AGM papers",
+      "circular": "Circular",
+      "licence": "Licence or registration",
+      "agreement": "Agreement",
+      "deed": "Deed",
+      "nid": "NID copy",
+      "plan": "Plan or drawing",
+      "other": "Other"
+    },
+    "docType": "Kind",
+    "title": "Title",
+    "add": "Add a document",
+    "chooseFile": "Choose a photo or PDF",
+    "fileHint": "Photo or PDF, up to 5 MB",
+    "upload": "Upload",
+    "uploading": "Uploading…",
+    "added": "Document added.",
+    "tooLarge": "The file is larger than 5 MB.",
+    "edit": "Rename",
+    "save": "Save",
+    "archive": "Archive",
+    "restore": "Bring back",
+    "archived": "Archived.",
+    "restored": "Brought back.",
+    "archivedBy": "Archived by {name} on {date}"
   }
 }

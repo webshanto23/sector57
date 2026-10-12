@@ -4,12 +4,12 @@ import { processDocument } from './document.js';
 import { PRIVATE_FILE_STORAGE, type FileStorage } from './storage.js';
 
 /** What a private file belongs to; the second segment of its key. */
-export type PrivateArea = 'forms' | 'expenses';
+export type PrivateArea = 'forms' | 'expenses' | 'documents';
 
 const fileMissing = () => new NotFoundException({ code: 'file_not_found', message: 'File not found' });
 
 /**
- * Documents people send with the public forms (deeds, NID copies) and expense vouchers. They are stored apart from
+ * Documents people send with the public forms (deeds, NID copies), expense vouchers and the documents library. They are stored apart from
  * the public media (`PRIVATE_MEDIA_DIR`), under keys that start with the society id, and are
  * only ever read back through the API after a permission check.
  */

@@ -39,7 +39,7 @@ Schema changes are additive and need Anis's approval first.
 | 18 | M2: Overview dashboard | Done | `step/18-overview` |
 | 19 | M2 (optional): Resident bills view | Later, needs a decision | `step/19-my-bills` |
 | 20 | Move-in/out checklists and resident directory | Built, awaiting Codex review | `step/20-moves-directory` |
-| 21 | Documents library | Next | `step/21-documents` |
+| 21 | Documents library | Built, awaiting Codex review | `step/21-documents` |
 
 The step numbers are names, not the build order. Order changed on 2026-10-08: Steps 3 and 8 moved to the end so the forms use the real location tree (Step 9) and the file storage from Step 7, and residents submit while the office reviews in the same release.
 
@@ -656,6 +656,20 @@ Built 2026-10-12 on `step/20-moves-directory` (branched from `step/18-overview`)
 - **Web:** `/dashboard/moves` (list) and `/dashboard/moves/[id]` (checklist, dues, complete, cancel); "Start move-in / move-out" and the open move's link on the unit's tenancy row; `/dashboard/directory` (cards on phones, CSV) and `/dashboard/directory/print` (A4 door-to-door sheet).
 - **Tests:** `test/moves.e2e-spec.ts` (11): move-in and move-out with occupancy, the dues hold and override, cancel and the direct-end cancel, one open move, Block C / Block D scope, other societies, directory order, search with Bangla digits, paging, print, CSV and no NID anywhere.
 - **Checked:** `pnpm check` and the whole e2e suite (19 files, 282 tests). The pages rendered in Bangla and English against the dev servers; not clicked through in a browser, and the 375/820/1440 checks stay in the deferred pass.
+
+## Step 21: Documents library — Built, awaiting Codex review
+
+Built 2026-10-12 on `step/21-documents` (branched from `step/20-moves-directory` after Anis pushed it). The last placeholder nav page; plan approved by Anis with migration `14_documents`.
+
+- **Migration `14_documents`** (additive): `documents.title`, `archived_at`, `archived_by` (kept together by a check) and an index on `(society_id, entity_type, uploaded_at desc)`.
+- **API** (`src/documents`, `documents` permission, society-wide):
+  - A library document belongs to the society (minutes, AGM papers, circulars, licences, agreements), a person (deed, NID copy, agreement) or a place (deed, plan, agreement): `DOCUMENT_TYPES` in shared; a type that doesn't fit is 400 `invalid_doc_type`.
+  - A person's documents also need the members grant where they live (to see; edit to add or change), a place's the units or locations grant there. An NID copy shows only to those who may edit the person (hidden from lists, 404 by id).
+  - `GET /documents` (society papers by default, or `entityType` + `entityId`; search, kind, archived), `GET /documents/:id`, `GET /documents/:id/file` (photos inline, PDFs download, `private, no-store`, each read audited), `POST /documents` (multipart, checked by `processDocument`, stored by `PrivateFilesService` in area `documents`; at most 50 per person or place, 409 `too_many_documents`), `PATCH /documents/:id` (title, kind), `POST /documents/:id/archive` and `/restore`. No delete.
+  - Form uploads and expense vouchers are never listed or served here (404); they keep their own pages and rules.
+- **Web:** `/dashboard/documents` (current and archived tabs, search, kind filter, upload, rename, archive), and a Documents panel on person, unit and location pages.
+- **Tests:** `test/documents.e2e-spec.ts` (7): upload, list, file download and its audit row; bad files, wrong kinds, missing title or file; person documents by area with the NID hidden from viewers; the per-record limit; place documents by area; rename, archive and restore; form files, vouchers and other societies kept out.
+- **Checked:** `pnpm check` and the whole e2e suite (20 files, 289 tests). The library and the panels rendered in Bangla and English against the dev servers; uploading was not clicked through in a browser, and the 375/820/1440 checks stay in the deferred pass.
 
 ## Later: beyond milestone 2
 
