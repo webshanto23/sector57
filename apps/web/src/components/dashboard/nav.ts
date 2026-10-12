@@ -100,7 +100,7 @@ export const DASHBOARD_NAV: NavGroup[] = [
       { key: "collect", icon: Banknote, module: "payments" },
       { key: "recurring", icon: Repeat, module: "billing" },
       { key: "donations", icon: HandHeart, module: "donations" },
-      { key: "expenses", icon: Wallet, module: "expenses" },
+      { key: "expenses", icon: Wallet, module: "expenses", also: ["budgets"] },
     ],
   },
   { key: "community", icon: Megaphone, items: [{ key: "notices", icon: Bell, module: "notices" }] },

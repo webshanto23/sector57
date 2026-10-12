@@ -105,6 +105,14 @@ const DEMO_CHARGE_TYPES = [
   { name_bn: "সদস্য ফি", name_en: "Membership fee", kind: "fee", default_amount: "1200.00" },
 ];
 
+// Examples for trying out expenses; a real society keeps its own list.
+const DEMO_EXPENSE_HEADS = [
+  { name_bn: "কর্মচারী বেতন", name_en: "Staff salaries" },
+  { name_bn: "মেরামত", name_en: "Repairs" },
+  { name_bn: "বিদ্যুৎ বিল", name_en: "Electricity" },
+  { name_bn: "পরিচ্ছন্নতা", name_en: "Cleaning" },
+];
+
 async function main() {
   const society = await prisma.societies.upsert({
     where: { slug: SOCIETY.slug },
@@ -185,7 +193,7 @@ async function main() {
 }
 
 async function seedDemo(societyId: string, defaultFundId: string) {
-  const added = { notices: 0, committee: 0, albums: 0, chargeTypes: 0 };
+  const added = { notices: 0, committee: 0, albums: 0, chargeTypes: 0, expenseHeads: 0 };
 
   for (const charge of DEMO_CHARGE_TYPES) {
     const name_bn = nfc(charge.name_bn);
@@ -193,6 +201,15 @@ async function seedDemo(societyId: string, defaultFundId: string) {
     if (!exists) {
       await prisma.charge_types.create({ data: { ...charge, name_bn, society_id: societyId, fund_id: defaultFundId } });
       added.chargeTypes++;
+    }
+  }
+
+  for (const head of DEMO_EXPENSE_HEADS) {
+    const name_bn = nfc(head.name_bn);
+    const exists = await prisma.expense_heads.findFirst({ where: { society_id: societyId, name_bn }, select: { id: true } });
+    if (!exists) {
+      await prisma.expense_heads.create({ data: { ...head, name_bn, society_id: societyId } });
+      added.expenseHeads++;
     }
   }
 
