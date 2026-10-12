@@ -6,6 +6,7 @@ import { Geist_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
 import { ThemeScript } from "@/components/theme/theme-script";
 import { routing } from "@/i18n/routing";
+import { getBrand } from "@/lib/brand";
 import "../globals.css";
 
 // next/font sets the font tokens that globals.css reads (--font-sans, --font-display, --font-geist-mono).
@@ -28,12 +29,12 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: LayoutProps<"/[locale]">): Promise<Metadata> {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) return {};
-  const t = await getTranslations({ locale, namespace: "Common" });
+  const [t, brand] = await Promise.all([getTranslations({ locale, namespace: "Common" }), getBrand(locale)]);
   return {
     // Absolute canonical and hreflang URLs in production (e.g. https://sector57society.org).
     ...(process.env.SITE_URL ? { metadataBase: new URL(process.env.SITE_URL) } : {}),
-    title: { default: t("societyName"), template: `%s | ${t("societyShort")}` },
-    description: t("siteDescription"),
+    title: { default: brand.name, template: `%s | ${brand.name}` },
+    description: t("siteDescription", { name: brand.name }),
   };
 }
 

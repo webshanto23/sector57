@@ -20,6 +20,7 @@ import { NOTICE_CATEGORY_STYLE } from "@/components/site/notice-category";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getDevelopments, getHomeContent, getLatestNotices } from "@/lib/api/public";
+import { getBrand } from "@/lib/brand";
 import { alternates } from "@/lib/metadata";
 
 export const revalidate = 60;
@@ -46,10 +47,11 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
   const locale = raw as Locale;
   setRequestLocale(locale);
 
-  const [t, tn, common, content, notices, developments] = await Promise.all([
+  const [t, tn, common, brand, content, notices, developments] = await Promise.all([
     getTranslations("Site.home"),
     getTranslations("Notices"),
     getTranslations("Common"),
+    getBrand(locale),
     getHomeContent(),
     getLatestNotices(3),
     getDevelopments(),
@@ -69,12 +71,12 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
       <section className="grid overflow-hidden rounded-[12px] border border-line bg-surface min-[761px]:grid-cols-[1.15fr_1fr]">
         <div className="grid content-center gap-3.5 p-5 min-[761px]:px-7 min-[761px]:pt-7 min-[761px]:pb-6">
           <span className="text-[12.5px] font-semibold tracking-[.02em] text-primary">
-            {home?.hero.label ?? common("societyName")}
+            {home?.hero.label ?? brand.name}
           </span>
           <h1 className="font-display text-[clamp(25px,3.4vw,34px)] leading-[1.35]">
-            {home?.hero.title ?? common("societyName")}
+            {home?.hero.title ?? brand.name}
           </h1>
-          <p className="text-muted-foreground">{home?.hero.lead ?? common("siteDescription")}</p>
+          <p className="text-muted-foreground">{home?.hero.lead ?? common("siteDescription", { name: brand.name })}</p>
           <div className="flex flex-wrap gap-2.5">
             <Link href="/forms" className={buttonVariants()}>
               <FilePen aria-hidden />

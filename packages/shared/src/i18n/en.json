@@ -1,9 +1,7 @@
 {
   "Common": {
-    "societyName": "Uttara Sector 15 Welfare Society",
-    "societyShort": "Uttara Sector 15",
-    "logoMark": "15",
-    "siteDescription": "Notices, member services and committee information for the Uttara Sector 15 Welfare Society.",
+    "fallbackName": "Welfare Society",
+    "siteDescription": "Notices, member services and committee information for the {name}.",
     "language": "Language",
     "switchToEnglish": "English",
     "switchToBangla": "বাংলা",
@@ -44,7 +42,6 @@
       "label": "Website",
       "login": "Log in"
     },
-    "brandPlace": "Uttara, Dhaka",
     "footer": {
       "officeHours": "Office hours",
       "contact": "Contact"
@@ -60,7 +57,7 @@
       "allProjects": "All projects",
       "emergency": "Emergency contacts",
       "progress": "{title}: {percent}% complete",
-      "artLabel": "Sector 57 buildings by the lake"
+      "artLabel": "Buildings of our area by the lake"
     }
   },
   "Notices": {
@@ -1099,8 +1096,15 @@
       "fine": "Fine"
     },
     "settings": {
-      "sub": "The president's switches, the fiscal year and the receipt header.",
+      "sub": "The society profile, the president's switches, the fiscal year and the receipt header.",
       "readOnly": "You can view these settings but not change them.",
+      "profile": "Society profile",
+      "profileHint": "Shown at the top of the website and dashboard, in the browser tab, and in the logo on receipts.",
+      "mark": "Logo mark",
+      "markHint": "Inside the logo's red circle, at most 3 characters (for example ১৫).",
+      "placeBn": "Line under the name (Bangla)",
+      "placeEn": "Line under the name (English)",
+      "placeHint": "For example: Uttara, Dhaka. Leave blank to show nothing.",
       "switches": "President's decisions",
       "separateFunds": "Separate funds for facilities",
       "separateFundsHint": "When on, money for the mosque, gym and other facilities can be kept in funds of their own. When off, everything goes into the general fund.",

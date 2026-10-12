@@ -3,7 +3,7 @@ import { compareMoney, fromPaisa, moneyOrZeroSchema, moneySchema, toPaisa } from
 import { optionalText, pagination, text } from '../schemas.js';
 import { cleanText } from '../text.js';
 import { billToSnapshotSchema, invoiceRowSchema, type InvoiceStatus } from './billing.js';
-import { receiptHeaderSchema } from './finance.js';
+import { documentHeaderSchema } from './finance.js';
 import { isoDay } from './members.js';
 
 // ---------------------------------------------------------------------------
@@ -108,7 +108,7 @@ export const collectSummarySchema = z.object({
   /** The caller's handovers still waiting for the treasurer. */
   pending: z.object({ count: z.number().int().min(0), amount: z.string() }),
   /** What the receipt prints at the top, for the live preview. */
-  header: receiptHeaderSchema,
+  header: documentHeaderSchema,
 });
 export type CollectSummary = z.infer<typeof collectSummarySchema>;
 
@@ -206,7 +206,7 @@ export const paymentDetailSchema = paymentRowSchema.extend({
   allocations: z.array(paymentAllocationSchema),
   printCount: z.number().int().min(0),
   void: z.object({ reason: z.string(), at: z.iso.datetime({ offset: true }), by: z.string().nullable() }).nullable(),
-  header: receiptHeaderSchema,
+  header: documentHeaderSchema,
   can: z.object({ void: z.boolean() }),
 });
 export type PaymentDetail = z.infer<typeof paymentDetailSchema>;

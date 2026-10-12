@@ -1,4 +1,4 @@
-# Sector 57 Community Management System
+# Sector 15 Community Management System
 
 @AGENTS.md
 
@@ -8,7 +8,7 @@
 
 ## What we are building
 
-- A community (welfare society) management system for Uttara Sector 57, Dhaka. Owner and only developer: Anis, working with Claude and Codex.
+- A community (welfare society) management system for Uttara Sector 15, Dhaka. Owner and only developer: Anis, working with Claude and Codex.
 - It will later ship as a product to other societies, so everything is multi-tenant: every business table carries `society_id`, and nothing may assume a single society.
 - Milestone 1: a presentable public website plus the simpler backend modules (login, dynamic roles, content CMS, member forms, property/units/members), built as vertical slices. Billing and finance are milestone 2.
 - Priorities, in order: security, then speed. Design polish comes after both.
@@ -21,6 +21,7 @@
 - **Area-scoped access.** A user's role can be limited to one branch of the location tree (sector > block > road > plot > building > storey > unit). Permission checks must respect that scope.
 - **Configurable hierarchy.** `location_levels` defines the levels per society; `locations` is one self-referencing tree; `units` are leaf locations with an extra row.
 - **Money.** `numeric(14,2)` in BDT (Prisma `Decimal`, never JS floats). Financial rows are never hard-deleted. Collections are cash only (no online payment); a receipt is issued.
+- **The society's identity is data.** Its name, logo badge and the place line under the name come only from the database (`societies.name_bn/en` plus the `branding` setting, edited under Settings > Society profile). Never put a society's name, number or place in code or i18n; the web reads them with `getBrand(locale)` (`src/lib/brand.ts`), receipts and bills get the badge in their `header.mark`.
 - **President toggles.** Things like sharing renter data with the thana and separate facility funds are per-society settings (`society_settings`), not code branches.
 - **Out of scope for v1:** visitor/gate management, online payment, external reporting to RAJUK or City Corporation.
 - **Responsive, mobile first.** Most users are on phones, owners on tablets, the office on large screens. Tables become cards on phones. Check layouts at 375, 820 and 1440 px.

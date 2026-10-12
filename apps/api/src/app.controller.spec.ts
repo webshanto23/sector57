@@ -22,7 +22,7 @@ describe('AppController', () => {
 
   describe('society', () => {
     it('returns the request society', () => {
-      const society = { id: 'x', slug: 's', nameBn: 'স', nameEn: null, fiscalYearStartMonth: 7 };
+      const society = { id: 'x', slug: 's', nameBn: 'স', nameEn: null, fiscalYearStartMonth: 7, mark: 'স', placeBn: null, placeEn: null };
       expect(appController.society(society)).toBe(society);
     });
   });

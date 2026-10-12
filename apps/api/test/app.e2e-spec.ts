@@ -21,7 +21,7 @@ describe('App (e2e)', () => {
 
   it('GET /society returns the default society', async () => {
     const res = await request(app.getHttpServer()).get('/society').expect(200);
-    expect(res.body).toMatchObject({ slug: 'sector57', nameBn: 'উত্তরা সেক্টর ৫৭ কল্যাণ সমিতি' });
+    expect(res.body).toMatchObject({ slug: 'sector57', nameBn: 'উত্তরা সেক্টর ১৫ কল্যাণ সমিতি' });
   });
 
   it('documents response schemas for the typed web client', async () => {

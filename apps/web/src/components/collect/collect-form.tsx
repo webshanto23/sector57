@@ -10,8 +10,8 @@ import {
   pick,
   subtractMoney,
   type CollectAccount,
+  type DocumentHeader,
   type Locale,
-  type ReceiptHeader,
 } from "@s57/shared";
 import { Printer, Search } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -37,7 +37,7 @@ export function CollectForm({
   today,
 }: {
   initial: CollectAccount | null;
-  header: ReceiptHeader;
+  header: DocumentHeader;
   collector: string;
   /** `YYYY-MM-DD` in Dhaka, from the server. */
   today: string;

@@ -1,20 +1,18 @@
-import { pick, type Locale, type ReceiptHeader } from "@s57/shared";
-import { useTranslations } from "next-intl";
+import { pick, type DocumentHeader, type Locale } from "@s57/shared";
 import { Kantha } from "@/components/kit";
 import { Logo } from "@/components/site/logo";
 
 /**
- * The top of a receipt or a printed bill (mockup `.receipt .rh`): logo, the society's
- * name, address and phone from the receipt header, and what the paper is.
+ * The top of a receipt or a printed bill (mockup `.receipt .rh`): the society's logo
+ * badge, name, address and phone from the receipt header, and what the paper is.
  */
-export function DocumentHead({ header, locale, title }: { header: ReceiptHeader; locale: Locale; title: string }) {
-  const t = useTranslations("Common");
+export function DocumentHead({ header, locale, title }: { header: DocumentHeader; locale: Locale; title: string }) {
   const address = locale === "en" ? (header.addressEn ?? header.addressBn) : header.addressBn;
   return (
     <>
       <div className="bg-accent px-4 py-3.5 text-center text-accent-foreground">
         <div className="flex items-center justify-center gap-2">
-          <Logo mark={t("logoMark")} />
+          <Logo mark={header.mark} />
           <b className="text-[15px] leading-tight">{pick(header.nameBn, header.nameEn, locale)}</b>
         </div>
         {address || header.phone ? (

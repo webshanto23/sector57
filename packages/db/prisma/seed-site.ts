@@ -11,13 +11,13 @@ export const SITE_PAGES = [
     title_en: "Site details",
     content: {
       bn: {
-        address: "বাড়ি ১, রোড ৩, সেক্টর ৫৭, উত্তরা, ঢাকা",
+        address: "বাড়ি ১, রোড ৩, সেক্টর ১৫, উত্তরা, ঢাকা",
         officeHours: "শনি থেকে বৃহস্পতিবার, সকাল ১০টা থেকে সন্ধ্যা ৬টা",
         phone: "01711-000057",
         email: "office@sector57society.org",
       },
       en: {
-        address: "House 1, Road 3, Sector 57, Uttara, Dhaka",
+        address: "House 1, Road 3, Sector 15, Uttara, Dhaka",
         officeHours: "Saturday to Thursday, 10am to 6pm",
         phone: "01711-000057",
         email: "office@sector57society.org",
@@ -31,9 +31,9 @@ export const SITE_PAGES = [
     content: {
       bn: {
         hero: {
-          label: "উত্তরা সেক্টর ৫৭ কল্যাণ সমিতি",
+          label: "উত্তরা সেক্টর ১৫ কল্যাণ সমিতি",
           title: "নিরাপদ, পরিচ্ছন্ন ও সুশৃঙ্খল সেক্টর, প্রতিটি বাসিন্দার জন্য",
-          lead: "খবর, নোটিশ, কমিটি, উন্নয়ন কাজ আর সদস্য সেবা, সেক্টর ৫৭-এর মানুষের জন্য এক জায়গায়।",
+          lead: "খবর, নোটিশ, কমিটি, উন্নয়ন কাজ আর সদস্য সেবা, সেক্টর ১৫-এর মানুষের জন্য এক জায়গায়।",
         },
         stats: [
           { label: "ব্লক", value: "6" },
@@ -60,9 +60,9 @@ export const SITE_PAGES = [
       },
       en: {
         hero: {
-          label: "Uttara Sector 57 Welfare Society",
+          label: "Uttara Sector 15 Welfare Society",
           title: "A safe, clean and well-run sector for every resident",
-          lead: "News, notices, committee, development work and member services for the people of Sector 57, in one place.",
+          lead: "News, notices, committee, development work and member services for the people of Sector 15, in one place.",
         },
         stats: [
           { label: "Blocks", value: "6" },

@@ -1,4 +1,5 @@
 import { ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { brandingOf, SETTING_KEYS, type Branding } from '@s57/shared';
 import type { Request } from 'express';
 import { ENV, type Env } from '../config/env.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -9,7 +10,7 @@ export type SocietyContext = {
   nameBn: string;
   nameEn: string | null;
   fiscalYearStartMonth: number;
-};
+} & Branding;
 
 type CacheEntry = { value: SocietyContext | null; active: boolean; expires: number };
 
@@ -32,7 +33,7 @@ export class SocietyService {
     return this.env.DEFAULT_SOCIETY_SLUG;
   }
 
-  /** Drops the cached row after the society itself changed (fiscal year start). */
+  /** Drops the cached row after the society itself changed (fiscal year start, name, branding). */
   forget(slug: string): void {
     this.cache.delete(slug);
   }
@@ -42,7 +43,10 @@ export class SocietyService {
     const now = Date.now();
     let entry = this.cache.get(slug);
     if (!entry || entry.expires <= now) {
-      const row = await this.prisma.societies.findUnique({ where: { slug } });
+      const row = await this.prisma.societies.findUnique({
+        where: { slug },
+        include: { society_settings: { where: { key: SETTING_KEYS.branding }, select: { value: true } } },
+      });
       entry = {
         expires: now + CACHE_MS,
         active: row?.status === 'active',
@@ -52,6 +56,7 @@ export class SocietyService {
           nameBn: row.name_bn,
           nameEn: row.name_en,
           fiscalYearStartMonth: row.fiscal_year_start_month,
+          ...brandingOf(row.society_settings?.[0]?.value, row.name_bn),
         },
       };
       this.cache.set(slug, entry);

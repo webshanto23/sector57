@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { compareMoney, moneySchema } from '../money.js';
 import { optionalText, pagination, text } from '../schemas.js';
 import { cleanText } from '../text.js';
-import { CHARGE_KINDS, fundOptionSchema, receiptHeaderSchema } from './finance.js';
+import { CHARGE_KINDS, fundOptionSchema, documentHeaderSchema } from './finance.js';
 import { isoDay, partySchema, RENTED_STATUSES, type TenancyStatus } from './members.js';
 import type { BillTo } from './property.js';
 
@@ -206,7 +206,7 @@ export const invoiceDetailSchema = invoiceRowSchema.extend({
     z.object({ id: z.uuid(), receiptNo: z.string(), receivedDay: isoDay, amount: z.string(), voided: z.boolean() }),
   ),
   /** What a printed bill shows at the top. */
-  header: receiptHeaderSchema,
+  header: documentHeaderSchema,
   /** Whether the caller may void it now (`billing.approve` there, and nothing paid). */
   can: z.object({ void: z.boolean() }),
 });

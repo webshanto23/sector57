@@ -1,4 +1,4 @@
-// Idempotent seed: the Sector 57 society, its location levels, the permission
+// Idempotent seed: the Sector 15 society, its location levels, the permission
 // catalogue, the starter roles, the default fund and the public website pages (plus
 // demo notices, committee, developments, gallery and charge types outside production). Safe to run
 // repeatedly; it never deletes rows.
@@ -92,6 +92,8 @@ const ROLES: { name: string; description: string; is_system: boolean; grants: Gr
 const SETTINGS: Record<string, unknown> = {
   share_renters_with_thana: false,
   separate_facility_funds: false,
+  // Header logo badge and place line; the office changes them under Settings > Society profile.
+  branding: { mark: "১৫", placeBn: "উত্তরা, ঢাকা", placeEn: "Uttara, Dhaka" },
 };
 
 const DEFAULT_FUND = { name_bn: "সাধারণ তহবিল", name_en: "General fund" };

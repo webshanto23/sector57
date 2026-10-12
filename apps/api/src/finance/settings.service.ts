@@ -1,8 +1,11 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import type { Prisma } from '@s57/db';
 import {
+  brandingOf,
   receiptHeaderSchema,
   SETTING_KEYS,
+  type Branding,
+  type DocumentHeader,
   type ReceiptHeader,
   type SettingKey,
   type SettingsInput,
@@ -43,6 +46,7 @@ export class SettingsService {
     const value = (key: SettingKey) => rows.find((row) => row.key === SETTING_KEYS[key])?.value;
     const header = receiptHeaderSchema.safeParse(value('receiptHeader'));
     return {
+      profile: { nameBn: society.name_bn, nameEn: society.name_en, ...brandingOf(value('branding'), society.name_bn) },
       shareRentersWithThana: value('shareRentersWithThana') === true,
       separateFacilityFunds: value('separateFacilityFunds') === true,
       fiscalYearStartMonth: society.fiscal_year_start_month,
@@ -54,19 +58,21 @@ export class SettingsService {
     };
   }
 
-  /** What receipts and printed bills show at the top. */
-  async receiptHeader(societyId: string): Promise<ReceiptHeader> {
-    const [society, row] = await Promise.all([
+  /** What receipts and printed bills show at the top, with the logo badge. */
+  async receiptHeader(societyId: string): Promise<DocumentHeader> {
+    const [society, rows] = await Promise.all([
       this.prisma.societies.findUniqueOrThrow({ where: { id: societyId }, select: { name_bn: true, name_en: true, address: true, phone: true } }),
-      this.prisma.society_settings.findUnique({
-        where: { society_id_key: { society_id: societyId, key: SETTING_KEYS.receiptHeader } },
-        select: { value: true },
+      this.prisma.society_settings.findMany({
+        where: { society_id: societyId, key: { in: [SETTING_KEYS.receiptHeader, SETTING_KEYS.branding] } },
+        select: { key: true, value: true },
       }),
     ]);
-    const header = receiptHeaderSchema.safeParse(row?.value);
+    const value = (key: string) => rows.find((row) => row.key === key)?.value;
+    const header = receiptHeaderSchema.safeParse(value(SETTING_KEYS.receiptHeader));
+    const { mark } = brandingOf(value(SETTING_KEYS.branding), society.name_bn);
     return header.success
-      ? header.data
-      : { nameBn: society.name_bn, nameEn: society.name_en, addressBn: society.address, addressEn: null, phone: society.phone };
+      ? { ...header.data, mark }
+      : { nameBn: society.name_bn, nameEn: society.name_en, addressBn: society.address, addressEn: null, phone: society.phone, mark };
   }
 
   /** Is the society keeping facility money (mosque, gym) in funds of their own? */
@@ -96,6 +102,7 @@ export class SettingsService {
         shareRentersWithThana: input.shareRentersWithThana,
         separateFacilityFunds: input.separateFacilityFunds,
         receiptHeader: input.receiptHeader satisfies ReceiptHeader | undefined,
+        branding: input.profile && ({ mark: input.profile.mark, placeBn: input.profile.placeBn, placeEn: input.profile.placeEn } satisfies Branding),
       };
       for (const [key, value] of Object.entries(values) as [SettingKey, Prisma.InputJsonValue | undefined][]) {
         if (value === undefined) continue;
@@ -105,7 +112,16 @@ export class SettingsService {
           create: { society_id: actor.societyId, key: SETTING_KEYS[key], value, updated_by: actor.userId },
         });
       }
-      if (month !== undefined) await tx.societies.update({ where: { id: actor.societyId }, data: { fiscal_year_start_month: month } });
+      if (month !== undefined || input.profile) {
+        await tx.societies.update({
+          where: { id: actor.societyId },
+          data: {
+            fiscal_year_start_month: month,
+            name_bn: input.profile?.nameBn,
+            ...(input.profile ? { name_en: input.profile.nameEn } : {}),
+          },
+        });
+      }
 
       const after = await this.get(actor.societyId, tx);
       const changed = (Object.keys(input) as (keyof SettingsInput)[]).filter((key) => input[key] !== undefined);
@@ -124,7 +140,8 @@ export class SettingsService {
       );
       return after;
     });
-    if (input.fiscalYearStartMonth !== undefined) this.societies.forget(societySlug);
+    // The cached society carries the fiscal year, the name and the branding.
+    if (input.fiscalYearStartMonth !== undefined || input.profile) this.societies.forget(societySlug);
     return after;
   }
 }

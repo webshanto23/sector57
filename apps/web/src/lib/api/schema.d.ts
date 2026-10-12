@@ -1519,6 +1519,9 @@ export interface components {
             nameBn: string;
             nameEn: string | null;
             fiscalYearStartMonth: number;
+            mark: string;
+            placeBn: string | null;
+            placeEn: string | null;
         };
         NoticeListDto_Output: {
             items: {
@@ -2973,6 +2976,13 @@ export interface components {
                 addressEn: string | null;
                 phone: string | null;
             };
+            profile: {
+                nameBn: string;
+                nameEn: string | null;
+                mark: string;
+                placeBn: string | null;
+                placeEn: string | null;
+            };
         };
         SettingsInputDto: {
             shareRentersWithThana?: boolean;
@@ -2984,6 +2994,13 @@ export interface components {
                 addressBn?: string | null;
                 addressEn?: string | null;
                 phone?: string | null;
+            };
+            profile?: {
+                nameBn: string;
+                nameEn?: string | null;
+                mark: string;
+                placeBn?: string | null;
+                placeEn?: string | null;
             };
         };
         FundListDto_Output: {
@@ -3233,6 +3250,7 @@ export interface components {
                 addressBn: string | null;
                 addressEn: string | null;
                 phone: string | null;
+                mark: string;
             };
             can: {
                 void: boolean;
@@ -3640,6 +3658,7 @@ export interface components {
                 addressBn: string | null;
                 addressEn: string | null;
                 phone: string | null;
+                mark: string;
             };
         };
         PaymentListDto_Output: {
@@ -3759,6 +3778,7 @@ export interface components {
                 addressBn: string | null;
                 addressEn: string | null;
                 phone: string | null;
+                mark: string;
             };
             can: {
                 void: boolean;
