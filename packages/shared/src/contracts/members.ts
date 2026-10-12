@@ -10,6 +10,10 @@ export type RenterType = (typeof RENTER_TYPES)[number];
 export const TENANCY_STATUSES = ['pending', 'active', 'moving_out', 'ended'] as const;
 export type TenancyStatus = (typeof TENANCY_STATUSES)[number];
 export const OPEN_TENANCY_STATUSES = ['pending', 'active', 'moving_out'] as const satisfies readonly TenancyStatus[];
+/** `move_events.kind`: a renter moving into a unit, or out of it (see `contracts/moves.ts`). */
+export const MOVE_KINDS = ['move_in', 'move_out'] as const;
+export type MoveKind = (typeof MOVE_KINDS)[number];
+
 /** Statuses that make a unit `rented`: the renter has moved in. */
 export const RENTED_STATUSES = ['active', 'moving_out'] as const satisfies readonly TenancyStatus[];
 
@@ -43,6 +47,7 @@ const oneOf =
 export const toRenterType = oneOf(RENTER_TYPES, 'other');
 export const toTenancyStatus = oneOf(TENANCY_STATUSES, 'ended');
 export const toRelation = oneOf(OCCUPANT_RELATIONS, 'other');
+export const toMoveKind = oneOf(MOVE_KINDS, 'move_in');
 export const toGender = (value: string | null): Gender | null => (value === null ? null : oneOf(GENDERS, 'other')(value));
 
 const blankToNull = (value: string | null | undefined) => (value == null || value.trim() === '' ? null : value);
@@ -189,6 +194,8 @@ export const tenancySchema = z.object({
   endDate: isoDay.nullable(),
   monthlyRent: z.string().nullable(),
   policeFormSubmitted: z.boolean(),
+  /** The move-in or move-out under way, if any. */
+  openMove: z.object({ id: z.uuid(), kind: z.enum(MOVE_KINDS) }).nullable(),
 });
 export type Tenancy = z.infer<typeof tenancySchema>;
 

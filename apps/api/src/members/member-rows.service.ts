@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { Prisma } from '@s57/db';
 import {
+  toMoveKind,
   toRelation,
   toRenterType,
   toTenancyStatus,
@@ -54,6 +55,7 @@ const tenancySelect = {
   units: { select: { locations: { select: placeSelect } } },
   persons: { select: personPartySelect },
   organisations: { select: organisationPartySelect },
+  move_events: { where: { status: 'open' }, select: { id: true, kind: true }, take: 1 },
 } satisfies Prisma.tenanciesSelect;
 
 const occupantSelect = {
@@ -157,6 +159,7 @@ export class MemberRowsService {
       endDate: row.end_date ? isoDate(row.end_date) : null,
       monthlyRent: row.monthly_rent?.toString() ?? null,
       policeFormSubmitted: row.police_form_submitted,
+      openMove: row.move_events[0] ? { id: row.move_events[0].id, kind: toMoveKind(row.move_events[0].kind) } : null,
     }));
   }
 

@@ -884,6 +884,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/moves": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MovesController_list"];
+        put?: never;
+        post: operations["MovesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/moves/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MovesController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["MovesController_update"];
+        trace?: never;
+    };
+    "/moves/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MovesController_complete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/moves/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MovesController_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DirectoryController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/print": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DirectoryController_print"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/directory/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DirectoryController_csv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/public/locations": {
         parameters: {
             query?: never;
@@ -2895,6 +3007,12 @@ export interface components {
                 endDate: string | null;
                 monthlyRent: string | null;
                 policeFormSubmitted: boolean;
+                openMove: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @enum {string} */
+                    kind: "move_in" | "move_out";
+                } | null;
             }[];
             households: {
                 /** Format: uuid */
@@ -3024,6 +3142,12 @@ export interface components {
                 endDate: string | null;
                 monthlyRent: string | null;
                 policeFormSubmitted: boolean;
+                openMove: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @enum {string} */
+                    kind: "move_in" | "move_out";
+                } | null;
             }[];
             can: {
                 edit: boolean;
@@ -3246,6 +3370,12 @@ export interface components {
             endDate: string | null;
             monthlyRent: string | null;
             policeFormSubmitted: boolean;
+            openMove: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "move_in" | "move_out";
+            } | null;
         };
         TenancyUpdateDto: {
             /** @enum {string} */
@@ -3400,6 +3530,12 @@ export interface components {
                 endDate: string | null;
                 monthlyRent: string | null;
                 policeFormSubmitted: boolean;
+                openMove: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @enum {string} */
+                    kind: "move_in" | "move_out";
+                } | null;
             }[] | null;
             occupants: {
                 /** Format: uuid */
@@ -3446,6 +3582,216 @@ export interface components {
                     delete: boolean;
                 };
             };
+        };
+        MoveListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "move_in" | "move_out";
+                /** @enum {string} */
+                status: "open" | "done" | "cancelled";
+                plannedDate: string | null;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                renter: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                } | null;
+                /** @enum {string} */
+                renterType: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+                checked: number;
+                checks: number;
+                /** Format: date-time */
+                createdAt: string;
+                completedAt: string | null;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            open: {
+                moveIn: number;
+                moveOut: number;
+            };
+        };
+        MoveDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "move_in" | "move_out";
+            /** @enum {string} */
+            status: "open" | "done" | "cancelled";
+            plannedDate: string | null;
+            place: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string[];
+                isUnit: boolean;
+            };
+            renter: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                photoUrl: string | null;
+                verified: boolean | null;
+            } | null;
+            /** @enum {string} */
+            renterType: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+            checked: number;
+            checks: number;
+            /** Format: date-time */
+            createdAt: string;
+            completedAt: string | null;
+            tenancy: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                status: "pending" | "active" | "moving_out" | "ended";
+                /** Format: date */
+                startDate: string;
+                endDate: string | null;
+                policeFormSubmitted: boolean;
+            };
+            checklist: {
+                /** @enum {string} */
+                key: "nid" | "agreement" | "police_form" | "photo" | "keys" | "meter" | "police_informed";
+                done: boolean;
+            }[];
+            note: string | null;
+            duesCleared: boolean;
+            dues: {
+                owed: string;
+                bills: number;
+            } | null;
+            createdBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            completedBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            cancelledBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            cancelledAt: string | null;
+            can: {
+                edit: boolean;
+                complete: boolean;
+                cancel: boolean;
+                overrideDues: boolean;
+            };
+        };
+        MoveCreateDto: {
+            /** Format: uuid */
+            tenancyId: string;
+            /** @enum {string} */
+            kind: "move_in" | "move_out";
+            plannedDate?: string | null;
+            note?: string | null;
+        };
+        MoveUpdateDto: {
+            plannedDate?: string | null;
+            checklist?: {
+                [key: string]: boolean;
+            };
+            note?: string | null;
+        };
+        MoveCompleteDto: {
+            /** Format: date */
+            date: string;
+        };
+        DirectoryListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                person: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                };
+                /** @enum {string} */
+                relation: "head" | "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
+                /** @enum {string} */
+                household: "owner" | "renter";
+                isOwner: boolean;
+                memberNo: number | null;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                /** Format: date */
+                since: string;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                units: number;
+                residents: number;
+            };
+        };
+        DirectoryPrintDto_Output: {
+            area: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            items: {
+                /** Format: uuid */
+                id: string;
+                person: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                };
+                /** @enum {string} */
+                relation: "head" | "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
+                /** @enum {string} */
+                household: "owner" | "renter";
+                isOwner: boolean;
+                memberNo: number | null;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                /** Format: date */
+                since: string;
+            }[];
+            truncated: boolean;
         };
         PublicPlaceListDto_Output: {
             items: {
@@ -7544,6 +7890,214 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["LocationPeopleDto_Output"];
                 };
+            };
+        };
+    };
+    MovesController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                kind?: "move_in" | "move_out";
+                status?: "open" | "done" | "cancelled";
+                areaId?: string;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MoveListDto_Output"];
+                };
+            };
+        };
+    };
+    MovesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MoveCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MoveDetailDto_Output"];
+                };
+            };
+        };
+    };
+    MovesController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MoveDetailDto_Output"];
+                };
+            };
+        };
+    };
+    MovesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MoveUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MoveDetailDto_Output"];
+                };
+            };
+        };
+    };
+    MovesController_complete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MoveCompleteDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MoveDetailDto_Output"];
+                };
+            };
+        };
+    };
+    MovesController_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MoveDetailDto_Output"];
+                };
+            };
+        };
+    };
+    DirectoryController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                areaId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectoryListDto_Output"];
+                };
+            };
+        };
+    };
+    DirectoryController_print: {
+        parameters: {
+            query?: {
+                areaId?: string;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DirectoryPrintDto_Output"];
+                };
+            };
+        };
+    };
+    DirectoryController_csv: {
+        parameters: {
+            query?: {
+                areaId?: string;
+                q?: string;
+                lang?: "bn" | "en";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

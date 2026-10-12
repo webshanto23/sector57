@@ -31,13 +31,15 @@ Schema changes are additive and need Anis's approval first.
 | 3 + 8 | Public member forms and office review | Done | `step/03-forms` |
 | 11 | M2: Finance setup (funds, charge types, numbering, settings) | Done | `step/11-finance-setup` |
 | 12 | M2: Bills (invoices) and opening arrears | Done | `step/12-bills` |
-| 13 | M2: Recurring charges and billing runs | Built, awaiting Codex review | `step/13-recurring` |
-| 14 | M2: Cash collection, receipts and handover | Built, awaiting Codex review | `step/14-collection` |
-| 15 | M2: Donations | Built, awaiting Codex review | `step/15-donations` |
-| 16 | M2: Expenses and budgets | Built, awaiting Codex review | `step/16-expenses` |
-| 17 | M2: Fund ledger and finance reports | Built, awaiting Codex review | `step/17-reports` |
-| 18 | M2: Overview dashboard | Built, awaiting Codex review | `step/18-overview` |
+| 13 | M2: Recurring charges and billing runs | Done | `step/13-recurring` |
+| 14 | M2: Cash collection, receipts and handover | Done | `step/14-collection` |
+| 15 | M2: Donations | Done | `step/15-donations` |
+| 16 | M2: Expenses and budgets | Done | `step/16-expenses` |
+| 17 | M2: Fund ledger and finance reports | Done | `step/17-reports` |
+| 18 | M2: Overview dashboard | Done | `step/18-overview` |
 | 19 | M2 (optional): Resident bills view | Later, needs a decision | `step/19-my-bills` |
+| 20 | Move-in/out checklists and resident directory | Built, awaiting Codex review | `step/20-moves-directory` |
+| 21 | Documents library | Next | `step/21-documents` |
 
 The step numbers are names, not the build order. Order changed on 2026-10-08: Steps 3 and 8 moved to the end so the forms use the real location tree (Step 9) and the file storage from Step 7, and residents submit while the office reviews in the same release.
 
@@ -482,7 +484,7 @@ Built 2026-10-11 on `step/12-bills` (branched from `main` after PR #8). Decided 
 - **Tests:** shared bill-to, overdue, period and input tests; `billing.e2e-spec.ts` runs in a throwaway society and covers the society boundary, Block C / Block D scope (list, read, create, void, lookup), co-owner choice, renter billing, the owner above, `no_bill_to`, exact paisa and Bangla digits, the snapshot surviving a name change, funds, membership bills, concurrent numbering, opening arrears once per unit, totals against the rows, voiding rules and the database void check.
 - **For later steps:** a payment (Step 14) locks the bills it settles (`FOR UPDATE`), raises `paid` and moves the status to `partial` or `paid`; it never touches lines. Bills are never deleted; a billing run (Step 13) sets `kind = 'regular'` and fills `schedule_id` on lines.
 
-### Step 13: Recurring charges and billing runs — Built, awaiting Codex review
+### Step 13: Recurring charges and billing runs — Done
 
 Built 2026-10-11 on `step/13-recurring` (branched from `main` after PR #9 and #10). Decided by Anis: fixed amounts with **rates by area** (the society's charges differ by building; rent itself stays between owner and renter and is not billed), no per-square-foot rates, units and tenancies that start mid-month are billed from the next run (no part months).
 
@@ -495,7 +497,7 @@ Built 2026-10-11 on `step/13-recurring` (branched from `main` after PR #9 and #1
 - **Tests:** shared month, catch-up, resume, rate and input tests; `billing-runs.e2e-spec.ts` in a throwaway society covers permissions (scoped roles can't manage or run, but see the bills a run made in their area), rates by building and block, unit types and areas, skip reasons, one bill per unit and fund with exact paisa, running twice, two runs at once, catch-up on an automatic run, already-billed periods, a failed run leaving nothing behind, pause and resume, and the edit rules.
 - **Not done:** a voided bill keeps its schedule line, so a run won't bill that unit and period again; the office makes a manual bill instead.
 
-### Step 14: Cash collection, receipts and handover — Built, awaiting Codex review
+### Step 14: Cash collection, receipts and handover — Done
 
 Built 2026-10-11 on `step/14-collection` (branched from `step/13-recurring`). Decided by Anis: no credit or over-payment (paying ahead means billing those months first, "Bill ahead"); receipts on A5 with an office counterfoil; no SMS (its own step once a provider is chosen).
 
@@ -521,7 +523,7 @@ Built 2026-10-11 on `step/14-collection` (branched from `step/13-recurring`). De
   - **Login loop.** A token that is unexpired but refused by the API (session revoked, another `JWT_SECRET`) used to bounce between `/login` and `/dashboard`. The dashboard now redirects to `/login?ended=1`, where the proxy clears the auth cookies.
   - **Docker web build.** Turborepo's strict env mode hid the `API_URL` build arg from `next build`, so the web image proxied `/api` to itself. `turbo.json` now declares `API_URL` on `build`.
 
-### Step 15: Donations — Built, awaiting Codex review
+### Step 15: Donations — Done
 
 Built 2026-10-12 on `step/15-donations` (branched from `step/14-collection`). Decided by Anis: no public donor list in milestone 2; `purpose` stays free text until the `projects` decision in Step 16; a walk-in donor with a name is added as a person (reused by phone).
 
@@ -540,7 +542,7 @@ Built 2026-10-12 on `step/15-donations` (branched from `step/14-collection`). De
 - **Not checked yet:** the pages clicked through in a browser and the A5 print preview; the 375/820/1440 pass stays deferred.
 - **For later steps:** the ledger agrees with receipts for bills (`source_type = 'payment'`) plus donations (`'donation'`); a donation receipt has no allocations, so anything that sums `payments` for billing must exclude `kind = donation` (join `donations`).
 
-### Step 16: Expenses and budgets — Built, awaiting Codex review
+### Step 16: Expenses and budgets — Done
 
 Built 2026-10-12 on `step/16-expenses` (branched from `step/15-donations`). Decided by Anis: paying more than a fund holds is refused; no approval limits by amount; no `projects` table yet (expenses group by head, donations keep a free-text purpose); voucher numbers are drawn at payment; voucher files are optional, with a "No voucher" mark.
 
@@ -555,7 +557,7 @@ Built 2026-10-12 on `step/16-expenses` (branched from `step/15-donations`). Deci
 - **Not checked yet:** the pages clicked through in a browser and the A5 voucher print preview; the 375/820/1440 pass stays deferred.
 - **Known gap:** voiding a receipt or donation (Steps 14–15) after its cash was spent can leave a fund below zero; those voids don't check the balance. Step 17's ledger shows such a fund in red.
 
-### Step 17: Fund ledger and finance reports — Built, awaiting Codex review
+### Step 17: Fund ledger and finance reports — Done
 
 Built 2026-10-12 on `step/17-reports` (branched from `step/16-expenses`). Decided by Anis (the scope note's proposals): income is on a cash basis with a "billed" column beside it; a part-paid bill's payment settles its lines in their order (`position`); the door-to-door arrears list prints on A4; voiding a transfer needs `ledger.approve`, with no time limit; the audit log viewer ships here, in one branch.
 
@@ -573,7 +575,7 @@ Built 2026-10-12 on `step/17-reports` (branched from `step/16-expenses`). Decide
 - **Tests:** shared tests for transfers, the ledger query, `percentOf`, `daysBetween`, `addDays`, `arrearsBucket` and the audit filters; `csv.spec.ts`; `reports.e2e-spec.ts` in a throwaway society covers deposits, refusals, two transfers racing for the same cash, voids (permission, once, destination short), the trigger, the society boundary, the statement's running balance across pages, collection by area and arrears with Block C / Block D scopes, income split by line order against the ledger, the day book per section and scope, CSV files and their permissions, the audit viewer, and each fund's ledger agreeing with receipts, donations, expenses and transfers.
 - **Checked:** every new page renders (Bangla and English) against the dev API with an admin session, and the CSV downloads work through the `/api` proxy. **Not checked yet:** clicking through in a browser, the A4 print preview, and the 375/820/1440 pass (still deferred).
 
-### Step 18: Overview dashboard — Built, awaiting Codex review
+### Step 18: Overview dashboard — Done
 
 Built 2026-10-12 on `step/18-overview` (branched from `step/17-reports`). Decided by Anis: "collected" counts bill receipts only (never donations); figures may be up to 30 seconds old.
 
@@ -637,6 +639,23 @@ Online payment, bank or mobile payment entry, SMS (unless the decision above add
 | Door-to-door arrears paper | Decided: A4 | Step 17 |
 | Who voids a transfer | Decided: `ledger.approve`, no time limit | Step 17 |
 | Resident bills view | Later, with the member app | Step 19 |
+
+## Step 20: Move-in/out checklists and resident directory — Built, awaiting Codex review
+
+Built 2026-10-12 on `step/20-moves-directory` (branched from `step/18-overview`). These were the two "Move in-out" and "Residents" nav pages Step 10 deferred; Anis chose to build them, with Documents as Step 21. Plan approved by Anis, including migration `13_moves`.
+
+- **Migration `13_moves`** (additive): `move_events.status` (`open | done | cancelled`), `note`, `created_at`, `completed_by`, `cancelled_at`, `cancelled_by`; a check keeps status, completion and cancel fields together; one open move per tenancy (partial unique index). The columns use `ADD COLUMN IF NOT EXISTS` so a half-applied run can be resolved and re-run.
+- **Moves** (`src/members/moves.service.ts`, `tenancies` permission at the unit):
+  - `POST /moves` starts a move-in for a `pending` tenancy, or a move-out for an `active` one (which becomes `moving_out`). 409 `move_wrong_status`, `move_open_exists`.
+  - `PATCH /moves/:id`: planned date, note, checklist ticks (fixed keys `MOVE_CHECKLIST` in shared; the other kind's keys are 400 `invalid_check`). Ticking `police_form` on a move-in also sets the tenancy's police form.
+  - `POST /moves/:id/complete` (`date`): a move-in makes the tenancy `active` from that day (household rows that started with it move too); a move-out ends the tenancy and its household through `TenanciesService.endIn`. Unpaid bills on the unit need `tenancies.approve` (409 `dues_outstanding` with `details.owed`); `dues_cleared` records which it was.
+  - `POST /moves/:id/cancel`: a cancelled move-out puts the tenancy back to `active`.
+  - `GET /moves` (open first, filters, search in either digit form, open counts) and `GET /moves/:id` (dues shown with `billing.view`).
+  - Ending a tenancy directly cancels its open move; deleting a mistaken tenancy removes its moves; `PATCH /tenancies/:id` refuses a status change while a move is open (409 `move_open`). Tenancy rows carry `openMove`.
+- **Resident directory** (`src/members/directory.service.ts`, `members.view`, area-scoped): current household rows (owners' and renters'), in natural address order, with relation, household, owner flag and member number; never the NID. `GET /directory` (search, area, paging, counts), `GET /directory/print` (everyone under a place, at most 3,000) and `GET /directory/csv` (`members.export`).
+- **Web:** `/dashboard/moves` (list) and `/dashboard/moves/[id]` (checklist, dues, complete, cancel); "Start move-in / move-out" and the open move's link on the unit's tenancy row; `/dashboard/directory` (cards on phones, CSV) and `/dashboard/directory/print` (A4 door-to-door sheet).
+- **Tests:** `test/moves.e2e-spec.ts` (11): move-in and move-out with occupancy, the dues hold and override, cancel and the direct-end cancel, one open move, Block C / Block D scope, other societies, directory order, search with Bangla digits, paging, print, CSV and no NID anywhere.
+- **Checked:** `pnpm check` and the whole e2e suite (19 files, 282 tests). The pages rendered in Bangla and English against the dev servers; not clicked through in a browser, and the 375/820/1440 checks stay in the deferred pass.
 
 ## Later: beyond milestone 2
 

@@ -44,7 +44,7 @@
 - Docker setup (Anis, 2026-10-08): `Dockerfile` (`api` and web targets), `docker-compose.yml` (Postgres 18, API on 4000, web on 3000) and `.dockerignore`. While the compose stack runs, it holds ports 3000 and 4000, so local `pnpm dev` servers fall back to other ports or fail to bind.
 - CI: `.github/workflows/ci.yml` is a draft that Anis owns and is finishing; don't change it unless asked. Until it works, run `pnpm check` before pushing; a `deploy.sh` script is planned.
 
-## Current state (2026-10-11)
+## Current state (2026-10-12)
 
 - The full step list with status and open decisions is in `docs/steps.md`; keep it updated as steps move.
 - Steps 0, 1 and 2 are merged into `main` (GitHub remote `origin`). Visual checks at 375/820/1440 are deferred for all of them. Headless Chrome won't go below about 500 px wide, so use CDP viewport emulation, not `--window-size`.
@@ -111,29 +111,33 @@
   - Make bills only through `InvoicesService` (`src/billing`); who a unit's bill goes to is `BillToService.choose` (rule `pickBillTo` in shared). A bill keeps `bill_to_snapshot`, `fund_id` (one fund per bill) and `kind` (`regular`, `opening`, `membership`); lines carry `position`.
   - Bills are area-scoped through their unit's path; a membership bill has no unit and needs a society-wide billing grant. `overdue` is derived, never stored.
   - Lines never change after issue. A bill is voided (reason, who, when) only while nothing is paid; anything that changes `paid` locks the bill row `FOR UPDATE` first.
-- Step 13 (recurring charges and billing runs) is built on `step/13-recurring`, branched from `main`, awaiting Codex review. Rules for later steps:
+- Step 13 (recurring charges and billing runs) is merged into `main`. Rules for later steps:
   - Schedules (`SchedulesService`) and runs (`BillingRunsService`) live in `src/billing`; both take `lockBillingRun(tx, societyId)` first. Period maths and area rates are the pure helpers in shared `contracts/schedules.ts` (`duePeriods`, `nextRunAfter`, `resumeFrom`, `rateFor`).
   - A run writes everything in one transaction (bills via `createMany`, numbers via `NumberingService.reserve`); inside a transaction, run queries one after another and avoid nested relation selects (they load in parallel on the one connection and trip pg's deprecation warning).
   - The nightly job (`BillingRunsJob`, 02:00 Dhaka) bills `auto` schedules for every society and is off when `NODE_ENV=test`.
-- Step 14 (cash collection, receipts, handover) is built on `step/14-collection`, branched from `step/13-recurring`, awaiting Codex review. Rules for later steps:
+- Step 14 (cash collection, receipts, handover) is merged into `main`. Rules for later steps:
   - Take money only through `PaymentsService` (`src/payments`): it locks the bills `FOR UPDATE`, settles them oldest first (`allocate` in shared), writes one `in` ledger row per fund and the payer snapshot. A payment is area-scoped through `payments.unit_id`; one with no unit needs a society-wide grant.
   - A void reverses the bills' `paid` and the ledger rows, never deletes; after the day or once handed over it needs `payments.approve`. Handovers are confirmed by someone other than the collector.
   - Printable documents go in `PrintSheet` (`components/print`); the print CSS in `globals.css` shows only that, on A5, in light colours.
-- Step 15 (donations) is built on `step/15-donations`, branched from `step/14-collection`, awaiting Codex review. Rules for later steps:
+- Step 15 (donations) is merged into `main`. Rules for later steps:
   - Record donations only through `DonationsService` (`src/donations`): it writes the donation, its receipt (a `payments` row with no unit and no allocations, `payer_snapshot` null when anonymous) and the one `in` ledger row (`source_type = 'donation'`). The receipt writes no ledger row.
   - A donation's receipt is voided only through `POST /donations/:id/void` (`/payments/:id/void` answers 409 `use_donation_void`); `mayVoidReceipt` (payments service) holds the collector-or-approver rule for both.
   - Anything that sums `payments` for bills must leave donation receipts out (`kind`, or join `donations`). Handovers take all of a collector's cash, bills and donations alike.
-- Step 16 (expenses and budgets) is built on `step/16-expenses`, branched from `step/15-donations`, awaiting Codex review. Rules for later steps:
+- Step 16 (expenses and budgets) is merged into `main`. Rules for later steps:
   - Move expenses only through `ExpensesService` (`src/expenses`); who may do what is `expenseActions` in shared. Paying takes `lockFinanceSetup`, refuses more than the fund holds in that account (409 `fund_insufficient`) and writes one `out` ledger row (`source_type = 'expense'`); a void writes the reversing `in` row.
   - Any new money-out path must take `lockFinanceSetup` and check the account's balance the same way. Expense vouchers are private files (`PrivateFilesService`, area `expenses`) served only through `GET /expenses/:id/vouchers/:documentId`.
-- Step 17 (fund ledger, transfers, finance reports, audit log viewer) is built on `step/17-reports`, branched from `step/16-expenses`, awaiting Codex review. Rules for later steps:
+- Step 17 (fund ledger, transfers, finance reports, audit log viewer) is merged into `main`. Rules for later steps:
   - Move money between funds or accounts only through `TransfersService` (`src/ledger`); read a fund's balance per account with `fundBalances` (`src/finance/balances.ts`). `fund_transfers` rows are only ever voided (trigger, migration `12_fund_transfers`).
   - Extra fields on an error (like a balance) go in `details`; the exception filter drops anything else.
   - Reports live in `src/reports`, read-only. Figures that must agree with the fund statements are built from `ledger_entries`, not from the source tables. CSV goes through `csvFile` (BOM, CRLF, formula text defused) on a `/csv` route behind the module's `export`.
   - Area reports respect the caller's `billing.view` scope; a place is reachable when the caller holds the grant there or their area lies under it (404 otherwise). Long printed lists use the `print-a4` class (named page `a4` in `globals.css`).
-- Step 18 (overview dashboard) is built on `step/18-overview`, branched from `step/17-reports`, awaiting Codex review. Rules for later steps:
+- Step 18 (overview dashboard) is merged into `main`. Rules for later steps:
   - `GET /overview` (`src/overview`) returns one block per card, null without its grant; a new card adds a nullable block there and its sum limited with the card's grant scope. Results are cached per caller and grants for `OVERVIEW_CACHE_SECONDS` (e2e tests set it to `0`).
   - Money charts use `chartScale` (shared) for their axis; amounts become numbers only for drawing.
+- Step 20 (move-in/out checklists, resident directory) is built on `step/20-moves-directory`, branched from `step/18-overview`, awaiting Codex review. Rules for later steps:
+  - Start, complete or cancel moves only through `MovesService` (`src/members`); a tenancy's status follows its open move (`PATCH /tenancies/:id` refuses a status change while one is open). End tenancies inside a transaction with `TenanciesService.endIn`, which also cancels an open move.
+  - Checklist keys are fixed in shared (`MOVE_CHECKLIST`), labels in i18n. A move-out with unpaid bills on the unit needs `tenancies.approve`.
+  - The resident directory (`DirectoryService`) reads current `occupants` rows only; it never returns an NID.
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
 
 ## Reference material
