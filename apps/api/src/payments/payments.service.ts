@@ -56,6 +56,7 @@ const rowSelect = {
   users: userName,
   cash_handovers: { select: { confirmed_at: true } },
   payment_allocations: { select: { invoices: { select: { invoice_no: true, due_date: true } } } },
+  donations: { select: { id: true, purpose: true, funds: { select: { name_bn: true, name_en: true } } } },
 } satisfies Prisma.paymentsSelect;
 type Row = Prisma.paymentsGetPayload<{ select: typeof rowSelect }>;
 
@@ -296,21 +297,22 @@ export class PaymentsService {
 
   async get(actor: Actor, id: string): Promise<PaymentDetail> {
     const row = await this.prisma.payments.findFirst({ where: { id, society_id: actor.societyId }, select: detailSelect });
-    const path = row?.units?.locations.path ?? null;
-    if (!row || !allowed(actor.access, 'view', path)) throw paymentNotFound();
+    if (!row || !allowed(actor.access, 'view', row.units?.locations.path ?? null)) throw paymentNotFound();
+    return this.detail(actor, row);
+  }
+
+  /**
+   * A receipt for a page that has already checked the caller may see it (a donation's page
+   * checks `donations.view`). Only the society is checked here.
+   */
+  async receipt(actor: Actor, id: string): Promise<PaymentDetail> {
+    const row = await this.prisma.payments.findFirst({ where: { id, society_id: actor.societyId }, select: detailSelect });
+    if (!row) throw paymentNotFound();
+    return this.detail(actor, row);
+  }
+
+  private async detail(actor: Actor, row: Prisma.paymentsGetPayload<{ select: typeof detailSelect }>): Promise<PaymentDetail> {
     const header = await this.settings.receiptHeader(actor.societyId);
-    const today = isoDate(todayDate());
-    const mayVoid =
-      row.voided_at === null &&
-      (allowed(actor.access, 'approve', path) ||
-        (allowed(actor.access, 'create', path) &&
-          collectorMayVoid({
-            receivedBy: row.received_by,
-            userId: actor.userId,
-            receivedDay: isoDate(todayDate(row.received_at)),
-            today,
-            inHandover: row.handover_id !== null,
-          })));
     return {
       ...toRow(row),
       note: row.note,
@@ -330,10 +332,13 @@ export class PaymentsService {
             amount: line.amount.toFixed(2),
           })),
         })),
+      donation: row.donations
+        ? { id: row.donations.id, purpose: row.donations.purpose, fund: { nameBn: row.donations.funds.name_bn, nameEn: row.donations.funds.name_en } }
+        : null,
       printCount: row.print_count,
       void: row.voided_at && row.void_reason ? { reason: row.void_reason, at: row.voided_at.toISOString(), by: row.users_voided ? nameOf(row.users_voided) : null } : null,
       header,
-      can: { void: mayVoid },
+      can: { void: mayVoidReceipt(actor, { ...row, donation: row.donations !== null, path: row.units?.locations.path ?? null }) },
     };
   }
 
@@ -471,6 +476,11 @@ export class PaymentsService {
   async print(actor: Actor, id: string): Promise<PaymentPrint> {
     const row = await this.prisma.payments.findFirst({ where: { id, society_id: actor.societyId }, select: { units: { select: { locations: { select: { path: true } } } } } });
     if (!row || !allowed(actor.access, 'view', row.units?.locations.path ?? null)) throw paymentNotFound();
+    return this.countPrint(actor, id);
+  }
+
+  /** `print` for a receipt the caller's page has already checked (a donation's). */
+  async countPrint(actor: Actor, id: string): Promise<PaymentPrint> {
     const printCount = await this.prisma.$transaction(async (tx) => {
       const updated = await tx.payments.update({ where: { id }, data: { print_count: { increment: 1 } }, select: { print_count: true, receipt_no: true } });
       await this.audit.record({ ...auditOf(actor, 'print', id), after: { receiptNo: updated.receipt_no, printCount: updated.print_count } }, tx);
@@ -490,24 +500,25 @@ export class PaymentsService {
       await tx.$queryRaw`SELECT id FROM payments WHERE id = ${id}::uuid AND society_id = ${actor.societyId}::uuid FOR UPDATE`;
       const payment = await tx.payments.findFirst({
         where: { id, society_id: actor.societyId },
-        select: { receipt_no: true, amount: true, received_by: true, received_at: true, voided_at: true, handover_id: true, unit_id: true },
+        select: {
+          receipt_no: true,
+          amount: true,
+          received_by: true,
+          received_at: true,
+          voided_at: true,
+          handover_id: true,
+          unit_id: true,
+          donations: { select: { id: true } },
+        },
       });
       const unit = payment?.unit_id ? await tx.locations.findUnique({ where: { id: payment.unit_id }, select: { path: true } }) : null;
       const path = unit?.path ?? null;
       if (!payment || !allowed(actor.access, 'view', path)) throw paymentNotFound();
+      if (payment.donations) throw conflict('use_donation_void', "A donation's receipt is voided from the donation");
       if (payment.voided_at) throw conflict('already_void', 'This receipt is already void');
       // A pending handover's expected amount changes with the void; confirming waits for it.
       if (payment.handover_id) await tx.$queryRaw`SELECT id FROM cash_handovers WHERE id = ${payment.handover_id}::uuid FOR UPDATE`;
-      const byCollector =
-        allowed(actor.access, 'create', path) &&
-        collectorMayVoid({
-          receivedBy: payment.received_by,
-          userId: actor.userId,
-          receivedDay: isoDate(todayDate(payment.received_at)),
-          today,
-          inHandover: payment.handover_id !== null,
-        });
-      if (!byCollector && !allowed(actor.access, 'approve', path)) {
+      if (!mayVoidReceipt(actor, { ...payment, donation: false, path }, today)) {
         throw new ForbiddenException({ code: 'void_needs_approval', message: 'Only an approver can void this receipt now' });
       }
 
@@ -628,6 +639,32 @@ export function allowed(access: CallerAccess, action: PermissionAction, path: st
   return path ? access.can(action, 'payments', { path }) : access.paths(action, 'payments') === 'all';
 }
 
+/**
+ * May the caller void this receipt? The collector may on the day they took it while the cash
+ * is still with them; anyone else needs `approve`. A donation's receipt follows the
+ * society-wide `donations` grants, any other the `payments` grants on its unit.
+ */
+export function mayVoidReceipt(
+  actor: Actor,
+  receipt: { voided_at: Date | null; received_by: string; received_at: Date; handover_id: string | null; donation: boolean; path: string | null },
+  today = isoDate(todayDate()),
+): boolean {
+  if (receipt.voided_at) return false;
+  const may = (action: PermissionAction) =>
+    receipt.donation ? actor.access.paths(action, 'donations') === 'all' : allowed(actor.access, action, receipt.path);
+  return (
+    may('approve') ||
+    (may('create') &&
+      collectorMayVoid({
+        receivedBy: receipt.received_by,
+        userId: actor.userId,
+        receivedDay: isoDate(todayDate(receipt.received_at)),
+        today,
+        inHandover: receipt.handover_id !== null,
+      }))
+  );
+}
+
 /** The ticked bills' bill-tos, the newest bill's first, each once. */
 function payersOf(bills: InvoiceRow[]): PayerOption[] {
   const seen = new Map<string, PayerOption>();
@@ -639,9 +676,10 @@ function payersOf(bills: InvoiceRow[]): PayerOption[] {
 }
 
 function toRow(row: Row): PaymentRow {
-  const payer: PayerSnapshot = payerSnapshotSchema.parse(row.payer_snapshot);
+  const payer: PayerSnapshot | null = row.payer_snapshot === null ? null : payerSnapshotSchema.parse(row.payer_snapshot);
   return {
     id: row.id,
+    kind: row.donations ? 'donation' : 'bills',
     receiptNo: row.receipt_no,
     receivedAt: row.received_at.toISOString(),
     receivedDay: isoDate(todayDate(row.received_at)),

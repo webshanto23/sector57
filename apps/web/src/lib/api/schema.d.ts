@@ -1508,6 +1508,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/donations/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DonationsController_options"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/donations/donors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DonationsController_donors"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/donations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DonationsController_list"];
+        put?: never;
+        post: operations["DonationsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/donations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["DonationsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/donations/{id}/print": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DonationsController_print"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/donations/{id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["DonationsController_void"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3665,6 +3761,8 @@ export interface components {
             items: {
                 /** Format: uuid */
                 id: string;
+                /** @enum {string} */
+                kind: "bills" | "donation";
                 receiptNo: string;
                 /** Format: date-time */
                 receivedAt: string;
@@ -3687,7 +3785,7 @@ export interface components {
                         code: string | null;
                         address: string[];
                     } | null;
-                };
+                } | null;
                 collectedBy: {
                     /** Format: uuid */
                     id: string;
@@ -3713,6 +3811,8 @@ export interface components {
         PaymentDetailDto_Output: {
             /** Format: uuid */
             id: string;
+            /** @enum {string} */
+            kind: "bills" | "donation";
             receiptNo: string;
             /** Format: date-time */
             receivedAt: string;
@@ -3735,7 +3835,7 @@ export interface components {
                     code: string | null;
                     address: string[];
                 } | null;
-            };
+            } | null;
             collectedBy: {
                 /** Format: uuid */
                 id: string;
@@ -3765,6 +3865,15 @@ export interface components {
                     amount: string;
                 }[];
             }[];
+            donation: {
+                /** Format: uuid */
+                id: string;
+                purpose: string | null;
+                fund: {
+                    nameBn: string;
+                    nameEn: string | null;
+                };
+            } | null;
             printCount: number;
             void: {
                 reason: string;
@@ -3859,6 +3968,290 @@ export interface components {
         HandoverConfirmDto: {
             amountCounted: string;
             note?: string | null;
+        };
+        DonationOptionsDto_Output: {
+            funds: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+                isDefault: boolean;
+            }[];
+            separateFunds: boolean;
+            purposes: string[];
+            header: {
+                nameBn: string;
+                nameEn: string | null;
+                addressBn: string | null;
+                addressEn: string | null;
+                phone: string | null;
+                mark: string;
+            };
+        };
+        DonorLookupDto_Output: {
+            donors: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+            }[];
+        };
+        DonationListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                paymentId: string;
+                receiptNo: string;
+                /** Format: date-time */
+                receivedAt: string;
+                /** Format: date */
+                receivedDay: string;
+                amount: string;
+                donor: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    memberNo: number | null;
+                    unit: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                        code: string | null;
+                        address: string[];
+                    } | null;
+                } | null;
+                fund: {
+                    /** Format: uuid */
+                    id: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                };
+                purpose: string | null;
+                collectedBy: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                };
+                voided: boolean;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            totals: {
+                count: number;
+                amount: string;
+                voidCount: number;
+                donors: number;
+                byFund: {
+                    count: number;
+                    amount: string;
+                    fund: {
+                        /** Format: uuid */
+                        id: string;
+                        nameBn: string;
+                        nameEn: string | null;
+                    };
+                }[];
+                byPurpose: {
+                    count: number;
+                    amount: string;
+                    purpose: string | null;
+                }[];
+            };
+            summary: {
+                month: {
+                    count: number;
+                    amount: string;
+                };
+                fiscalYear: {
+                    count: number;
+                    amount: string;
+                    label: string;
+                    donors: number;
+                };
+            };
+            cash: {
+                inHand: {
+                    count: number;
+                    amount: string;
+                };
+                pending: {
+                    count: number;
+                    amount: string;
+                };
+            };
+        };
+        DonationDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            paymentId: string;
+            receiptNo: string;
+            /** Format: date-time */
+            receivedAt: string;
+            /** Format: date */
+            receivedDay: string;
+            amount: string;
+            donor: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                memberNo: number | null;
+                unit: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    code: string | null;
+                    address: string[];
+                } | null;
+            } | null;
+            fund: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+            };
+            purpose: string | null;
+            collectedBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            };
+            voided: boolean;
+            receipt: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "bills" | "donation";
+                receiptNo: string;
+                /** Format: date-time */
+                receivedAt: string;
+                /** Format: date */
+                receivedDay: string;
+                amount: string;
+                payer: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    memberNo: number | null;
+                    unit: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                        code: string | null;
+                        address: string[];
+                    } | null;
+                } | null;
+                collectedBy: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                };
+                voided: boolean;
+                handover: {
+                    /** Format: uuid */
+                    id: string;
+                    confirmed: boolean;
+                } | null;
+                invoiceNos: string[];
+                note: string | null;
+                allocations: {
+                    /** Format: uuid */
+                    invoiceId: string;
+                    invoiceNo: string;
+                    /** Format: date */
+                    issueDate: string;
+                    periodStart: string | null;
+                    periodEnd: string | null;
+                    total: string;
+                    amount: string;
+                    lines: {
+                        description: string;
+                        descriptionEn: string | null;
+                        amount: string;
+                    }[];
+                }[];
+                donation: {
+                    /** Format: uuid */
+                    id: string;
+                    purpose: string | null;
+                    fund: {
+                        nameBn: string;
+                        nameEn: string | null;
+                    };
+                } | null;
+                printCount: number;
+                void: {
+                    reason: string;
+                    /** Format: date-time */
+                    at: string;
+                    by: string | null;
+                } | null;
+                header: {
+                    nameBn: string;
+                    nameEn: string | null;
+                    addressBn: string | null;
+                    addressEn: string | null;
+                    phone: string | null;
+                    mark: string;
+                };
+                can: {
+                    void: boolean;
+                };
+            };
+            can: {
+                void: boolean;
+            };
+        };
+        DonationCreateDto: {
+            donor: {
+                /** @constant */
+                kind: "person";
+                /** Format: uuid */
+                id: string;
+            } | {
+                /** @constant */
+                kind: "organisation";
+                /** Format: uuid */
+                id: string;
+            } | {
+                /** @constant */
+                kind: "new";
+                fullName: string;
+                fullNameEn?: string | null;
+                phone?: string | null;
+            } | {
+                /** @constant */
+                kind: "anonymous";
+            };
+            fundId?: string | null;
+            purpose?: string | null;
+            amount: string;
+            note?: string | null;
+        };
+        DonationPrintDto_Output: {
+            /** @enum {string} */
+            copy: "original" | "duplicate";
+            printCount: number;
+        };
+        DonationVoidDto: {
+            reason: string;
         };
     };
     responses: never;
@@ -6895,6 +7288,166 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HandoverDto_Output"];
+                };
+            };
+        };
+    };
+    DonationsController_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DonationOptionsDto_Output"];
+                };
+            };
+        };
+    };
+    DonationsController_donors: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DonorLookupDto_Output"];
+                };
+            };
+        };
+    };
+    DonationsController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                from?: string;
+                to?: string;
+                fundId?: string;
+                purpose?: string;
+                personId?: string;
+                organisationId?: string;
+                status?: "valid" | "void";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DonationListDto_Output"];
+                };
+            };
+        };
+    };
+    DonationsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DonationCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DonationDetailDto_Output"];
+                };
+            };
+        };
+    };
+    DonationsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DonationDetailDto_Output"];
+                };
+            };
+        };
+    };
+    DonationsController_print: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DonationPrintDto_Output"];
+                };
+            };
+        };
+    };
+    DonationsController_void: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DonationVoidDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DonationDetailDto_Output"];
                 };
             };
         };

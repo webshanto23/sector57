@@ -24,6 +24,7 @@ export async function ReceiptsTable({
   hide?: ("by" | "unit")[];
 }) {
   const t = await getTranslations("Collect.list.col");
+  const tReceipt = await getTranslations("Collect.receipt");
   const columns: Column<PaymentRow>[] = [
     {
       key: "receipt",
@@ -35,9 +36,14 @@ export async function ReceiptsTable({
         </Link>
       ),
     },
-    { key: "payer", header: t("payer"), cell: (row) => pick(row.payer.name, row.payer.nameEn, locale) },
-    ...(hide.includes("unit") ? [] : [{ key: "unit", header: t("unit"), cell: (row: PaymentRow) => row.payer.unit?.name ?? "—" }]),
-    { key: "bills", header: t("bills"), cell: (row) => <span className="font-mono text-[12px]">{row.invoiceNos.join(", ")}</span> },
+    { key: "payer", header: t("payer"), cell: (row) => (row.payer ? pick(row.payer.name, row.payer.nameEn, locale) : tReceipt("anonymous")) },
+    ...(hide.includes("unit") ? [] : [{ key: "unit", header: t("unit"), cell: (row: PaymentRow) => row.payer?.unit?.name ?? "—" }]),
+    {
+      key: "bills",
+      header: t("bills"),
+      cell: (row) =>
+        row.kind === "donation" ? <Chip tone="info">{tReceipt("donation")}</Chip> : <span className="font-mono text-[12px]">{row.invoiceNos.join(", ")}</span>,
+    },
     ...(hide.includes("by") ? [] : [{ key: "by", header: t("by"), cell: (row: PaymentRow) => row.collectedBy.name }]),
     { key: "amount", header: t("amount"), numeric: true, cell: (row) => formatTaka(row.amount, locale) },
     { key: "status", header: t("status"), cell: (row) => <ReceiptStatusChip row={row} /> },

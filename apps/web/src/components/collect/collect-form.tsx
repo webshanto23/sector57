@@ -100,6 +100,7 @@ export function CollectForm({
   const preview: ReceiptData | null =
     account && payer && result?.ok && parsed.success
       ? {
+          kind: "bills",
           header,
           receiptNo: null,
           date: today,

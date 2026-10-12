@@ -1,11 +1,11 @@
-import { canAnywhere, formatDate, formatTaka, type Locale } from "@s57/shared";
+import { canAnywhere, formatDate, formatTaka, pick, type Locale } from "@s57/shared";
 import { ChevronLeft, Plus } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Note } from "@/components/admin/form-status";
 import { PaymentVoidPanel } from "@/components/collect/payment-void-panel";
-import { Receipt, receiptOf } from "@/components/collect/receipt";
+import { donationLine, Receipt, receiptOf } from "@/components/collect/receipt";
 import { ReceiptPrint } from "@/components/collect/receipt-print";
 import { ReceiptStatusChip } from "@/components/collect/receipts-table";
 import { Card, DataTable, PageHeader, type Column } from "@/components/kit";
@@ -29,7 +29,13 @@ export default async function ReceiptPage({ params, searchParams }: PageProps<"/
   setRequestLocale(locale);
 
   const me = await requirePermission("payments");
-  const [t, tBilling, payment] = await Promise.all([getTranslations("Collect"), getTranslations("Billing"), getPayment(id)]);
+  const [t, tBilling, tDonations, payment] = await Promise.all([
+    getTranslations("Collect"),
+    getTranslations("Billing"),
+    getTranslations("Donations"),
+    getPayment(id),
+  ]);
+  const tReceipt = await getTranslations("Collect.receipt");
   if (!payment) notFound();
   const { print } = await searchParams;
   const columns: Column<PaymentAllocation>[] = [
@@ -89,12 +95,29 @@ export default async function ReceiptPage({ params, searchParams }: PageProps<"/
             </Note>
           ) : null}
           <div className="max-w-[560px]">
-            <Receipt data={receiptOf(payment, locale, null)} locale={locale} />
+            <Receipt data={receiptOf(payment, locale, null, (purpose) => donationLine(tReceipt, purpose))} locale={locale} />
           </div>
-          <Card className="grid gap-3">
-            <h2 className="text-[15px]">{t("detail.bills")}</h2>
-            <DataTable columns={columns} rows={payment.allocations} rowKey={(row) => row.invoiceId} caption={t("detail.bills")} />
-          </Card>
+          {payment.donation ? (
+            <Card className="grid gap-2 text-[13.5px]">
+              <h2 className="text-[15px]">{tReceipt("donation")}</h2>
+              <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1.5">
+                <dt className="text-muted-foreground">{tDonations("detail.fund")}</dt>
+                <dd>{pick(payment.donation.fund.nameBn, payment.donation.fund.nameEn, locale)}</dd>
+                <dt className="text-muted-foreground">{tDonations("detail.purpose")}</dt>
+                <dd>{payment.donation.purpose ?? "—"}</dd>
+              </dl>
+              {canAnywhere(me.access, "donations") ? (
+                <Link href={`/dashboard/donations/${payment.donation.id}`} className="font-semibold text-primary">
+                  {tDonations("detail.open")}
+                </Link>
+              ) : null}
+            </Card>
+          ) : (
+            <Card className="grid gap-3">
+              <h2 className="text-[15px]">{t("detail.bills")}</h2>
+              <DataTable columns={columns} rows={payment.allocations} rowKey={(row) => row.invoiceId} caption={t("detail.bills")} />
+            </Card>
+          )}
         </div>
 
         <div className="grid gap-3.5">
@@ -102,7 +125,7 @@ export default async function ReceiptPage({ params, searchParams }: PageProps<"/
             <ReceiptPrint payment={payment} autoPrint={print === "1"} />
             {where ? <p className="text-[13px] text-muted-foreground">{t(`detail.${where}`)}</p> : null}
           </Card>
-          {payment.can.void ? <PaymentVoidPanel id={payment.id} /> : null}
+          {payment.can.void ? <PaymentVoidPanel id={payment.id} donationId={payment.donation?.id} /> : null}
         </div>
       </div>
     </>

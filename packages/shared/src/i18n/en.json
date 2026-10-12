@@ -505,7 +505,10 @@
       "cannot_confirm_own": "Someone else must confirm your cash.",
       "note_required": "The count differs from what was expected: write a note saying why.",
       "nothing_to_bill": "Nothing more is due for this unit up to that month.",
-      "bill_ahead_range": "Choose this month or up to 12 months ahead."
+      "bill_ahead_range": "Choose this month or up to 12 months ahead.",
+      "donor_not_found": "That donor wasn't found. Search again.",
+      "donation_not_found": "The donation wasn't found.",
+      "use_donation_void": "A donation's receipt is voided from the donation's page."
     }
   },
   "Cms": {
@@ -1523,7 +1526,11 @@
       "part": "part of {total}",
       "preview": "Receipt preview",
       "previewEmpty": "The receipt appears here once bills are ticked.",
-      "note": "Note: {note}"
+      "note": "Note: {note}",
+      "donationTitle": "Donation receipt",
+      "anonymous": "Anonymous donor",
+      "donation": "Donation",
+      "donationFor": "Donation: {purpose}"
     },
     "list": {
       "title": "Receipts",
@@ -1600,6 +1607,106 @@
       "confirmedNow": "Confirmed.",
       "own": "Someone else must confirm your cash.",
       "empty": "No handovers yet."
+    }
+  },
+  "Donations": {
+    "sub": "Gifts to the society, each with a printed receipt. Void ones stay, marked.",
+    "new": "Record a donation",
+    "stat": {
+      "month": "This month",
+      "year": "Fiscal year {year}",
+      "donors": "Donors this year",
+      "count": "{count} donations",
+      "inHand": "Your cash in hand",
+      "inHandNote": "{count} receipts not handed over",
+      "pending": "{amount} waiting for the treasurer"
+    },
+    "handovers": "Handovers",
+    "searchLabel": "Search donations",
+    "searchPlaceholder": "Receipt no., donor, phone or purpose",
+    "from": "From",
+    "to": "To",
+    "allFunds": "All funds",
+    "allStatus": "All donations",
+    "valid": "Valid",
+    "void": "Void",
+    "filter": "Show",
+    "clear": "Clear filters",
+    "purposeFilter": "Purpose: {purpose}",
+    "empty": "No donations yet.",
+    "emptyFiltered": "No donations match this search.",
+    "totals": "{count} donations, {amount}",
+    "voidCount": "{count} void",
+    "byFund": "By fund",
+    "byPurpose": "By purpose",
+    "noPurpose": "No purpose given",
+    "col": {
+      "receipt": "Receipt",
+      "donor": "Donor",
+      "purpose": "Purpose",
+      "fund": "Fund",
+      "amount": "Amount",
+      "by": "Received by",
+      "status": "Status"
+    },
+    "status": {
+      "valid": "Valid",
+      "void": "Void"
+    },
+    "form": {
+      "title": "Record a donation",
+      "sub": "The donation gets a receipt from the same series as bill payments, and the cash counts in your cash in hand.",
+      "donor": "Donor",
+      "kind": {
+        "onRecord": "On record",
+        "new": "New person",
+        "anonymous": "Anonymous"
+      },
+      "find": "Find a person or organisation",
+      "findPlaceholder": "Name or phone",
+      "search": "Search",
+      "noMatch": "Nobody on record matches. Choose \"New person\" to add them.",
+      "organisation": "Organisation",
+      "choose": "Choose",
+      "change": "Change",
+      "fullName": "Name (as typed)",
+      "fullNameEn": "Name in English (optional)",
+      "phone": "Phone (optional)",
+      "newHint": "If the phone is already on record, that person is used and their name goes on the receipt.",
+      "anonymousHint": "The receipt says \"Anonymous donor\". Nothing about the donor is kept.",
+      "fund": "Fund",
+      "purpose": "Purpose (optional)",
+      "purposeHint": "For example a mosque repair or Eid gifts. Earlier purposes are suggested.",
+      "amount": "Amount (৳)",
+      "note": "Note (optional)",
+      "receivedBy": "Received by",
+      "save": "Save and print receipt",
+      "saving": "Saving…",
+      "needDonor": "Choose a donor, add a new person or mark the donation anonymous.",
+      "badAmount": "Type an amount above zero with at most two decimals.",
+      "previewEmpty": "The receipt appears here once a donor and an amount are given."
+    },
+    "detail": {
+      "back": "All donations",
+      "another": "Record another",
+      "fund": "Fund",
+      "purpose": "Purpose",
+      "donorPage": "Open the donor",
+      "receipt": "See it among the receipts",
+      "voidTitle": "Void the donation",
+      "voidHint": "The money is taken back out of the fund and the receipt is marked void. Both stay on record.",
+      "voidReason": "Reason for voiding",
+      "voidButton": "Void donation",
+      "voidQuestion": "Void this donation? This can't be undone.",
+      "voidedNow": "The donation is void.",
+      "open": "Open the donation"
+    },
+    "panel": {
+      "title": "Donations",
+      "empty": "No donations from them yet.",
+      "more": "{count} more",
+      "total": "In all: {amount}",
+      "record": "Record a donation"
     }
   }
 }
