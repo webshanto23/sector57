@@ -2,7 +2,7 @@
 
 import { pick, type Locale, type PublicPlace } from "@s57/shared";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useEffectEvent, useId, useState } from "react";
 import { Field, inputClass } from "@/components/kit";
 import { api } from "@/lib/api/client";
 
@@ -28,11 +28,14 @@ export function PlacePicker({
   invalid,
   describedBy,
   onChange,
+  topWhenEmpty = false,
 }: {
   id: string;
   invalid?: boolean;
   describedBy?: string;
   onChange: (place: PickedPlace) => void;
+  /** Report the skipped single top place (the whole sector) while nothing below it is chosen. */
+  topWhenEmpty?: boolean;
 }) {
   const t = useTranslations("Forms");
   const locale = useLocale() as Locale;
@@ -42,6 +45,10 @@ export function PlacePicker({
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(true);
   const baseId = useId();
+  // The skipped top stands for "anywhere" until something below it is chosen.
+  const topSkipped = useEffectEvent((id: string) => {
+    if (topWhenEmpty) onChange({ id, isUnit: false, belowTop: false });
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -54,6 +61,7 @@ export function PlacePicker({
           const below = await children(only.id);
           if (cancelled) return;
           setHiddenTop(only.id);
+          topSkipped(only.id);
           setSteps([{ options: below, selected: "" }]);
         } else {
           setSteps([{ options: top, selected: "" }]);
@@ -93,7 +101,7 @@ export function PlacePicker({
       const place = step.options.find((option) => option.id === step.selected);
       if (place) return { id: place.id, isUnit: place.isUnit, belowTop: hiddenTop !== null || index > 0 };
     }
-    return null;
+    return topWhenEmpty && hiddenTop ? { id: hiddenTop, isUnit: false, belowTop: false } : null;
   };
 
   /** The label of a dropdown: the level name of its places ("Block", "Road / Plot" when mixed). */

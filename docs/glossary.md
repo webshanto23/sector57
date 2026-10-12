@@ -14,6 +14,20 @@ One word, one meaning, everywhere: menus, page titles, buttons, messages (Bangla
 | **Member** | সদস্য | A registered member of the society: applied, approved, can vote and pays the membership fee. Being an owner, renter or resident does not make someone a member. A `memberships` row (numbered, active, lapsed or cancelled), made when the office approves a membership application. | Membership form (public site), membership approval, "Society member · no. N" on a person's page |
 | **Application** | আবেদন | A request sent from the public website (membership application, renter registration) that the office reviews: new, in review, approved or rejected. | `/forms` on the site, `/dashboard/forms` |
 | **Committee member** | কমিটির সদস্য | Someone holding a committee seat for a term. Always written in full, never just "member". | Committee pages |
+| **Staff** | কর্মী | Someone the society employs (guard, cleaner, electrician, office staff): a person plus one `staff` row per stint of work, numbered. Never "employee" or কর্মচারী. Agreed 2026-10-12. | `/dashboard/hrm` |
+| **Attendance** | হাজিরা | One staff member's status for one day: present, half day, leave, absent or day off. Agreed 2026-10-12. | The day's roster, the month calendar |
+
+## To agree (Operations, Steps 22–26)
+
+Proposed words for the later Operations steps; final only once Anis agrees, before each step's scope note. Staff and Attendance were agreed with Step 22 and moved to the table above.
+
+| English | Bangla | Means |
+|---|---|---|
+| **Ticket** | অভিযোগ | A problem reported to the office (street light, garbage, water), tracked until resolved. |
+| **Work order** | কাজের আদেশ | A job given to staff or a vendor, from a ticket, an asset or planned maintenance. |
+| **Facility** | সুবিধা | A shared place the society runs (hall, mosque, playground, generator room). |
+| **Asset** | সম্পদ | A thing the society owns and keeps track of (generator, pump, CCTV, furniture). |
+| **Sticker** | স্টিকার | The numbered vehicle sticker issued to a unit's vehicle for a year. |
 
 ## In code
 

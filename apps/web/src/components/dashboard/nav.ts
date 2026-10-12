@@ -13,6 +13,7 @@ import {
   FolderOpen,
   Globe,
   HandHeart,
+  IdCard,
   House,
   Landmark,
   LayoutDashboard,
@@ -27,6 +28,7 @@ import {
   UserRound,
   Users,
   Wallet,
+  Wrench,
   type LucideIcon,
 } from "lucide-react";
 
@@ -45,6 +47,7 @@ export type NavKey =
   | "donations"
   | "expenses"
   | "ledger"
+  | "hrm"
   | "notices"
   | "documents"
   | "reports"
@@ -65,7 +68,7 @@ export type NavItem = {
 export type NavGroup =
   | { key: null; icon?: undefined; items: NavItem[] }
   | {
-      key: "property" | "people" | "finance" | "community" | "records" | "admin";
+      key: "property" | "people" | "finance" | "operations" | "community" | "records" | "admin";
       /** Shown before the group name; kept apart from the item icons. */
       icon: LucideIcon;
       items: NavItem[];
@@ -73,8 +76,8 @@ export type NavGroup =
 
 /**
  * The mockup's `DNAV`, in its order. Items whose module is not in the permission
- * catalogue yet (staff, facilities, work orders, helpdesk, vehicles, events, voting,
- * board, certificates) are left out until that module exists.
+ * catalogue yet (facilities, work orders, helpdesk, vehicles, events, voting, board,
+ * certificates) are left out until that module exists.
  */
 export const DASHBOARD_NAV: NavGroup[] = [
   { key: null, items: [{ key: "overview", icon: LayoutDashboard, module: null }] },
@@ -107,6 +110,12 @@ export const DASHBOARD_NAV: NavGroup[] = [
       { key: "expenses", icon: Wallet, module: "expenses", also: ["budgets"] },
       { key: "ledger", icon: Landmark, module: "ledger" },
     ],
+  },
+  {
+    key: "operations",
+    icon: Wrench,
+    // The staff page has a tab for attendance, so a roster-only role still finds it.
+    items: [{ key: "hrm", icon: IdCard, module: "staff", also: ["attendance"] }],
   },
   { key: "community", icon: Megaphone, items: [{ key: "notices", icon: Bell, module: "notices" }] },
   {

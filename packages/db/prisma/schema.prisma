@@ -511,6 +511,7 @@ model locations {
   user_roles            user_roles[]
   form_submissions      form_submissions[]
   memberships           memberships[]
+  staff                 staff[]
 
   @@unique([society_id, parent_id, name])
   @@unique([society_id, path], map: "locations_path_uq")
@@ -735,6 +736,7 @@ model persons {
   users             users[]
   form_submissions  form_submissions[]
   memberships       memberships[]
+  staff             staff[]
 
   @@unique([society_id, nid], map: "persons_nid_uq", where: raw("(nid IS NOT NULL)"))
   @@unique([society_id, phone], map: "persons_phone_uq", where: raw("(phone IS NOT NULL)"))
@@ -827,6 +829,8 @@ model societies {
   user_sessions           user_sessions[]
   users                   users[]
   vendors                 vendors[]
+  staff                   staff[]
+  attendance              attendance[]
 }
 
 model society_settings {
@@ -939,6 +943,8 @@ model users {
   user_roles_user_roles_granted_byTousers user_roles[]       @relation("user_roles_granted_byTousers")
   user_roles_user_roles_user_idTousers    user_roles[]       @relation("user_roles_user_idTousers")
   user_sessions                           user_sessions[]
+  staff_created                           staff[]            @relation("staff_created_byTousers")
+  attendance_marked                       attendance[]       @relation("attendance_marked_byTousers")
   persons                                 persons?           @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   societies                               societies          @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
@@ -976,4 +982,56 @@ model vendors {
   societies   societies  @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([society_id, name], map: "vendors_society_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// One stint of work for a person (Step 22): leaving is dated and a rejoin is a new row. One current stint per person (partial unique index); left fields and pay by kind kept together by checks (migration 15_staff).
+model staff {
+  id                 String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id         String       @db.Uuid
+  person_id          String       @db.Uuid
+  staff_no           Int
+  designation_bn     String
+  designation_en     String?
+  kind               String
+  posted_location_id String       @db.Uuid
+  joined_on          DateTime     @db.Date
+  left_on            DateTime?    @db.Date
+  left_reason        String?
+  monthly_salary     Decimal?     @db.Decimal(14, 2)
+  daily_rate         Decimal?     @db.Decimal(14, 2)
+  created_by         String?      @db.Uuid
+  created_at         DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime     @default(now()) @updatedAt @db.Timestamptz(6)
+  societies          societies    @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  persons            persons      @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  locations          locations    @relation(fields: [posted_location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users              users?       @relation("staff_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  attendance         attendance[]
+
+  @@unique([society_id, staff_no], map: "staff_no_uq")
+  @@unique([person_id], map: "staff_current_person_uq", where: raw("(left_on IS NULL)"))
+  @@index([society_id, left_on], map: "staff_society_idx")
+  @@index([posted_location_id], map: "staff_posted_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// One staff member's status for one Dhaka date; times only for days they came in (migration 15_staff).
+model attendance {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id String    @db.Uuid
+  staff_id   String    @db.Uuid
+  date       DateTime  @db.Date
+  status     String
+  in_time    DateTime? @db.Time(0)
+  out_time   DateTime? @db.Time(0)
+  note       String?
+  marked_by  String?   @db.Uuid
+  marked_at  DateTime  @default(now()) @db.Timestamptz(6)
+  societies  societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  staff      staff     @relation(fields: [staff_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users?    @relation("attendance_marked_byTousers", fields: [marked_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([staff_id, date], map: "attendance_staff_date_uq")
+  @@index([society_id, date], map: "attendance_society_date_idx")
 }

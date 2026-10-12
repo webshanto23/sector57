@@ -2,7 +2,7 @@
 
 Status of every step, what it contains, and the decisions still open. Updated 2026-10-12.
 
-Status key: **Done** (merged to `main`) · **Next** · **Planned** · **Later** (after milestone 1).
+Status key: **Done** (merged to `main`) · **Next** · **Planned** · **Later** (not yet in a milestone).
 
 ## How a step runs
 
@@ -40,6 +40,11 @@ Schema changes are additive and need Anis's approval first.
 | 19 | M2 (optional): Resident bills view | Later, needs a decision | `step/19-my-bills` |
 | 20 | Move-in/out checklists and resident directory | Built, awaiting Codex review | `step/20-moves-directory` |
 | 21 | Documents library | Built, awaiting Codex review | `step/21-documents` |
+| 22 | M3: Staff and attendance | Built, awaiting Codex review | `step/22-staff` |
+| 23 | M3: Facilities and assets | Planned | `step/23-facilities` |
+| 24 | M3: Helpdesk and work orders | Planned | `step/24-helpdesk` |
+| 25 | M3: Vehicles, stickers and parking | Planned | `step/25-vehicles` |
+| 26 | M3: Payroll | Planned | `step/26-payroll` |
 
 The step numbers are names, not the build order. Order changed on 2026-10-08: Steps 3 and 8 moved to the end so the forms use the real location tree (Step 9) and the file storage from Step 7, and residents submit while the office reviews in the same release.
 
@@ -671,16 +676,169 @@ Built 2026-10-12 on `step/21-documents` (branched from `step/20-moves-directory`
 - **Tests:** `test/documents.e2e-spec.ts` (7): upload, list, file download and its audit row; bad files, wrong kinds, missing title or file; person documents by area with the NID hidden from viewers; the per-record limit; place documents by area; rename, archive and restore; form files, vouchers and other societies kept out.
 - **Checked:** `pnpm check` and the whole e2e suite (20 files, 289 tests). The library and the panels rendered in Bangla and English against the dev servers; uploading was not clicked through in a browser, and the 375/820/1440 checks stay in the deferred pass.
 
-## Later: beyond milestone 2
+## Milestone 3: Operations — Planned
 
-These are in the mockup's dashboard nav but not in milestones 1 or 2. Each needs its own plan.
+Draft plan, 2026-10-12. It covers the mockup's **Operations** nav group: Staff and HRM (`hrm`), Facilities and assets (`facilities`), Work orders (`work`), Helpdesk (`helpdesk`), Vehicles and stickers (`vehicles`). Nothing here is confirmed: each step still gets its own scope note, and the items marked **(decide)** need Anis before that step starts.
 
-**Operations**
-- Staff and HRM (`hrm`)
-- Facilities and assets (`facilities`)
-- Work orders (`work`)
-- Helpdesk (`helpdesk`)
-- Vehicles and stickers (`vehicles`)
+### What there is to build on
+
+- **Schema:** no Operations tables yet. The phase-2 list at the end of `docs/schema-phase1.sql` names `staff, attendance, payroll, facilities, assets, work_orders, tickets, vehicles, stickers, parking_slots`. `funds.location_id` is waiting for the facility a fund belongs to (Step 11).
+- **Mockup:** no Operations screens, only the nav entries. Hints elsewhere:
+  - The overview's Helpdesk card shows a title and a due chip ("Due today", "Overdue 1 day", "In progress").
+  - Its "This week" card shows "Salary disbursement, 42 staff".
+  - The resident app shows ticket `T-2290` with a timeline (Submitted → Assigned → Work started), "Assigned to Kalam Mia, electrician" and "Add photo or comment".
+  - The resident app also has a "Bookings" tile and a car sticker `S57-C-0912` valid until "Dec 2026".
+  - Screens follow the existing list, detail and form patterns, as Steps 15–16 did.
+- **Reused, not rebuilt:**
+  - `PartiesService.resolvePerson` (staff and vehicle owners are persons).
+  - `NumberingService` (ticket and work order numbers).
+  - `ExpensesService` (repair costs and salaries become expenses, so money keeps going through approve → pay → ledger).
+  - `InvoicesService` (sticker and booking fees).
+  - `MediaService` / `PrivateFilesService` and the Step 21 documents panel.
+  - `TreeService.parentFor` and `scopeWhere`, `PrintSheet`, and the overview.
+- **Permissions:** new modules go into `PERMISSION_MODULES`, the seed and `components/admin/modules.ts`, and into `LOCATION_SCOPED_MODULES` when their rows sit on the tree.
+
+### Order
+
+| # | Step | Depends on | Why here |
+|---|---|---|---|
+| 22 | Staff and attendance | – | Tickets, work orders and assets name a staff member |
+| 23 | Facilities and assets | 22 (custodian) | Work orders and maintenance point at assets |
+| 24 | Helpdesk and work orders | 22, 23 | The most visible value (overview card); a ticket leads to a work order |
+| 25 | Vehicles, stickers and parking | – | Small and independent; can move earlier if the office needs it |
+| 26 | Payroll | 22, Step 16 | Money, so last; salaries are already paid as expenses under "Staff salaries" until then |
+
+### Step 22: Staff and attendance — Built, awaiting Codex review
+
+Built 2026-10-12 on `step/22-staff` (branched from `step/21-documents`). Anis said "continue" to the scope note, so the proposals stand: staff are area-scoped by their post; two permission modules, `staff` (profiles) and `attendance` (the roster); pay only for society-wide `staff.edit`; today and yesterday with `attendance.edit`, older days with `attendance.approve`; Staff is কর্মী everywhere; order 22 → 23 → 24 → 25 → 26.
+
+- **Migration `15_staff`** (additive):
+  - `staff`: one row per stint of work. Person, `staff_no` (per society, never reused), `designation_bn/en`, `kind` (`permanent | contract | daily`), `posted_location_id`, `joined_on`, `left_on` + `left_reason` (together, never before joining), `monthly_salary` or `daily_rate` by kind (checks), `created_by`. One current stint per person (partial unique index). No `user_id`: a staff member's login is the `users` row of the same person.
+  - `attendance`: staff, Dhaka date, `status` (`present | half_day | leave | absent | off`), in and out times (only for present and half days, check), note, `marked_by`, `marked_at`. One row per staff member and day.
+- **Permissions:** `staff` and `attendance` join `PERMISSION_MODULES`, the seed and `LOCATION_SCOPED_MODULES` (scoped through the post). The matrix and the sidebar get an **Operations** group.
+- **API** (`src/staff`):
+  - `GET /staff` (current, left or all; search by name, phone, designation or number in either digit form; designation, kind and area filters; the designations in use), `GET /staff/:id`, `POST /staff` (the person through `resolvePerson`; 409 `staff_current_exists`), `PATCH /staff/:id` (current stints only, 409 `staff_left`; moving needs `staff.edit` at the new post), `POST /staff/:id/leave` (not in the future, not before marked days: 409 `attendance_after_leave`), `POST /staff/:id/rejoin` (a new stint and number after the last one ended). No delete.
+  - The person's own details change from the staff page only when the caller may edit them as a member, or they are on file only as staff (no ownership, tenancy or household). NIDs follow the same rule, and never go into audit rows.
+  - `GET /attendance?date=` (everyone working that day in the caller's area, with what each may change), `PUT /attendance` (the day's marks in one transaction; only changes are written and audited, one audit row per save), `GET /attendance/month?month=&staffId=` (calendar, counts, days worked with half days at a half), `GET /attendance/csv?month=` and `GET /staff/csv` (behind `export`; no NIDs, pay only for society-wide editors).
+  - Documents library: a staff member's papers (`entityType=staff`, kinds `contract`, `nid`, `other`) follow `staff` at their post; NID copies only for those who may edit the person.
+- **Web:**
+  - `/dashboard/hrm`: Staff and Attendance tabs (each shown with its grant). The staff list (cards on phones; search, designation, kind and current/left filters; CSV).
+  - `/dashboard/hrm/new`: person, job and post (the place picker; the top means the whole society).
+  - `/dashboard/hrm/[id]`: job, pay, post and person editors as allowed, leaving and rejoining, other stints, the month calendar (Saturday first) and the Documents panel.
+  - `/dashboard/hrm/attendance`: the day's roster with one tap per status, optional times and note, "mark the rest present", and a sticky Save that sends only changes.
+- **Seed:** the demo expense head "কর্মচারী বেতন" becomes "কর্মী বেতন" while it is still exactly as seeded.
+- **Tests:** `test/staff.e2e-spec.ts` (11): adding with numbers in order and a person reused by phone; the Block C / Block D scope, pay and NID hiding; editing the person only when allowed; saving the roster and auditing only changes; the edit window and approvers; month counts; CSV; leaving and rejoining; staff papers; other societies kept out. Shared helpers in `contracts/staff.spec.ts` (7).
+- **Checked:** `pnpm check` and the whole e2e suite (21 files, 300 tests). The pages rendered (200) in Bangla and English against the dev servers, with a demo staff member and a marked day that were removed afterwards; the forms were not clicked through in a browser, and the 375/820/1440 checks stay in the deferred pass.
+
+### Step 23: Facilities and assets — Planned
+
+- **Migration `16_facilities`:**
+  - `facilities`: location, `name_bn/en`, `kind` (`hall | mosque | playground | generator | water_pump | office | other`), `bookable`, `fund_id` (only while separate funds are on), `archived_at`.
+  - `assets`: `asset_no`, name, category, facility or location, custodian (staff), purchase date and cost, vendor, `expense_id` (the purchase), warranty end, `status` (`in_use | repair | retired | lost`), retired date and reason.
+  - `asset_maintenance_plans`: asset, task, `every_months`, `next_due_on`.
+- **Module `facilities`**, location-scoped through the facility's or asset's place.
+- **API (`src/facilities`):**
+  - Facilities: add, edit, archive.
+  - Assets: add, edit, retire; photos through `MediaService`, papers through Step 21.
+  - The "maintenance due" list.
+- **Web:**
+  - `/dashboard/facilities` with tabs Facilities, Assets and Maintenance due.
+  - Asset detail with its history (work orders from Step 24).
+- **Bookings (decide):** proposal is later, with the member app, because a fee means a bill and a clash rule. If they are wanted now, add `facility_bookings` here:
+  - facility, person or unit, and a time range (no overlap, through an exclusion constraint);
+  - status `requested | confirmed | cancelled`;
+  - the fee billed through `InvoicesService`.
+
+### Step 24: Helpdesk and work orders — Planned
+
+- **Migration `17_helpdesk`:**
+  - `tickets`:
+    - `ticket_no` (`T-NNNN`, a new `NumberingService` kind, never restarts) and `location_id` (where the problem is).
+    - `category`: fixed keys in shared (`street_light | garbage | water | drainage | electricity | security | noise | repair | other`).
+    - Title, description and `priority` (`low | normal | high | urgent`).
+    - `status`: `open | assigned | in_progress | resolved | closed | cancelled`.
+    - Reporter: a person, or a typed name and phone for phone-in complaints, plus `reported_by_user`.
+    - Assigned staff, `due_at`, resolved and closed times.
+  - `ticket_events`: append-only timeline of status changes, comments and photos, with who and when (the mockup's timeline).
+  - `work_orders`:
+    - `wo_no` (`WO-YY-NNNN`, by fiscal year).
+    - Source: a ticket, an asset or a maintenance plan, and its location.
+    - Assignee: staff or a vendor.
+    - Estimated cost, `status` (`open | in_progress | done | cancelled`), completion note, `expense_id`.
+- **Rules:**
+  - The due time comes from an SLA per category (new setting `helpdesk_sla_hours`). Overdue is derived, as for bills.
+  - Resolving needs a note; the office closes a ticket after confirming.
+  - Finishing a work order with a cost makes a **pending expense request** through `ExpensesService` (head chosen then). Approve and pay work as usual; work orders never touch the ledger.
+  - A finished maintenance work order moves its plan's `next_due_on` on.
+- **Modules `helpdesk` and `work_orders`**, both location-scoped (a Block C coordinator sees only Block C).
+- **Who opens tickets (decide):** proposal is the office only, typing in phone and walk-in complaints, since residents have no logins yet (Step 19). The member app adds self-reporting later; a public "report a problem" form like Step 3 is the alternative.
+- **Web:**
+  - `/dashboard/helpdesk`: stat cards (open, overdue, due today, resolved this week), filters, cards on phones.
+  - `/dashboard/helpdesk/[id]`: timeline, assign, status, photos, "Create work order".
+  - `/dashboard/work`: list and detail; finishing one asks for the cost, which becomes the expense.
+  - The overview gets the mockup's Helpdesk card (the three most urgent) with `helpdesk.view`.
+
+### Step 25: Vehicles, stickers and parking — Planned
+
+- **Migration `18_vehicles`:**
+  - `vehicles`: `reg_no` (normalised: either digit form, spaces and dashes removed; unique per society while active), `kind` (`car | motorcycle | microbus | cng | bicycle | other`), make, colour, unit, person, `removed_at`.
+  - `stickers`: `sticker_no`, vehicle, `valid_until`, `status` (`active | revoked | replaced`; expired is derived), `replaces_id`, `invoice_id`. The number prefix comes from a new `sticker_prefix` setting, never from code.
+  - `parking_slots`: location, code, assigned unit or vehicle.
+- **Rules:**
+  - A sticker goes only to a vehicle of a current owner, renter or resident of the unit.
+  - A lost sticker is replaced: the old one is marked `replaced` and the new one gets a new number.
+  - **(decide)** Is the sticker free or billed? If billed, it is a charge type billed through `InvoicesService` on the unit.
+  - **(decide)** Is it valid to the end of the calendar year or the fiscal year?
+- **Module `vehicles`**, location-scoped through the unit.
+- **API:**
+  - Vehicles: add, edit, remove.
+  - Stickers: issue, renew (in bulk for a year), revoke, replace.
+  - `GET /vehicles/lookup?plate=` gives a guard only the unit, sticker and validity. This is not gate management, which stays out of scope.
+  - Parking slots: add, edit, assign.
+  - An A4 sticker sheet to print, and CSV.
+- **Web:** `/dashboard/vehicles` with tabs Vehicles, Stickers and Parking, and a Vehicles panel on unit and person pages.
+
+### Step 26: Payroll — Planned
+
+- **Migration `19_payroll`:**
+  - `payroll_runs`: month, `status` (`draft | approved | paid | void`), who prepared, approved and paid it, and when.
+  - `payslips`: staff, base, attendance deduction, allowance and deduction lines, net; all `numeric(14,2)`.
+  - `salary_advances` **(decide)**.
+- **Rules:**
+  - Every milestone 2 finance rule applies.
+  - Nobody approves their own run (403 `cannot_approve_own`).
+  - Paying goes through `ExpensesService` under the "Staff salaries" head, so the ledger, budgets and reports stay right with no new ledger source. **(decide)** One expense per fund for the run, or one per staff member?
+  - Payslips never change after approval; a void reverses through the expense void.
+  - Daily workers are paid by their days present.
+- **Module `payroll`**, society-wide.
+- **Web:**
+  - `/dashboard/hrm/payroll`: the month's run, editable while a draft; approve; pay.
+  - An A5 payslip through `PrintSheet`.
+  - The overview's "This week" card shows an approved run not yet paid.
+
+### Every Operations step
+
+- Same workflow as before: scope note, Anis confirms, `step/NN-name` branch, `pnpm check` and e2e, Codex review. Migrations are additive and approved first.
+- E2e tests prove the society boundary and the Block C / Block D scope. Steps with money (25 if stickers are billed, 26) also add the exact-paisa, no-delete and ledger-agrees tests.
+- Bilingual `*_bn` / `*_en` text, NFC, searches in either digit form, cards on phones; the 375/820/1440 pass stays deferred.
+- New words (Staff, Attendance, Ticket, Work order, Facility, Asset, Sticker) go into `docs/glossary.md` once Anis agrees them.
+
+### Open decisions
+
+| Decision | Proposal | Needed before |
+|---|---|---|
+| Staff area-scoped by posting | Yes (decided 2026-10-12) | Step 22 |
+| Facility bookings | Later, with the member app | Step 23 |
+| Who opens tickets | The office only for now | Step 24 |
+| Sticker fee | Ask the office | Step 25 |
+| Sticker validity | Calendar year (as the mockup's "Dec 2026") | Step 25 |
+| Salary advances | Not at first | Step 26 |
+| Salary expenses | One per fund per run | Step 26 |
+| Order | 22 → 23 → 24 → 25 → 26 (decided 2026-10-12; 25 can still move first) | Step 23 |
+
+## Later: beyond milestone 3
+
+These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.
 
 **Community**
 - Notices and SMS (`noticesd`), adding SMS sending to the Step 7 notices

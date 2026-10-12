@@ -67,6 +67,8 @@ const MODULES = [
   "expenses",
   "budgets",
   "ledger",
+  "staff",
+  "attendance",
   "audit",
 ] as const;
 
@@ -106,8 +108,9 @@ const DEMO_CHARGE_TYPES = [
 ];
 
 // Examples for trying out expenses; a real society keeps its own list.
-const DEMO_EXPENSE_HEADS = [
-  { name_bn: "কর্মচারী বেতন", name_en: "Staff salaries" },
+// `formerly`: an earlier demo name, renamed in place while the row is still exactly as seeded.
+const DEMO_EXPENSE_HEADS: { name_bn: string; name_en: string; formerly?: string }[] = [
+  { name_bn: "কর্মী বেতন", name_en: "Staff salaries", formerly: "কর্মচারী বেতন" },
   { name_bn: "মেরামত", name_en: "Repairs" },
   { name_bn: "বিদ্যুৎ বিল", name_en: "Electricity" },
   { name_bn: "পরিচ্ছন্নতা", name_en: "Cleaning" },
@@ -204,10 +207,15 @@ async function seedDemo(societyId: string, defaultFundId: string) {
     }
   }
 
-  for (const head of DEMO_EXPENSE_HEADS) {
+  for (const { formerly, ...head } of DEMO_EXPENSE_HEADS) {
     const name_bn = nfc(head.name_bn);
     const exists = await prisma.expense_heads.findFirst({ where: { society_id: societyId, name_bn }, select: { id: true } });
-    if (!exists) {
+    // "Staff" is কর্মী everywhere (glossary); only the untouched demo head follows.
+    const renamed =
+      !exists && formerly
+        ? (await prisma.expense_heads.updateMany({ where: { society_id: societyId, name_bn: nfc(formerly), name_en: head.name_en }, data: { name_bn } })).count
+        : 0;
+    if (!exists && renamed === 0) {
       await prisma.expense_heads.create({ data: { ...head, name_bn, society_id: societyId } });
       added.expenseHeads++;
     }

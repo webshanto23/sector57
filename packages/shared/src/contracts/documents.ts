@@ -4,10 +4,11 @@ import { cleanText } from '../text.js';
 
 /**
  * What a library document belongs to: the society itself (minutes, circulars, licences), a
- * person, or a place in the location tree (a unit or a building). Form uploads and expense
- * vouchers are documents too, but stay on their own pages with their own rules.
+ * person, a place in the location tree (a unit or a building), or a staff member's stint.
+ * Form uploads and expense vouchers are documents too, but stay on their own pages with
+ * their own rules.
  */
-export const DOCUMENT_ENTITIES = ['society', 'person', 'location'] as const;
+export const DOCUMENT_ENTITIES = ['society', 'person', 'location', 'staff'] as const;
 export type DocumentEntity = (typeof DOCUMENT_ENTITIES)[number];
 
 /** Kinds of document, per what they belong to. Labels live in i18n (`Documents.type.*`). */
@@ -15,19 +16,20 @@ export const DOCUMENT_TYPES = {
   society: ['minutes', 'agm', 'circular', 'licence', 'agreement', 'other'],
   person: ['deed', 'nid', 'agreement', 'other'],
   location: ['deed', 'plan', 'agreement', 'other'],
+  staff: ['contract', 'nid', 'other'],
 } as const satisfies Record<DocumentEntity, readonly string[]>;
-export const DOCUMENT_TYPE_KEYS = ['minutes', 'agm', 'circular', 'licence', 'agreement', 'deed', 'nid', 'plan', 'other'] as const;
+export const DOCUMENT_TYPE_KEYS = ['minutes', 'agm', 'circular', 'licence', 'agreement', 'deed', 'nid', 'plan', 'contract', 'other'] as const;
 export type DocumentType = (typeof DOCUMENT_TYPE_KEYS)[number];
 
-/** Most documents one person or place keeps (society papers have no limit). */
+/** Most documents one person, place or staff member keeps (society papers have no limit). */
 export const MAX_RECORD_DOCUMENTS = 50;
 
 export const isDocumentType = (entity: DocumentEntity, type: string): type is DocumentType =>
   (DOCUMENT_TYPES[entity] as readonly string[]).includes(type);
 
 /**
- * `POST /documents` (multipart: `file` plus these fields). `entityId` is required for a person
- * or place and left out for the society. A type that doesn't fit the entity is refused.
+ * `POST /documents` (multipart: `file` plus these fields). `entityId` is required for a person,
+ * place or staff member and left out for the society. A type that doesn't fit the entity is refused.
  */
 export const documentCreateSchema = z
   .object({

@@ -129,6 +129,15 @@ const KNOWN = [
   "too_many_documents",
   "invalid_doc_type",
   "invalid_entity",
+  "staff_not_found",
+  "staff_current_exists",
+  "staff_left",
+  "staff_not_left",
+  "staff_not_current",
+  "attendance_locked",
+  "attendance_after_leave",
+  "attendance_before_join",
+  "rejoin_before_leave",
 ] as const;
 type KnownCode = (typeof KNOWN)[number];
 
@@ -157,6 +166,9 @@ const FIELD_CODES = [
   "duplicate_rate",
   "invalid_month",
   "transfer_nothing_moves",
+  "invalid_time",
+  "times_not_allowed",
+  "duplicate_staff",
 ] as const;
 type FieldCode = (typeof FIELD_CODES)[number];
 
