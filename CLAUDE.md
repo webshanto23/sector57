@@ -138,6 +138,9 @@
   - Start, complete or cancel moves only through `MovesService` (`src/members`); a tenancy's status follows its open move (`PATCH /tenancies/:id` refuses a status change while one is open). End tenancies inside a transaction with `TenanciesService.endIn`, which also cancels an open move.
   - Checklist keys are fixed in shared (`MOVE_CHECKLIST`), labels in i18n. A move-out with unpaid bills on the unit needs `tenancies.approve`.
   - The resident directory (`DirectoryService`) reads current `occupants` rows only; it never returns an NID.
+- Step 21 (documents library) is built on `step/21-documents`, branched from `step/20-moves-directory`, awaiting Codex review. Rules for later steps:
+  - Library documents (society, person, location) go only through `DocumentsService` (`src/documents`); files through `PrivateFilesService` (area `documents`). Nothing is deleted; documents are archived.
+  - A person's or place's documents follow the members or units/locations grant on that record as well as `documents`; NID copies only for those who may edit the person. Form files and expense vouchers stay with their own routes and are never served by `/documents`.
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
 
 ## Reference material
