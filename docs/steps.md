@@ -42,7 +42,7 @@ Schema changes are additive and need Anis's approval first.
 | 21 | Documents library | Done | `step/21-documents` |
 | 22 | M3: Staff and attendance | Done | `step/22-staff` |
 | 23 | M3: Facilities and assets | Done | `step/23-facilities` |
-| 24 | M3: Helpdesk and work orders | Planned | `step/24-helpdesk` |
+| 24 | M3: Helpdesk and work orders | In progress | `step/24-helpdesk` |
 | 25 | M3: Vehicles, stickers and parking | Planned | `step/25-vehicles` |
 | 26 | M3: Payroll | Planned | `step/26-payroll` |
 
@@ -756,7 +756,14 @@ Built 2026-10-13 on `step/23-facilities` (branched from `step/22-staff`). Anis s
 - **Tests:** `test/facilities.e2e-spec.ts` (10): facilities and the fund rule; area scope (404 outside the area, 403 without the grant); numbering; custodians in or above the area; linking a paid expense by voucher; status changes and the approver; moving a facility moves its assets, and archiving; upkeep due and done; asset papers; CSV; other societies kept out. Shared helpers in `contracts/facilities.spec.ts` (6) and the `AST` number format.
 - **Checked:** `pnpm check` and the whole e2e suite (22 files, 310 tests). All eight new pages rendered (200) in Bangla and English against the dev servers, with a demo facility and asset that were removed afterwards; the forms were not clicked through in a browser, and the 375/820/1440 checks stay in the deferred pass.
 
-### Step 24: Helpdesk and work orders — Planned
+### Step 24: Helpdesk and work orders — In progress
+
+On `step/24-helpdesk` (branched from `chore/web-auth-headers`). Anis said "start" to the scope note (2026-10-13), so the proposals stand: the office alone opens tickets; resolving needs `helpdesk.edit` and a note, closing, cancelling and reopening need `helpdesk.approve`; a cost when finishing a work order also needs `expenses.create` (without it, finish with no cost), the expense is dated the finishing day; words: Ticket অভিযোগ, Work order কাজের আদেশ, Helpdesk হেল্পডেস্ক. Built in four parts: (1) schema and shared, (2) tickets API, (3) work orders API, (4) web.
+
+- **Part 1 done:** migration `17_helpdesk` (`tickets`, `ticket_events`, `work_orders`; numbering kinds `ticket` and `work_order`; `asset_events.kind` takes `work_order`), modules `helpdesk` and `work_orders` (catalogue, seed, area-scoped, Operations group of the matrix), `contracts/helpdesk.ts` and `contracts/work-orders.ts` (inputs, status moves, SLA setting `helpdesk_sla_hours` with defaults, number search) with unit tests. Response schemas come with the API parts.
+
+The plan:
+
 
 - **Migration `17_helpdesk`:**
   - `tickets`:
@@ -850,7 +857,7 @@ These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs
 **Community**
 - Notices and SMS (`noticesd`), adding SMS sending to the Step 7 notices
 - Events and AGM (`events`)
-- Elections and voting (`voting`)
+- Elections and voting (`voting`) (remove this when planning, it will be done later or mostly physical)
 - Community board (`board`)
 
 **Records and administration**

@@ -8,7 +8,7 @@ export const MATRIX_GROUPS = [
   { key: "property", modules: ["locations", "units"] },
   { key: "people", modules: ["members", "ownerships", "tenancies", "forms"] },
   { key: "finance", modules: ["billing", "payments", "donations", "expenses", "budgets", "ledger"] },
-  { key: "operations", modules: ["staff", "attendance", "facilities"] },
+  { key: "operations", modules: ["staff", "attendance", "facilities", "helpdesk", "work_orders"] },
   { key: "community", modules: ["notices", "committee", "gallery", "site"] },
   { key: "records", modules: ["documents"] },
   { key: "admin", modules: ["users", "roles", "settings", "audit"] },
