@@ -24,6 +24,7 @@ import { ENV, type Env } from '../config/env.js';
 import type { CallerAccess } from '../permissions/caller-access.js';
 import { scopeWhere } from '../permissions/caller-access.js';
 import type { Actor } from '../permissions/permissions.decorators.js';
+import { payrollWaiting } from '../payroll/payroll-waiting.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { AreaReportsService } from '../reports/area-reports.service.js';
 import { TtlCache } from './ttl-cache.js';
@@ -221,13 +222,14 @@ export class OverviewService {
     const expenses = access.can('approve', 'expenses');
     const handovers = access.can('approve', 'payments');
     const forms = access.can('approve', 'forms');
-    if (!expenses && !handovers && !forms) return null;
-    const [e, h, f] = await Promise.all([
+    const [e, h, f, p] = await Promise.all([
       expenses ? this.pendingExpenses(actor) : null,
       handovers ? this.pendingHandovers(actor) : null,
       forms ? this.openFormItems(actor) : null,
+      payrollWaiting(this.prisma, actor),
     ]);
-    return { expenses: e, handovers: h, forms: f };
+    if (!e && !h && !f && !p) return null;
+    return { expenses: e, handovers: h, forms: f, payroll: p };
   }
 
   /** Pending expenses someone else asked for (nobody approves their own). */

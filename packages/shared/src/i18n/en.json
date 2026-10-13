@@ -311,6 +311,7 @@
       "helpdesk": "Helpdesk (tickets)",
       "work_orders": "Work orders",
       "vehicles": "Vehicles and stickers",
+      "payroll": "Payroll",
       "audit": "Audit log"
     },
     "actions": {
@@ -610,6 +611,17 @@
       "parking_slot_removed": "This parking slot is out of use.",
       "parking_code_taken": "Another slot at this place has this code.",
       "parking_vehicle_taken": "This vehicle already holds another slot.",
+      "payroll_exists": "This month already has a payroll run.",
+      "payroll_no_staff": "Nobody worked in that month.",
+      "payroll_not_draft": "Only a draft run can be changed.",
+      "negative_net": "Deductions would take the payslip below zero.",
+      "payslip_negative_net": "Deductions would take a payslip below zero; correct that payslip.",
+      "payroll_not_approved": "Only an approved run can be paid.",
+      "pay_needs_expenses": "Paying salaries needs the right to create expenses.",
+      "void_needs_expenses": "Voiding paid salaries needs the right to approve expenses.",
+      "payroll_void": "The run is already void.",
+      "no_default_fund": "The society has no default fund.",
+      "expense_from_payroll": "This expense came from a payroll run; void the run instead.",
       "invalid_prefix": "Use 1 to 10 letters or digits."
     }
   },
@@ -2298,7 +2310,10 @@
       "form": "{kind}: {reference}",
       "from": "From {name}",
       "review": "Review",
-      "more": "{count, plural, one {# more} other {# more}}"
+      "more": "{count, plural, one {# more} other {# more}}",
+      "payroll": "Payroll {month}: {amount}",
+      "payrollDraft": "Waiting for approval",
+      "payrollApproved": "Approved, to pay"
     },
     "openTickets": "Open tickets",
     "overdueTickets": "{count, plural, =0 {None past due time} other {# past due time}}",
@@ -2520,7 +2535,8 @@
     "tabs": {
       "label": "Staff sections",
       "staff": "Staff",
-      "attendance": "Attendance"
+      "attendance": "Attendance",
+      "payroll": "Payroll"
     },
     "col": {
       "name": "Name",
@@ -2558,6 +2574,126 @@
     "phone": "Phone",
     "nid": "NID",
     "nidHidden": "On file (hidden)"
+  },
+  "Payroll": {
+    "title": "Payroll",
+    "sub": "Monthly salaries from staff pay and attendance, paid as expenses.",
+    "month": "Month",
+    "show": "Show",
+    "none": "No payroll for {month} yet.",
+    "noneHint": "Preparing it lists everyone who worked in the month with their pay worked out from attendance. You can still change it before it is approved.",
+    "prepare": "Prepare payroll for {month}",
+    "preparedNow": "Payroll prepared.",
+    "status": {
+      "draft": "Draft",
+      "approved": "Approved",
+      "paid": "Paid",
+      "void": "Void"
+    },
+    "stats": {
+      "staff": "Staff",
+      "base": "Pay before deductions",
+      "deductions": "Deductions",
+      "net": "Net pay"
+    },
+    "steps": {
+      "prepared": "Prepared by {name}, {date}",
+      "approved": "Approved by {name}, {date}",
+      "paid": "Paid by {name} from {account}, {date}",
+      "voided": "Voided by {name}, {date}: {reason}",
+      "someone": "someone"
+    },
+    "byFund": "Net pay by fund",
+    "expenses": "Expenses booked",
+    "voucher": "Voucher {no}",
+    "voided": "Voided earlier",
+    "voidedItem": "{date}: {reason} ({amount})",
+    "table": {
+      "caption": "Payslips",
+      "staff": "Staff",
+      "days": "Attendance",
+      "daysValue": "{present} present · {half} half · {absent} absent",
+      "daysOf": "{days} of {total} days",
+      "base": "Pay",
+      "deduction": "Absence",
+      "adjust": "Allowances / deductions",
+      "net": "Net",
+      "open": "Payslip",
+      "empty": "Nobody is on this payroll."
+    },
+    "actions": {
+      "title": "Next step",
+      "refresh": "Recalculate from attendance",
+      "refreshHint": "Picks up changed pay and attendance marks. Allowances, deductions, funds and notes stay.",
+      "refreshedNow": "Recalculated.",
+      "approve": "Approve",
+      "approveHint": "After approval the payslips can no longer change.",
+      "approvedNow": "Approved.",
+      "ownRun": "You prepared this payroll, so someone else must approve it.",
+      "payTitle": "Pay salaries",
+      "payHint": "Books one paid expense per fund under the head you choose.",
+      "account": "Paid from",
+      "head": "Expense head",
+      "noHeads": "Add an expense head (for example “Staff salaries”) before paying.",
+      "pay": "Pay {amount}",
+      "payQuestion": "Pay {amount} in salaries now? This books the expenses and takes the money out of the funds.",
+      "paidNow": "Salaries paid.",
+      "voidTitle": "Void payroll",
+      "voidHint": "Voids this payroll; the month can then be prepared again.",
+      "voidHintPaid": "Voids this payroll and its expenses, putting the money back in the funds.",
+      "voidReason": "Reason",
+      "void": "Void",
+      "voidQuestion": "Void this payroll? This cannot be undone.",
+      "voidedNow": "Payroll voided."
+    },
+    "payslip": {
+      "title": "Payslip",
+      "titleOf": "Payslip: {name}",
+      "back": "Back to payroll",
+      "staffNo": "Staff no.",
+      "designation": "Designation",
+      "month": "Month",
+      "period": "Days worked for",
+      "rate": {
+        "monthly": "Monthly salary",
+        "daily": "Daily rate"
+      },
+      "attendance": "Attendance",
+      "base": "Pay for the period",
+      "attendanceDeduction": "Absence deduction",
+      "allowances": "Allowances",
+      "deductions": "Deductions",
+      "net": "Net pay",
+      "fund": "Paid from fund",
+      "note": "Note",
+      "words": "In words: {words}",
+      "prepared": "Prepared by",
+      "approvedBy": "Approved by",
+      "received": "Received by",
+      "print": "Print payslip",
+      "void": "Void",
+      "noPay": "No pay is set for this staff member, so the payslip starts at zero."
+    },
+    "editor": {
+      "title": "Allowances and deductions",
+      "hint": "Only while the payroll is a draft.",
+      "kind": {
+        "allowance": "Allowance",
+        "deduction": "Deduction"
+      },
+      "label": "What for",
+      "labelEn": "In English (optional)",
+      "amount": "Amount",
+      "addAllowance": "Add allowance",
+      "addDeduction": "Add deduction",
+      "remove": "Remove",
+      "fund": "Fund",
+      "note": "Note",
+      "netPreview": "Net pay will be {amount}",
+      "negative": "Deductions are more than the pay.",
+      "save": "Save payslip",
+      "savedNow": "Payslip saved."
+    }
   },
   "Attendance": {
     "title": "Attendance",

@@ -24,6 +24,8 @@ import { Authenticated, Can, CurrentActor, type Actor } from '../permissions/per
 import { requireUpload, VoucherUpload, type UploadedImage } from '../storage/image-upload.js';
 import { BudgetsService } from './budgets.service.js';
 import { ExpenseSetupService } from './expense-setup.service.js';
+import { ExpenseListService } from './expense-list.service.js';
+import { ExpenseVouchersService } from './expense-vouchers.service.js';
 import { ExpensesService } from './expenses.service.js';
 
 export class ExpenseDetailDto extends createDto(expenseDetailSchema) {}
@@ -52,6 +54,8 @@ export class VoucherParamDto extends createDto(z.object({ id: z.uuid(), document
 export class ExpensesController {
   constructor(
     private readonly expenses: ExpensesService,
+    private readonly listing: ExpenseListService,
+    private readonly vouchers: ExpenseVouchersService,
     private readonly setup: ExpenseSetupService,
   ) {}
 
@@ -70,7 +74,7 @@ export class ExpensesController {
   @Can('expenses', 'view')
   @ZodResponse({ status: 200, type: ExpenseListDto })
   list(@CurrentActor() actor: Actor, @Query() query: ExpenseListQueryDto) {
-    return this.expenses.list(actor, query);
+    return this.listing.list(actor, query);
   }
 
   @Get(':id')
@@ -137,7 +141,7 @@ export class ExpensesController {
   @VoucherUpload()
   @ZodResponse({ status: 201, type: ExpenseDetailDto })
   addVoucher(@CurrentActor() actor: Actor, @Param() { id }: IdParamDto, @UploadedFile() file: UploadedImage | undefined) {
-    return this.expenses.addVoucher(actor, id, requireUpload(file));
+    return this.vouchers.addVoucher(actor, id, requireUpload(file));
   }
 
   /** Only before the expense is paid (409 `expense_voucher_locked`). */
@@ -146,7 +150,7 @@ export class ExpensesController {
   @Can('expenses', 'view')
   @ZodResponse({ status: 200, type: ExpenseDetailDto })
   removeVoucher(@CurrentActor() actor: Actor, @Param() { id, documentId }: VoucherParamDto) {
-    return this.expenses.removeVoucher(actor, id, documentId);
+    return this.vouchers.removeVoucher(actor, id, documentId);
   }
 
   /** A voucher file. Photos open in the browser; PDFs always download. */
@@ -154,7 +158,7 @@ export class ExpensesController {
   @Can('expenses', 'view')
   @Header('Cache-Control', 'private, no-store')
   async voucher(@CurrentActor() actor: Actor, @Param() { id, documentId }: VoucherParamDto): Promise<StreamableFile> {
-    const file = await this.expenses.voucher(actor, id, documentId);
+    const file = await this.vouchers.voucher(actor, id, documentId);
     const inline = file.contentType.startsWith('image/');
     return new StreamableFile(file.data, {
       type: file.contentType,

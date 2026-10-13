@@ -36,6 +36,7 @@ export const PERMISSION_MODULES = [
   'helpdesk',
   'work_orders',
   'vehicles',
+  'payroll',
   'audit',
 ] as const;
 export type PermissionModule = (typeof PERMISSION_MODULES)[number];

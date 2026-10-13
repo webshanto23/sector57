@@ -4,15 +4,15 @@ import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 
-export type HrmTab = "staff" | "attendance";
+export type HrmTab = "staff" | "attendance" | "payroll";
 
-const HREFS: Record<HrmTab, string> = { staff: "/dashboard/hrm", attendance: "/dashboard/hrm/attendance" };
+const HREFS: Record<HrmTab, string> = { staff: "/dashboard/hrm", attendance: "/dashboard/hrm/attendance", payroll: "/dashboard/hrm/payroll" };
 
 /** Tabs of the staff section; only the ones the user may open are passed in. */
 export function HrmTabs({ tabs }: { tabs: HrmTab[] }) {
   const t = useTranslations("Staff.tabs");
   const pathname = usePathname();
-  const current = pathname.startsWith(HREFS.attendance) ? "attendance" : "staff";
+  const current = pathname.startsWith(HREFS.attendance) ? "attendance" : pathname.startsWith(HREFS.payroll) ? "payroll" : "staff";
 
   if (tabs.length < 2) return null;
   return (

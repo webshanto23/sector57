@@ -4,7 +4,9 @@ import { FinanceModule } from '../finance/finance.module.js';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { StorageModule } from '../storage/storage.module.js';
 import { BudgetsService } from './budgets.service.js';
+import { ExpenseListService } from './expense-list.service.js';
 import { ExpenseSetupService } from './expense-setup.service.js';
+import { ExpenseVouchersService } from './expense-vouchers.service.js';
 import { BudgetsController, ExpenseHeadsController, ExpensesController, VendorsController } from './expenses.controller.js';
 import { ExpensesService } from './expenses.service.js';
 
@@ -12,8 +14,8 @@ import { ExpensesService } from './expenses.service.js';
 @Module({
   imports: [PrismaModule, AuditModule, FinanceModule, StorageModule],
   controllers: [ExpensesController, ExpenseHeadsController, VendorsController, BudgetsController],
-  providers: [ExpensesService, ExpenseSetupService, BudgetsService],
-  // Finishing a work order with a cost raises a request through it.
+  providers: [ExpensesService, ExpenseListService, ExpenseVouchersService, ExpenseSetupService, BudgetsService],
+  // Finishing a work order with a cost raises a request through it; paying a payroll run books its expenses.
   exports: [ExpensesService],
 })
 export class ExpensesModule {}

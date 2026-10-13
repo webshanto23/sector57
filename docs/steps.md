@@ -42,9 +42,9 @@ Schema changes are additive and need Anis's approval first.
 | 21 | Documents library | Done | `step/21-documents` |
 | 22 | M3: Staff and attendance | Done | `step/22-staff` |
 | 23 | M3: Facilities and assets | Done | `step/23-facilities` |
-| 24 | M3: Helpdesk and work orders | In progress | `step/24-helpdesk` |
-| 25 | M3: Vehicles, stickers and parking | Planned | `step/25-vehicles` |
-| 26 | M3: Payroll | Planned | `step/26-payroll` |
+| 24 | M3: Helpdesk and work orders | Built, awaiting review | `step/24-helpdesk` |
+| 25 | M3: Vehicles, stickers and parking | Built, awaiting review | `step/25-vehicles` |
+| 26 | M3: Payroll | Built, awaiting review | `step/26-payroll` |
 
 The step numbers are names, not the build order. Order changed on 2026-10-08: Steps 3 and 8 moved to the end so the forms use the real location tree (Step 9) and the file storage from Step 7, and residents submit while the office reviews in the same release.
 
@@ -841,7 +841,16 @@ On `step/25-vehicles` (branched from `step/24-helpdesk`). Anis decided (2026-10-
   - An A4 sticker sheet to print, and CSV.
 - **Web:** `/dashboard/vehicles` with tabs Vehicles, Stickers and Parking, and a Vehicles panel on unit and person pages.
 
-### Step 26: Payroll — Planned
+### Step 26: Payroll — Built, awaiting review
+
+On `step/26-payroll` (branched from `step/25-vehicles`). Anis confirmed the scope on 2026-10-13: each payslip is charged to a fund (the default unless separate funds is on), paying books one expense per fund; absent days are deducted at salary ÷ days in the month, half days at half that, leave and off days are paid; a run can be voided before or after paying, and the month prepared again. No salary advances. Rules in `docs/rules/payroll.md`.
+
+- **Part 1 done:** migration `19_payroll` (`payroll_runs`, `payslips`, `payslip_lines`, `payroll_run_expenses`; checks for the net and the stages, triggers for draft-only payslips, forward-only runs and no deletes except a cascade; plain foreign keys checked at commit), module `payroll`, `contracts/payroll.ts` with unit tests.
+- **Part 2 done (draft API):** `GET /payroll?month=`, `GET /payroll/:id`, `POST /payroll`, `POST /payroll/:id/refresh`, `PATCH /payroll/:id/payslips/:payslipId`, `POST /payroll/:id/approve`, `GET /payroll/:id/payslips/:payslipId/sheet`.
+- **Part 3 done (pay and void):** `POST /payroll/:id/pay` and `/void` through `ExpensesService.bookPaidIn` / `voidBookedIn`. `expenses.service.ts` (584 lines) was split on the way into `ExpenseListService`, `ExpenseVouchersService`, `expense-money.ts` and `expense-rows.ts`; its public methods are unchanged. The overview's approvals card gained payroll. E2e `test/payroll.e2e-spec.ts` (6).
+- **Part 4 done (web):** a Payroll tab under HRM (month picker, totals, the run's steps, net by fund, the expenses booked, payslips as a table or cards, prepare / recalculate / approve / pay / void), the payslip page with the line editor and the A5 print, the payroll item on the overview, `schema.d.ts` regenerated.
+
+**Plan as written:**
 
 - **Migration `19_payroll`:**
   - `payroll_runs`: month, `status` (`draft | approved | paid | void`), who prepared, approved and paid it, and when.
@@ -875,8 +884,8 @@ On `step/25-vehicles` (branched from `step/24-helpdesk`). Anis decided (2026-10-
 | Who opens tickets | The office only for now | Step 24 |
 | Sticker fee | Free by default; an optional fee in the `vehicle_stickers` setting | Step 25 |
 | Sticker validity | Calendar year by default; fiscal year through the setting | Step 25 |
-| Salary advances | Not at first | Step 26 |
-| Salary expenses | One per fund per run | Step 26 |
+| Salary advances | Not at first (confirmed 2026-10-13) | Step 26 |
+| Salary expenses | One per fund per run (confirmed 2026-10-13) | Step 26 |
 | Order | 22 → 23 → 24 → 25 → 26 (decided 2026-10-12; 25 can still move first) | Step 23 |
 
 ## Later: beyond milestone 3
