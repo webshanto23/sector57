@@ -297,79 +297,92 @@ export class InvoicesService {
 
   private async issue(actor: Actor, spec: BillSpec): Promise<InvoiceDetail> {
     const today = isoDate(todayDate());
-    const { kind, issueDate, dueDate, period, lines } = spec;
+    const { issueDate, dueDate } = spec;
     if (issueDate > today) throw bad('future_date', 'The date is in the future');
     if (dueDate < issueDate) throw bad('due_before_issue', 'The due date is before the bill date');
     let id: string;
     try {
-      id = await this.prisma.$transaction(async (tx) => {
-        const target = await this.target(tx, actor, spec);
-        const fundId = await this.lineFund(tx, actor.societyId, lines.map((line) => line.chargeTypeId));
-        const names = await tx.charge_types.findMany({
-          where: { id: { in: lines.map((line) => line.chargeTypeId) } },
-          select: { id: true, name_bn: true, name_en: true },
-        });
-        const nameOfType = new Map(names.map((row) => [row.id, row]));
-
-        const number = await this.numbering.next(tx, actor.societyId, 'invoice', issueDate);
-        const total = addMoney(...lines.map((line) => line.amount));
-        const created = await tx.invoices.create({
-          data: {
-            society_id: actor.societyId,
-            invoice_no: number.formatted,
-            kind,
-            unit_id: target.unit?.id ?? null,
-            membership_id: target.membershipId,
-            bill_to_person_id: target.snapshot.kind === 'person' ? target.snapshot.id : null,
-            bill_to_organisation_id: target.snapshot.kind === 'organisation' ? target.snapshot.id : null,
-            bill_to_snapshot: target.snapshot,
-            fund_id: fundId,
-            period_start: period ? day(period.start) : null,
-            period_end: period ? day(period.end) : null,
-            issue_date: day(issueDate),
-            due_date: day(dueDate),
-            total: new Prisma.Decimal(total),
-            status: 'unpaid',
-            created_by: actor.userId,
-            invoice_lines: {
-              create: lines.map((line, position) => ({
-                charge_type_id: line.chargeTypeId,
-                unit_id: target.unit?.id ?? null,
-                period_start: period ? day(period.start) : null,
-                description: line.description ?? nameOfType.get(line.chargeTypeId)!.name_bn,
-                description_en: line.descriptionEn ?? (line.description ? null : nameOfType.get(line.chargeTypeId)!.name_en),
-                amount: new Prisma.Decimal(line.amount),
-                position,
-              })),
-            },
-          },
-          select: { id: true },
-        });
-        await this.audit.record(
-          {
-            ...auditOf(actor, 'create', created.id),
-            after: {
-              invoiceNo: number.formatted,
-              kind,
-              unitId: target.unit?.id ?? null,
-              billTo: { kind: target.snapshot.kind, id: target.snapshot.id, role: target.snapshot.role },
-              fundId,
-              issueDate,
-              dueDate,
-              period,
-              total,
-              lines: lines.map((line) => ({ chargeTypeId: line.chargeTypeId, amount: line.amount, description: line.description ?? null })),
-            },
-          },
-          tx,
-        );
-        return created.id;
-      });
+      id = (await this.prisma.$transaction((tx) => this.issueIn(tx, actor, spec))).id;
     } catch (error) {
       if (isUniqueViolation(error)) throw conflict('opening_exists', 'This unit already has its earlier arrears entered');
       throw error;
     }
     return this.get(actor, id);
+  }
+
+  /**
+   * Writes a regular unit bill inside the caller's transaction (e.g. a sticker fee): the same
+   * checks as `POST /invoices` (`billing.create` at the unit, someone to bill, one open fund).
+   * Dated today. Returns its id and number.
+   */
+  async issueUnitBillIn(tx: Tx, actor: Actor, unitId: string, dueDate: string, lines: LineSpec[]): Promise<{ id: string; invoiceNo: string }> {
+    const today = isoDate(todayDate());
+    return this.issueIn(tx, actor, { kind: 'regular', unitId, personId: null, issueDate: today, dueDate: dueDate < today ? today : dueDate, period: null, lines });
+  }
+
+  private async issueIn(tx: Tx, actor: Actor, spec: BillSpec): Promise<{ id: string; invoiceNo: string }> {
+    const { kind, issueDate, dueDate, period, lines } = spec;
+    const target = await this.target(tx, actor, spec);
+    const fundId = await this.lineFund(tx, actor.societyId, lines.map((line) => line.chargeTypeId));
+    const names = await tx.charge_types.findMany({
+      where: { id: { in: lines.map((line) => line.chargeTypeId) } },
+      select: { id: true, name_bn: true, name_en: true },
+    });
+    const nameOfType = new Map(names.map((row) => [row.id, row]));
+
+    const number = await this.numbering.next(tx, actor.societyId, 'invoice', issueDate);
+    const total = addMoney(...lines.map((line) => line.amount));
+    const created = await tx.invoices.create({
+      data: {
+        society_id: actor.societyId,
+        invoice_no: number.formatted,
+        kind,
+        unit_id: target.unit?.id ?? null,
+        membership_id: target.membershipId,
+        bill_to_person_id: target.snapshot.kind === 'person' ? target.snapshot.id : null,
+        bill_to_organisation_id: target.snapshot.kind === 'organisation' ? target.snapshot.id : null,
+        bill_to_snapshot: target.snapshot,
+        fund_id: fundId,
+        period_start: period ? day(period.start) : null,
+        period_end: period ? day(period.end) : null,
+        issue_date: day(issueDate),
+        due_date: day(dueDate),
+        total: new Prisma.Decimal(total),
+        status: 'unpaid',
+        created_by: actor.userId,
+        invoice_lines: {
+          create: lines.map((line, position) => ({
+            charge_type_id: line.chargeTypeId,
+            unit_id: target.unit?.id ?? null,
+            period_start: period ? day(period.start) : null,
+            description: line.description ?? nameOfType.get(line.chargeTypeId)!.name_bn,
+            description_en: line.descriptionEn ?? (line.description ? null : nameOfType.get(line.chargeTypeId)!.name_en),
+            amount: new Prisma.Decimal(line.amount),
+            position,
+          })),
+        },
+      },
+      select: { id: true },
+    });
+    await this.audit.record(
+      {
+        ...auditOf(actor, 'create', created.id),
+        after: {
+          invoiceNo: number.formatted,
+          kind,
+          unitId: target.unit?.id ?? null,
+          billTo: { kind: target.snapshot.kind, id: target.snapshot.id, role: target.snapshot.role },
+          fundId,
+          issueDate,
+          dueDate,
+          period,
+          total,
+          lines: lines.map((line) => ({ chargeTypeId: line.chargeTypeId, amount: line.amount, description: line.description ?? null })),
+        },
+      },
+      tx,
+    );
+    return { id: created.id, invoiceNo: number.formatted };
   }
 
   /** Voids a bill nothing has been paid on. The lines stay as they were; the bill no longer counts. */

@@ -423,6 +423,7 @@ model invoices {
   societies               societies             @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   units                   units?                @relation(fields: [unit_id], references: [location_id], onDelete: NoAction, onUpdate: NoAction)
   payment_allocations     payment_allocations[]
+  stickers                stickers[]
 
   @@unique([society_id, invoice_no])
   @@unique([unit_id], map: "invoices_one_opening_uq", where: raw("((kind = 'opening'::text) AND (status <> 'void'::text))"))
@@ -519,6 +520,7 @@ model locations {
   assets                assets[]
   tickets               tickets[]
   work_orders           work_orders[]
+  parking_slots         parking_slots[]
 
   @@unique([society_id, parent_id, name])
   @@unique([society_id, path], map: "locations_path_uq")
@@ -745,6 +747,7 @@ model persons {
   memberships       memberships[]
   staff             staff[]
   tickets_reported  tickets[]
+  vehicles          vehicles[]
 
   @@unique([society_id, nid], map: "persons_nid_uq", where: raw("(nid IS NOT NULL)"))
   @@unique([society_id, phone], map: "persons_phone_uq", where: raw("(phone IS NOT NULL)"))
@@ -846,6 +849,9 @@ model societies {
   tickets                 tickets[]
   ticket_events           ticket_events[]
   work_orders             work_orders[]
+  vehicles                vehicles[]
+  stickers                stickers[]
+  parking_slots           parking_slots[]
 }
 
 model society_settings {
@@ -897,6 +903,8 @@ model units {
   payments      payments[]
   occupants     occupants[]
   tenancies     tenancies[]
+  vehicles      vehicles[]
+  parking_slots parking_slots[]
   locations     locations       @relation(fields: [location_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   societies     societies       @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
@@ -967,6 +975,9 @@ model users {
   tickets_reported                        tickets[]                 @relation("tickets_reported_byTousers")
   ticket_events_created                   ticket_events[]           @relation("ticket_events_created_byTousers")
   work_orders_created                     work_orders[]             @relation("work_orders_created_byTousers")
+  vehicles_created                        vehicles[]                @relation("vehicles_created_byTousers")
+  stickers_issued                         stickers[]                @relation("stickers_issued_byTousers")
+  parking_slots_created                   parking_slots[]           @relation("parking_slots_created_byTousers")
   persons                                 persons?                  @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   societies                               societies                 @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
@@ -1273,4 +1284,93 @@ model work_orders {
   @@index([asset_id], map: "work_orders_asset_idx")
   @@index([plan_id], map: "work_orders_plan_idx")
   @@index([assigned_staff_id], map: "work_orders_staff_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// A vehicle of a person at a unit (Step 25, migration 18_vehicles). Removed, never deleted.
+model vehicles {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id    String          @db.Uuid
+  reg_no        String
+  reg_key       String
+  kind          String
+  make          String?
+  colour        String?
+  unit_id       String          @db.Uuid
+  person_id     String          @db.Uuid
+  note          String?
+  created_by    String?         @db.Uuid
+  removed_at    DateTime?       @db.Timestamptz(6)
+  remove_reason String?
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime        @default(now()) @updatedAt @db.Timestamptz(6)
+  societies     societies       @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  units         units           @relation(fields: [unit_id], references: [location_id], onDelete: NoAction, onUpdate: NoAction)
+  persons       persons         @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users         users?          @relation("vehicles_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  stickers      stickers[]
+  parking_slots parking_slots[]
+
+  @@unique([society_id, reg_key], map: "vehicles_reg_uq", where: raw("(removed_at IS NULL)"))
+  @@index([society_id, removed_at], map: "vehicles_society_idx")
+  @@index([unit_id], map: "vehicles_unit_idx")
+  @@index([person_id], map: "vehicles_person_idx")
+  @@index([society_id, reg_key], map: "vehicles_reg_key_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// A vehicle's sticker (Step 25). Revoked or replaced, never deleted; expired is derived from valid_until.
+model stickers {
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id    String     @db.Uuid
+  sticker_no    String
+  vehicle_id    String     @db.Uuid
+  valid_until   DateTime   @db.Date
+  reason        String     @default("new")
+  status        String     @default("active")
+  replaces_id   String?    @db.Uuid
+  invoice_id    String?    @db.Uuid
+  issued_by     String?    @db.Uuid
+  issued_at     DateTime   @default(now()) @db.Timestamptz(6)
+  revoked_at    DateTime?  @db.Timestamptz(6)
+  revoke_reason String?
+  societies     societies  @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  vehicles      vehicles   @relation(fields: [vehicle_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replaces      stickers?  @relation("stickers_replaces", fields: [replaces_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replaced_by   stickers[] @relation("stickers_replaces")
+  invoices      invoices?  @relation(fields: [invoice_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users         users?     @relation("stickers_issued_byTousers", fields: [issued_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([society_id, sticker_no], map: "stickers_no_uq")
+  @@unique([vehicle_id], map: "stickers_active_uq", where: raw("(status = 'active'::text)"))
+  @@unique([replaces_id], map: "stickers_replaces_uq", where: raw("(replaces_id IS NOT NULL)"))
+  @@unique([invoice_id], map: "stickers_invoice_uq", where: raw("(invoice_id IS NOT NULL)"))
+  @@index([society_id, status, valid_until], map: "stickers_society_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// A parking slot at a place, given to a unit or a vehicle (Step 25). Codes are unique per place
+/// among slots in use (expression index parking_slots_code_uq, SQL only). Removed, never deleted.
+model parking_slots {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id  String    @db.Uuid
+  location_id String    @db.Uuid
+  code        String
+  note        String?
+  unit_id     String?   @db.Uuid
+  vehicle_id  String?   @db.Uuid
+  created_by  String?   @db.Uuid
+  removed_at  DateTime? @db.Timestamptz(6)
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+  societies   societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  locations   locations @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  units       units?    @relation(fields: [unit_id], references: [location_id], onDelete: NoAction, onUpdate: NoAction)
+  vehicles    vehicles? @relation(fields: [vehicle_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users       users?    @relation("parking_slots_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([vehicle_id], map: "parking_slots_vehicle_uq", where: raw("(vehicle_id IS NOT NULL)"))
+  @@index([society_id, removed_at], map: "parking_slots_society_idx")
+  @@index([location_id], map: "parking_slots_location_idx")
+  @@index([unit_id], map: "parking_slots_unit_idx")
 }

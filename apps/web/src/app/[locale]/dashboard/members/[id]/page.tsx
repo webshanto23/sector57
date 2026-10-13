@@ -11,6 +11,7 @@ import { Chip, PageHeader } from "@/components/kit";
 import { PersonEditor } from "@/components/members/person-editor";
 import { HouseholdTable, OwnershipTable, TenancyTable } from "@/components/members/record-tables";
 import { buttonVariants } from "@/components/ui/button";
+import { VehiclesPanel } from "@/components/vehicles/vehicles-panel";
 import { Link } from "@/i18n/navigation";
 import { getPerson } from "@/lib/api/members";
 import { requirePermission } from "@/lib/api/session";
@@ -63,6 +64,7 @@ export default async function PersonPage({ params }: PageProps<"/[locale]/dashbo
         <HouseholdTable rows={person.households} open={open} />
         <BillsPanel access={me.access} locale={locale} personId={person.id} />
         <DonationsPanel access={me.access} locale={locale} personId={person.id} />
+        <VehiclesPanel access={me.access} locale={locale} personId={person.id} />
         <DocumentsPanel access={me.access} entityType="person" entityId={person.id} />
       </div>
     </>

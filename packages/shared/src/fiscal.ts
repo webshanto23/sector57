@@ -37,13 +37,13 @@ export function fiscalYearOf(day: string, startMonth: number): FiscalYear {
 // ---------------------------------------------------------------------------
 
 /** What `document_sequences` numbers. */
-export const DOCUMENT_KINDS = ['invoice', 'receipt', 'voucher', 'asset', 'ticket', 'work_order'] as const;
+export const DOCUMENT_KINDS = ['invoice', 'receipt', 'voucher', 'asset', 'ticket', 'work_order', 'sticker'] as const;
 export type DocumentKind = (typeof DOCUMENT_KINDS)[number];
 
 /**
  * The counter a document draws from, so numbering restarts at the right time:
  * invoices each month (`2610`), vouchers and work orders each fiscal year (`26` for 2026-27),
- * receipts, asset and ticket numbers never (`''`).
+ * receipts, asset, ticket and sticker numbers never (`''`).
  */
 export function documentPeriod(kind: DocumentKind, day: string, fiscalStartMonth: number): string {
   const { year, month } = parseDay(day);
@@ -52,12 +52,16 @@ export function documentPeriod(kind: DocumentKind, day: string, fiscalStartMonth
   return '';
 }
 
-/** `INV-2610-0001`, `RC-00001`, `EXP-26-0001`, `AST-0001`, `T-0001`, `WO-26-0001`. Numbers past the padding just grow longer. */
+/**
+ * `INV-2610-0001`, `RC-00001`, `EXP-26-0001`, `AST-0001`, `T-0001`, `WO-26-0001`, `STK-0001`.
+ * Numbers past the padding just grow longer. Stickers print the society's own prefix (`formatStickerNo`).
+ */
 export function formatDocumentNo(kind: DocumentKind, period: string, no: number): string {
   if (kind === 'invoice') return `INV-${period}-${String(no).padStart(4, '0')}`;
   if (kind === 'voucher') return `EXP-${period}-${String(no).padStart(4, '0')}`;
   if (kind === 'asset') return `AST-${String(no).padStart(4, '0')}`;
   if (kind === 'ticket') return `T-${String(no).padStart(4, '0')}`;
   if (kind === 'work_order') return `WO-${period}-${String(no).padStart(4, '0')}`;
+  if (kind === 'sticker') return `STK-${String(no).padStart(4, '0')}`;
   return `RC-${String(no).padStart(5, '0')}`;
 }

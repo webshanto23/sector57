@@ -7,6 +7,7 @@ import {
   BookUser,
   Briefcase,
   Building2,
+  Car,
   ChartColumn,
   Coins,
   FilePen,
@@ -53,6 +54,7 @@ export type NavKey =
   | "facilities"
   | "work"
   | "helpdesk"
+  | "vehicles"
   | "notices"
   | "documents"
   | "reports"
@@ -81,8 +83,8 @@ export type NavGroup =
 
 /**
  * The mockup's `DNAV`, in its order. Items whose module is not in the permission
- * catalogue yet (vehicles, events, voting, board,
- * certificates) are left out until that module exists.
+ * catalogue yet (events, voting, board, certificates)
+ * are left out until that module exists.
  */
 export const DASHBOARD_NAV: NavGroup[] = [
   { key: null, items: [{ key: "overview", icon: LayoutDashboard, module: null }] },
@@ -125,6 +127,7 @@ export const DASHBOARD_NAV: NavGroup[] = [
       { key: "facilities", icon: Warehouse, module: "facilities" },
       { key: "work", icon: Wrench, module: "work_orders" },
       { key: "helpdesk", icon: LifeBuoy, module: "helpdesk" },
+      { key: "vehicles", icon: Car, module: "vehicles" },
     ],
   },
   { key: "community", icon: Megaphone, items: [{ key: "notices", icon: Bell, module: "notices" }] },

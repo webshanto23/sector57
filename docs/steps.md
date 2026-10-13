@@ -811,7 +811,17 @@ The plan:
   - `/dashboard/work`: list and detail; finishing one asks for the cost, which becomes the expense.
   - The overview gets the mockup's Helpdesk card (the three most urgent) with `helpdesk.view`.
 
-### Step 25: Vehicles, stickers and parking — Planned
+### Step 25: Vehicles, stickers and parking — Built, awaiting review
+
+On `step/25-vehicles` (branched from `step/24-helpdesk`). Anis decided (2026-10-13): stickers free by default and valid to 31 December by default, both changeable in one setting `vehicle_stickers` (prefix, `calendar | fiscal`, optional fee billed to the unit); no guard lookup screen on the web for now. Built in four parts; rules in `docs/rules/vehicles.md`.
+
+- **Part 1 done:** migration `18_vehicles` (`vehicles`, `stickers`, `parking_slots`; numbering kind `sticker`), module `vehicles`, document kind `sticker`, `contracts/vehicles.ts` with unit tests.
+- **Part 2 done (vehicles API):** list, get, add, edit, remove, `lookup`, `unit-people`; e2e `test/vehicles.e2e-spec.ts`.
+- **Part 3 done (stickers and parking API):** issue, bulk renew, replace, revoke, CSV, A4 sheet, `/vehicles/settings`, the fee through `InvoicesService.issueUnitBillIn`; parking slots add, edit, assign, remove; e2e `test/stickers.e2e-spec.ts`.
+- **Part 4 done (web):** `/dashboard/vehicles` with tabs Vehicles, Stickers and Parking; vehicle pages with the sticker actions; bulk renew, A4 print and CSV on the Stickers tab with the settings card; parking slot pages; a Vehicles panel on unit and person pages; `schema.d.ts` regenerated.
+
+**Plan as written:**
+
 
 - **Migration `18_vehicles`:**
   - `vehicles`: `reg_no` (normalised: either digit form, spaces and dashes removed; unique per society while active), `kind` (`car | motorcycle | microbus | cng | bicycle | other`), make, colour, unit, person, `removed_at`.
@@ -863,8 +873,8 @@ The plan:
 | Staff area-scoped by posting | Yes (decided 2026-10-12) | Step 22 |
 | Facility bookings | Later, with the member app | Step 23 |
 | Who opens tickets | The office only for now | Step 24 |
-| Sticker fee | Ask the office | Step 25 |
-| Sticker validity | Calendar year (as the mockup's "Dec 2026") | Step 25 |
+| Sticker fee | Free by default; an optional fee in the `vehicle_stickers` setting | Step 25 |
+| Sticker validity | Calendar year by default; fiscal year through the setting | Step 25 |
 | Salary advances | Not at first | Step 26 |
 | Salary expenses | One per fund per run | Step 26 |
 | Order | 22 → 23 → 24 → 25 → 26 (decided 2026-10-12; 25 can still move first) | Step 23 |

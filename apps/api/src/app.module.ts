@@ -39,6 +39,7 @@ import { StaffModule } from './staff/staff.module.js';
 import { FacilitiesModule } from './facilities/facilities.module.js';
 import { HelpdeskModule } from './helpdesk/helpdesk.module.js';
 import { WorkOrdersModule } from './work-orders/work-orders.module.js';
+import { VehiclesModule } from './vehicles/vehicles.module.js';
 import { StorageModule } from './storage/storage.module.js';
 import { UsersModule } from './users/users.module.js';
 
@@ -86,6 +87,7 @@ import { UsersModule } from './users/users.module.js';
     FacilitiesModule,
     HelpdeskModule,
     WorkOrdersModule,
+    VehiclesModule,
     AuditLogModule,
   ],
   controllers: [AppController],
