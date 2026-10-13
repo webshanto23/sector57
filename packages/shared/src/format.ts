@@ -64,6 +64,8 @@ const DATE_STYLES = {
   month: { month: 'short' },
   // Overview card: অক্টোবর / October
   monthLong: { month: 'long' },
+  // Timelines: ০৪ নভে, ৯:৩০ AM / 04 Nov, 09:30
+  dateTime: { day: '2-digit', month: 'short', hour: 'numeric', minute: '2-digit' },
   // Billing period: অক্টো, ২০২৬ / Oct 2026
   monthYear: { month: 'short', year: 'numeric' },
   // Committee term: ২০২৫ / 2025

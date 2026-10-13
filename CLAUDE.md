@@ -45,6 +45,7 @@ Each file holds the rules earlier steps set for that area. Read only the ones th
 | Documents library | `docs/rules/documents.md` |
 | Staff, attendance | `docs/rules/staff.md` |
 | Facilities, assets | `docs/rules/facilities.md` |
+| Helpdesk, tickets, work orders | `docs/rules/helpdesk.md` |
 
 When a step sets a new rule, add it to the matching file (or a new one listed here), not to this file.
 
@@ -62,7 +63,7 @@ Keep each step small and cheap in tokens.
 
 ## Current state (2026-10-13)
 
-- Steps 0–23 are done, approved by Codex and merged into `main` (GitHub remote `origin`, Step 23 as PR #20, 2026-10-13). Next is Step 24 (helpdesk and work orders).
+- Steps 0–23 are done, approved by Codex and merged into `main` (GitHub remote `origin`, Step 23 as PR #20, 2026-10-13). Step 24 (helpdesk and work orders) is built on `step/24-helpdesk` and awaits Codex review.
 - The full step list with status and open decisions is in `docs/steps.md`; keep it updated as steps move.
 - Visual checks at 375/820/1440 are deferred. When they resume, use CDP viewport emulation (headless Chrome won't go below about 500 px with `--window-size`).
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.

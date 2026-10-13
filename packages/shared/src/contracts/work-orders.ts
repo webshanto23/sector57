@@ -2,7 +2,8 @@ import { z } from 'zod';
 import { isZeroMoney, optionalMoneySchema } from '../money.js';
 import { asciiDigits, optionalText, pagination, text } from '../schemas.js';
 import { cleanText } from '../text.js';
-import { isoDay } from './members.js';
+import { EXPENSE_STATUSES } from './expenses.js';
+import { isoDay, placeSchema } from './members.js';
 
 // ---------------------------------------------------------------------------
 // Work orders (কাজের আদেশ)
@@ -128,3 +129,67 @@ export function workOrderNumberOf(term: string): { period: string | null; no: nu
   const match = /^(?:wo[\s-]*)?(?:(\d{2})[\s-]+)?0*(\d{1,9})$/i.exec(asciiDigits(term.trim()));
   return match ? { period: match[1] ?? null, no: Number(match[2]) } : null;
 }
+
+// ---------------------------------------------------------------------------
+// Responses
+// ---------------------------------------------------------------------------
+
+const bilingual = z.object({ bn: z.string(), en: z.string().nullable() });
+const staffRef = z.object({ id: z.uuid(), staffNo: z.number().int(), name: z.string(), nameEn: z.string().nullable() });
+const userRef = z.object({ id: z.uuid(), name: z.string() });
+const instant = z.iso.datetime({ offset: true });
+
+export const workOrderRowSchema = z.object({
+  id: z.uuid(),
+  woNo: z.string(),
+  title: z.string(),
+  status: z.enum(WORK_ORDER_STATUSES),
+  source: z.enum(WORK_ORDER_SOURCES),
+  place: placeSchema,
+  staff: staffRef.nullable(),
+  vendor: z.object({ id: z.uuid(), name: z.string() }).nullable(),
+  estimatedCost: z.string().nullable(),
+  ticket: z.object({ id: z.uuid(), ticketNo: z.string() }).nullable(),
+  asset: z.object({ id: z.uuid(), assetNo: z.string(), name: bilingual }).nullable(),
+  completedOn: isoDay.nullable(),
+  createdAt: instant,
+});
+export type WorkOrderRow = z.infer<typeof workOrderRowSchema>;
+
+export const workOrderListSchema = z.object({
+  items: z.array(workOrderRowSchema),
+  total: z.number().int().min(0),
+  page: z.number().int().min(1),
+  pageSize: z.number().int().min(1),
+  /** In the caller's area, filters ignored. */
+  counts: z.object({ open: z.number().int().min(0), inProgress: z.number().int().min(0) }),
+  can: z.object({ create: z.boolean() }),
+});
+export type WorkOrderList = z.infer<typeof workOrderListSchema>;
+
+/** `GET /work-orders/:id`. `open` on a link: the caller may open it (the ticket, the asset, the expense). */
+export const workOrderDetailSchema = workOrderRowSchema.extend({
+  description: z.string().nullable(),
+  ticket: z.object({ id: z.uuid(), ticketNo: z.string(), title: z.string(), open: z.boolean() }).nullable(),
+  asset: z.object({ id: z.uuid(), assetNo: z.string(), name: bilingual, open: z.boolean() }).nullable(),
+  plan: z.object({ id: z.uuid(), task: bilingual }).nullable(),
+  completionNote: z.string().nullable(),
+  cancelledAt: instant.nullable(),
+  cancelReason: z.string().nullable(),
+  /** The expense request made when it was finished with a cost. */
+  expense: z.object({ id: z.uuid(), voucherNo: z.string().nullable(), amount: z.string(), status: z.enum(EXPENSE_STATUSES), open: z.boolean() }).nullable(),
+  createdBy: userRef.nullable(),
+  can: z.object({
+    /** Change details and the assignee (not once done or cancelled). */
+    edit: z.boolean(),
+    /** The status changes the caller may make now. */
+    statuses: z.array(z.enum(WORK_ORDER_STATUSES)),
+    /** May finish it with a cost (`expenses.create`). */
+    cost: z.boolean(),
+  }),
+});
+export type WorkOrderDetail = z.infer<typeof workOrderDetailSchema>;
+
+/** `GET /work-orders/options`: vendors a job may go to. */
+export const workOrderOptionsSchema = z.object({ vendors: z.array(z.object({ id: z.uuid(), name: z.string() })) });
+export type WorkOrderOptions = z.infer<typeof workOrderOptionsSchema>;

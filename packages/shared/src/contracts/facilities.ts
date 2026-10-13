@@ -257,7 +257,7 @@ export const maintenancePlanSchema = z.object({
 export type MaintenancePlan = z.infer<typeof maintenancePlanSchema>;
 
 /** `asset_events.kind`; labels in i18n (`Assets.event.*`). */
-export const ASSET_EVENT_KINDS = ['created', 'updated', 'moved', 'custodian', 'status', 'maintenance', 'photo'] as const;
+export const ASSET_EVENT_KINDS = ['created', 'updated', 'moved', 'custodian', 'status', 'maintenance', 'photo', 'work_order'] as const;
 export type AssetEventKind = (typeof ASSET_EVENT_KINDS)[number];
 
 /** What an event recorded, as it was then (names, not ids, so the history reads right later). */
@@ -274,6 +274,8 @@ export const assetEventDetailSchema = z.object({
   on: isoDay.optional(),
   /** The fields an edit changed. */
   fields: z.array(z.string()).optional(),
+  /** For `work_order`: the number of the work order raised on it. */
+  workOrderNo: z.string().optional(),
 });
 export type AssetEventDetail = z.infer<typeof assetEventDetailSchema>;
 

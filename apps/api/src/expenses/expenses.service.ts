@@ -210,26 +210,32 @@ export class ExpensesService {
   /** A new request, `pending`. The head and vendor must be the society's and not archived. */
   async create(actor: Actor, input: ExpenseInput): Promise<ExpenseDetail> {
     if (input.spentOn > isoDate(todayDate())) throw bad('future_date', 'The date is in the future');
-    const id = await this.prisma.$transaction(async (tx) => {
-      const refs = await this.refs(tx, actor.societyId, input);
-      const row = await tx.expenses.create({
-        data: {
-          society_id: actor.societyId,
-          expense_head_id: input.headId,
-          fund_id: refs.fundId,
-          vendor_id: input.vendorId ?? null,
-          description: input.description,
-          amount: new Prisma.Decimal(input.amount),
-          spent_on: day(input.spentOn),
-          status: 'pending',
-          requested_by: actor.userId,
-        },
-        select: { id: true },
-      });
-      await this.audit.record({ ...auditOf(actor, 'create', row.id), after: { ...input, fundId: refs.fundId } }, tx);
-      return row.id;
-    });
+    const id = await this.prisma.$transaction((tx) => this.createIn(tx, actor, input));
     return this.get(actor, id);
+  }
+
+  /**
+   * Saves a new pending request inside the caller's transaction and returns its id (work
+   * orders finished with a cost). The caller checks `expenses.create` and the date.
+   */
+  async createIn(tx: Tx, actor: Actor, input: ExpenseInput): Promise<string> {
+    const refs = await this.refs(tx, actor.societyId, input);
+    const row = await tx.expenses.create({
+      data: {
+        society_id: actor.societyId,
+        expense_head_id: input.headId,
+        fund_id: refs.fundId,
+        vendor_id: input.vendorId ?? null,
+        description: input.description,
+        amount: new Prisma.Decimal(input.amount),
+        spent_on: day(input.spentOn),
+        status: 'pending',
+        requested_by: actor.userId,
+      },
+      select: { id: true },
+    });
+    await this.audit.record({ ...auditOf(actor, 'create', row.id), after: { ...input, fundId: refs.fundId } }, tx);
+    return row.id;
   }
 
   /** Changes a pending request: its requester, or anyone with `expenses.edit`. */

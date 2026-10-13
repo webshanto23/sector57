@@ -153,6 +153,18 @@ const KNOWN = [
   "too_many_plans",
   "done_before_last",
   "warranty_before_purchase",
+  "ticket_not_found",
+  "ticket_finished",
+  "ticket_status_same",
+  "ticket_status_invalid",
+  "ticket_status_changed",
+  "ticket_assignee_same",
+  "ticket_photo_limit",
+  "work_order_not_found",
+  "work_order_finished",
+  "work_order_status_invalid",
+  "work_order_status_changed",
+  "plan_asset_mismatch",
 ] as const;
 type KnownCode = (typeof KNOWN)[number];
 

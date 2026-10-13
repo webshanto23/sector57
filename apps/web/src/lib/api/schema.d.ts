@@ -2692,6 +2692,246 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/tickets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TicketsController_list"];
+        put?: never;
+        post: operations["TicketsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tickets/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TicketsController_staff"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tickets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["TicketsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["TicketsController_update"];
+        trace?: never;
+    };
+    "/tickets/{id}/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TicketsController_assign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tickets/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TicketsController_setStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tickets/{id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TicketsController_comment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tickets/{id}/photos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["TicketsController_addPhoto"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/helpdesk/sla": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["HelpdeskController_sla"];
+        put: operations["HelpdeskController_setSla"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/work-orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WorkOrdersController_list"];
+        put?: never;
+        post: operations["WorkOrdersController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/work-orders/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WorkOrdersController_options"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/work-orders/staff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WorkOrdersController_staff"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/work-orders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WorkOrdersController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["WorkOrdersController_update"];
+        trace?: never;
+    };
+    "/work-orders/{id}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WorkOrdersController_start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/work-orders/{id}/done": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WorkOrdersController_done"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/work-orders/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WorkOrdersController_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/audit": {
         parameters: {
             query?: never;
@@ -6338,6 +6578,23 @@ export interface components {
                     percent: number;
                 }[];
             } | null;
+            helpdesk: {
+                active: number;
+                overdue: number;
+                items: {
+                    /** Format: uuid */
+                    id: string;
+                    ticketNo: string;
+                    title: string;
+                    /** @enum {string} */
+                    priority: "low" | "normal" | "high" | "urgent";
+                    /** @enum {string} */
+                    status: "open" | "assigned" | "in_progress" | "resolved" | "closed" | "cancelled";
+                    /** Format: date-time */
+                    dueAt: string;
+                    overdue: boolean;
+                }[];
+            } | null;
             approvals: {
                 expenses: {
                     count: number;
@@ -7006,7 +7263,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                kind: "created" | "updated" | "moved" | "custodian" | "status" | "maintenance" | "photo";
+                kind: "created" | "updated" | "moved" | "custodian" | "status" | "maintenance" | "photo" | "work_order";
                 detail: {
                     /** @enum {string} */
                     status?: "in_use" | "repair" | "retired" | "lost";
@@ -7018,6 +7275,7 @@ export interface components {
                     /** Format: date */
                     on?: string;
                     fields?: string[];
+                    workOrderNo?: string;
                 };
                 note: string | null;
                 by: {
@@ -7100,6 +7358,462 @@ export interface components {
             /** Format: date */
             doneOn: string;
             note?: string | null;
+        };
+        TicketListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                ticketNo: string;
+                title: string;
+                /** @enum {string} */
+                category: "street_light" | "garbage" | "water" | "drainage" | "electricity" | "security" | "noise" | "repair" | "other";
+                /** @enum {string} */
+                priority: "low" | "normal" | "high" | "urgent";
+                /** @enum {string} */
+                status: "open" | "assigned" | "in_progress" | "resolved" | "closed" | "cancelled";
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                reporter: {
+                    /** @constant */
+                    kind: "person";
+                    /** Format: uuid */
+                    personId: string;
+                    name: string;
+                } | {
+                    /** @constant */
+                    kind: "typed";
+                    name: string;
+                    phone: string | null;
+                } | {
+                    /** @constant */
+                    kind: "none";
+                };
+                assignee: {
+                    /** Format: uuid */
+                    id: string;
+                    staffNo: number;
+                    name: string;
+                    nameEn: string | null;
+                } | null;
+                /** Format: date-time */
+                dueAt: string;
+                overdue: boolean;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                active: number;
+                overdue: number;
+                dueToday: number;
+                resolvedWeek: number;
+            };
+            can: {
+                create: boolean;
+            };
+        };
+        TicketStaffListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                staffNo: number;
+                name: string;
+                nameEn: string | null;
+                designation: {
+                    bn: string;
+                    en: string | null;
+                };
+            }[];
+        };
+        TicketDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            ticketNo: string;
+            title: string;
+            /** @enum {string} */
+            category: "street_light" | "garbage" | "water" | "drainage" | "electricity" | "security" | "noise" | "repair" | "other";
+            /** @enum {string} */
+            priority: "low" | "normal" | "high" | "urgent";
+            /** @enum {string} */
+            status: "open" | "assigned" | "in_progress" | "resolved" | "closed" | "cancelled";
+            place: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string[];
+                isUnit: boolean;
+            };
+            reporter: {
+                /** @constant */
+                kind: "person";
+                /** Format: uuid */
+                personId: string;
+                name: string;
+            } | {
+                /** @constant */
+                kind: "typed";
+                name: string;
+                phone: string | null;
+            } | {
+                /** @constant */
+                kind: "none";
+            };
+            assignee: {
+                /** Format: uuid */
+                id: string;
+                staffNo: number;
+                name: string;
+                nameEn: string | null;
+            } | null;
+            /** Format: date-time */
+            dueAt: string;
+            overdue: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            description: string | null;
+            resolvedAt: string | null;
+            resolutionNote: string | null;
+            closedAt: string | null;
+            reportedBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            events: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "created" | "updated" | "assigned" | "status" | "comment" | "photo" | "work_order";
+                detail: {
+                    /** @enum {string} */
+                    from?: "open" | "assigned" | "in_progress" | "resolved" | "closed" | "cancelled";
+                    /** @enum {string} */
+                    to?: "open" | "assigned" | "in_progress" | "resolved" | "closed" | "cancelled";
+                    staff?: string | null;
+                    fields?: string[];
+                    workOrderNo?: string;
+                    /** @enum {string} */
+                    workOrderStatus?: "open" | "in_progress" | "done" | "cancelled";
+                };
+                note: string | null;
+                photoUrl: string | null;
+                thumbUrl: string | null;
+                by: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                /** Format: date-time */
+                at: string;
+            }[];
+            workOrders: {
+                /** Format: uuid */
+                id: string;
+                woNo: string;
+                title: string;
+                /** @enum {string} */
+                status: "open" | "in_progress" | "done" | "cancelled";
+            }[];
+            can: {
+                edit: boolean;
+                photo: boolean;
+                workOrder: boolean;
+                statuses: ("open" | "assigned" | "in_progress" | "resolved" | "closed" | "cancelled")[];
+            };
+        };
+        TicketCreateDto: {
+            /** Format: uuid */
+            locationId: string;
+            /** @enum {string} */
+            category: "street_light" | "garbage" | "water" | "drainage" | "electricity" | "security" | "noise" | "repair" | "other";
+            title: string;
+            description?: string | null;
+            /**
+             * @default normal
+             * @enum {string}
+             */
+            priority: "low" | "normal" | "high" | "urgent";
+            reporter?: {
+                /** @constant */
+                kind: "person";
+                /** Format: uuid */
+                personId: string;
+            } | {
+                /** @constant */
+                kind: "typed";
+                name: string;
+                phone?: string | null;
+            } | {
+                /** @constant */
+                kind: "none";
+            };
+            /** @default null */
+            assignedStaffId: string | null;
+        };
+        TicketUpdateDto: {
+            /** Format: uuid */
+            locationId?: string;
+            /** @enum {string} */
+            category?: "street_light" | "garbage" | "water" | "drainage" | "electricity" | "security" | "noise" | "repair" | "other";
+            title?: string;
+            description?: string | null;
+            /** @enum {string} */
+            priority?: "low" | "normal" | "high" | "urgent";
+            reporter?: {
+                /** @constant */
+                kind: "person";
+                /** Format: uuid */
+                personId: string;
+            } | {
+                /** @constant */
+                kind: "typed";
+                name: string;
+                phone?: string | null;
+            } | {
+                /** @constant */
+                kind: "none";
+            };
+        };
+        TicketAssignDto: {
+            staffId: string | null;
+            note?: string | null;
+        };
+        TicketStatusDto: {
+            /** @enum {string} */
+            status: "open" | "assigned" | "in_progress" | "resolved" | "closed" | "cancelled";
+            note?: string | null;
+        };
+        TicketCommentDto: {
+            note: string;
+        };
+        SlaViewDto_Output: {
+            hours: {
+                street_light: number;
+                garbage: number;
+                water: number;
+                drainage: number;
+                electricity: number;
+                security: number;
+                noise: number;
+                repair: number;
+                other: number;
+            };
+            can: {
+                edit: boolean;
+            };
+        };
+        SlaInputDto: {
+            street_light: number;
+            garbage: number;
+            water: number;
+            drainage: number;
+            electricity: number;
+            security: number;
+            noise: number;
+            repair: number;
+            other: number;
+        };
+        WorkOrderListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                woNo: string;
+                title: string;
+                /** @enum {string} */
+                status: "open" | "in_progress" | "done" | "cancelled";
+                /** @enum {string} */
+                source: "ticket" | "asset" | "plan" | "none";
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                staff: {
+                    /** Format: uuid */
+                    id: string;
+                    staffNo: number;
+                    name: string;
+                    nameEn: string | null;
+                } | null;
+                vendor: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                estimatedCost: string | null;
+                ticket: {
+                    /** Format: uuid */
+                    id: string;
+                    ticketNo: string;
+                } | null;
+                asset: {
+                    /** Format: uuid */
+                    id: string;
+                    assetNo: string;
+                    name: {
+                        bn: string;
+                        en: string | null;
+                    };
+                } | null;
+                completedOn: string | null;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                open: number;
+                inProgress: number;
+            };
+            can: {
+                create: boolean;
+            };
+        };
+        WorkOrderOptionsDto_Output: {
+            vendors: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            }[];
+        };
+        WorkOrderStaffListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                staffNo: number;
+                name: string;
+                nameEn: string | null;
+                designation: {
+                    bn: string;
+                    en: string | null;
+                };
+            }[];
+        };
+        WorkOrderDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            woNo: string;
+            title: string;
+            /** @enum {string} */
+            status: "open" | "in_progress" | "done" | "cancelled";
+            /** @enum {string} */
+            source: "ticket" | "asset" | "plan" | "none";
+            place: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string[];
+                isUnit: boolean;
+            };
+            staff: {
+                /** Format: uuid */
+                id: string;
+                staffNo: number;
+                name: string;
+                nameEn: string | null;
+            } | null;
+            vendor: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            estimatedCost: string | null;
+            ticket: {
+                /** Format: uuid */
+                id: string;
+                ticketNo: string;
+                title: string;
+                open: boolean;
+            } | null;
+            asset: {
+                /** Format: uuid */
+                id: string;
+                assetNo: string;
+                name: {
+                    bn: string;
+                    en: string | null;
+                };
+                open: boolean;
+            } | null;
+            completedOn: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            description: string | null;
+            plan: {
+                /** Format: uuid */
+                id: string;
+                task: {
+                    bn: string;
+                    en: string | null;
+                };
+            } | null;
+            completionNote: string | null;
+            cancelledAt: string | null;
+            cancelReason: string | null;
+            expense: {
+                /** Format: uuid */
+                id: string;
+                voucherNo: string | null;
+                amount: string;
+                /** @enum {string} */
+                status: "pending" | "approved" | "rejected" | "paid" | "void";
+                open: boolean;
+            } | null;
+            createdBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            can: {
+                edit: boolean;
+                statuses: ("open" | "in_progress" | "done" | "cancelled")[];
+                cost: boolean;
+            };
+        };
+        WorkOrderCreateDto: {
+            /** @default null */
+            ticketId: string | null;
+            /** @default null */
+            assetId: string | null;
+            /** @default null */
+            planId: string | null;
+            /** @default null */
+            locationId: string | null;
+            title: string;
+            description?: string | null;
+            /** @default null */
+            staffId: string | null;
+            /** @default null */
+            vendorId: string | null;
+            estimatedCost?: string | null;
+        };
+        WorkOrderUpdateDto: {
+            title?: string;
+            description?: string | null;
+            staffId?: string | null;
+            vendorId?: string | null;
+            estimatedCost?: string | null;
+        };
+        WorkOrderDoneDto: {
+            /** Format: date */
+            completedOn: string;
+            note: string;
+            cost?: string | null;
+            /** @default null */
+            headId: string | null;
+        };
+        WorkOrderCancelDto: {
+            reason: string;
         };
         AuditListDto_Output: {
             items: {
@@ -12280,6 +12994,479 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AssetDetailDto_Output"];
+                };
+            };
+        };
+    };
+    TicketsController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                view?: "active" | "overdue" | "resolved" | "finished" | "all";
+                category?: "street_light" | "garbage" | "water" | "drainage" | "electricity" | "security" | "noise" | "repair" | "other";
+                priority?: "low" | "normal" | "high" | "urgent";
+                locationId?: string;
+                staffId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketListDto_Output"];
+                };
+            };
+        };
+    };
+    TicketsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TicketCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketDetailDto_Output"];
+                };
+            };
+        };
+    };
+    TicketsController_staff: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketStaffListDto_Output"];
+                };
+            };
+        };
+    };
+    TicketsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketDetailDto_Output"];
+                };
+            };
+        };
+    };
+    TicketsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TicketUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketDetailDto_Output"];
+                };
+            };
+        };
+    };
+    TicketsController_assign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TicketAssignDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketDetailDto_Output"];
+                };
+            };
+        };
+    };
+    TicketsController_setStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TicketStatusDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketDetailDto_Output"];
+                };
+            };
+        };
+    };
+    TicketsController_comment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TicketCommentDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketDetailDto_Output"];
+                };
+            };
+        };
+    };
+    TicketsController_addPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketDetailDto_Output"];
+                };
+            };
+        };
+    };
+    HelpdeskController_sla: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SlaViewDto_Output"];
+                };
+            };
+        };
+    };
+    HelpdeskController_setSla: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SlaInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SlaViewDto_Output"];
+                };
+            };
+        };
+    };
+    WorkOrdersController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                view?: "active" | "done" | "cancelled" | "all";
+                source?: "ticket" | "asset" | "plan" | "none";
+                locationId?: string;
+                staffId?: string;
+                vendorId?: string;
+                ticketId?: string;
+                assetId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkOrderListDto_Output"];
+                };
+            };
+        };
+    };
+    WorkOrdersController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkOrderCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkOrderDetailDto_Output"];
+                };
+            };
+        };
+    };
+    WorkOrdersController_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkOrderOptionsDto_Output"];
+                };
+            };
+        };
+    };
+    WorkOrdersController_staff: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkOrderStaffListDto_Output"];
+                };
+            };
+        };
+    };
+    WorkOrdersController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkOrderDetailDto_Output"];
+                };
+            };
+        };
+    };
+    WorkOrdersController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkOrderUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkOrderDetailDto_Output"];
+                };
+            };
+        };
+    };
+    WorkOrdersController_start: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkOrderDetailDto_Output"];
+                };
+            };
+        };
+    };
+    WorkOrdersController_done: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkOrderDoneDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkOrderDetailDto_Output"];
+                };
+            };
+        };
+    };
+    WorkOrdersController_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkOrderCancelDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkOrderDetailDto_Output"];
                 };
             };
         };

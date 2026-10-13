@@ -155,18 +155,30 @@ export function AssetPlaceFields({ id, value, onChange, options }: { id: string;
 
 type Custodian = CustodianList["items"][number];
 
+/** Where the picker searches: asset custodians, or staff a ticket or work order may go to. */
+export type StaffSource = "assets" | "tickets" | "work-orders";
+
+function searchStaff(source: StaffSource, q: string) {
+  const params = { query: q ? { q } : {} };
+  if (source === "tickets") return api.GET("/tickets/staff", { params });
+  if (source === "work-orders") return api.GET("/work-orders/staff", { params });
+  return api.GET("/assets/custodians", { params });
+}
+
 /**
- * The staff member who looks after the asset: search current staff the user may pick (posted in
- * or above their area) by name, designation or staff number. `initial` is the one already set.
+ * A staff member: search current staff the user may pick (posted in or above their area) by
+ * name, designation or staff number. `initial` is the one already set; `source` says what for.
  */
 export function CustodianPicker({
   id,
   initial,
   onChange,
+  source = "assets",
 }: {
   id: string;
   initial: { id: string; name: string; nameEn: string | null; staffNo: number } | null;
   onChange: (staffId: string | null) => void;
+  source?: StaffSource;
 }) {
   const t = useTranslations("Assets");
   const locale = useLocale() as Locale;
@@ -179,7 +191,7 @@ export function CustodianPicker({
     if (chosen) return;
     let cancelled = false;
     const timer = setTimeout(async () => {
-      const { data } = await api.GET("/assets/custodians", { params: { query: q.trim() ? { q: q.trim() } : {} } });
+      const { data } = await searchStaff(source, q.trim());
       if (cancelled) return;
       setFailed(!data);
       setResults(data?.items ?? []);
@@ -188,7 +200,7 @@ export function CustodianPicker({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [q, chosen]);
+  }, [q, chosen, source]);
 
   if (chosen) {
     return (

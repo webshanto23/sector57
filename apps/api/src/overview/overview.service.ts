@@ -1,7 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from '@s57/db';
 import {
+  ACTIVE_TICKET_STATUSES,
   FORM_KEYS,
+  isTicketOverdue,
   lastMonths,
   monthOfDay,
   monthStart,
@@ -14,6 +16,8 @@ import {
   type Overview,
   type PermissionAction,
   type PermissionModule,
+  type TicketPriority,
+  type TicketStatus,
 } from '@s57/shared';
 import { isoDate, todayDate } from '../common/dates.js';
 import { ENV, type Env } from '../config/env.js';
@@ -72,7 +76,7 @@ export class OverviewService {
     const months = lastMonths(today, OVERVIEW_MONTHS);
     const thisMonth = monthOfDay(today);
 
-    const [collectedBy, billedBy, arrears, occupancy, forms, areas, approvals] = await Promise.all([
+    const [collectedBy, billedBy, arrears, occupancy, forms, areas, approvals, helpdesk] = await Promise.all([
       canCollected ? this.collectedByMonth(access, societyId, months[0]!) : null,
       canBilled ? this.billedByMonth(access, societyId, months[0]!) : null,
       canBilled ? this.arrears(access, societyId, today) : null,
@@ -80,6 +84,7 @@ export class OverviewService {
       can('view', 'forms') ? this.openForms(access, societyId) : null,
       canBilled ? this.areas(access, societyId, today) : null,
       this.approvals(actor),
+      can('view', 'helpdesk') ? this.helpdesk(actor) : null,
     ]);
 
     const collected = collectedBy?.get(thisMonth) ?? '0.00';
@@ -102,6 +107,7 @@ export class OverviewService {
             }))
           : null,
       areas,
+      helpdesk,
       approvals,
     };
   }
@@ -174,6 +180,39 @@ export class OverviewService {
       parent: report.parent,
       // An area with no bills this month has no rate to show.
       items: report.areas.filter((area) => area.bills > 0).map((area) => ({ id: area.id, name: area.name, billed: area.billed, collected: area.collected, percent: area.percent })),
+    };
+  }
+
+  /** Active tickets in the caller's `helpdesk.view` area: counts and the soonest due. */
+  private async helpdesk(actor: Actor): Promise<Overview['helpdesk']> {
+    const now = new Date();
+    const where: Prisma.ticketsWhereInput = {
+      society_id: actor.societyId,
+      status: { in: [...ACTIVE_TICKET_STATUSES] },
+      locations: scopeWhere(actor.access, 'view', 'helpdesk', (prefix) => ({ path: { startsWith: prefix } })),
+    };
+    const [active, overdue, rows] = await Promise.all([
+      this.prisma.tickets.count({ where }),
+      this.prisma.tickets.count({ where: { AND: [where, { due_at: { lt: now } }] } }),
+      this.prisma.tickets.findMany({
+        where,
+        select: { id: true, ticket_no: true, title: true, priority: true, status: true, due_at: true },
+        orderBy: [{ due_at: 'asc' }, { id: 'asc' }],
+        take: OVERVIEW_ITEMS,
+      }),
+    ]);
+    return {
+      active,
+      overdue,
+      items: rows.map((row) => ({
+        id: row.id,
+        ticketNo: row.ticket_no,
+        title: row.title,
+        priority: row.priority as TicketPriority,
+        status: row.status as TicketStatus,
+        dueAt: row.due_at.toISOString(),
+        overdue: isTicketOverdue(row.status as TicketStatus, row.due_at, now),
+      })),
     };
   }
 

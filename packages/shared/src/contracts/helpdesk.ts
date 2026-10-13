@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { asciiDigits, bdPhone, optionalText, pagination, text } from '../schemas.js';
 import { cleanText } from '../text.js';
+import { placeSchema } from './members.js';
+import { WORK_ORDER_STATUSES } from './work-orders.js';
 
 // ---------------------------------------------------------------------------
 // Tickets (অভিযোগ)
@@ -225,3 +227,115 @@ export function compareTicketUrgency(
   const rank = TICKET_PRIORITIES.indexOf(b.priority) - TICKET_PRIORITIES.indexOf(a.priority);
   return rank !== 0 ? rank : a.dueAt.getTime() - b.dueAt.getTime();
 }
+
+// ---------------------------------------------------------------------------
+// Responses
+// ---------------------------------------------------------------------------
+
+const bilingual = z.object({ bn: z.string(), en: z.string().nullable() });
+const staffRef = z.object({ id: z.uuid(), staffNo: z.number().int(), name: z.string(), nameEn: z.string().nullable() });
+const userRef = z.object({ id: z.uuid(), name: z.string() });
+const instant = z.iso.datetime({ offset: true });
+
+/** Who reported it, as shown: a person on record (name only), a typed name and phone, or nobody. */
+export const ticketReporterViewSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('person'), personId: z.uuid(), name: z.string() }),
+  z.object({ kind: z.literal('typed'), name: z.string(), phone: z.string().nullable() }),
+  z.object({ kind: z.literal('none') }),
+]);
+export type TicketReporterView = z.infer<typeof ticketReporterViewSchema>;
+
+export const ticketRowSchema = z.object({
+  id: z.uuid(),
+  ticketNo: z.string(),
+  title: z.string(),
+  category: z.enum(TICKET_CATEGORIES),
+  priority: z.enum(TICKET_PRIORITIES),
+  status: z.enum(TICKET_STATUSES),
+  place: placeSchema,
+  reporter: ticketReporterViewSchema,
+  assignee: staffRef.nullable(),
+  dueAt: instant,
+  /** Derived: still active and past its due time. */
+  overdue: z.boolean(),
+  createdAt: instant,
+});
+export type TicketRow = z.infer<typeof ticketRowSchema>;
+
+export const ticketListSchema = z.object({
+  items: z.array(ticketRowSchema),
+  total: z.number().int().min(0),
+  page: z.number().int().min(1),
+  pageSize: z.number().int().min(1),
+  /** In the caller's area, filters ignored: still active, overdue, due later today, resolved in the last 7 days. */
+  counts: z.object({
+    active: z.number().int().min(0),
+    overdue: z.number().int().min(0),
+    dueToday: z.number().int().min(0),
+    resolvedWeek: z.number().int().min(0),
+  }),
+  can: z.object({ create: z.boolean() }),
+});
+export type TicketList = z.infer<typeof ticketListSchema>;
+
+/** What an event recorded, as it was then (names, not ids). */
+export const ticketEventDetailSchema = z.object({
+  /** For `status`: from and to. */
+  from: z.enum(TICKET_STATUSES).optional(),
+  to: z.enum(TICKET_STATUSES).optional(),
+  /** For `assigned` (and `created` when given at once): the staff member's name; null when taken back. */
+  staff: z.string().nullable().optional(),
+  /** For `updated`: the fields changed. */
+  fields: z.array(z.string()).optional(),
+  /** For `work_order`: its number, and what became of it (raised, done or cancelled). */
+  workOrderNo: z.string().optional(),
+  workOrderStatus: z.enum(WORK_ORDER_STATUSES).optional(),
+});
+export type TicketEventDetail = z.infer<typeof ticketEventDetailSchema>;
+
+export const ticketEventSchema = z.object({
+  id: z.uuid(),
+  kind: z.enum(TICKET_EVENT_KINDS),
+  detail: ticketEventDetailSchema,
+  note: z.string().nullable(),
+  /** For `photo`: the image and its thumbnail. */
+  photoUrl: z.string().nullable(),
+  thumbUrl: z.string().nullable(),
+  by: userRef.nullable(),
+  at: instant,
+});
+export type TicketEvent = z.infer<typeof ticketEventSchema>;
+
+/** `GET /tickets/:id`. */
+export const ticketDetailSchema = ticketRowSchema.extend({
+  description: z.string().nullable(),
+  resolvedAt: instant.nullable(),
+  resolutionNote: z.string().nullable(),
+  closedAt: instant.nullable(),
+  reportedBy: userRef.nullable(),
+  /** Oldest first. */
+  events: z.array(ticketEventSchema),
+  /** Work orders raised on it, shown with `work_orders.view` where it is. */
+  workOrders: z.array(z.object({ id: z.uuid(), woNo: z.string(), title: z.string(), status: z.enum(WORK_ORDER_STATUSES) })),
+  can: z.object({
+    /** Change details, assign, comment and add photos (not once closed or cancelled). */
+    edit: z.boolean(),
+    /** Room for another photo. */
+    photo: z.boolean(),
+    /** Raise a work order on it (`work_orders.create` where it is, not once closed or cancelled). */
+    workOrder: z.boolean(),
+    /** The status changes the caller may make now. */
+    statuses: z.array(z.enum(TICKET_STATUSES)),
+  }),
+});
+export type TicketDetail = z.infer<typeof ticketDetailSchema>;
+
+/** `GET /tickets/staff?q=`: current staff a ticket may be given to (posted inside the caller's area or above it). */
+export const ticketStaffQuery = z.object({ q: search });
+export type TicketStaffQuery = z.infer<typeof ticketStaffQuery>;
+export const ticketStaffListSchema = z.object({ items: z.array(staffRef.extend({ designation: bilingual })) });
+export type TicketStaffList = z.infer<typeof ticketStaffListSchema>;
+
+/** `GET /helpdesk/sla`: hours per category in force; `edit` when the caller may change them. */
+export const slaViewSchema = z.object({ hours: slaInputSchema, can: z.object({ edit: z.boolean() }) });
+export type SlaView = z.infer<typeof slaViewSchema>;

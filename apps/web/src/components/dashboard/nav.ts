@@ -16,6 +16,7 @@ import {
   IdCard,
   House,
   Landmark,
+  LifeBuoy,
   LayoutDashboard,
   Map,
   Megaphone,
@@ -50,6 +51,8 @@ export type NavKey =
   | "ledger"
   | "hrm"
   | "facilities"
+  | "work"
+  | "helpdesk"
   | "notices"
   | "documents"
   | "reports"
@@ -78,7 +81,7 @@ export type NavGroup =
 
 /**
  * The mockup's `DNAV`, in its order. Items whose module is not in the permission
- * catalogue yet (work orders, helpdesk, vehicles, events, voting, board,
+ * catalogue yet (vehicles, events, voting, board,
  * certificates) are left out until that module exists.
  */
 export const DASHBOARD_NAV: NavGroup[] = [
@@ -120,6 +123,8 @@ export const DASHBOARD_NAV: NavGroup[] = [
     items: [
       { key: "hrm", icon: IdCard, module: "staff", also: ["attendance"] },
       { key: "facilities", icon: Warehouse, module: "facilities" },
+      { key: "work", icon: Wrench, module: "work_orders" },
+      { key: "helpdesk", icon: LifeBuoy, module: "helpdesk" },
     ],
   },
   { key: "community", icon: Megaphone, items: [{ key: "notices", icon: Bell, module: "notices" }] },
