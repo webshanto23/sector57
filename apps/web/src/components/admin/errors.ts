@@ -138,6 +138,21 @@ const KNOWN = [
   "attendance_after_leave",
   "attendance_before_join",
   "rejoin_before_leave",
+  "facility_not_found",
+  "facility_name_taken",
+  "facility_archived",
+  "facility_not_archived",
+  "facility_has_assets",
+  "asset_not_found",
+  "asset_gone",
+  "asset_status_same",
+  "asset_status_invalid",
+  "asset_status_changed",
+  "plan_not_found",
+  "plan_changed",
+  "too_many_plans",
+  "done_before_last",
+  "warranty_before_purchase",
 ] as const;
 type KnownCode = (typeof KNOWN)[number];
 
@@ -169,6 +184,9 @@ const FIELD_CODES = [
   "invalid_time",
   "times_not_allowed",
   "duplicate_staff",
+  "place_required",
+  "reason_required",
+  "warranty_before_purchase",
 ] as const;
 type FieldCode = (typeof FIELD_CODES)[number];
 

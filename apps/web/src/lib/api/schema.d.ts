@@ -2436,6 +2436,262 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/facilities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FacilitiesController_list"];
+        put?: never;
+        post: operations["FacilitiesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/facilities/funds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FacilitiesController_funds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/facilities/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FacilitiesController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["FacilitiesController_update"];
+        trace?: never;
+    };
+    "/facilities/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["FacilitiesController_archive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/facilities/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["FacilitiesController_restore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AssetsController_list"];
+        put?: never;
+        post: operations["AssetsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assets/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AssetsController_csv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assets/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AssetsController_options"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assets/custodians": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AssetsController_custodians"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assets/maintenance-due": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AssetsController_due"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AssetsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["AssetsController_update"];
+        trace?: never;
+    };
+    "/assets/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AssetsController_setStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assets/{id}/photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AssetsController_setPhoto"];
+        delete: operations["AssetsController_removePhoto"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assets/{id}/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AssetsController_addPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assets/plans/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["AssetsController_removePlan"];
+        options?: never;
+        head?: never;
+        patch: operations["AssetsController_updatePlan"];
+        trace?: never;
+    };
+    "/assets/plans/{id}/done": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AssetsController_done"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/audit": {
         parameters: {
             query?: never;
@@ -2755,7 +3011,7 @@ export interface components {
                 fullAccess: boolean;
                 grants: {
                     /** @enum {string} */
-                    module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "audit";
+                    module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "audit";
                     /** @enum {string} */
                     action: "view" | "create" | "edit" | "approve" | "delete" | "export";
                     scopeLocationId: string | null;
@@ -2787,7 +3043,7 @@ export interface components {
             permissionCount: number;
             permissions: {
                 /** @enum {string} */
-                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "audit";
+                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "audit";
                 /** @enum {string} */
                 action: "view" | "create" | "edit" | "approve" | "delete" | "export";
             }[];
@@ -2797,7 +3053,7 @@ export interface components {
             description?: string | null;
             permissions: {
                 /** @enum {string} */
-                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "audit";
+                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "audit";
                 /** @enum {string} */
                 action: "view" | "create" | "edit" | "approve" | "delete" | "export";
             }[];
@@ -6135,11 +6391,11 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                entityType: "society" | "person" | "location" | "staff";
+                entityType: "society" | "person" | "location" | "staff" | "asset";
                 /** Format: uuid */
                 entityId: string;
                 /** @enum {string} */
-                docType: "minutes" | "agm" | "circular" | "licence" | "agreement" | "deed" | "nid" | "plan" | "contract" | "other";
+                docType: "minutes" | "agm" | "circular" | "licence" | "agreement" | "deed" | "nid" | "plan" | "contract" | "invoice" | "warranty" | "other";
                 title: string;
                 /** @enum {string} */
                 kind: "pdf" | "image";
@@ -6169,11 +6425,11 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            entityType: "society" | "person" | "location" | "staff";
+            entityType: "society" | "person" | "location" | "staff" | "asset";
             /** Format: uuid */
             entityId: string;
             /** @enum {string} */
-            docType: "minutes" | "agm" | "circular" | "licence" | "agreement" | "deed" | "nid" | "plan" | "contract" | "other";
+            docType: "minutes" | "agm" | "circular" | "licence" | "agreement" | "deed" | "nid" | "plan" | "contract" | "invoice" | "warranty" | "other";
             title: string;
             /** @enum {string} */
             kind: "pdf" | "image";
@@ -6194,7 +6450,7 @@ export interface components {
         DocumentUpdateDto: {
             title?: string;
             /** @enum {string} */
-            docType?: "minutes" | "agm" | "circular" | "licence" | "agreement" | "deed" | "nid" | "plan" | "contract" | "other";
+            docType?: "minutes" | "agm" | "circular" | "licence" | "agreement" | "deed" | "nid" | "plan" | "contract" | "invoice" | "warranty" | "other";
         };
         StaffListDto_Output: {
             items: {
@@ -6442,6 +6698,408 @@ export interface components {
                 unmarked: number;
             };
             daysWorked: string;
+        };
+        FacilityListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                name: {
+                    bn: string;
+                    en: string | null;
+                };
+                /** @enum {string} */
+                kind: "hall" | "mosque" | "playground" | "generator" | "water_pump" | "office" | "other";
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                bookable: boolean;
+                fund: {
+                    /** Format: uuid */
+                    id: string;
+                    name: {
+                        bn: string;
+                        en: string | null;
+                    };
+                } | null;
+                assets: number;
+                archivedAt: string | null;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            can: {
+                create: boolean;
+            };
+        };
+        FacilityFundsDto_Output: {
+            separateFunds: boolean;
+            funds: {
+                /** Format: uuid */
+                id: string;
+                name: {
+                    bn: string;
+                    en: string | null;
+                };
+            }[];
+        };
+        FacilityDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            name: {
+                bn: string;
+                en: string | null;
+            };
+            /** @enum {string} */
+            kind: "hall" | "mosque" | "playground" | "generator" | "water_pump" | "office" | "other";
+            place: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string[];
+                isUnit: boolean;
+            };
+            bookable: boolean;
+            fund: {
+                /** Format: uuid */
+                id: string;
+                name: {
+                    bn: string;
+                    en: string | null;
+                };
+            } | null;
+            assets: number;
+            archivedAt: string | null;
+            note: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            can: {
+                edit: boolean;
+                archive: boolean;
+                addAsset: boolean;
+            };
+        };
+        FacilityCreateDto: {
+            /** Format: uuid */
+            locationId: string;
+            nameBn: string;
+            nameEn?: string | null;
+            /** @enum {string} */
+            kind: "hall" | "mosque" | "playground" | "generator" | "water_pump" | "office" | "other";
+            /** @default false */
+            bookable: boolean;
+            /** @default null */
+            fundId: string | null;
+            note?: string | null;
+        };
+        FacilityUpdateDto: {
+            /** Format: uuid */
+            locationId?: string;
+            nameBn?: string;
+            nameEn?: string | null;
+            /** @enum {string} */
+            kind?: "hall" | "mosque" | "playground" | "generator" | "water_pump" | "office" | "other";
+            bookable?: boolean;
+            fundId?: string | null;
+            note?: string | null;
+        };
+        AssetListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                assetNo: string;
+                name: {
+                    bn: string;
+                    en: string | null;
+                };
+                category: string;
+                facility: {
+                    /** Format: uuid */
+                    id: string;
+                    name: {
+                        bn: string;
+                        en: string | null;
+                    };
+                } | null;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                custodian: {
+                    /** Format: uuid */
+                    id: string;
+                    staffNo: number;
+                    name: string;
+                    nameEn: string | null;
+                } | null;
+                /** @enum {string} */
+                status: "in_use" | "repair" | "retired" | "lost";
+                thumbUrl: string | null;
+                nextDueOn: string | null;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                inUse: number;
+                repair: number;
+                due: number;
+            };
+            categories: string[];
+            can: {
+                create: boolean;
+                export: boolean;
+            };
+        };
+        AssetOptionsDto_Output: {
+            facilities: {
+                /** Format: uuid */
+                id: string;
+                name: {
+                    bn: string;
+                    en: string | null;
+                };
+                place: string;
+            }[];
+            categories: string[];
+            vendors: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            }[];
+        };
+        CustodianListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                staffNo: number;
+                name: string;
+                nameEn: string | null;
+                designation: {
+                    bn: string;
+                    en: string | null;
+                };
+            }[];
+        };
+        MaintenanceDueDto_Output: {
+            /** Format: date */
+            today: string;
+            items: {
+                plan: {
+                    /** Format: uuid */
+                    id: string;
+                    task: {
+                        bn: string;
+                        en: string | null;
+                    };
+                    everyMonths: number;
+                    /** Format: date */
+                    nextDueOn: string;
+                    lastDoneOn: string | null;
+                };
+                asset: {
+                    /** Format: uuid */
+                    id: string;
+                    assetNo: string;
+                    name: {
+                        bn: string;
+                        en: string | null;
+                    };
+                    /** @enum {string} */
+                    status: "in_use" | "repair" | "retired" | "lost";
+                    facility: {
+                        bn: string;
+                        en: string | null;
+                    } | null;
+                    place: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                        address: string[];
+                        isUnit: boolean;
+                    };
+                    custodian: {
+                        /** Format: uuid */
+                        id: string;
+                        staffNo: number;
+                        name: string;
+                        nameEn: string | null;
+                    } | null;
+                };
+                canMark: boolean;
+            }[];
+            truncated: boolean;
+        };
+        AssetDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            assetNo: string;
+            name: {
+                bn: string;
+                en: string | null;
+            };
+            category: string;
+            facility: {
+                /** Format: uuid */
+                id: string;
+                name: {
+                    bn: string;
+                    en: string | null;
+                };
+            } | null;
+            place: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string[];
+                isUnit: boolean;
+            };
+            custodian: {
+                /** Format: uuid */
+                id: string;
+                staffNo: number;
+                name: string;
+                nameEn: string | null;
+            } | null;
+            /** @enum {string} */
+            status: "in_use" | "repair" | "retired" | "lost";
+            thumbUrl: string | null;
+            nextDueOn: string | null;
+            photoUrl: string | null;
+            purchasedOn: string | null;
+            purchaseCost: string | null;
+            vendor: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            expense: {
+                /** Format: uuid */
+                id: string;
+                voucherNo: string | null;
+                amount: string;
+                open: boolean;
+            } | null;
+            warrantyUntil: string | null;
+            retiredOn: string | null;
+            retiredReason: string | null;
+            note: string | null;
+            plans: {
+                /** Format: uuid */
+                id: string;
+                task: {
+                    bn: string;
+                    en: string | null;
+                };
+                everyMonths: number;
+                /** Format: date */
+                nextDueOn: string;
+                lastDoneOn: string | null;
+            }[];
+            history: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "created" | "updated" | "moved" | "custodian" | "status" | "maintenance" | "photo";
+                detail: {
+                    /** @enum {string} */
+                    status?: "in_use" | "repair" | "retired" | "lost";
+                    place?: string;
+                    custodian?: string | null;
+                    task?: string;
+                    /** Format: date */
+                    doneOn?: string;
+                    /** Format: date */
+                    on?: string;
+                    fields?: string[];
+                };
+                note: string | null;
+                by: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                /** Format: date-time */
+                at: string;
+            }[];
+            /** Format: date-time */
+            createdAt: string;
+            can: {
+                edit: boolean;
+                statuses: ("in_use" | "repair" | "retired" | "lost")[];
+            };
+        };
+        AssetCreateDto: {
+            nameBn: string;
+            nameEn?: string | null;
+            category: string;
+            /** @default null */
+            custodianStaffId: string | null;
+            /** @default null */
+            purchasedOn: string | null;
+            purchaseCost?: string | null;
+            /** @default null */
+            vendorId: string | null;
+            expenseVoucherNo?: string | null;
+            /** @default null */
+            warrantyUntil: string | null;
+            note?: string | null;
+            place: {
+                /** @default null */
+                facilityId: string | null;
+                /** @default null */
+                locationId: string | null;
+            };
+        };
+        AssetUpdateDto: {
+            nameBn?: string;
+            nameEn?: string | null;
+            category?: string;
+            place?: {
+                /** @default null */
+                facilityId: string | null;
+                /** @default null */
+                locationId: string | null;
+            };
+            custodianStaffId?: string | null;
+            purchasedOn?: string | null;
+            purchaseCost?: string | null;
+            vendorId?: string | null;
+            expenseVoucherNo?: string | null;
+            warrantyUntil?: string | null;
+            note?: string | null;
+        };
+        AssetStatusDto: {
+            /** @enum {string} */
+            status: "in_use" | "repair" | "retired" | "lost";
+            /** @default null */
+            on: string | null;
+            reason?: string | null;
+        };
+        MaintenancePlanCreateDto: {
+            taskBn: string;
+            taskEn?: string | null;
+            everyMonths: number;
+            /** Format: date */
+            nextDueOn: string;
+        };
+        MaintenancePlanUpdateDto: {
+            taskBn?: string;
+            taskEn?: string | null;
+            everyMonths?: number;
+            /** Format: date */
+            nextDueOn?: string;
+        };
+        MaintenanceDoneDto: {
+            /** Format: date */
+            doneOn: string;
+            note?: string | null;
         };
         AuditListDto_Output: {
             items: {
@@ -10702,9 +11360,9 @@ export interface operations {
             query?: {
                 page?: number;
                 pageSize?: number;
-                entityType?: "society" | "person" | "location" | "staff";
+                entityType?: "society" | "person" | "location" | "staff" | "asset";
                 entityId?: string;
-                docType?: "minutes" | "agm" | "circular" | "licence" | "agreement" | "deed" | "nid" | "plan" | "contract" | "other";
+                docType?: "minutes" | "agm" | "circular" | "licence" | "agreement" | "deed" | "nid" | "plan" | "contract" | "invoice" | "warranty" | "other";
                 q?: string;
                 archived?: string;
             };
@@ -11116,6 +11774,513 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    FacilitiesController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                kind?: "hall" | "mosque" | "playground" | "generator" | "water_pump" | "office" | "other";
+                state?: "current" | "archived";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacilityListDto_Output"];
+                };
+            };
+        };
+    };
+    FacilitiesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FacilityCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacilityDetailDto_Output"];
+                };
+            };
+        };
+    };
+    FacilitiesController_funds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacilityFundsDto_Output"];
+                };
+            };
+        };
+    };
+    FacilitiesController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacilityDetailDto_Output"];
+                };
+            };
+        };
+    };
+    FacilitiesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FacilityUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacilityDetailDto_Output"];
+                };
+            };
+        };
+    };
+    FacilitiesController_archive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacilityDetailDto_Output"];
+                };
+            };
+        };
+    };
+    FacilitiesController_restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacilityDetailDto_Output"];
+                };
+            };
+        };
+    };
+    AssetsController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                state?: "active" | "in_use" | "repair" | "retired" | "lost" | "all";
+                category?: string;
+                facilityId?: string;
+                areaId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetListDto_Output"];
+                };
+            };
+        };
+    };
+    AssetsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetDetailDto_Output"];
+                };
+            };
+        };
+    };
+    AssetsController_csv: {
+        parameters: {
+            query?: {
+                q?: string;
+                state?: "active" | "in_use" | "repair" | "retired" | "lost" | "all";
+                category?: string;
+                facilityId?: string;
+                areaId?: string;
+                lang?: "bn" | "en";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AssetsController_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetOptionsDto_Output"];
+                };
+            };
+        };
+    };
+    AssetsController_custodians: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustodianListDto_Output"];
+                };
+            };
+        };
+    };
+    AssetsController_due: {
+        parameters: {
+            query?: {
+                within?: number;
+                areaId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MaintenanceDueDto_Output"];
+                };
+            };
+        };
+    };
+    AssetsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetDetailDto_Output"];
+                };
+            };
+        };
+    };
+    AssetsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetDetailDto_Output"];
+                };
+            };
+        };
+    };
+    AssetsController_setStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetStatusDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetDetailDto_Output"];
+                };
+            };
+        };
+    };
+    AssetsController_setPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetDetailDto_Output"];
+                };
+            };
+        };
+    };
+    AssetsController_removePhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetDetailDto_Output"];
+                };
+            };
+        };
+    };
+    AssetsController_addPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MaintenancePlanCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetDetailDto_Output"];
+                };
+            };
+        };
+    };
+    AssetsController_removePlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetDetailDto_Output"];
+                };
+            };
+        };
+    };
+    AssetsController_updatePlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MaintenancePlanUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetDetailDto_Output"];
+                };
+            };
+        };
+    };
+    AssetsController_done: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MaintenanceDoneDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetDetailDto_Output"];
+                };
             };
         };
     };

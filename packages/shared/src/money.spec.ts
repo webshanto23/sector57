@@ -134,6 +134,7 @@ describe('document numbers', () => {
     expect(formatDocumentNo('invoice', '2610', 1)).toBe('INV-2610-0001');
     expect(formatDocumentNo('receipt', '', 42)).toBe('RC-00042');
     expect(formatDocumentNo('voucher', '26', 12345)).toBe('EXP-26-12345');
+    expect(formatDocumentNo('asset', documentPeriod('asset', '2026-10-13', 7), 7)).toBe('AST-0007');
   });
 });
 

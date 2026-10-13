@@ -4,11 +4,11 @@ import { cleanText } from '../text.js';
 
 /**
  * What a library document belongs to: the society itself (minutes, circulars, licences), a
- * person, a place in the location tree (a unit or a building), or a staff member's stint.
+ * person, a place in the location tree (a unit or a building), a staff member's stint, or an asset.
  * Form uploads and expense vouchers are documents too, but stay on their own pages with
  * their own rules.
  */
-export const DOCUMENT_ENTITIES = ['society', 'person', 'location', 'staff'] as const;
+export const DOCUMENT_ENTITIES = ['society', 'person', 'location', 'staff', 'asset'] as const;
 export type DocumentEntity = (typeof DOCUMENT_ENTITIES)[number];
 
 /** Kinds of document, per what they belong to. Labels live in i18n (`Documents.type.*`). */
@@ -17,11 +17,12 @@ export const DOCUMENT_TYPES = {
   person: ['deed', 'nid', 'agreement', 'other'],
   location: ['deed', 'plan', 'agreement', 'other'],
   staff: ['contract', 'nid', 'other'],
+  asset: ['invoice', 'warranty', 'other'],
 } as const satisfies Record<DocumentEntity, readonly string[]>;
-export const DOCUMENT_TYPE_KEYS = ['minutes', 'agm', 'circular', 'licence', 'agreement', 'deed', 'nid', 'plan', 'contract', 'other'] as const;
+export const DOCUMENT_TYPE_KEYS = ['minutes', 'agm', 'circular', 'licence', 'agreement', 'deed', 'nid', 'plan', 'contract', 'invoice', 'warranty', 'other'] as const;
 export type DocumentType = (typeof DOCUMENT_TYPE_KEYS)[number];
 
-/** Most documents one person, place or staff member keeps (society papers have no limit). */
+/** Most documents one person, place, staff member or asset keeps (society papers have no limit). */
 export const MAX_RECORD_DOCUMENTS = 50;
 
 export const isDocumentType = (entity: DocumentEntity, type: string): type is DocumentType =>
@@ -29,7 +30,7 @@ export const isDocumentType = (entity: DocumentEntity, type: string): type is Do
 
 /**
  * `POST /documents` (multipart: `file` plus these fields). `entityId` is required for a person,
- * place or staff member and left out for the society. A type that doesn't fit the entity is refused.
+ * place, staff member or asset and left out for the society. A type that doesn't fit the entity is refused.
  */
 export const documentCreateSchema = z
   .object({

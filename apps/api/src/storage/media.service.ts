@@ -5,7 +5,7 @@ import { processImage } from './image.js';
 import { FILE_STORAGE, type FileStorage } from './storage.js';
 
 /** What a stored image belongs to; the second segment of its key. */
-export type MediaArea = 'gallery' | 'people';
+export type MediaArea = 'gallery' | 'people' | 'assets';
 
 /**
  * Uploaded images: checked, re-encoded and saved with a thumbnail, under keys that

@@ -16,6 +16,7 @@ import {
 } from '@s57/shared';
 import { AuditService } from '../audit/audit.service.js';
 import { isoDate, todayDate } from '../common/dates.js';
+import { assetNotFound, AssetsService } from '../facilities/assets.service.js';
 import { canOnParty, PartiesService, personNotFound } from '../members/parties.service.js';
 import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -57,7 +58,8 @@ const toType = (value: string): DocumentType => ((DOCUMENT_TYPE_KEYS as readonly
  * The documents library (`documents` permission, society-wide): the society's papers, and
  * documents kept with a person or a place. A person's documents also need the right to see
  * (or, to change them, edit) that person where they live; a place's, the right on that place.
- * A staff member's papers follow the `staff` grant at their post. An NID copy is shown only
+ * A staff member's papers follow the `staff` grant at their post, an asset's the `facilities`
+ * grant where it is kept. An NID copy is shown only
  * to those who may edit the person. Files are private (checked and stored by
  * `PrivateFilesService`), read only through `GET /documents/:id/file`, and every read is
  * audited. Nothing is deleted: documents are archived.
@@ -71,6 +73,7 @@ export class DocumentsService {
     private readonly parties: PartiesService,
     private readonly tree: TreeService,
     private readonly staff: StaffService,
+    private readonly assets: AssetsService,
   ) {}
 
   async list(actor: Actor, query: DocumentListQuery): Promise<DocumentList> {
@@ -205,6 +208,7 @@ export class DocumentsService {
   private missing(entityType: DocumentEntity) {
     if (entityType === 'person') return personNotFound();
     if (entityType === 'location') return locationNotFound();
+    if (entityType === 'asset') return assetNotFound();
     return entityType === 'staff' ? staffNotFound() : notFound();
   }
 
@@ -226,6 +230,12 @@ export class DocumentsService {
       const rights = await this.staff.paperRights(actor, entityId);
       if (!rights) return { view: false, create: false, edit: false, nid: false };
       return { view: doc.view && rights.view, create: doc.create && rights.edit, edit: doc.edit && rights.edit, nid: rights.nid };
+    }
+
+    if (entityType === 'asset') {
+      const rights = await this.assets.paperRights(actor, entityId);
+      if (!rights) return { view: false, create: false, edit: false, nid: false };
+      return { view: doc.view && rights.view, create: doc.create && rights.edit, edit: doc.edit && rights.edit, nid: false };
     }
 
     const place = await this.tree.find(actor.societyId, entityId);
