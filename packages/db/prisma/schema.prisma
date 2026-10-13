@@ -225,6 +225,7 @@ model expenses {
   voided_at                          DateTime?     @db.Timestamptz(6)
   voided_by                          String?       @db.Uuid
   void_reason                        String?
+  assets                             assets[]
   users_expenses_approved_byTousers  users?        @relation("expenses_approved_byTousers", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   expense_heads                      expense_heads @relation(fields: [expense_head_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   funds                              funds         @relation(fields: [fund_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -331,6 +332,7 @@ model funds {
   charge_types   charge_types[]
   donations      donations[]
   expenses       expenses[]
+  facilities     facilities[]
   invoices       invoices[]
   locations      locations?       @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   societies      societies        @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -512,6 +514,8 @@ model locations {
   form_submissions      form_submissions[]
   memberships           memberships[]
   staff                 staff[]
+  facilities            facilities[]
+  assets                assets[]
 
   @@unique([society_id, parent_id, name])
   @@unique([society_id, path], map: "locations_path_uq")
@@ -783,16 +787,16 @@ model site_pages {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model societies {
-  id                      String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                      String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name_bn                 String
   name_en                 String?
-  slug                    String               @unique
+  slug                    String                    @unique
   logo_url                String?
   address                 String?
   phone                   String?
-  fiscal_year_start_month Int                  @default(7) @db.SmallInt
-  status                  String               @default("active")
-  created_at              DateTime             @default(now()) @db.Timestamptz(6)
+  fiscal_year_start_month Int                       @default(7) @db.SmallInt
+  status                  String                    @default("active")
+  created_at              DateTime                  @default(now()) @db.Timestamptz(6)
   audit_logs              audit_logs[]
   budgets                 budgets[]
   charge_schedules        charge_schedules[]
@@ -831,6 +835,10 @@ model societies {
   vendors                 vendors[]
   staff                   staff[]
   attendance              attendance[]
+  facilities              facilities[]
+  assets                  assets[]
+  asset_maintenance_plans asset_maintenance_plans[]
+  asset_events            asset_events[]
 }
 
 model society_settings {
@@ -903,50 +911,54 @@ model user_roles {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model users {
-  id                                      String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  society_id                              String             @db.Uuid
-  person_id                               String?            @db.Uuid
+  id                                      String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id                              String                    @db.Uuid
+  person_id                               String?                   @db.Uuid
   phone                                   String
-  email                                   String?            @db.Citext
+  email                                   String?                   @db.Citext
   password_hash                           String?
-  language                                String             @default("bn")
-  status                                  String             @default("invited")
-  last_login_at                           DateTime?          @db.Timestamptz(6)
-  created_at                              DateTime           @default(now()) @db.Timestamptz(6)
-  failed_login_count                      Int                @default(0) @db.SmallInt
-  locked_until                            DateTime?          @db.Timestamptz(6)
+  language                                String                    @default("bn")
+  status                                  String                    @default("invited")
+  last_login_at                           DateTime?                 @db.Timestamptz(6)
+  created_at                              DateTime                  @default(now()) @db.Timestamptz(6)
+  failed_login_count                      Int                       @default(0) @db.SmallInt
+  locked_until                            DateTime?                 @db.Timestamptz(6)
   audit_logs                              audit_logs[]
   charge_schedules                        charge_schedules[]
   billing_runs                            billing_runs[]
-  documents                               documents[]        @relation("documents_uploaded_byTousers")
-  documents_archived                      documents[]        @relation("documents_archived_byTousers")
-  expenses_expenses_approved_byTousers    expenses[]         @relation("expenses_approved_byTousers")
-  expenses_expenses_requested_byTousers   expenses[]         @relation("expenses_requested_byTousers")
+  documents                               documents[]               @relation("documents_uploaded_byTousers")
+  documents_archived                      documents[]               @relation("documents_archived_byTousers")
+  expenses_expenses_approved_byTousers    expenses[]                @relation("expenses_approved_byTousers")
+  expenses_expenses_requested_byTousers   expenses[]                @relation("expenses_requested_byTousers")
   form_submissions                        form_submissions[]
-  invoices                                invoices[]         @relation("invoices_created_byTousers")
-  invoices_voided                         invoices[]         @relation("invoices_voided_byTousers")
+  invoices                                invoices[]                @relation("invoices_created_byTousers")
+  invoices_voided                         invoices[]                @relation("invoices_voided_byTousers")
   ledger_entries                          ledger_entries[]
-  move_events                             move_events[]      @relation("move_events_created_byTousers")
-  move_events_completed                   move_events[]      @relation("move_events_completed_byTousers")
-  move_events_cancelled                   move_events[]      @relation("move_events_cancelled_byTousers")
+  move_events                             move_events[]             @relation("move_events_created_byTousers")
+  move_events_completed                   move_events[]             @relation("move_events_completed_byTousers")
+  move_events_cancelled                   move_events[]             @relation("move_events_cancelled_byTousers")
   notices                                 notices[]
-  payments                                payments[]         @relation("payments_received_byTousers")
-  payments_voided                         payments[]         @relation("payments_voided_byTousers")
-  handovers_collected                     cash_handovers[]   @relation("cash_handovers_collector_idTousers")
-  handovers_confirmed                     cash_handovers[]   @relation("cash_handovers_confirmed_byTousers")
+  payments                                payments[]                @relation("payments_received_byTousers")
+  payments_voided                         payments[]                @relation("payments_voided_byTousers")
+  handovers_collected                     cash_handovers[]          @relation("cash_handovers_collector_idTousers")
+  handovers_confirmed                     cash_handovers[]          @relation("cash_handovers_confirmed_byTousers")
   budgets                                 budgets[]
-  expenses_expenses_paid_byTousers        expenses[]         @relation("expenses_paid_byTousers")
-  expenses_expenses_rejected_byTousers    expenses[]         @relation("expenses_rejected_byTousers")
-  expenses_expenses_voided_byTousers      expenses[]         @relation("expenses_voided_byTousers")
-  fund_transfers_created                  fund_transfers[]   @relation("fund_transfers_created_byTousers")
-  fund_transfers_voided                   fund_transfers[]   @relation("fund_transfers_voided_byTousers")
-  user_roles_user_roles_granted_byTousers user_roles[]       @relation("user_roles_granted_byTousers")
-  user_roles_user_roles_user_idTousers    user_roles[]       @relation("user_roles_user_idTousers")
+  expenses_expenses_paid_byTousers        expenses[]                @relation("expenses_paid_byTousers")
+  expenses_expenses_rejected_byTousers    expenses[]                @relation("expenses_rejected_byTousers")
+  expenses_expenses_voided_byTousers      expenses[]                @relation("expenses_voided_byTousers")
+  fund_transfers_created                  fund_transfers[]          @relation("fund_transfers_created_byTousers")
+  fund_transfers_voided                   fund_transfers[]          @relation("fund_transfers_voided_byTousers")
+  user_roles_user_roles_granted_byTousers user_roles[]              @relation("user_roles_granted_byTousers")
+  user_roles_user_roles_user_idTousers    user_roles[]              @relation("user_roles_user_idTousers")
   user_sessions                           user_sessions[]
-  staff_created                           staff[]            @relation("staff_created_byTousers")
-  attendance_marked                       attendance[]       @relation("attendance_marked_byTousers")
-  persons                                 persons?           @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  societies                               societies          @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  staff_created                           staff[]                   @relation("staff_created_byTousers")
+  attendance_marked                       attendance[]              @relation("attendance_marked_byTousers")
+  facilities_created                      facilities[]              @relation("facilities_created_byTousers")
+  assets_created                          assets[]                  @relation("assets_created_byTousers")
+  asset_plans_created                     asset_maintenance_plans[] @relation("asset_plans_created_byTousers")
+  asset_events_created                    asset_events[]            @relation("asset_events_created_byTousers")
+  persons                                 persons?                  @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies                               societies                 @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([society_id, phone])
 }
@@ -979,6 +991,7 @@ model vendors {
   archived_at DateTime?  @db.Timestamptz(6)
   created_at  DateTime   @default(now()) @db.Timestamptz(6)
   expenses    expenses[]
+  assets      assets[]
   societies   societies  @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([society_id, name], map: "vendors_society_idx")
@@ -1008,6 +1021,7 @@ model staff {
   locations          locations    @relation(fields: [posted_location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users              users?       @relation("staff_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   attendance         attendance[]
+  assets_kept        assets[]
 
   @@unique([society_id, staff_no], map: "staff_no_uq")
   @@unique([person_id], map: "staff_current_person_uq", where: raw("(left_on IS NULL)"))
@@ -1034,4 +1048,113 @@ model attendance {
 
   @@unique([staff_id, date], map: "attendance_staff_date_uq")
   @@index([society_id, date], map: "attendance_society_date_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// A place the society runs (Step 23): hall, mosque, pump house. Archived, never deleted; names unique among those in use (partial unique index, migration 16_facilities).
+model facilities {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id  String    @db.Uuid
+  location_id String    @db.Uuid
+  name_bn     String
+  name_en     String?
+  kind        String
+  bookable    Boolean   @default(false)
+  fund_id     String?   @db.Uuid
+  note        String?
+  archived_at DateTime? @db.Timestamptz(6)
+  created_by  String?   @db.Uuid
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+  societies   societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  locations   locations @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  funds       funds?    @relation(fields: [fund_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users       users?    @relation("facilities_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  assets      assets[]
+
+  @@unique([society_id, name_bn], map: "facilities_name_uq", where: raw("(archived_at IS NULL)"))
+  @@index([location_id], map: "facilities_location_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// A thing the society owns (Step 23), numbered AST-NNNN. At a facility (location_id is then the facility's place) or straight on a location. Retired or lost with a date and reason (check, migration 16_facilities); never deleted.
+model assets {
+  id                 String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id         String                    @db.Uuid
+  asset_no           String
+  name_bn            String
+  name_en            String?
+  category           String
+  facility_id        String?                   @db.Uuid
+  location_id        String                    @db.Uuid
+  custodian_staff_id String?                   @db.Uuid
+  purchased_on       DateTime?                 @db.Date
+  purchase_cost      Decimal?                  @db.Decimal(14, 2)
+  vendor_id          String?                   @db.Uuid
+  expense_id         String?                   @db.Uuid
+  warranty_until     DateTime?                 @db.Date
+  status             String                    @default("in_use")
+  retired_on         DateTime?                 @db.Date
+  retired_reason     String?
+  photo_url          String?
+  note               String?
+  created_by         String?                   @db.Uuid
+  created_at         DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime                  @default(now()) @updatedAt @db.Timestamptz(6)
+  societies          societies                 @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  facilities         facilities?               @relation(fields: [facility_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  locations          locations                 @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  staff              staff?                    @relation(fields: [custodian_staff_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vendors            vendors?                  @relation(fields: [vendor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  expenses           expenses?                 @relation(fields: [expense_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users              users?                    @relation("assets_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  plans              asset_maintenance_plans[]
+  events             asset_events[]
+
+  @@unique([society_id, asset_no], map: "assets_no_uq")
+  @@index([society_id, status], map: "assets_society_idx")
+  @@index([location_id], map: "assets_location_idx")
+  @@index([facility_id], map: "assets_facility_idx")
+  @@index([custodian_staff_id], map: "assets_custodian_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// Upkeep every few months (Step 23). Done moves next_due_on on; stopped plans are archived (migration 16_facilities).
+model asset_maintenance_plans {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id   String    @db.Uuid
+  asset_id     String    @db.Uuid
+  task_bn      String
+  task_en      String?
+  every_months Int
+  next_due_on  DateTime  @db.Date
+  last_done_on DateTime? @db.Date
+  archived_at  DateTime? @db.Timestamptz(6)
+  created_by   String?   @db.Uuid
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
+  societies    societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  assets       assets    @relation(fields: [asset_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users        users?    @relation("asset_plans_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([asset_id], map: "asset_plans_asset_idx")
+  @@index([society_id, next_due_on], map: "asset_plans_due_idx", where: raw("(archived_at IS NULL)"))
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// An asset's history (Step 23), only ever added to (migration 16_facilities).
+model asset_events {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id String    @db.Uuid
+  asset_id   String    @db.Uuid
+  kind       String
+  detail     Json      @default("{}")
+  note       String?
+  created_by String?   @db.Uuid
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  societies  societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  assets     assets    @relation(fields: [asset_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users?    @relation("asset_events_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([asset_id, created_at], map: "asset_events_asset_idx")
 }

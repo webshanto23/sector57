@@ -146,6 +146,10 @@
   - Pay (`monthly_salary` or `daily_rate` by kind) is seen and set only with a society-wide `staff.edit` (`seesPay`). A person's details or NID change from staff pages only when the caller may edit them as a member or they are on file only as staff.
   - Mark attendance only through `AttendanceService.save` (one row per staff and Dhaka date). Today and yesterday need `attendance.edit`; older days `attendance.approve` (`attendanceOpen` in shared). Days worked count half days at a half (`daysWorked`), which payroll (Step 26) will use.
   - Tickets, work orders and assets (Steps 23–24) point at a `staff` row, not at a person.
+- Step 23 (facilities and assets) is built on `step/23-facilities`, branched from `step/22-staff`, awaiting Codex review. Rules for later steps:
+  - Change facilities only through `FacilitiesService` and assets through `AssetsService` / `MaintenanceService` (`src/facilities`); module `facilities`, area-scoped through `assets.location_id` (always set; a facility's asset carries the facility's place, and moving the facility moves them).
+  - Every asset change also writes an `asset_events` row in the same transaction (`AssetsService.event`); work orders (Step 24) add theirs the same way. Assets are never deleted: retire or lose them (`facilities.approve`, `assetStatusMoves` in shared).
+  - Asset numbers come from `NumberingService` kind `asset` (`AST-NNNN`, never restarts). Anything new that counts upkeep uses `monthsAfter` / `upkeepState` from shared.
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.
 
 ## Reference material

@@ -69,6 +69,7 @@ const MODULES = [
   "ledger",
   "staff",
   "attendance",
+  "facilities",
   "audit",
 ] as const;
 

@@ -36,6 +36,7 @@ import { SitePagesModule } from './site-pages/site-pages.module.js';
 import { SocietyContextGuard } from './society/society-context.guard.js';
 import { SocietyModule } from './society/society.module.js';
 import { StaffModule } from './staff/staff.module.js';
+import { FacilitiesModule } from './facilities/facilities.module.js';
 import { StorageModule } from './storage/storage.module.js';
 import { UsersModule } from './users/users.module.js';
 
@@ -80,6 +81,7 @@ import { UsersModule } from './users/users.module.js';
     OverviewModule,
     DocumentsModule,
     StaffModule,
+    FacilitiesModule,
     AuditLogModule,
   ],
   controllers: [AppController],

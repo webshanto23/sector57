@@ -1,6 +1,6 @@
 # Sector 15 build steps
 
-Status of every step, what it contains, and the decisions still open. Updated 2026-10-12.
+Status of every step, what it contains, and the decisions still open. Updated 2026-10-13.
 
 Status key: **Done** (merged to `main`) · **Next** · **Planned** · **Later** (not yet in a milestone).
 
@@ -41,7 +41,7 @@ Schema changes are additive and need Anis's approval first.
 | 20 | Move-in/out checklists and resident directory | Built, awaiting Codex review | `step/20-moves-directory` |
 | 21 | Documents library | Built, awaiting Codex review | `step/21-documents` |
 | 22 | M3: Staff and attendance | Built, awaiting Codex review | `step/22-staff` |
-| 23 | M3: Facilities and assets | Planned | `step/23-facilities` |
+| 23 | M3: Facilities and assets | Built, awaiting Codex review | `step/23-facilities` |
 | 24 | M3: Helpdesk and work orders | Planned | `step/24-helpdesk` |
 | 25 | M3: Vehicles, stickers and parking | Planned | `step/25-vehicles` |
 | 26 | M3: Payroll | Planned | `step/26-payroll` |
@@ -730,24 +730,31 @@ Built 2026-10-12 on `step/22-staff` (branched from `step/21-documents`). Anis sa
 - **Tests:** `test/staff.e2e-spec.ts` (11): adding with numbers in order and a person reused by phone; the Block C / Block D scope, pay and NID hiding; editing the person only when allowed; saving the roster and auditing only changes; the edit window and approvers; month counts; CSV; leaving and rejoining; staff papers; other societies kept out. Shared helpers in `contracts/staff.spec.ts` (7).
 - **Checked:** `pnpm check` and the whole e2e suite (21 files, 300 tests). The pages rendered (200) in Bangla and English against the dev servers, with a demo staff member and a marked day that were removed afterwards; the forms were not clicked through in a browser, and the 375/820/1440 checks stay in the deferred pass.
 
-### Step 23: Facilities and assets — Planned
+### Step 23: Facilities and assets — Built, awaiting Codex review
 
-- **Migration `16_facilities`:**
-  - `facilities`: location, `name_bn/en`, `kind` (`hall | mosque | playground | generator | water_pump | office | other`), `bookable`, `fund_id` (only while separate funds are on), `archived_at`.
-  - `assets`: `asset_no`, name, category, facility or location, custodian (staff), purchase date and cost, vendor, `expense_id` (the purchase), warranty end, `status` (`in_use | repair | retired | lost`), retired date and reason.
-  - `asset_maintenance_plans`: asset, task, `every_months`, `next_due_on`.
-- **Module `facilities`**, location-scoped through the facility's or asset's place.
-- **API (`src/facilities`):**
-  - Facilities: add, edit, archive.
-  - Assets: add, edit, retire; photos through `MediaService`, papers through Step 21.
-  - The "maintenance due" list.
-- **Web:**
-  - `/dashboard/facilities` with tabs Facilities, Assets and Maintenance due.
-  - Asset detail with its history (work orders from Step 24).
-- **Bookings (decide):** proposal is later, with the member app, because a fee means a bill and a clash rule. If they are wanted now, add `facility_bookings` here:
-  - facility, person or unit, and a time range (no overlap, through an exclusion constraint);
-  - status `requested | confirmed | cancelled`;
-  - the fee billed through `InvoicesService`.
+Built 2026-10-13 on `step/23-facilities` (branched from `step/22-staff`). Anis said "continue" to the scope note, so the proposals stand: bookings later (only a `bookable` flag now), asset numbers `AST-NNNN`, a purchase expense is linked optionally by voucher number (adding an asset never makes an expense), and an asset may sit straight on a location without a facility.
+
+- **Migration `16_facilities`** (additive):
+  - `document_sequences.kind` also takes `asset` (one counter per society, never restarts).
+  - `facilities`: location, `name_bn/en`, `kind` (`hall | mosque | playground | generator | water_pump | office | other`), `bookable`, `fund_id`, note, `archived_at`. Names unique among facilities in use (partial unique index).
+  - `assets`: `asset_no` (unique per society), name, free-text category, `facility_id` or just a place (`location_id` is always set; for a facility's asset it is the facility's place), `custodian_staff_id`, purchase date and cost, vendor, `expense_id`, warranty end (not before the purchase, check), `status` (`in_use | repair | retired | lost`), retired day and reason (together, only for retired or lost, check), photo, note.
+  - `asset_maintenance_plans`: asset, task (bn/en), `every_months` (1–120), `next_due_on`, `last_done_on`, `archived_at` (stopped).
+  - `asset_events`: the asset's history (`created | updated | moved | custodian | status | maintenance | photo`, a JSON detail with names as they were then, a note, who and when). Only ever added to; Step 24 adds work orders here.
+- **Permissions:** one module `facilities`, in `PERMISSION_MODULES`, the seed, `LOCATION_SCOPED_MODULES` and the Operations group of the matrix; scoped through where the facility or asset is. Sidebar: Operations > Facilities and assets.
+- **API** (`src/facilities`):
+  - `GET/POST /facilities`, `GET/PATCH /facilities/:id` (moving a facility moves its assets, each with a "moved" event), `POST /facilities/:id/archive` (409 `facility_has_assets` while anything there is in use or under repair) and `/restore`, `GET /facilities/funds`. A fund only while separate funds are on (409 `separate_funds_off`), never the default or a closed one.
+  - `GET /assets` (search by name, category or number in either digit form, `AST-0012` or `12`; status, category, facility and area filters; counts in use, under repair and upkeep due in 30 days), `GET /assets/csv` (behind `export`), `GET /assets/options` (facilities, categories, vendors), `GET /assets/custodians` (current staff posted inside the caller's create/edit area or above it; names and designations only), `POST /assets`, `GET/PATCH /assets/:id` (409 `asset_gone` once retired or lost), `POST /assets/:id/status`, `POST/DELETE /assets/:id/photo` (`MediaService`, area `assets`).
+  - Status: in use ⇄ repair with `facilities.edit`; retire, lose, or put a retired or lost asset back with `facilities.approve` (`assetStatusMoves` in shared). Retiring or losing needs a day (not in the future) and a reason. The change is a conditional update on the old status (409 `asset_status_changed`).
+  - Upkeep: `POST /assets/:id/plans` (at most 20 open), `PATCH/DELETE /assets/plans/:id` (a plan never done is deleted, one done is stopped), `POST /assets/plans/:id/done` (not in the future, not before the last time; the next due day is `monthsAfter(doneOn, everyMonths)`, keeping the day of the month), `GET /assets/maintenance-due?within=` (overdue and due within the window, for assets in use or under repair, soonest first).
+  - Documents library: an asset's papers (`entityType=asset`, kinds `invoice`, `warranty`, `other`) follow `facilities` where it is kept.
+  - Every change writes an audit row and, for assets, a history event in the same transaction.
+- **Web:** `/dashboard/facilities` with tabs Facilities, Assets and Upkeep due.
+  - Facilities: list, new, and a detail page (details, move, archive or bring back, its assets).
+  - Assets: list (cards on phones; search, facility, category and status filters; CSV), new asset (details, at a facility or on a place, custodian search), and the asset page (details, move, custodian, status, photo, upkeep plans with "done", history, the Documents panel, a link to the purchase expense).
+  - Upkeep due: the list with "done" in place.
+- **Not built:** editing an upkeep plan in the web (the API has `PATCH`; remove it and add it again for now); bookings.
+- **Tests:** `test/facilities.e2e-spec.ts` (10): facilities and the fund rule; area scope (404 outside the area, 403 without the grant); numbering; custodians in or above the area; linking a paid expense by voucher; status changes and the approver; moving a facility moves its assets, and archiving; upkeep due and done; asset papers; CSV; other societies kept out. Shared helpers in `contracts/facilities.spec.ts` (6) and the `AST` number format.
+- **Checked:** `pnpm check` and the whole e2e suite (22 files, 310 tests). All eight new pages rendered (200) in Bangla and English against the dev servers, with a demo facility and asset that were removed afterwards; the forms were not clicked through in a browser, and the 375/820/1440 checks stay in the deferred pass.
 
 ### Step 24: Helpdesk and work orders — Planned
 

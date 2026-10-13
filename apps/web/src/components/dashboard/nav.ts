@@ -28,6 +28,7 @@ import {
   UserRound,
   Users,
   Wallet,
+  Warehouse,
   Wrench,
   type LucideIcon,
 } from "lucide-react";
@@ -48,6 +49,7 @@ export type NavKey =
   | "expenses"
   | "ledger"
   | "hrm"
+  | "facilities"
   | "notices"
   | "documents"
   | "reports"
@@ -76,7 +78,7 @@ export type NavGroup =
 
 /**
  * The mockup's `DNAV`, in its order. Items whose module is not in the permission
- * catalogue yet (facilities, work orders, helpdesk, vehicles, events, voting, board,
+ * catalogue yet (work orders, helpdesk, vehicles, events, voting, board,
  * certificates) are left out until that module exists.
  */
 export const DASHBOARD_NAV: NavGroup[] = [
@@ -115,7 +117,10 @@ export const DASHBOARD_NAV: NavGroup[] = [
     key: "operations",
     icon: Wrench,
     // The staff page has a tab for attendance, so a roster-only role still finds it.
-    items: [{ key: "hrm", icon: IdCard, module: "staff", also: ["attendance"] }],
+    items: [
+      { key: "hrm", icon: IdCard, module: "staff", also: ["attendance"] },
+      { key: "facilities", icon: Warehouse, module: "facilities" },
+    ],
   },
   { key: "community", icon: Megaphone, items: [{ key: "notices", icon: Bell, module: "notices" }] },
   {

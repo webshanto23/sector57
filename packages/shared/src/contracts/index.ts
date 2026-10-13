@@ -25,3 +25,4 @@ export * from './moves.js';
 export * from './directory.js';
 export * from './documents.js';
 export * from './staff.js';
+export * from './facilities.js';
