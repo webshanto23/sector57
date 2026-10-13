@@ -1,6 +1,6 @@
 # Sector 15 build steps
 
-Status of every step, what it contains, and the decisions still open. Updated 2026-10-13.
+Status of every step, what it contains, and the decisions still open. Updated 2026-10-13. Codex reviewed every step through 23 and approved them (2026-10-13).
 
 Status key: **Done** (merged to `main`) · **Next** · **Planned** · **Later** (not yet in a milestone).
 
@@ -38,10 +38,10 @@ Schema changes are additive and need Anis's approval first.
 | 17 | M2: Fund ledger and finance reports | Done | `step/17-reports` |
 | 18 | M2: Overview dashboard | Done | `step/18-overview` |
 | 19 | M2 (optional): Resident bills view | Later, needs a decision | `step/19-my-bills` |
-| 20 | Move-in/out checklists and resident directory | Built, awaiting Codex review | `step/20-moves-directory` |
-| 21 | Documents library | Built, awaiting Codex review | `step/21-documents` |
-| 22 | M3: Staff and attendance | Built, awaiting Codex review | `step/22-staff` |
-| 23 | M3: Facilities and assets | Built, awaiting Codex review | `step/23-facilities` |
+| 20 | Move-in/out checklists and resident directory | Done | `step/20-moves-directory` |
+| 21 | Documents library | Done | `step/21-documents` |
+| 22 | M3: Staff and attendance | Done | `step/22-staff` |
+| 23 | M3: Facilities and assets | Done | `step/23-facilities` |
 | 24 | M3: Helpdesk and work orders | Planned | `step/24-helpdesk` |
 | 25 | M3: Vehicles, stickers and parking | Planned | `step/25-vehicles` |
 | 26 | M3: Payroll | Planned | `step/26-payroll` |
@@ -645,7 +645,7 @@ Online payment, bank or mobile payment entry, SMS (unless the decision above add
 | Who voids a transfer | Decided: `ledger.approve`, no time limit | Step 17 |
 | Resident bills view | Later, with the member app | Step 19 |
 
-## Step 20: Move-in/out checklists and resident directory — Built, awaiting Codex review
+## Step 20: Move-in/out checklists and resident directory — Done
 
 Built 2026-10-12 on `step/20-moves-directory` (branched from `step/18-overview`). These were the two "Move in-out" and "Residents" nav pages Step 10 deferred; Anis chose to build them, with Documents as Step 21. Plan approved by Anis, including migration `13_moves`.
 
@@ -662,7 +662,7 @@ Built 2026-10-12 on `step/20-moves-directory` (branched from `step/18-overview`)
 - **Tests:** `test/moves.e2e-spec.ts` (11): move-in and move-out with occupancy, the dues hold and override, cancel and the direct-end cancel, one open move, Block C / Block D scope, other societies, directory order, search with Bangla digits, paging, print, CSV and no NID anywhere.
 - **Checked:** `pnpm check` and the whole e2e suite (19 files, 282 tests). The pages rendered in Bangla and English against the dev servers; not clicked through in a browser, and the 375/820/1440 checks stay in the deferred pass.
 
-## Step 21: Documents library — Built, awaiting Codex review
+## Step 21: Documents library — Done
 
 Built 2026-10-12 on `step/21-documents` (branched from `step/20-moves-directory` after Anis pushed it). The last placeholder nav page; plan approved by Anis with migration `14_documents`.
 
@@ -708,7 +708,7 @@ Draft plan, 2026-10-12. It covers the mockup's **Operations** nav group: Staff a
 | 25 | Vehicles, stickers and parking | – | Small and independent; can move earlier if the office needs it |
 | 26 | Payroll | 22, Step 16 | Money, so last; salaries are already paid as expenses under "Staff salaries" until then |
 
-### Step 22: Staff and attendance — Built, awaiting Codex review
+### Step 22: Staff and attendance — Done
 
 Built 2026-10-12 on `step/22-staff` (branched from `step/21-documents`). Anis said "continue" to the scope note, so the proposals stand: staff are area-scoped by their post; two permission modules, `staff` (profiles) and `attendance` (the roster); pay only for society-wide `staff.edit`; today and yesterday with `attendance.edit`, older days with `attendance.approve`; Staff is কর্মী everywhere; order 22 → 23 → 24 → 25 → 26.
 
@@ -730,7 +730,7 @@ Built 2026-10-12 on `step/22-staff` (branched from `step/21-documents`). Anis sa
 - **Tests:** `test/staff.e2e-spec.ts` (11): adding with numbers in order and a person reused by phone; the Block C / Block D scope, pay and NID hiding; editing the person only when allowed; saving the roster and auditing only changes; the edit window and approvers; month counts; CSV; leaving and rejoining; staff papers; other societies kept out. Shared helpers in `contracts/staff.spec.ts` (7).
 - **Checked:** `pnpm check` and the whole e2e suite (21 files, 300 tests). The pages rendered (200) in Bangla and English against the dev servers, with a demo staff member and a marked day that were removed afterwards; the forms were not clicked through in a browser, and the 375/820/1440 checks stay in the deferred pass.
 
-### Step 23: Facilities and assets — Built, awaiting Codex review
+### Step 23: Facilities and assets — Done
 
 Built 2026-10-13 on `step/23-facilities` (branched from `step/22-staff`). Anis said "continue" to the scope note, so the proposals stand: bookings later (only a `bookable` flag now), asset numbers `AST-NNNN`, a purchase expense is linked optionally by voucher number (adding an asset never makes an expense), and an asset may sit straight on a location without a facility.
 

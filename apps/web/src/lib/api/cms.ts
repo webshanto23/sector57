@@ -1,7 +1,6 @@
 import "server-only";
 
 import {
-  AUTH_COOKIES,
   type AlbumAdmin,
   type AlbumAdminList,
   type CommitteeSeatList,
@@ -12,14 +11,8 @@ import {
   type Pagination,
   type SitePageAdmin,
 } from "@s57/shared";
-import { cookies } from "next/headers";
 import { api } from "./client";
-
-/** The access cookie, forwarded to the API from a server component (the proxy has already refreshed it). */
-async function authHeaders() {
-  const access = (await cookies()).get(AUTH_COOKIES.access)?.value;
-  return access ? { cookie: `${AUTH_COOKIES.access}=${access}` } : {};
-}
+import { authHeaders } from "./session";
 
 const failed = (what: string, status: number) => new Error(`Could not load ${what} (${status})`);
 const missing = (status: number) => status === 404 || status === 400;
