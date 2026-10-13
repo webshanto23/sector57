@@ -37,6 +37,8 @@ import { SocietyContextGuard } from './society/society-context.guard.js';
 import { SocietyModule } from './society/society.module.js';
 import { StaffModule } from './staff/staff.module.js';
 import { FacilitiesModule } from './facilities/facilities.module.js';
+import { HelpdeskModule } from './helpdesk/helpdesk.module.js';
+import { WorkOrdersModule } from './work-orders/work-orders.module.js';
 import { StorageModule } from './storage/storage.module.js';
 import { UsersModule } from './users/users.module.js';
 
@@ -82,6 +84,8 @@ import { UsersModule } from './users/users.module.js';
     DocumentsModule,
     StaffModule,
     FacilitiesModule,
+    HelpdeskModule,
+    WorkOrdersModule,
     AuditLogModule,
   ],
   controllers: [AppController],

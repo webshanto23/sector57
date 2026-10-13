@@ -8,13 +8,14 @@ import {
   type Locale,
   type Overview,
 } from "@s57/shared";
-import { Banknote, Building2, ClipboardList, Info, TriangleAlert } from "lucide-react";
+import { Banknote, Building2, ClipboardList, Info, LifeBuoy, TriangleAlert } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 import { visibleNavKeys } from "@/components/dashboard/nav";
 import { Card, PageHeader, ProgressBar, StatCard } from "@/components/kit";
 import { BilledChart } from "@/components/overview/billed-chart";
+import { HelpdeskCard } from "@/components/overview/helpdesk-card";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getOverview } from "@/lib/api/overview";
@@ -85,6 +86,11 @@ export default async function OverviewPage({ params }: PageProps<"/[locale]/dash
   if (view.forms) {
     stats.push(<StatCard key="forms" icon={ClipboardList} tone="warn" label={t("pendingForms")} value={n(view.forms.open)} note={t("pendingFormsNote")} />);
   }
+  if (view.helpdesk) {
+    stats.push(
+      <StatCard key="helpdesk" icon={LifeBuoy} tone="warn" label={t("openTickets")} value={n(view.helpdesk.active)} note={t("overdueTickets", { count: view.helpdesk.overdue })} />,
+    );
+  }
 
   return (
     <>
@@ -120,10 +126,11 @@ export default async function OverviewPage({ params }: PageProps<"/[locale]/dash
           </div>
         ) : null}
 
-        {view.approvals ? (
-          // Half the width on wider screens, like the mockup's lower row (its helpdesk and calendar cards come later).
+        {view.approvals || view.helpdesk ? (
+          // Half the width each on wider screens, like the mockup's lower row (its calendar card comes later).
           <div className="grid gap-3.5 min-[701px]:grid-cols-2">
-            <ApprovalsCard approvals={view.approvals} locale={locale} />
+            {view.approvals ? <ApprovalsCard approvals={view.approvals} locale={locale} /> : null}
+            {view.helpdesk ? <HelpdeskCard helpdesk={view.helpdesk} /> : null}
           </div>
         ) : null}
       </div>

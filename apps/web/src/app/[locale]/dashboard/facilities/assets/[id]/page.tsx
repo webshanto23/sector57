@@ -1,5 +1,5 @@
-import { formatDate, formatTaka, isAssetGone, localDigits, pick, type AssetDetail, type Locale } from "@s57/shared";
-import { ChevronLeft, ExternalLink } from "lucide-react";
+import { canAnywhere, formatDate, formatTaka, isAssetGone, localDigits, pick, type AssetDetail, type Locale } from "@s57/shared";
+import { ChevronLeft, ClipboardList, ExternalLink } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -78,6 +78,12 @@ export default async function AssetPage({ params }: PageProps<"/[locale]/dashboa
           <div className="grid content-start gap-3.5">
             {asset.can.statuses.length > 0 ? <StatusCard key={asset.status} asset={asset} today={today} /> : null}
             {asset.can.edit || asset.photoUrl ? <PhotoCard asset={asset} /> : null}
+            {canAnywhere(me.access, "work_orders", "create") && !isAssetGone(asset.status) ? (
+              <Link href={{ pathname: "/dashboard/work/new", query: { assetId: asset.id } }} className={`${buttonVariants({ variant: "outline" })} justify-self-start`}>
+                <ClipboardList aria-hidden />
+                {t("raiseWorkOrder")}
+              </Link>
+            ) : null}
             {asset.expense?.open ? (
               <Link href={`/dashboard/expenses/${asset.expense.id}`} className={`${buttonVariants({ variant: "outline" })} justify-self-start`}>
                 <ExternalLink aria-hidden />

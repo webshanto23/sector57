@@ -13,5 +13,7 @@ import { ExpensesService } from './expenses.service.js';
   imports: [PrismaModule, AuditModule, FinanceModule, StorageModule],
   controllers: [ExpensesController, ExpenseHeadsController, VendorsController, BudgetsController],
   providers: [ExpensesService, ExpenseSetupService, BudgetsService],
+  // Finishing a work order with a cost raises a request through it.
+  exports: [ExpensesService],
 })
 export class ExpensesModule {}

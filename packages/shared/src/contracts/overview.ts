@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { toPaisa } from '../money.js';
 import { FORM_KEYS } from './forms.js';
+import { TICKET_PRIORITIES, TICKET_STATUSES } from './helpdesk.js';
 import { isoDay } from './members.js';
 import { addMonths, monthOfDay } from './schedules.js';
 
@@ -88,6 +89,27 @@ export const overviewSchema = z.object({
           billed: z.string(),
           collected: z.string(),
           percent: z.number().int().min(0),
+        }),
+      ),
+    })
+    .nullable(),
+  /**
+   * `helpdesk.view`: tickets still waiting in the caller's area, how many are past their due
+   * time, and the `OVERVIEW_ITEMS` due soonest (the most overdue first).
+   */
+  helpdesk: z
+    .object({
+      active: z.number().int().min(0),
+      overdue: z.number().int().min(0),
+      items: z.array(
+        z.object({
+          id: z.uuid(),
+          ticketNo: z.string(),
+          title: z.string(),
+          priority: z.enum(TICKET_PRIORITIES),
+          status: z.enum(TICKET_STATUSES),
+          dueAt: z.iso.datetime({ offset: true }),
+          overdue: z.boolean(),
         }),
       ),
     })

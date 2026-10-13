@@ -1,5 +1,5 @@
 import { formatDate, type AssetEvent, type AssetEventKind, type Locale } from "@s57/shared";
-import { ArrowRightLeft, Camera, CirclePlus, PencilLine, RefreshCw, UserRound, Wrench, type LucideIcon } from "lucide-react";
+import { ArrowRightLeft, Camera, CirclePlus, ClipboardList, PencilLine, RefreshCw, UserRound, Wrench, type LucideIcon } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Card } from "@/components/kit";
 
@@ -11,6 +11,7 @@ const ICONS: Record<AssetEventKind, LucideIcon> = {
   status: RefreshCw,
   maintenance: Wrench,
   photo: Camera,
+  work_order: ClipboardList,
 };
 
 /** Fields an edit may name, as `Assets.field.*` labels. */
@@ -41,6 +42,8 @@ export async function AssetHistory({ events, locale }: { events: AssetEvent[]; l
         return t("event.maintenance", { task: d.task ?? "", date: d.doneOn ? formatDate(d.doneOn, locale, "short") : "" });
       case "photo":
         return t("event.photo");
+      case "work_order":
+        return t("event.workOrder", { no: d.workOrderNo ?? "" });
       case "updated":
         return d.fields && d.fields.length > 0 ? t("event.updatedFields", { fields: d.fields.filter(isField).map((field) => t(`field.${field}`)).join(", ") }) : t("event.updated");
     }
