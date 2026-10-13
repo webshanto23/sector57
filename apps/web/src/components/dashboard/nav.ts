@@ -121,9 +121,9 @@ export const DASHBOARD_NAV: NavGroup[] = [
   {
     key: "operations",
     icon: Wrench,
-    // The staff page has a tab for attendance, so a roster-only role still finds it.
+    // The staff page has tabs for attendance and payroll, so a roster-only or payroll-only role still finds it.
     items: [
-      { key: "hrm", icon: IdCard, module: "staff", also: ["attendance"] },
+      { key: "hrm", icon: IdCard, module: "staff", also: ["attendance", "payroll"] },
       { key: "facilities", icon: Warehouse, module: "facilities" },
       { key: "work", icon: Wrench, module: "work_orders" },
       { key: "helpdesk", icon: LifeBuoy, module: "helpdesk" },

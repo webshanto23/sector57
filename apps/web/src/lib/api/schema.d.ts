@@ -3204,6 +3204,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/payroll": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PayrollController_month"];
+        put?: never;
+        post: operations["PayrollController_prepare"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payroll/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PayrollController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payroll/{id}/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PayrollController_refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payroll/{id}/payslips/{payslipId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["PayrollController_editPayslip"];
+        trace?: never;
+    };
+    "/payroll/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PayrollController_approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payroll/{id}/pay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PayrollController_pay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payroll/{id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PayrollController_void"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/payroll/{id}/payslips/{payslipId}/sheet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PayrollController_sheet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/audit": {
         parameters: {
             query?: never;
@@ -3523,7 +3651,7 @@ export interface components {
                 fullAccess: boolean;
                 grants: {
                     /** @enum {string} */
-                    module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "vehicles" | "audit";
+                    module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "vehicles" | "payroll" | "audit";
                     /** @enum {string} */
                     action: "view" | "create" | "edit" | "approve" | "delete" | "export";
                     scopeLocationId: string | null;
@@ -3555,7 +3683,7 @@ export interface components {
             permissionCount: number;
             permissions: {
                 /** @enum {string} */
-                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "vehicles" | "audit";
+                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "vehicles" | "payroll" | "audit";
                 /** @enum {string} */
                 action: "view" | "create" | "edit" | "approve" | "delete" | "export";
             }[];
@@ -3565,7 +3693,7 @@ export interface components {
             description?: string | null;
             permissions: {
                 /** @enum {string} */
-                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "vehicles" | "audit";
+                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "vehicles" | "payroll" | "audit";
                 /** @enum {string} */
                 action: "view" | "create" | "edit" | "approve" | "delete" | "export";
             }[];
@@ -6913,6 +7041,17 @@ export interface components {
                         at: string;
                     }[];
                 } | null;
+                payroll: {
+                    count: number;
+                    items: {
+                        /** Format: uuid */
+                        id: string;
+                        month: string;
+                        /** @enum {string} */
+                        status: "draft" | "approved";
+                        net: string;
+                    }[];
+                } | null;
             } | null;
         };
         DocumentListDto_Output: {
@@ -8551,6 +8690,347 @@ export interface components {
             unitId: string | null;
             /** @default null */
             vehicleId: string | null;
+        };
+        PayrollMonthDto_Output: {
+            month: string;
+            run: {
+                /** Format: uuid */
+                id: string;
+                month: string;
+                /** @enum {string} */
+                status: "draft" | "approved" | "paid" | "void";
+                preparedBy: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                /** Format: date-time */
+                preparedAt: string;
+                approvedBy: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                approvedAt: string | null;
+                paidBy: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                paidAt: string | null;
+                paidAccount: ("cash" | "bank") | null;
+                expenseHead: {
+                    /** Format: uuid */
+                    id: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                } | null;
+                voidedBy: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                voidedAt: string | null;
+                voidReason: string | null;
+                totals: {
+                    count: number;
+                    base: string;
+                    attendanceDeduction: string;
+                    allowances: string;
+                    deductions: string;
+                    net: string;
+                };
+                byFund: {
+                    fund: {
+                        /** Format: uuid */
+                        id: string;
+                        nameBn: string;
+                        nameEn: string | null;
+                    };
+                    net: string;
+                }[];
+                expenses: {
+                    /** Format: uuid */
+                    id: string;
+                    voucherNo: string | null;
+                    /** Format: uuid */
+                    fundId: string;
+                    amount: string;
+                    status: string;
+                }[];
+                payslips: {
+                    /** Format: uuid */
+                    id: string;
+                    staff: {
+                        /** Format: uuid */
+                        id: string;
+                        staffNo: number;
+                        name: string;
+                        nameEn: string | null;
+                        designationBn: string;
+                        designationEn: string | null;
+                    };
+                    fund: {
+                        /** Format: uuid */
+                        id: string;
+                        nameBn: string;
+                        nameEn: string | null;
+                    };
+                    /** @enum {string} */
+                    kind: "permanent" | "contract" | "daily";
+                    rate: string;
+                    daysInMonth: number;
+                    daysEmployed: number;
+                    presentDays: number;
+                    halfDays: number;
+                    absentDays: number;
+                    base: string;
+                    attendanceDeduction: string;
+                    allowances: string;
+                    deductions: string;
+                    net: string;
+                    note: string | null;
+                    lines: {
+                        /** Format: uuid */
+                        id: string;
+                        /** @enum {string} */
+                        kind: "allowance" | "deduction";
+                        labelBn: string;
+                        labelEn: string | null;
+                        amount: string;
+                    }[];
+                }[];
+                can: {
+                    edit: boolean;
+                    approve: boolean;
+                    pay: boolean;
+                    void: boolean;
+                };
+            } | null;
+            voided: {
+                /** Format: uuid */
+                id: string;
+                /** Format: date-time */
+                voidedAt: string;
+                voidReason: string;
+                net: string;
+            }[];
+            funds: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+                isDefault: boolean;
+            }[];
+            heads: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+            }[];
+            can: {
+                create: boolean;
+            };
+        };
+        PayrollRunDto_Output: {
+            /** Format: uuid */
+            id: string;
+            month: string;
+            /** @enum {string} */
+            status: "draft" | "approved" | "paid" | "void";
+            preparedBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            /** Format: date-time */
+            preparedAt: string;
+            approvedBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            approvedAt: string | null;
+            paidBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            paidAt: string | null;
+            paidAccount: ("cash" | "bank") | null;
+            expenseHead: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+            } | null;
+            voidedBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            voidedAt: string | null;
+            voidReason: string | null;
+            totals: {
+                count: number;
+                base: string;
+                attendanceDeduction: string;
+                allowances: string;
+                deductions: string;
+                net: string;
+            };
+            byFund: {
+                fund: {
+                    /** Format: uuid */
+                    id: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                };
+                net: string;
+            }[];
+            expenses: {
+                /** Format: uuid */
+                id: string;
+                voucherNo: string | null;
+                /** Format: uuid */
+                fundId: string;
+                amount: string;
+                status: string;
+            }[];
+            payslips: {
+                /** Format: uuid */
+                id: string;
+                staff: {
+                    /** Format: uuid */
+                    id: string;
+                    staffNo: number;
+                    name: string;
+                    nameEn: string | null;
+                    designationBn: string;
+                    designationEn: string | null;
+                };
+                fund: {
+                    /** Format: uuid */
+                    id: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                };
+                /** @enum {string} */
+                kind: "permanent" | "contract" | "daily";
+                rate: string;
+                daysInMonth: number;
+                daysEmployed: number;
+                presentDays: number;
+                halfDays: number;
+                absentDays: number;
+                base: string;
+                attendanceDeduction: string;
+                allowances: string;
+                deductions: string;
+                net: string;
+                note: string | null;
+                lines: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @enum {string} */
+                    kind: "allowance" | "deduction";
+                    labelBn: string;
+                    labelEn: string | null;
+                    amount: string;
+                }[];
+            }[];
+            can: {
+                edit: boolean;
+                approve: boolean;
+                pay: boolean;
+                void: boolean;
+            };
+        };
+        PayrollCreateDto: {
+            month: string;
+        };
+        PayslipEditDto: {
+            /** Format: uuid */
+            fundId: string;
+            note?: string | null;
+            lines: {
+                /** @enum {string} */
+                kind: "allowance" | "deduction";
+                labelBn: string;
+                labelEn?: string | null;
+                amount: string;
+            }[];
+        };
+        PayrollPayDto: {
+            /** @enum {string} */
+            account: "cash" | "bank";
+            /** Format: uuid */
+            headId: string;
+        };
+        PayrollVoidDto: {
+            reason: string;
+        };
+        PayslipSheetDto_Output: {
+            header: {
+                nameBn: string;
+                nameEn: string | null;
+                addressBn: string | null;
+                addressEn: string | null;
+                phone: string | null;
+                mark: string;
+            };
+            month: string;
+            /** @enum {string} */
+            status: "draft" | "approved" | "paid" | "void";
+            paidAt: string | null;
+            payslip: {
+                /** Format: uuid */
+                id: string;
+                staff: {
+                    /** Format: uuid */
+                    id: string;
+                    staffNo: number;
+                    name: string;
+                    nameEn: string | null;
+                    designationBn: string;
+                    designationEn: string | null;
+                };
+                fund: {
+                    /** Format: uuid */
+                    id: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                };
+                /** @enum {string} */
+                kind: "permanent" | "contract" | "daily";
+                rate: string;
+                daysInMonth: number;
+                daysEmployed: number;
+                presentDays: number;
+                halfDays: number;
+                absentDays: number;
+                base: string;
+                attendanceDeduction: string;
+                allowances: string;
+                deductions: string;
+                net: string;
+                note: string | null;
+                lines: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @enum {string} */
+                    kind: "allowance" | "deduction";
+                    labelBn: string;
+                    labelEn: string | null;
+                    amount: string;
+                }[];
+            };
+            period: {
+                /** Format: date */
+                from: string;
+                /** Format: date */
+                to: string;
+            };
         };
         AuditListDto_Output: {
             items: {
@@ -14733,6 +15213,211 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ParkingSlotDto_Output"];
+                };
+            };
+        };
+    };
+    PayrollController_month: {
+        parameters: {
+            query: {
+                month: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollMonthDto_Output"];
+                };
+            };
+        };
+    };
+    PayrollController_prepare: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayrollCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollRunDto_Output"];
+                };
+            };
+        };
+    };
+    PayrollController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollRunDto_Output"];
+                };
+            };
+        };
+    };
+    PayrollController_refresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollRunDto_Output"];
+                };
+            };
+        };
+    };
+    PayrollController_editPayslip: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                payslipId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayslipEditDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollRunDto_Output"];
+                };
+            };
+        };
+    };
+    PayrollController_approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollRunDto_Output"];
+                };
+            };
+        };
+    };
+    PayrollController_pay: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayrollPayDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollRunDto_Output"];
+                };
+            };
+        };
+    };
+    PayrollController_void: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayrollVoidDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayrollRunDto_Output"];
+                };
+            };
+        };
+    };
+    PayrollController_sheet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                payslipId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PayslipSheetDto_Output"];
                 };
             };
         };

@@ -44,6 +44,7 @@ Each file holds the rules earlier steps set for that area. Read only the ones th
 | Expenses, budgets | `docs/rules/expenses.md` |
 | Documents library | `docs/rules/documents.md` |
 | Staff, attendance | `docs/rules/staff.md` |
+| Payroll | `docs/rules/payroll.md` |
 | Facilities, assets | `docs/rules/facilities.md` |
 | Helpdesk, tickets, work orders | `docs/rules/helpdesk.md` |
 | Vehicles, stickers, parking | `docs/rules/vehicles.md` |
@@ -64,7 +65,7 @@ Keep each step small and cheap in tokens.
 
 ## Current state (2026-10-13)
 
-- Steps 0–23 are done, approved by Codex and merged into `main` (GitHub remote `origin`, Step 23 as PR #20, 2026-10-13). Step 24 (helpdesk and work orders) is built on `step/24-helpdesk` and Step 25 (vehicles, stickers, parking) on `step/25-vehicles`; both await Codex review.
+- Steps 0–23 are done, approved by Codex and merged into `main` (GitHub remote `origin`, Step 23 as PR #20, 2026-10-13). Step 24 (helpdesk and work orders) is built on `step/24-helpdesk`, Step 25 (vehicles, stickers, parking) on `step/25-vehicles` and Step 26 (payroll) on `step/26-payroll`; all three await Codex review.
 - The full step list with status and open decisions is in `docs/steps.md`; keep it updated as steps move.
 - Visual checks at 375/820/1440 are deferred. When they resume, use CDP viewport emulation (headless Chrome won't go below about 500 px with `--window-size`).
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.

@@ -129,6 +129,8 @@ export const overviewSchema = z.object({
       forms: approvalList(
         z.object({ id: z.uuid(), reference: z.string(), formKey: z.enum(FORM_KEYS), place: z.string().nullable(), at: z.iso.datetime({ offset: true }) }),
       ).nullable(),
+      /** Payroll runs waiting for the caller: drafts someone else prepared (`payroll.approve`), approved runs to pay (`payroll.edit` and `expenses.create`). */
+      payroll: approvalList(z.object({ id: z.uuid(), month: z.string(), status: z.enum(['draft', 'approved']), net: z.string() })).nullable(),
     })
     .nullable(),
 });

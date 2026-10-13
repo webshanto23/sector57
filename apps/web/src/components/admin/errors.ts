@@ -178,6 +178,17 @@ const KNOWN = [
   "parking_slot_removed",
   "parking_code_taken",
   "parking_vehicle_taken",
+  "payroll_exists",
+  "payroll_no_staff",
+  "payroll_not_draft",
+  "negative_net",
+  "payslip_negative_net",
+  "payroll_not_approved",
+  "pay_needs_expenses",
+  "void_needs_expenses",
+  "payroll_void",
+  "no_default_fund",
+  "expense_from_payroll",
 ] as const;
 type KnownCode = (typeof KNOWN)[number];
 

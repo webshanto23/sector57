@@ -218,6 +218,19 @@ async function ApprovalsCard({ approvals, locale }: { approvals: Approvals; loca
       })),
     });
   }
+  if (approvals.payroll) {
+    groups.push({
+      key: "payroll",
+      count: approvals.payroll.count,
+      all: "/dashboard/hrm/payroll",
+      items: approvals.payroll.items.map((item) => ({
+        key: item.id,
+        title: t("payroll", { month: formatDate(`${item.month}-01`, locale, "monthYear"), amount: formatTaka(item.net, locale) }),
+        sub: item.status === "draft" ? t("payrollDraft") : t("payrollApproved"),
+        href: `/dashboard/hrm/payroll?month=${item.month}`,
+      })),
+    });
+  }
   const empty = groups.every((group) => group.count === 0);
 
   return (

@@ -29,3 +29,4 @@ export * from './facilities.js';
 export * from './helpdesk.js';
 export * from './work-orders.js';
 export * from './vehicles.js';
+export * from './payroll.js';

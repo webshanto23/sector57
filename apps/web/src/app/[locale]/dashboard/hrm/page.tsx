@@ -26,7 +26,9 @@ export default async function StaffPage({ params, searchParams }: PageProps<"/[l
 
   const me = await getMe();
   if (!me) notFound();
-  if (!canAnywhere(me.access, "staff")) redirect({ href: "/dashboard/hrm/attendance", locale });
+  if (!canAnywhere(me.access, "staff")) {
+    redirect({ href: canAnywhere(me.access, "attendance") ? "/dashboard/hrm/attendance" : "/dashboard/hrm/payroll", locale });
+  }
 
   const search = await searchParams;
   const text = (key: string) => (typeof search[key] === "string" && search[key].trim() ? search[key] : undefined);
