@@ -35,6 +35,7 @@ export const PERMISSION_MODULES = [
   'facilities',
   'helpdesk',
   'work_orders',
+  'vehicles',
   'audit',
 ] as const;
 export type PermissionModule = (typeof PERMISSION_MODULES)[number];
@@ -58,6 +59,7 @@ export const LOCATION_SCOPED_MODULES = [
   'facilities',
   'helpdesk',
   'work_orders',
+  'vehicles',
 ] as const satisfies readonly PermissionModule[];
 
 export const isLocationScoped = (module: PermissionModule): boolean =>

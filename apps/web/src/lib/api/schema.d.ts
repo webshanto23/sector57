@@ -2932,6 +2932,278 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/vehicles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["VehiclesController_list"];
+        put?: never;
+        post: operations["VehiclesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["VehiclesController_lookup"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/unit-people": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["VehiclesController_unitPeople"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["VehiclesController_settings"];
+        put: operations["VehiclesController_setSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/vehicles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["VehiclesController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["VehiclesController_update"];
+        trace?: never;
+    };
+    "/vehicles/{id}/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["VehiclesController_remove"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stickers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StickersController_list"];
+        put?: never;
+        post: operations["StickersController_issue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stickers/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StickersController_csv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stickers/sheet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StickersController_sheet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stickers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StickersController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stickers/renew": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StickersController_renew"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stickers/{id}/replace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StickersController_replace"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/stickers/{id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StickersController_revoke"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/parking": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ParkingController_list"];
+        put?: never;
+        post: operations["ParkingController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/parking/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ParkingController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["ParkingController_update"];
+        trace?: never;
+    };
+    "/parking/{id}/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ParkingController_assign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/parking/{id}/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ParkingController_remove"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/audit": {
         parameters: {
             query?: never;
@@ -3251,7 +3523,7 @@ export interface components {
                 fullAccess: boolean;
                 grants: {
                     /** @enum {string} */
-                    module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "audit";
+                    module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "vehicles" | "audit";
                     /** @enum {string} */
                     action: "view" | "create" | "edit" | "approve" | "delete" | "export";
                     scopeLocationId: string | null;
@@ -3283,7 +3555,7 @@ export interface components {
             permissionCount: number;
             permissions: {
                 /** @enum {string} */
-                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "audit";
+                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "vehicles" | "audit";
                 /** @enum {string} */
                 action: "view" | "create" | "edit" | "approve" | "delete" | "export";
             }[];
@@ -3293,7 +3565,7 @@ export interface components {
             description?: string | null;
             permissions: {
                 /** @enum {string} */
-                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "audit";
+                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "vehicles" | "audit";
                 /** @enum {string} */
                 action: "view" | "create" | "edit" | "approve" | "delete" | "export";
             }[];
@@ -7814,6 +8086,471 @@ export interface components {
         };
         WorkOrderCancelDto: {
             reason: string;
+        };
+        VehicleListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                regNo: string;
+                /** @enum {string} */
+                kind: "car" | "motorcycle" | "microbus" | "cng" | "bicycle" | "other";
+                make: string | null;
+                colour: string | null;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                person: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                };
+                sticker: {
+                    /** Format: uuid */
+                    id: string;
+                    stickerNo: string;
+                    /** Format: date */
+                    validUntil: string;
+                    /** @enum {string} */
+                    state: "active" | "expired" | "revoked" | "replaced";
+                } | null;
+                removedAt: string | null;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                active: number;
+                noSticker: number;
+            };
+            can: {
+                create: boolean;
+            };
+        };
+        VehicleLookupDto_Output: {
+            items: {
+                regNo: string;
+                /** @enum {string} */
+                kind: "car" | "motorcycle" | "microbus" | "cng" | "bicycle" | "other";
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                sticker: {
+                    stickerNo: string;
+                    /** Format: date */
+                    validUntil: string;
+                    /** @enum {string} */
+                    state: "active" | "expired" | "revoked" | "replaced";
+                } | null;
+            }[];
+        };
+        VehicleUnitPeopleDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                ties: ("owner" | "renter" | "resident")[];
+            }[];
+        };
+        StickerSettingsViewDto_Output: {
+            settings: {
+                prefix: string;
+                /** @enum {string} */
+                validity: "calendar" | "fiscal";
+                fee: {
+                    /** Format: uuid */
+                    chargeTypeId: string;
+                    amount: string;
+                } | null;
+            };
+            can: {
+                edit: boolean;
+            };
+        };
+        StickerSettingsDto: {
+            prefix: string;
+            /** @enum {string} */
+            validity: "calendar" | "fiscal";
+            fee: {
+                /** Format: uuid */
+                chargeTypeId: string;
+                amount: string;
+            } | null;
+        };
+        VehicleDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            regNo: string;
+            /** @enum {string} */
+            kind: "car" | "motorcycle" | "microbus" | "cng" | "bicycle" | "other";
+            make: string | null;
+            colour: string | null;
+            place: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string[];
+                isUnit: boolean;
+            };
+            person: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+            };
+            sticker: {
+                /** Format: uuid */
+                id: string;
+                stickerNo: string;
+                /** Format: date */
+                validUntil: string;
+                /** @enum {string} */
+                state: "active" | "expired" | "revoked" | "replaced";
+            } | null;
+            removedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            note: string | null;
+            removeReason: string | null;
+            can: {
+                edit: boolean;
+                remove: boolean;
+            };
+        };
+        VehicleCreateDto: {
+            regNo: string;
+            /** @enum {string} */
+            kind: "car" | "motorcycle" | "microbus" | "cng" | "bicycle" | "other";
+            make?: string | null;
+            colour?: string | null;
+            /** Format: uuid */
+            unitId: string;
+            /** Format: uuid */
+            personId: string;
+            note?: string | null;
+        };
+        VehicleUpdateDto: {
+            regNo?: string;
+            /** @enum {string} */
+            kind?: "car" | "motorcycle" | "microbus" | "cng" | "bicycle" | "other";
+            make?: string | null;
+            colour?: string | null;
+            /** Format: uuid */
+            unitId?: string;
+            /** Format: uuid */
+            personId?: string;
+            note?: string | null;
+        };
+        VehicleRemoveDto: {
+            reason: string;
+        };
+        StickerListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                stickerNo: string;
+                /** @enum {string} */
+                reason: "new" | "renewal" | "replacement";
+                /** @enum {string} */
+                status: "active" | "revoked" | "replaced";
+                /** @enum {string} */
+                state: "active" | "expired" | "revoked" | "replaced";
+                /** Format: date */
+                validUntil: string;
+                vehicle: {
+                    /** Format: uuid */
+                    id: string;
+                    regNo: string;
+                    /** @enum {string} */
+                    kind: "car" | "motorcycle" | "microbus" | "cng" | "bicycle" | "other";
+                    removed: boolean;
+                };
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                replaces: {
+                    /** Format: uuid */
+                    id: string;
+                    stickerNo: string;
+                } | null;
+                invoice: {
+                    /** Format: uuid */
+                    id: string;
+                    invoiceNo: string;
+                } | null;
+                /** Format: date-time */
+                issuedAt: string;
+                revokedAt: string | null;
+                revokeReason: string | null;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                active: number;
+                expired: number;
+            };
+            can: {
+                issue: boolean;
+                export: boolean;
+            };
+        };
+        StickerSheetDto_Output: {
+            header: {
+                nameBn: string;
+                nameEn: string | null;
+                addressBn: string | null;
+                addressEn: string | null;
+                phone: string | null;
+                mark: string;
+            };
+            items: {
+                stickerNo: string;
+                regNo: string;
+                /** @enum {string} */
+                kind: "car" | "motorcycle" | "microbus" | "cng" | "bicycle" | "other";
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                /** Format: date */
+                validUntil: string;
+            }[];
+        };
+        StickerRowDto_Output: {
+            /** Format: uuid */
+            id: string;
+            stickerNo: string;
+            /** @enum {string} */
+            reason: "new" | "renewal" | "replacement";
+            /** @enum {string} */
+            status: "active" | "revoked" | "replaced";
+            /** @enum {string} */
+            state: "active" | "expired" | "revoked" | "replaced";
+            /** Format: date */
+            validUntil: string;
+            vehicle: {
+                /** Format: uuid */
+                id: string;
+                regNo: string;
+                /** @enum {string} */
+                kind: "car" | "motorcycle" | "microbus" | "cng" | "bicycle" | "other";
+                removed: boolean;
+            };
+            place: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string[];
+                isUnit: boolean;
+            };
+            replaces: {
+                /** Format: uuid */
+                id: string;
+                stickerNo: string;
+            } | null;
+            invoice: {
+                /** Format: uuid */
+                id: string;
+                invoiceNo: string;
+            } | null;
+            /** Format: date-time */
+            issuedAt: string;
+            revokedAt: string | null;
+            revokeReason: string | null;
+        };
+        StickerIssueDto: {
+            /** Format: uuid */
+            vehicleId: string;
+            /** @default false */
+            nextYear: boolean;
+        };
+        StickerRenewDto: {
+            stickerIds: string[];
+        };
+        StickerRenewResultDto_Output: {
+            renewed: {
+                /** Format: uuid */
+                id: string;
+                stickerNo: string;
+                /** @enum {string} */
+                reason: "new" | "renewal" | "replacement";
+                /** @enum {string} */
+                status: "active" | "revoked" | "replaced";
+                /** @enum {string} */
+                state: "active" | "expired" | "revoked" | "replaced";
+                /** Format: date */
+                validUntil: string;
+                vehicle: {
+                    /** Format: uuid */
+                    id: string;
+                    regNo: string;
+                    /** @enum {string} */
+                    kind: "car" | "motorcycle" | "microbus" | "cng" | "bicycle" | "other";
+                    removed: boolean;
+                };
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                replaces: {
+                    /** Format: uuid */
+                    id: string;
+                    stickerNo: string;
+                } | null;
+                invoice: {
+                    /** Format: uuid */
+                    id: string;
+                    invoiceNo: string;
+                } | null;
+                /** Format: date-time */
+                issuedAt: string;
+                revokedAt: string | null;
+                revokeReason: string | null;
+            }[];
+            skipped: {
+                /** Format: uuid */
+                stickerId: string;
+                code: string;
+            }[];
+        };
+        StickerRevokeDto: {
+            reason: string;
+        };
+        ParkingListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                code: string;
+                note: string | null;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                assignee: ({
+                    /** @constant */
+                    kind: "unit";
+                    place: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                        address: string[];
+                        isUnit: boolean;
+                    };
+                } | {
+                    /** @constant */
+                    kind: "vehicle";
+                    /** Format: uuid */
+                    id: string;
+                    regNo: string;
+                    place: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                        address: string[];
+                        isUnit: boolean;
+                    };
+                }) | null;
+                removedAt: string | null;
+                can: {
+                    edit: boolean;
+                    remove: boolean;
+                };
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                slots: number;
+                free: number;
+            };
+            can: {
+                create: boolean;
+            };
+        };
+        ParkingSlotDto_Output: {
+            /** Format: uuid */
+            id: string;
+            code: string;
+            note: string | null;
+            place: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string[];
+                isUnit: boolean;
+            };
+            assignee: ({
+                /** @constant */
+                kind: "unit";
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+            } | {
+                /** @constant */
+                kind: "vehicle";
+                /** Format: uuid */
+                id: string;
+                regNo: string;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+            }) | null;
+            removedAt: string | null;
+            can: {
+                edit: boolean;
+                remove: boolean;
+            };
+        };
+        ParkingSlotCreateDto: {
+            /** Format: uuid */
+            locationId: string;
+            code: string;
+            note?: string | null;
+        };
+        ParkingSlotUpdateDto: {
+            /** Format: uuid */
+            locationId?: string;
+            code?: string;
+            note?: string | null;
+        };
+        ParkingAssignDto: {
+            /** @default null */
+            unitId: string | null;
+            /** @default null */
+            vehicleId: string | null;
         };
         AuditListDto_Output: {
             items: {
@@ -13467,6 +14204,535 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WorkOrderDetailDto_Output"];
+                };
+            };
+        };
+    };
+    VehiclesController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                view?: "active" | "removed" | "all";
+                kind?: "car" | "motorcycle" | "microbus" | "cng" | "bicycle" | "other";
+                locationId?: string;
+                unitId?: string;
+                personId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VehicleListDto_Output"];
+                };
+            };
+        };
+    };
+    VehiclesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VehicleCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VehicleDetailDto_Output"];
+                };
+            };
+        };
+    };
+    VehiclesController_lookup: {
+        parameters: {
+            query: {
+                plate: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VehicleLookupDto_Output"];
+                };
+            };
+        };
+    };
+    VehiclesController_unitPeople: {
+        parameters: {
+            query: {
+                unitId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VehicleUnitPeopleDto_Output"];
+                };
+            };
+        };
+    };
+    VehiclesController_settings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StickerSettingsViewDto_Output"];
+                };
+            };
+        };
+    };
+    VehiclesController_setSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StickerSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StickerSettingsViewDto_Output"];
+                };
+            };
+        };
+    };
+    VehiclesController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VehicleDetailDto_Output"];
+                };
+            };
+        };
+    };
+    VehiclesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VehicleUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VehicleDetailDto_Output"];
+                };
+            };
+        };
+    };
+    VehiclesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VehicleRemoveDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["VehicleDetailDto_Output"];
+                };
+            };
+        };
+    };
+    StickersController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                state?: "active" | "expired" | "revoked" | "replaced";
+                validUntilBy?: string;
+                locationId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StickerListDto_Output"];
+                };
+            };
+        };
+    };
+    StickersController_issue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StickerIssueDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StickerRowDto_Output"];
+                };
+            };
+        };
+    };
+    StickersController_csv: {
+        parameters: {
+            query?: {
+                q?: string;
+                state?: "active" | "expired" | "revoked" | "replaced";
+                validUntilBy?: string;
+                locationId?: string;
+                lang?: "bn" | "en";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    StickersController_sheet: {
+        parameters: {
+            query: {
+                ids: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StickerSheetDto_Output"];
+                };
+            };
+        };
+    };
+    StickersController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StickerRowDto_Output"];
+                };
+            };
+        };
+    };
+    StickersController_renew: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StickerRenewDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StickerRenewResultDto_Output"];
+                };
+            };
+        };
+    };
+    StickersController_replace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StickerRowDto_Output"];
+                };
+            };
+        };
+    };
+    StickersController_revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StickerRevokeDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StickerRowDto_Output"];
+                };
+            };
+        };
+    };
+    ParkingController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                view?: "all" | "free" | "taken" | "removed";
+                locationId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParkingListDto_Output"];
+                };
+            };
+        };
+    };
+    ParkingController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParkingSlotCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParkingSlotDto_Output"];
+                };
+            };
+        };
+    };
+    ParkingController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParkingSlotDto_Output"];
+                };
+            };
+        };
+    };
+    ParkingController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParkingSlotUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParkingSlotDto_Output"];
+                };
+            };
+        };
+    };
+    ParkingController_assign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParkingAssignDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParkingSlotDto_Output"];
+                };
+            };
+        };
+    };
+    ParkingController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ParkingSlotDto_Output"];
                 };
             };
         };

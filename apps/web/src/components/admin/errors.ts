@@ -165,6 +165,19 @@ const KNOWN = [
   "work_order_status_invalid",
   "work_order_status_changed",
   "plan_asset_mismatch",
+  "vehicle_not_found",
+  "vehicle_removed",
+  "vehicle_exists",
+  "vehicle_person_not_at_unit",
+  "sticker_not_found",
+  "sticker_in_force",
+  "sticker_not_active",
+  "sticker_expired",
+  "sticker_fee_needs_billing",
+  "parking_slot_not_found",
+  "parking_slot_removed",
+  "parking_code_taken",
+  "parking_vehicle_taken",
 ] as const;
 type KnownCode = (typeof KNOWN)[number];
 
@@ -199,6 +212,8 @@ const FIELD_CODES = [
   "place_required",
   "reason_required",
   "warranty_before_purchase",
+  "invalid_reg_no",
+  "invalid_prefix",
 ] as const;
 type FieldCode = (typeof FIELD_CODES)[number];
 

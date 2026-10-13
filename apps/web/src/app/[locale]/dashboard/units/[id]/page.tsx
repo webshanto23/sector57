@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/kit";
 import { PeoplePanel } from "@/components/members/people-panel";
 import { OccupancyChip, PropertyBreadcrumb } from "@/components/property/labels";
 import { UnitForm } from "@/components/property/unit-form";
+import { VehiclesPanel } from "@/components/vehicles/vehicles-panel";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getLocationPeople } from "@/lib/api/members";
@@ -55,6 +56,7 @@ export default async function UnitPage({ params }: PageProps<"/[locale]/dashboar
         <UnitForm key={unit.id} unit={unit} />
         {people ? <PeoplePanel key={`people-${unit.id}`} people={people} /> : null}
         <BillsPanel access={me.access} locale={locale as Locale} unitId={unit.id} />
+        <VehiclesPanel access={me.access} locale={locale as Locale} unitId={unit.id} />
         <DocumentsPanel access={me.access} entityType="location" entityId={unit.id} />
       </div>
     </>
