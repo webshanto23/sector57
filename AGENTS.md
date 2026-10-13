@@ -2,102 +2,59 @@
 
 ## Project Shape
 
-- This is a pnpm 12.9.1 + Turborepo monorepo.
-- Workspace apps live in `apps/*`; shared packages live in `packages/*`.
-- `apps/api` is a NestJS 12 API using ESM, Vitest, oxlint, and Prisma through `@s57/db`.
-- `apps/web` is a Next.js 16 app using React 19, Tailwind CSS 4, shadcn, Base UI, and lucide icons.
-- `packages/db` owns the Prisma 7 schema, migrations, generated Prisma client, and exported DB client utilities.
-- `packages/shared` is for cross-app TypeScript contracts/helpers. Keep it framework-agnostic.
+- pnpm 12.9.1 + Turborepo monorepo: apps in `apps/*`, packages in `packages/*`.
+- `apps/api`: NestJS 12 (ESM, Vitest, oxlint), Prisma through `@s57/db`. Entry `src/main.ts`, port `PORT ?? 4000`.
+- `apps/web`: Next.js 16, React 19, Tailwind CSS 4, shadcn, Base UI, lucide icons. App Router under `src/app`.
+- `packages/db`: Prisma 7 schema, migrations, generated client, DB exports.
+- `packages/shared`: framework-agnostic contracts, zod schemas, constants and helpers used by more than one app.
 
 ## Commands
 
-- Install dependencies with `pnpm install`.
-- Run all dev tasks with `pnpm dev` from the repo root.
-- Build the workspace with `pnpm build`.
-- Run the root check pipeline with `pnpm check`, but note that early setup may not yet have complete test scripts in every package.
-- Run API commands with filters, for example:
-  - `pnpm --filter @s57/api dev`
-  - `pnpm --filter @s57/api build`
-  - `pnpm --filter @s57/api lint`
-  - `pnpm --filter @s57/api test`
-  - `pnpm --filter @s57/api test:e2e`
-- Run web commands with filters, for example:
-  - `pnpm --filter @s57/web dev`
-  - `pnpm --filter @s57/web build`
-  - `pnpm --filter @s57/web lint`
-- Run database commands through root scripts or package filters:
-  - `pnpm db:migrate`
-  - `pnpm db:seed`
-  - `pnpm db:studio`
-  - `pnpm --filter @s57/db generate`
+- `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm check` (lint, typecheck, test across the workspace).
+- Per package: `pnpm --filter @s57/api <dev|build|lint|test|test:e2e>`, `pnpm --filter @s57/web <dev|build|lint>`.
+- Database: `pnpm db:migrate`, `pnpm db:seed`, `pnpm db:studio`, `pnpm --filter @s57/db generate`.
+- While working, run only the affected spec or e2e file (`vitest run <path>`); run `pnpm check` once before handing work over.
 
 ## Code Style
 
-- Follow `.editorconfig`: UTF-8, LF endings, two-space indentation, final newline, and trimmed trailing whitespace outside Markdown.
-- This repository uses ESM. In Nest/API TypeScript, keep relative runtime imports explicit with `.js` extensions, matching the current `moduleResolution: "nodenext"` setup.
-- Prefer strict TypeScript and typed boundaries. Put shared schemas, DTO contracts, and common validation in `packages/shared` when they are used by more than one app.
-- Keep package ownership clear:
-  - API-only Nest modules, controllers, providers, and tests stay under `apps/api`.
-  - Web-only React components, app routes, and UI code stay under `apps/web`.
-  - Database schema, migrations, generated Prisma client, and DB exports stay under `packages/db`.
-  - Reusable domain types, zod schemas, and constants stay under `packages/shared`.
+- Follow `.editorconfig`: UTF-8, LF, two spaces, final newline, no trailing whitespace outside Markdown.
+- ESM everywhere; in the API keep relative imports explicit with `.js` (`moduleResolution: "nodenext"`).
+- Strict TypeScript and typed boundaries. Keep code in the package that owns it.
+- Unit tests: Vitest with globals, `*.spec.ts` beside the code. E2E tests: `apps/api/test`, `vitest.config.e2e.ts`.
 
-## Generated And Build Output
+## Generated Output
 
-- Do not hand-edit generated or compiled outputs:
-  - `apps/api/dist/**`
-  - `apps/api/*.tsbuildinfo`
-  - `packages/db/dist/**`
-  - `packages/db/generated/prisma/**`
-  - `.turbo/**`
-  - `node_modules/**`
-- When Prisma schema changes, update `packages/db/prisma/schema.prisma`, create/update migrations as needed, then regenerate the Prisma client with `pnpm --filter @s57/db generate`.
-- Keep `pnpm-lock.yaml` in sync when dependency changes are made.
+- Never hand-edit `apps/api/dist/**`, `apps/api/*.tsbuildinfo`, `packages/db/dist/**`, `packages/db/generated/prisma/**`, `.turbo/**`, `node_modules/**`.
+- After a Prisma schema change: update `schema.prisma`, add a migration, `pnpm --filter @s57/db generate`. Keep `pnpm-lock.yaml` in sync with dependency changes.
 
-## Database Notes
+## Database
 
-- Prisma schema source is `packages/db/prisma/schema.prisma`.
-- Prisma config is `packages/db/prisma7.config.ts`; it expects `DATABASE_URL`.
-- The current schema targets PostgreSQL and uses database features such as UUIDs, partial indexes, citext, trigram indexes, check constraints from SQL migrations, and Prisma preview support for partial indexes.
-- Be careful with destructive migration changes. Prefer additive migrations unless the user explicitly asks for resets or data-destructive changes.
-- `apps/api/src/prisma/prisma.service.ts` constructs `PrismaClient` with `PrismaPg` and `DATABASE_URL`; preserve that adapter pattern.
+- Prisma config is `packages/db/prisma7.config.ts` (expects `DATABASE_URL`). `apps/api/src/prisma/prisma.service.ts` builds `PrismaClient` with `PrismaPg`; keep that adapter pattern.
+- Some features live only in SQL migrations (check constraints, partial and trigram indexes, citext). Migrations are additive unless the user explicitly asks otherwise. Details: `docs/rules/database.md`.
 
-## API Notes
+## Web
 
-- The API entry point is `apps/api/src/main.ts`; it listens on `process.env.PORT ?? 4000`.
-- Keep Nest providers injectable and module-scoped. Add new feature areas as modules rather than crowding `AppModule`.
-- Unit tests use Vitest with globals. Keep `*.spec.ts` beside the code being tested unless a feature already establishes another convention.
-- E2E tests live under `apps/api/test` and use `vitest.config.e2e.ts`.
+- Read and obey `apps/web/AGENTS.md` before changing web code (Next.js 16 guidance).
+- Follow `apps/web/components.json` (shadcn/Base UI) and the tokens in `apps/web/src/app/globals.css`; use lucide icons; keep UI accessible and responsive.
 
-## Web Notes
+## Product Context
 
-- Read and obey `apps/web/AGENTS.md` before changing web code. It contains Next.js 16-specific guidance generated by Next.
-- The web app uses the App Router under `apps/web/src/app`.
-- Use shadcn/Base UI conventions already present in `apps/web/components.json`.
-- Use lucide icons when adding icon buttons or recognizable UI actions.
-- Keep UI components accessible, responsive, and consistent with Tailwind 4 token usage in `apps/web/src/app/globals.css`.
-
-## Documentation And Product Context
-
-- `docs/schema-phase1.sql` and `packages/db/prisma/schema.prisma` are important database/domain references.
-- `docs/Sector 57 Production UI.html` is a UI/product reference from setup. Treat it as reference material, not generated application source.
-- The product domain appears to be society/community management with Bengali-first fields (`*_bn`) and optional English fields (`*_en`). Preserve that bilingual data model when adding features.
+- Society management, multi-tenant (`society_id` everywhere), Bangla first: display text is `*_bn` (required) plus `*_en` (optional).
+- Module rules set by earlier steps are in `docs/rules/<area>.md` (the index is in `CLAUDE.md`). Read the file for the area you touch.
+- References: `docs/glossary.md`, `docs/schema-phase1.sql`, `docs/steps.md`, `docs/Sector 57 Production UI.html` (UI reference, not source).
 
 ## Agent Roles
 
-Two agents work on this repo, each with a fixed job. When an instruction in `CLAUDE.md` and this file seem to conflict, these roles decide who does what; anything still unclear goes to Anis.
+Two agents work on this repo, each with a fixed job. When `CLAUDE.md` and this file seem to conflict, these roles decide; anything still unclear goes to Anis.
 
-- **Claude (Claude Code): code and development.** Designs and implements features, schema changes and migrations, and refactors. Owns the code that ships.
-- **Codex: review, debug and test.** Reviews Claude's changes, debugs failures, and writes and runs tests. Reports findings (bug, file, reproduction) for Claude to fix rather than reworking features itself; small fixes needed to make a test or debug session run are fine.
+- **Claude (Claude Code): code and development.** Designs and implements features, schema changes, migrations and refactors. Owns the code that ships.
+- **Codex: review, debug and test.** Reviews Claude's changes, debugs failures, writes and runs tests. Reports findings (bug, file, reproduction) for Claude to fix; small fixes needed to make a test or debug session run are fine.
 - Neither agent undoes the other's work silently. Disagreements are written up for Anis to decide.
 
-## Working Rules For Agents
+## Working Rules
 
-- Before editing, inspect the relevant app/package files and any nearer `AGENTS.md`.
-- Keep changes narrowly scoped to the requested task.
-- Do not rewrite generated files by hand.
-- Do not remove the Next-generated block in `apps/web/AGENTS.md` or the Turborepo-generated block below; the tools recreate them.
-- Run `pnpm check` (lint, typecheck, test across the workspace) before handing work over.
+- Inspect the relevant files and any nearer `AGENTS.md` before editing. Keep changes narrowly scoped.
+- Do not remove the Next-generated block in `apps/web/AGENTS.md` or the Turborepo block below; the tools recreate them.
 - Never run destructive database or Git operations unless explicitly requested.
 
 <!-- BEGIN:turborepo-agent-rules -->
