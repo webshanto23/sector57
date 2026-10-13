@@ -70,6 +70,8 @@ const MODULES = [
   "staff",
   "attendance",
   "facilities",
+  "helpdesk",
+  "work_orders",
   "audit",
 ] as const;
 

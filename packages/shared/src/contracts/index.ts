@@ -26,3 +26,5 @@ export * from './directory.js';
 export * from './documents.js';
 export * from './staff.js';
 export * from './facilities.js';
+export * from './helpdesk.js';
+export * from './work-orders.js';

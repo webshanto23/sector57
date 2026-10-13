@@ -3011,7 +3011,7 @@ export interface components {
                 fullAccess: boolean;
                 grants: {
                     /** @enum {string} */
-                    module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "audit";
+                    module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "audit";
                     /** @enum {string} */
                     action: "view" | "create" | "edit" | "approve" | "delete" | "export";
                     scopeLocationId: string | null;
@@ -3043,7 +3043,7 @@ export interface components {
             permissionCount: number;
             permissions: {
                 /** @enum {string} */
-                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "audit";
+                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "audit";
                 /** @enum {string} */
                 action: "view" | "create" | "edit" | "approve" | "delete" | "export";
             }[];
@@ -3053,7 +3053,7 @@ export interface components {
             description?: string | null;
             permissions: {
                 /** @enum {string} */
-                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "audit";
+                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "audit";
                 /** @enum {string} */
                 action: "view" | "create" | "edit" | "approve" | "delete" | "export";
             }[];

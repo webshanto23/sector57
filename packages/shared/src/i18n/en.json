@@ -305,6 +305,8 @@
       "staff": "Staff",
       "attendance": "Attendance",
       "facilities": "Facilities and assets",
+      "helpdesk": "Helpdesk (tickets)",
+      "work_orders": "Work orders",
       "audit": "Audit log"
     },
     "actions": {

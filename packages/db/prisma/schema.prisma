@@ -226,6 +226,7 @@ model expenses {
   voided_by                          String?       @db.Uuid
   void_reason                        String?
   assets                             assets[]
+  work_orders                        work_orders[]
   users_expenses_approved_byTousers  users?        @relation("expenses_approved_byTousers", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   expense_heads                      expense_heads @relation(fields: [expense_head_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   funds                              funds         @relation(fields: [fund_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -516,6 +517,8 @@ model locations {
   staff                 staff[]
   facilities            facilities[]
   assets                assets[]
+  tickets               tickets[]
+  work_orders           work_orders[]
 
   @@unique([society_id, parent_id, name])
   @@unique([society_id, path], map: "locations_path_uq")
@@ -741,6 +744,7 @@ model persons {
   form_submissions  form_submissions[]
   memberships       memberships[]
   staff             staff[]
+  tickets_reported  tickets[]
 
   @@unique([society_id, nid], map: "persons_nid_uq", where: raw("(nid IS NOT NULL)"))
   @@unique([society_id, phone], map: "persons_phone_uq", where: raw("(phone IS NOT NULL)"))
@@ -839,6 +843,9 @@ model societies {
   assets                  assets[]
   asset_maintenance_plans asset_maintenance_plans[]
   asset_events            asset_events[]
+  tickets                 tickets[]
+  ticket_events           ticket_events[]
+  work_orders             work_orders[]
 }
 
 model society_settings {
@@ -957,6 +964,9 @@ model users {
   assets_created                          assets[]                  @relation("assets_created_byTousers")
   asset_plans_created                     asset_maintenance_plans[] @relation("asset_plans_created_byTousers")
   asset_events_created                    asset_events[]            @relation("asset_events_created_byTousers")
+  tickets_reported                        tickets[]                 @relation("tickets_reported_byTousers")
+  ticket_events_created                   ticket_events[]           @relation("ticket_events_created_byTousers")
+  work_orders_created                     work_orders[]             @relation("work_orders_created_byTousers")
   persons                                 persons?                  @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   societies                               societies                 @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
@@ -983,16 +993,17 @@ model user_sessions {
 }
 
 model vendors {
-  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  society_id  String     @db.Uuid
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id  String        @db.Uuid
   name        String
   phone       String?
   service     String?
-  archived_at DateTime?  @db.Timestamptz(6)
-  created_at  DateTime   @default(now()) @db.Timestamptz(6)
+  archived_at DateTime?     @db.Timestamptz(6)
+  created_at  DateTime      @default(now()) @db.Timestamptz(6)
   expenses    expenses[]
   assets      assets[]
-  societies   societies  @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  work_orders work_orders[]
+  societies   societies     @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([society_id, name], map: "vendors_society_idx")
 }
@@ -1000,28 +1011,30 @@ model vendors {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// One stint of work for a person (Step 22): leaving is dated and a rejoin is a new row. One current stint per person (partial unique index); left fields and pay by kind kept together by checks (migration 15_staff).
 model staff {
-  id                 String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  society_id         String       @db.Uuid
-  person_id          String       @db.Uuid
+  id                 String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id         String        @db.Uuid
+  person_id          String        @db.Uuid
   staff_no           Int
   designation_bn     String
   designation_en     String?
   kind               String
-  posted_location_id String       @db.Uuid
-  joined_on          DateTime     @db.Date
-  left_on            DateTime?    @db.Date
+  posted_location_id String        @db.Uuid
+  joined_on          DateTime      @db.Date
+  left_on            DateTime?     @db.Date
   left_reason        String?
-  monthly_salary     Decimal?     @db.Decimal(14, 2)
-  daily_rate         Decimal?     @db.Decimal(14, 2)
-  created_by         String?      @db.Uuid
-  created_at         DateTime     @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime     @default(now()) @updatedAt @db.Timestamptz(6)
-  societies          societies    @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  persons            persons      @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  locations          locations    @relation(fields: [posted_location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users              users?       @relation("staff_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  monthly_salary     Decimal?      @db.Decimal(14, 2)
+  daily_rate         Decimal?      @db.Decimal(14, 2)
+  created_by         String?       @db.Uuid
+  created_at         DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime      @default(now()) @updatedAt @db.Timestamptz(6)
+  societies          societies     @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  persons            persons       @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  locations          locations     @relation(fields: [posted_location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users              users?        @relation("staff_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   attendance         attendance[]
   assets_kept        assets[]
+  tickets_assigned   tickets[]
+  work_orders        work_orders[]
 
   @@unique([society_id, staff_no], map: "staff_no_uq")
   @@unique([person_id], map: "staff_current_person_uq", where: raw("(left_on IS NULL)"))
@@ -1110,6 +1123,7 @@ model assets {
   users              users?                    @relation("assets_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   plans              asset_maintenance_plans[]
   events             asset_events[]
+  work_orders        work_orders[]
 
   @@unique([society_id, asset_no], map: "assets_no_uq")
   @@index([society_id, status], map: "assets_society_idx")
@@ -1121,21 +1135,22 @@ model assets {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// Upkeep every few months (Step 23). Done moves next_due_on on; stopped plans are archived (migration 16_facilities).
 model asset_maintenance_plans {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  society_id   String    @db.Uuid
-  asset_id     String    @db.Uuid
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id   String        @db.Uuid
+  asset_id     String        @db.Uuid
   task_bn      String
   task_en      String?
   every_months Int
-  next_due_on  DateTime  @db.Date
-  last_done_on DateTime? @db.Date
-  archived_at  DateTime? @db.Timestamptz(6)
-  created_by   String?   @db.Uuid
-  created_at   DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at   DateTime  @default(now()) @updatedAt @db.Timestamptz(6)
-  societies    societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  assets       assets    @relation(fields: [asset_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users        users?    @relation("asset_plans_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  next_due_on  DateTime      @db.Date
+  last_done_on DateTime?     @db.Date
+  archived_at  DateTime?     @db.Timestamptz(6)
+  created_by   String?       @db.Uuid
+  created_at   DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime      @default(now()) @updatedAt @db.Timestamptz(6)
+  societies    societies     @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  assets       assets        @relation(fields: [asset_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users        users?        @relation("asset_plans_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  work_orders  work_orders[]
 
   @@index([asset_id], map: "asset_plans_asset_idx")
   @@index([society_id, next_due_on], map: "asset_plans_due_idx", where: raw("(archived_at IS NULL)"))
@@ -1157,4 +1172,105 @@ model asset_events {
   users      users?    @relation("asset_events_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([asset_id, created_at], map: "asset_events_asset_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// A reported problem at a place (Step 24), T-NNNN. Reporter (person or typed name), resolved and closed fields kept together by checks (migration 17_helpdesk).
+model tickets {
+  id                 String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id         String          @db.Uuid
+  ticket_no          String
+  location_id        String          @db.Uuid
+  category           String
+  title              String
+  description        String?
+  priority           String          @default("normal")
+  status             String          @default("open")
+  reporter_person_id String?         @db.Uuid
+  reporter_name      String?
+  reporter_phone     String?
+  reported_by        String?         @db.Uuid
+  assigned_staff_id  String?         @db.Uuid
+  due_at             DateTime        @db.Timestamptz(6)
+  resolved_at        DateTime?       @db.Timestamptz(6)
+  resolution_note    String?
+  closed_at          DateTime?       @db.Timestamptz(6)
+  created_at         DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime        @default(now()) @updatedAt @db.Timestamptz(6)
+  societies          societies       @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  locations          locations       @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  persons            persons?        @relation(fields: [reporter_person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users              users?          @relation("tickets_reported_byTousers", fields: [reported_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  staff              staff?          @relation(fields: [assigned_staff_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  events             ticket_events[]
+  work_orders        work_orders[]
+
+  @@unique([society_id, ticket_no], map: "tickets_no_uq")
+  @@index([society_id, status, due_at], map: "tickets_society_idx")
+  @@index([location_id], map: "tickets_location_idx")
+  @@index([assigned_staff_id], map: "tickets_assigned_idx")
+  @@index([reporter_person_id], map: "tickets_reporter_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// A ticket's timeline (Step 24), only ever added to (migration 17_helpdesk).
+model ticket_events {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id String    @db.Uuid
+  ticket_id  String    @db.Uuid
+  kind       String
+  detail     Json      @default("{}")
+  note       String?
+  photo_url  String?
+  created_by String?   @db.Uuid
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  societies  societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tickets    tickets   @relation(fields: [ticket_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users?    @relation("ticket_events_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([ticket_id, created_at], map: "ticket_events_ticket_idx")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// A job (Step 24), WO-YY-NNNN: from a ticket, an asset or an upkeep plan. Staff or vendor, done and cancelled fields kept together by checks; one expense per work order (migration 17_helpdesk).
+model work_orders {
+  id                String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id        String                   @db.Uuid
+  wo_no             String
+  ticket_id         String?                  @db.Uuid
+  asset_id          String?                  @db.Uuid
+  plan_id           String?                  @db.Uuid
+  location_id       String                   @db.Uuid
+  title             String
+  description       String?
+  assigned_staff_id String?                  @db.Uuid
+  vendor_id         String?                  @db.Uuid
+  estimated_cost    Decimal?                 @db.Decimal(14, 2)
+  status            String                   @default("open")
+  completed_on      DateTime?                @db.Date
+  completion_note   String?
+  expense_id        String?                  @db.Uuid
+  cancelled_at      DateTime?                @db.Timestamptz(6)
+  cancel_reason     String?
+  created_by        String?                  @db.Uuid
+  created_at        DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime                 @default(now()) @updatedAt @db.Timestamptz(6)
+  societies         societies                @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tickets           tickets?                 @relation(fields: [ticket_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  assets            assets?                  @relation(fields: [asset_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  plans             asset_maintenance_plans? @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  locations         locations                @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  staff             staff?                   @relation(fields: [assigned_staff_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vendors           vendors?                 @relation(fields: [vendor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  expenses          expenses?                @relation(fields: [expense_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users             users?                   @relation("work_orders_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([society_id, wo_no], map: "work_orders_no_uq")
+  @@unique([expense_id], map: "work_orders_expense_uq", where: raw("(expense_id IS NOT NULL)"))
+  @@index([society_id, status], map: "work_orders_society_idx")
+  @@index([location_id], map: "work_orders_location_idx")
+  @@index([ticket_id], map: "work_orders_ticket_idx")
+  @@index([asset_id], map: "work_orders_asset_idx")
+  @@index([plan_id], map: "work_orders_plan_idx")
+  @@index([assigned_staff_id], map: "work_orders_staff_idx")
 }

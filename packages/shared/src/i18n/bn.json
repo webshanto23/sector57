@@ -305,6 +305,8 @@
       "staff": "কর্মী",
       "attendance": "হাজিরা",
       "facilities": "সুবিধা ও সম্পদ",
+      "helpdesk": "হেল্পডেস্ক (অভিযোগ)",
+      "work_orders": "কাজের আদেশ",
       "audit": "অডিট লগ"
     },
     "actions": {
