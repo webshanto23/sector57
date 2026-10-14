@@ -29,7 +29,9 @@ ENV API_URL=${API_URL}
 # Standalone output: Next copies only the files the server needs (see next.config.ts).
 ENV NEXT_OUTPUT=standalone
 RUN pnpm --filter @s57/db generate
-RUN --mount=type=cache,id=s57-next,target=/app/apps/web/.next/cache pnpm build
+# `locked`: compose builds the api and web targets in parallel, and two Next builds
+# must not share Turbopack's cache at the same time.
+RUN --mount=type=cache,id=s57-next,target=/app/apps/web/.next/cache,sharing=locked pnpm build
 
 # API runtime dependencies: only the API and its workspace packages, not the web's.
 # Prisma CLI and tsx stay because the container runs `migrate:deploy` and `seed`.
