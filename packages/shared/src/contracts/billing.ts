@@ -217,9 +217,10 @@ export type InvoiceDetail = z.infer<typeof invoiceDetailSchema>;
 // ---------------------------------------------------------------------------
 
 /** A month, `YYYY-MM`. */
-const month = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'invalid_month');
+export const monthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'invalid_month');
+const month = monthSchema;
 
-const lineInputSchema = z.object({
+export const lineInputSchema = z.object({
   chargeTypeId: z.uuid(),
   amount: moneySchema,
   /** Blank uses the charge type's name. */
@@ -243,11 +244,16 @@ export const invoiceCreateSchema = z
   })
   .superRefine((input, ctx) => {
     if (!input.unitId === !input.personId) ctx.addIssue({ code: 'custom', path: ['unitId'], message: 'unit_or_person' });
-    if (input.periodTo && !input.periodFrom) ctx.addIssue({ code: 'custom', path: ['periodFrom'], message: 'invalid_period' });
-    if (input.periodFrom && input.periodTo && input.periodTo < input.periodFrom) {
-      ctx.addIssue({ code: 'custom', path: ['periodTo'], message: 'invalid_period' });
-    }
+    refinePeriod(input, ctx);
   });
+
+/** A period needs its first month, and the last can't come before it. */
+export function refinePeriod(input: { periodFrom?: string | null; periodTo?: string | null }, ctx: z.RefinementCtx): void {
+  if (input.periodTo && !input.periodFrom) ctx.addIssue({ code: 'custom', path: ['periodFrom'], message: 'invalid_period' });
+  if (input.periodFrom && input.periodTo && input.periodTo < input.periodFrom) {
+    ctx.addIssue({ code: 'custom', path: ['periodTo'], message: 'invalid_period' });
+  }
+}
 export type InvoiceCreateInput = z.input<typeof invoiceCreateSchema>;
 export type InvoiceCreate = z.output<typeof invoiceCreateSchema>;
 

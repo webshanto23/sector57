@@ -36,3 +36,15 @@ export async function lookupBilling(query: BillingLookupQuery): Promise<BillingL
   if (!data) throw failed("units to bill", response.status);
   return data;
 }
+
+/** Bills to print together, in the order asked. Null when any is missing or outside the caller's area. */
+export async function getInvoicesForPrint(ids: string[]): Promise<InvoiceDetail[] | null> {
+  const { data, response } = await api.GET("/invoices/print", {
+    params: { query: { ids: ids.join(",") } },
+    headers: await authHeaders(),
+    cache: "no-store",
+  });
+  if (response.status === 404 || response.status === 400) return null;
+  if (!data) throw failed("the bills", response.status);
+  return data.items;
+}

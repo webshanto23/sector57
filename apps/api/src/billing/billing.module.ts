@@ -9,15 +9,16 @@ import { BillToService } from './bill-to.service.js';
 import { BillingRunsJob } from './billing-runs.job.js';
 import { BillingRunsService } from './billing-runs.service.js';
 import { BillingLookupController, InvoicesController } from './invoices.controller.js';
+import { InvoiceBatchService } from './invoice-batch.service.js';
 import { InvoicesService } from './invoices.service.js';
 import { BillAheadController, BillingRunsController, SchedulesController } from './schedules.controller.js';
 import { SchedulesService } from './schedules.service.js';
 
-/** Steps 12–14: bills (by hand, opening arrears, ahead), recurring charges and billing runs. */
+/** Steps 12–14 and 27: bills (by hand, several units at once, opening arrears, ahead), recurring charges and billing runs. */
 @Module({
   imports: [ScheduleModule.forRoot(), PrismaModule, AuditModule, FinanceModule, MembersModule, PropertyModule],
   controllers: [InvoicesController, BillingLookupController, SchedulesController, BillingRunsController, BillAheadController],
-  providers: [BillToService, InvoicesService, SchedulesService, BillingRunsService, BillingRunsJob],
+  providers: [BillToService, InvoicesService, InvoiceBatchService, SchedulesService, BillingRunsService, BillingRunsJob],
   exports: [BillToService, InvoicesService],
 })
 export class BillingModule {}

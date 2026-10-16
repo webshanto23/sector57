@@ -10,19 +10,22 @@ import {
   toPaisa,
   type Locale,
 } from "@s57/shared";
-import { CircleCheck, Clock, Plus, Receipt, Repeat, TriangleAlert, X } from "lucide-react";
+import { CircleCheck, Clock, Layers, Plus, Receipt, Repeat, TriangleAlert, X } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { BillsTable } from "@/components/billing/bills-table";
+import { PrintSelected } from "@/components/billing/print-selected";
 import { Pager } from "@/components/cms/pager";
 import { Chip, inputClass, PageHeader, SearchInput, StatCard } from "@/components/kit";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Link } from "@/i18n/navigation";
+import { getPathname, Link } from "@/i18n/navigation";
 import { getInvoices } from "@/lib/api/billing";
 import { getLocation } from "@/lib/api/property";
 import { requirePermission } from "@/lib/api/session";
 
 const PAGE_SIZE = 25;
+/** The form the rows' tick boxes join to print several bills. */
+const PRINT_FORM_ID = "print-bills";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/dashboard/billing">): Promise<Metadata> {
   const { locale } = await params;
@@ -89,6 +92,12 @@ export default async function BillingPage({ params, searchParams }: PageProps<"/
               <Link href="/dashboard/recurring/run" className={buttonVariants({ variant: "outline" })}>
                 <Repeat aria-hidden />
                 {t("generate")}
+              </Link>
+            ) : null}
+            {canAnywhere(me.access, "billing", "create") ? (
+              <Link href="/dashboard/billing/batch" className={buttonVariants({ variant: "outline" })}>
+                <Layers aria-hidden />
+                {t("batch.open")}
               </Link>
             ) : null}
             {canAnywhere(me.access, "billing", "create") ? (
@@ -173,7 +182,8 @@ export default async function BillingPage({ params, searchParams }: PageProps<"/
         </Button>
       </form>
 
-      <BillsTable rows={list.items} locale={locale} empty={filtered ? t("emptyFiltered") : t("empty")} />
+      {list.items.length ? <PrintSelected formId={PRINT_FORM_ID} action={getPathname({ href: "/dashboard/billing/print", locale })} /> : null}
+      <BillsTable rows={list.items} locale={locale} empty={filtered ? t("emptyFiltered") : t("empty")} selectForm={PRINT_FORM_ID} />
 
       <Pager
         locale={locale}

@@ -88,7 +88,8 @@ export const invoiceSelect = {
     orderBy: [{ position: 'asc' }, { id: 'asc' }],
   },
 } satisfies Prisma.invoicesSelect;
-type Row = Prisma.invoicesGetPayload<{ select: typeof invoiceSelect }>;
+export type InvoiceRowData = Prisma.invoicesGetPayload<{ select: typeof invoiceSelect }>;
+type Row = InvoiceRowData;
 const select = invoiceSelect;
 
 const nameOf = (user: { phone: string; persons: { full_name: string } | null } | null) => (user ? (user.persons?.full_name ?? user.phone) : null);
@@ -149,17 +150,23 @@ export class InvoicesService {
 
   async get(actor: Actor, id: string): Promise<InvoiceDetail> {
     const row = await this.prisma.invoices.findFirst({ where: { id, society_id: actor.societyId }, select });
-    if (!row || !allowed(actor.access, 'view', pathOf(row))) throw invoiceNotFound();
+    if (!row || !canSeeBill(actor.access, row)) throw invoiceNotFound();
+    const [detail] = await this.details(actor, [row]);
+    return detail!;
+  }
+
+  /** Full bills for rows the caller may already see, in the same order, with one receipt header for all. */
+  async details(actor: Actor, rows: InvoiceRowData[]): Promise<InvoiceDetail[]> {
     const today = isoDate(todayDate());
     const [allocations, header] = await Promise.all([
       this.prisma.payment_allocations.findMany({
-        where: { invoice_id: id },
-        select: { amount: true, payments: { select: { id: true, receipt_no: true, received_at: true, voided_at: true } } },
+        where: { invoice_id: { in: rows.map((row) => row.id) } },
+        select: { invoice_id: true, amount: true, payments: { select: { id: true, receipt_no: true, received_at: true, voided_at: true } } },
         orderBy: [{ payments: { received_at: 'asc' } }, { payment_id: 'asc' }],
       }),
       this.settings.receiptHeader(actor.societyId),
     ]);
-    return {
+    return rows.map((row) => ({
       ...toInvoiceRow(row, today),
       fund: toFundOption(row.funds),
       lines: row.invoice_lines.map((line) => ({
@@ -172,16 +179,18 @@ export class InvoicesService {
       createdAt: row.created_at.toISOString(),
       createdBy: nameOf(row.users),
       void: row.voided_at && row.void_reason ? { reason: row.void_reason, at: row.voided_at.toISOString(), by: nameOf(row.users_voided) } : null,
-      payments: allocations.map((allocation) => ({
-        id: allocation.payments.id,
-        receiptNo: allocation.payments.receipt_no,
-        receivedDay: isoDate(todayDate(allocation.payments.received_at)),
-        amount: allocation.amount.toFixed(2),
-        voided: allocation.payments.voided_at !== null,
-      })),
+      payments: allocations
+        .filter((allocation) => allocation.invoice_id === row.id)
+        .map((allocation) => ({
+          id: allocation.payments.id,
+          receiptNo: allocation.payments.receipt_no,
+          receivedDay: isoDate(todayDate(allocation.payments.received_at)),
+          amount: allocation.amount.toFixed(2),
+          voided: allocation.payments.voided_at !== null,
+        })),
       header,
       can: { void: row.status === 'unpaid' && row.paid.isZero() && allowed(actor.access, 'approve', pathOf(row)) },
-    };
+    }));
   }
 
   /** Units and members to bill, for the new-bill form. */
@@ -318,6 +327,11 @@ export class InvoicesService {
   async issueUnitBillIn(tx: Tx, actor: Actor, unitId: string, dueDate: string, lines: LineSpec[]): Promise<{ id: string; invoiceNo: string }> {
     const today = isoDate(todayDate());
     return this.issueIn(tx, actor, { kind: 'regular', unitId, personId: null, issueDate: today, dueDate: dueDate < today ? today : dueDate, period: null, lines });
+  }
+
+  /** A regular unit bill with its period, dated today, inside the caller's transaction (a batch). The same checks as `POST /invoices`. */
+  async issueRegularIn(tx: Tx, actor: Actor, bill: Pick<BillSpec, 'dueDate' | 'period' | 'lines'> & { unitId: string }): Promise<{ id: string; invoiceNo: string }> {
+    return this.issueIn(tx, actor, { kind: 'regular', personId: null, issueDate: isoDate(todayDate()), ...bill });
   }
 
   private async issueIn(tx: Tx, actor: Actor, spec: BillSpec): Promise<{ id: string; invoiceNo: string }> {
@@ -548,6 +562,9 @@ const pathOf = (row: { units: { locations: { path: string } } | null }) => row.u
 function allowed(access: CallerAccess, action: PermissionAction, path: string | null): boolean {
   return path ? access.can(action, 'billing', { path }) : access.paths(action, 'billing') === 'all';
 }
+
+/** May the caller see this bill (`billing.view` at its unit, or society-wide for a membership bill)? */
+export const canSeeBill = (access: CallerAccess, row: { units: { locations: { path: string } } | null }) => allowed(access, 'view', pathOf(row));
 
 export function toInvoiceRow(row: Row, today: string): InvoiceRow {
   const status = toInvoiceStatus(row.status);

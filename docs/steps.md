@@ -868,6 +868,14 @@ On `step/26-payroll` (branched from `step/25-vehicles`). Anis confirmed the scop
   - An A5 payslip through `PrintSheet`.
   - The overview's "This week" card shows an approved run not yet paid.
 
+### Step 27: Bills for several units, printing bills together — Built, awaiting review
+
+On `step/27-bulk-bills` (branched from `step/26-payroll`). Anis asked for it on 2026-10-15 because owners and renters change, so recurring schedules can't cover every charge. Decided: different charges per unit, amounts typed by hand (no part-month maths), earlier bills for the same charge and months only warn, a unit whose lines pay into two funds gets one bill per fund, and the bills of a batch, or any ticked bills, print together. No migration. Rules in `docs/rules/billing.md`.
+
+- **Shared:** `contracts/billing-batch.ts` (`invoiceBatchSchema`, check and result contracts, `invoicePrintQuery`, and the pure rules `splitByFund`, `billSpan`, `duplicateBills`) with unit tests.
+- **API:** `InvoiceBatchService`; `POST /invoices/batch/check` (writes nothing), `POST /invoices/batch` (all or none, each bill through `InvoicesService.issueRegularIn`; an error names its unit in `details.unitId`), `GET /invoices/print?ids=` (at most 50, in the order asked, 404 if any is out of reach), `GET /billing/units` (every unit the caller may bill, with who pays, for the picker). `InvoicesService.details` builds full bills for several rows at once. E2e `test/invoice-batch.e2e-spec.ts` (7).
+- **Web:** `/dashboard/billing/batch` ("Several units" on the bills page): find units, or tick them in a side panel listing every billable unit as a folding tree of places (block › road › building…, each with a select-all box and counts) ("Choose from list"), lines per unit with "same lines as above", check, then make them all and go to the print page. `/dashboard/billing/print?ids=` or `?id=&id=`: every bill on a page of its own (`BillSheet`, split out of `BillPrint`), or "Print as a list": one A4 table (bill no., unit, bill to, charge, period, amount, total). The bills list has tick boxes and "Print selected". `schema.d.ts` regenerated.
+
 ### Every Operations step
 
 - Same workflow as before: scope note, Anis confirms, `step/NN-name` branch, `pnpm check` and e2e, Codex review. Migrations are additive and approved first.

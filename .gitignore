@@ -27,3 +27,5 @@ Thumbs.db
 
 # Local dev notes (passwords), never commit
 docs/super-admin.md
+docs/aws-start.md
+docs/leftovers.md
