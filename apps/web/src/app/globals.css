@@ -263,6 +263,10 @@
   .print-portal .print-break-avoid {
     break-inside: avoid;
   }
+  /* Several bills in one print job: each starts a new page. */
+  .print-portal .print-page + .print-page {
+    break-before: page;
+  }
   /* Long lists (the door-to-door arrears list) print on A4; receipts and vouchers stay A5. */
   @page a4 {
     size: A4 portrait;

@@ -63,9 +63,9 @@ Keep each step small and cheap in tokens.
 - **Docs once.** Update `docs/steps.md`, `docs/rules/` and memory once, at the end of the step, not along the way.
 - **No subagents** unless Anis asks for them.
 
-## Current state (2026-10-13)
+## Current state (2026-10-16)
 
-- Steps 0–23 are done, approved by Codex and merged into `main` (GitHub remote `origin`, Step 23 as PR #20, 2026-10-13). Step 24 (helpdesk and work orders) is built on `step/24-helpdesk`, Step 25 (vehicles, stickers, parking) on `step/25-vehicles` and Step 26 (payroll) on `step/26-payroll`; all three await Codex review.
+- Steps 0–23 are done, approved by Codex and merged into `main` (GitHub remote `origin`, Step 23 as PR #20, 2026-10-13). Step 24 (helpdesk and work orders) is built on `step/24-helpdesk`, Step 25 (vehicles, stickers, parking) on `step/25-vehicles`, Step 26 (payroll) on `step/26-payroll` and Step 27 (bills for several units, printing bills together) on `step/27-bulk-bills`; all four await Codex review.
 - The full step list with status and open decisions is in `docs/steps.md`; keep it updated as steps move.
 - Visual checks at 375/820/1440 are deferred. When they resume, use CDP viewport emulation (headless Chrome won't go below about 500 px with `--window-size`).
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.

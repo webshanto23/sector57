@@ -13,23 +13,39 @@ export async function BillsTable({
   locale,
   empty,
   hide = [],
+  selectForm,
 }: {
   rows: InvoiceRow[];
   locale: Locale;
   empty: string;
   hide?: ("unit" | "billTo")[];
+  /** With a form id, each bill gets a tick box that joins that form (printing several bills). */
+  selectForm?: string;
 }) {
   const t = await getTranslations("Billing");
+  const tPrint = await getTranslations("Billing.printMany");
   const tr = t as unknown as (key: string, values?: Record<string, string>) => string;
   const columns: Column<InvoiceRow>[] = [
     {
       key: "invoice",
       header: t("col.invoice"),
       cell: (row) => (
-        <Link href={`/dashboard/billing/${row.id}`} className="grid font-semibold text-fg">
-          <span className="font-mono text-[13px]">{row.invoiceNo}</span>
-          <span className="text-[12px] font-normal text-muted-foreground">{formatDate(row.issueDate, locale, "short")}</span>
-        </Link>
+        <span className="flex items-start gap-2.5">
+          {selectForm ? (
+            <input
+              type="checkbox"
+              form={selectForm}
+              name="id"
+              value={row.id}
+              aria-label={tPrint("select", { no: row.invoiceNo })}
+              className="mt-1 size-4 accent-primary"
+            />
+          ) : null}
+          <Link href={`/dashboard/billing/${row.id}`} className="grid font-semibold text-fg">
+            <span className="font-mono text-[13px]">{row.invoiceNo}</span>
+            <span className="text-[12px] font-normal text-muted-foreground">{formatDate(row.issueDate, locale, "short")}</span>
+          </Link>
+        </span>
       ),
     },
     ...(hide.includes("unit")

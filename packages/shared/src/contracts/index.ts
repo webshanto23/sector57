@@ -13,6 +13,7 @@ export * from './members.js';
 export * from './forms.js';
 export * from './finance.js';
 export * from './billing.js';
+export * from './billing-batch.js';
 export * from './schedules.js';
 export * from './payments.js';
 export * from './donations.js';
