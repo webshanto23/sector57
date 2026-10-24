@@ -442,7 +442,7 @@ model invoices {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// Append-only: a trigger (migration 6_finance_setup) refuses UPDATE, DELETE and TRUNCATE. Correct a row with a reversing entry.
+/// Append-only: a trigger (migration 06_finance_setup) refuses UPDATE, DELETE and TRUNCATE. Correct a row with a reversing entry.
 model ledger_entries {
   id          BigInt          @id @default(autoincrement())
   society_id  String          @db.Uuid
