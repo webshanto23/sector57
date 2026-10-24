@@ -40,6 +40,7 @@ import { FacilitiesModule } from './facilities/facilities.module.js';
 import { HelpdeskModule } from './helpdesk/helpdesk.module.js';
 import { WorkOrdersModule } from './work-orders/work-orders.module.js';
 import { PayrollModule } from './payroll/payroll.module.js';
+import { CertificatesModule } from './certificates/certificates.module.js';
 import { VehiclesModule } from './vehicles/vehicles.module.js';
 import { StorageModule } from './storage/storage.module.js';
 import { UsersModule } from './users/users.module.js';
@@ -89,6 +90,7 @@ import { UsersModule } from './users/users.module.js';
     HelpdeskModule,
     WorkOrdersModule,
     VehiclesModule,
+    CertificatesModule,
     PayrollModule,
     AuditLogModule,
   ],

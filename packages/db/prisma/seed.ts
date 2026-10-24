@@ -74,6 +74,7 @@ const MODULES = [
   "work_orders",
   "vehicles",
   "payroll",
+  "certificates",
   "audit",
 ] as const;
 

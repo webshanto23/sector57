@@ -48,6 +48,7 @@ Each file holds the rules earlier steps set for that area. Read only the ones th
 | Facilities, assets | `docs/rules/facilities.md` |
 | Helpdesk, tickets, work orders | `docs/rules/helpdesk.md` |
 | Vehicles, stickers, parking | `docs/rules/vehicles.md` |
+| Certificates and NOCs | `docs/rules/certificates.md` |
 
 When a step sets a new rule, add it to the matching file (or a new one listed here), not to this file.
 
@@ -63,9 +64,9 @@ Keep each step small and cheap in tokens.
 - **Docs once.** Update `docs/steps.md`, `docs/rules/` and memory once, at the end of the step, not along the way.
 - **No subagents** unless Anis asks for them.
 
-## Current state (2026-10-16)
+## Current state (2026-10-24)
 
-- Steps 0–23 are done, approved by Codex and merged into `main` (GitHub remote `origin`, Step 23 as PR #20, 2026-10-13). Step 24 (helpdesk and work orders) is built on `step/24-helpdesk`, Step 25 (vehicles, stickers, parking) on `step/25-vehicles`, Step 26 (payroll) on `step/26-payroll` and Step 27 (bills for several units, printing bills together) on `step/27-bulk-bills`; all four await Codex review.
+- Steps 0–27 are done and merged into `main` (GitHub remote `origin`; Step 27 as PR #27, migration folders zero-padded in PR #28). Step 28 (certificates and NOCs, the first "Records and administration" item) is built on `step/28-certificates` and awaits Codex review. Planned next: Step 29 (member and property reports), Step 30 (module switches and one settings screen).
 - The full step list with status and open decisions is in `docs/steps.md`; keep it updated as steps move.
 - Visual checks at 375/820/1440 are deferred. When they resume, use CDP viewport emulation (headless Chrome won't go below about 500 px with `--window-size`).
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.

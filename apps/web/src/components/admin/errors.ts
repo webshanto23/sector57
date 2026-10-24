@@ -189,6 +189,14 @@ const KNOWN = [
   "payroll_void",
   "no_default_fund",
   "expense_from_payroll",
+  "certificate_not_found",
+  "certificate_not_draft",
+  "certificate_person_not_at_unit",
+  "certificate_not_member",
+  "certificate_dues_outstanding",
+  "certificate_dues_unpaid",
+  "certificate_not_issued",
+  "certificate_already_void",
 ] as const;
 type KnownCode = (typeof KNOWN)[number];
 

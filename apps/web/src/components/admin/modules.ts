@@ -10,7 +10,7 @@ export const MATRIX_GROUPS = [
   { key: "finance", modules: ["billing", "payments", "donations", "expenses", "budgets", "ledger"] },
   { key: "operations", modules: ["staff", "attendance", "facilities", "helpdesk", "work_orders", "vehicles", "payroll"] },
   { key: "community", modules: ["notices", "committee", "gallery", "site"] },
-  { key: "records", modules: ["documents"] },
+  { key: "records", modules: ["documents", "certificates"] },
   { key: "admin", modules: ["users", "roles", "settings", "audit"] },
 ] as const satisfies readonly { key: string; modules: readonly PermissionModule[] }[];
 

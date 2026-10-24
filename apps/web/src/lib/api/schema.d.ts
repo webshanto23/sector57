@@ -3268,6 +3268,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/certificates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CertificatesController_list"];
+        put?: never;
+        post: operations["CertificatesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/certificates/unit-people": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CertificatesController_unitPeople"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/certificates/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CertificatesController_templates"];
+        put: operations["CertificatesController_setTemplates"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/certificates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CertificatesController_get"];
+        put?: never;
+        post?: never;
+        delete: operations["CertificatesController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["CertificatesController_update"];
+        trace?: never;
+    };
+    "/certificates/{id}/print": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CertificatesController_print"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/certificates/{id}/issue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CertificatesController_issue"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/certificates/{id}/void": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CertificatesController_void"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/payroll": {
         parameters: {
             query?: never;
@@ -3715,7 +3827,7 @@ export interface components {
                 fullAccess: boolean;
                 grants: {
                     /** @enum {string} */
-                    module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "vehicles" | "payroll" | "audit";
+                    module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "vehicles" | "payroll" | "certificates" | "audit";
                     /** @enum {string} */
                     action: "view" | "create" | "edit" | "approve" | "delete" | "export";
                     scopeLocationId: string | null;
@@ -3747,7 +3859,7 @@ export interface components {
             permissionCount: number;
             permissions: {
                 /** @enum {string} */
-                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "vehicles" | "payroll" | "audit";
+                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "vehicles" | "payroll" | "certificates" | "audit";
                 /** @enum {string} */
                 action: "view" | "create" | "edit" | "approve" | "delete" | "export";
             }[];
@@ -3757,7 +3869,7 @@ export interface components {
             description?: string | null;
             permissions: {
                 /** @enum {string} */
-                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "vehicles" | "payroll" | "audit";
+                module: "settings" | "users" | "roles" | "locations" | "units" | "members" | "ownerships" | "tenancies" | "committee" | "notices" | "documents" | "forms" | "site" | "gallery" | "billing" | "payments" | "donations" | "expenses" | "budgets" | "ledger" | "staff" | "attendance" | "facilities" | "helpdesk" | "work_orders" | "vehicles" | "payroll" | "certificates" | "audit";
                 /** @enum {string} */
                 action: "view" | "create" | "edit" | "approve" | "delete" | "export";
             }[];
@@ -8945,6 +9057,254 @@ export interface components {
             unitId: string | null;
             /** @default null */
             vehicleId: string | null;
+        };
+        CertificateListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                certNo: string | null;
+                /** @enum {string} */
+                type: "noc_sale" | "noc_rent" | "noc_utility" | "noc_renovation" | "noc_loan" | "residence" | "membership" | "no_dues";
+                /** @enum {string} */
+                lang: "bn" | "en";
+                /** @enum {string} */
+                status: "draft" | "issued" | "void";
+                person: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                };
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                purpose: string | null;
+                issuedAt: string | null;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                draft: number;
+                issued: number;
+                void: number;
+            };
+            can: {
+                create: boolean;
+            };
+        };
+        CertificateUnitPeopleDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                ties: ("owner" | "renter" | "resident")[];
+            }[];
+        };
+        CertificateTemplatesViewDto_Output: {
+            templates: {
+                noc_sale: {
+                    bn: string;
+                    en: string;
+                };
+                noc_rent: {
+                    bn: string;
+                    en: string;
+                };
+                noc_utility: {
+                    bn: string;
+                    en: string;
+                };
+                noc_renovation: {
+                    bn: string;
+                    en: string;
+                };
+                noc_loan: {
+                    bn: string;
+                    en: string;
+                };
+                residence: {
+                    bn: string;
+                    en: string;
+                };
+                membership: {
+                    bn: string;
+                    en: string;
+                };
+                no_dues: {
+                    bn: string;
+                    en: string;
+                };
+            };
+            defaults: {
+                noc_sale: {
+                    bn: string;
+                    en: string;
+                };
+                noc_rent: {
+                    bn: string;
+                    en: string;
+                };
+                noc_utility: {
+                    bn: string;
+                    en: string;
+                };
+                noc_renovation: {
+                    bn: string;
+                    en: string;
+                };
+                noc_loan: {
+                    bn: string;
+                    en: string;
+                };
+                residence: {
+                    bn: string;
+                    en: string;
+                };
+                membership: {
+                    bn: string;
+                    en: string;
+                };
+                no_dues: {
+                    bn: string;
+                    en: string;
+                };
+            };
+            customised: ("noc_sale" | "noc_rent" | "noc_utility" | "noc_renovation" | "noc_loan" | "residence" | "membership" | "no_dues")[];
+            placeholders: ("name" | "unit" | "society" | "date" | "certNo" | "memberNo" | "purpose" | "addressee")[];
+            can: {
+                edit: boolean;
+            };
+        };
+        CertificateTemplatesDto: {
+            [key: string]: {
+                bn: string;
+                en: string;
+            };
+        };
+        CertificateDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            certNo: string | null;
+            /** @enum {string} */
+            type: "noc_sale" | "noc_rent" | "noc_utility" | "noc_renovation" | "noc_loan" | "residence" | "membership" | "no_dues";
+            /** @enum {string} */
+            lang: "bn" | "en";
+            /** @enum {string} */
+            status: "draft" | "issued" | "void";
+            person: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+            };
+            place: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string[];
+                isUnit: boolean;
+            };
+            purpose: string | null;
+            issuedAt: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            addressee: string | null;
+            body: string;
+            signerName: string | null;
+            signerTitle: string | null;
+            duesOwedAtIssue: string | null;
+            issuedBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            voidedAt: string | null;
+            voidedBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            voidReason: string | null;
+            createdBy: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            dues: {
+                owed: string;
+                bills: number;
+            } | null;
+            can: {
+                edit: boolean;
+                delete: boolean;
+                issue: boolean;
+                void: boolean;
+            };
+        };
+        CertificatePrintDto_Output: {
+            header: {
+                nameBn: string;
+                nameEn: string | null;
+                addressBn: string | null;
+                addressEn: string | null;
+                phone: string | null;
+                mark: string;
+            };
+            society: string;
+            certNo: string;
+            /** @enum {string} */
+            type: "noc_sale" | "noc_rent" | "noc_utility" | "noc_renovation" | "noc_loan" | "residence" | "membership" | "no_dues";
+            /** @enum {string} */
+            lang: "bn" | "en";
+            /** @enum {string} */
+            status: "issued" | "void";
+            /** Format: date */
+            issuedOn: string;
+            addressee: string | null;
+            purpose: string | null;
+            body: string;
+            signerName: string;
+            signerTitle: string | null;
+        };
+        CertificateCreateDto: {
+            /** @enum {string} */
+            type: "noc_sale" | "noc_rent" | "noc_utility" | "noc_renovation" | "noc_loan" | "residence" | "membership" | "no_dues";
+            /**
+             * @default bn
+             * @enum {string}
+             */
+            lang: "bn" | "en";
+            /** Format: uuid */
+            personId: string;
+            /** Format: uuid */
+            unitId: string;
+            addressee?: string | null;
+            purpose?: string | null;
+        };
+        CertificateUpdateDto: {
+            /** @enum {string} */
+            lang?: "bn" | "en";
+            /** Format: uuid */
+            personId?: string;
+            addressee?: string | null;
+            purpose?: string | null;
+        };
+        CertificateIssueDto: {
+            signerName: string;
+            signerTitle?: string | null;
+            /** @default false */
+            allowDues: boolean;
+        };
+        CertificateVoidDto: {
+            reason: string;
         };
         PayrollMonthDto_Output: {
             month: string;
@@ -15554,6 +15914,256 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ParkingSlotDto_Output"];
+                };
+            };
+        };
+    };
+    CertificatesController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                type?: "noc_sale" | "noc_rent" | "noc_utility" | "noc_renovation" | "noc_loan" | "residence" | "membership" | "no_dues";
+                status?: "draft" | "issued" | "void";
+                locationId?: string;
+                unitId?: string;
+                personId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateListDto_Output"];
+                };
+            };
+        };
+    };
+    CertificatesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CertificateCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateDetailDto_Output"];
+                };
+            };
+        };
+    };
+    CertificatesController_unitPeople: {
+        parameters: {
+            query: {
+                unitId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateUnitPeopleDto_Output"];
+                };
+            };
+        };
+    };
+    CertificatesController_templates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateTemplatesViewDto_Output"];
+                };
+            };
+        };
+    };
+    CertificatesController_setTemplates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CertificateTemplatesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateTemplatesViewDto_Output"];
+                };
+            };
+        };
+    };
+    CertificatesController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateDetailDto_Output"];
+                };
+            };
+        };
+    };
+    CertificatesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CertificatesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CertificateUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateDetailDto_Output"];
+                };
+            };
+        };
+    };
+    CertificatesController_print: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificatePrintDto_Output"];
+                };
+            };
+        };
+    };
+    CertificatesController_issue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CertificateIssueDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateDetailDto_Output"];
+                };
+            };
+        };
+    };
+    CertificatesController_void: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CertificateVoidDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CertificateDetailDto_Output"];
                 };
             };
         };

@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Note } from "@/components/admin/form-status";
 import { BillsPanel } from "@/components/billing/bills-panel";
+import { CertificatesPanel } from "@/components/certificates/certificates-panel";
 import { DonationsPanel } from "@/components/donations/donations-panel";
 import { DocumentsPanel } from "@/components/documents/documents-panel";
 import { Chip, PageHeader } from "@/components/kit";
@@ -65,6 +66,7 @@ export default async function PersonPage({ params }: PageProps<"/[locale]/dashbo
         <BillsPanel access={me.access} locale={locale} personId={person.id} />
         <DonationsPanel access={me.access} locale={locale} personId={person.id} />
         <VehiclesPanel access={me.access} locale={locale} personId={person.id} />
+        <CertificatesPanel access={me.access} locale={locale} personId={person.id} />
         <DocumentsPanel access={me.access} entityType="person" entityId={person.id} />
       </div>
     </>

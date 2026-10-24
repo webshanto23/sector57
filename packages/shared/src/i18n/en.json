@@ -266,6 +266,7 @@
       "vehicles": "Vehicles",
       "notices": "Notices",
       "documents": "Documents",
+      "certificates": "Certificates",
       "reports": "Reports",
       "roles": "Permissions",
       "users": "Users",
@@ -312,6 +313,7 @@
       "work_orders": "Work orders",
       "vehicles": "Vehicles and stickers",
       "payroll": "Payroll",
+      "certificates": "Certificates and NOCs",
       "audit": "Audit log"
     },
     "actions": {
@@ -622,7 +624,15 @@
       "payroll_void": "The run is already void.",
       "no_default_fund": "The society has no default fund.",
       "expense_from_payroll": "This expense came from a payroll run; void the run instead.",
-      "invalid_prefix": "Use 1 to 10 letters or digits."
+      "invalid_prefix": "Use 1 to 10 letters or digits.",
+      "certificate_not_found": "This certificate no longer exists, or is outside your area. Reload the page.",
+      "certificate_not_draft": "This certificate has already been issued. Reload the page.",
+      "certificate_person_not_at_unit": "This person is not tied to the unit as this certificate needs (for example, only an owner can get a sale NOC).",
+      "certificate_not_member": "This person has no active membership, so a membership certificate can't be given.",
+      "certificate_dues_outstanding": "Bills on this unit are still unpaid, so a no-dues certificate can't be issued.",
+      "certificate_dues_unpaid": "Bills on this unit are still unpaid. Tick “Issue anyway” to issue it regardless.",
+      "certificate_not_issued": "This certificate hasn't been issued yet. Reload the page.",
+      "certificate_already_void": "This certificate is already void. Reload the page."
     }
   },
   "Cms": {
@@ -3465,6 +3475,164 @@
       "back": "All slots",
       "removedNote": "This slot is out of use.",
       "readOnly": "You can see this slot but not change it."
+    }
+  },
+  "Certificates": {
+    "title": "Certificates and NOCs",
+    "sub": "No-objection letters and certificates for owners, renters and residents, numbered when issued.",
+    "add": "New certificate",
+    "back": "All certificates",
+    "newTitle": "New certificate",
+    "newHint": "Start a draft. It gets its number when someone with approval rights issues it.",
+    "create": "Save draft",
+    "save": "Save",
+    "loading": "Loading…",
+    "templatesLink": "Letter text",
+    "type": {
+      "noc_sale": "NOC for sale",
+      "noc_rent": "NOC for letting",
+      "noc_utility": "NOC for a utility connection",
+      "noc_renovation": "NOC for renovation",
+      "noc_loan": "NOC for a bank loan",
+      "residence": "Residence certificate",
+      "membership": "Membership certificate",
+      "no_dues": "No-dues certificate"
+    },
+    "typeHint": {
+      "noc_sale": "For the owner selling the unit. Only an owner can get it.",
+      "noc_rent": "For the owner letting the unit to a renter. Only an owner can get it.",
+      "noc_utility": "For a gas, electricity or water connection. An owner or the renter can get it.",
+      "noc_renovation": "For building work in the unit. Only an owner can get it.",
+      "noc_loan": "For a bank loan against the unit. Only an owner can get it.",
+      "residence": "Says the person lives at the unit. An owner, renter or resident can get it.",
+      "membership": "Says the person is a registered member of the society. Needs an active membership.",
+      "no_dues": "Says nothing is owed for the unit. It can't be issued while any bill is unpaid."
+    },
+    "typeLabel": "Type",
+    "allTypes": "All types",
+    "status": {
+      "draft": "Draft",
+      "issued": "Issued",
+      "void": "Void"
+    },
+    "statusLabel": "Status",
+    "allStatuses": "All statuses",
+    "lang": {
+      "bn": "Bangla",
+      "en": "English"
+    },
+    "langLabel": "Letter language",
+    "col": {
+      "number": "Number",
+      "unit": "Unit",
+      "person": "For",
+      "status": "Status",
+      "date": "Date"
+    },
+    "draftNo": "Draft",
+    "stats": {
+      "draft": "Drafts",
+      "issued": "Issued",
+      "void": "Void"
+    },
+    "searchPlaceholder": "Number, name or phone",
+    "searchLabel": "Search certificates",
+    "filter": "Search",
+    "empty": "No certificates match.",
+    "startHint": "No certificates yet. Start one here, or from a unit's page.",
+    "holderTitle": "Unit and person",
+    "atUnit": "Unit: {unit}",
+    "pickUnit": "Choose a unit (flat or shop) to see who is tied to it.",
+    "person": "For",
+    "choosePerson": "Choose a person",
+    "notEligible": "not eligible for this type",
+    "nobodyFits": "Nobody at this unit can get this certificate. It is for: {ties}.",
+    "peopleFailed": "Could not load the people of this unit. It may be outside your area.",
+    "tie": {
+      "owner": "owner",
+      "renter": "renter",
+      "resident": "resident"
+    },
+    "letterDetails": "Letter",
+    "details": "Details",
+    "addressee": "Addressed to",
+    "addresseeHint": "Optional, e.g. “Manager, X Bank, Uttara branch”.",
+    "purpose": "Subject",
+    "purposeHint": "Optional, printed as the subject line.",
+    "letterTitle": "Letter text",
+    "letterDraftHint": "How the letter reads if it is issued today. The number is filled in when it is issued.",
+    "readOnly": "You can see this certificate but not change or issue it.",
+    "deleteTitle": "Discard draft",
+    "deleteHint": "A draft has no number yet, so discarding it leaves no gap.",
+    "delete": "Discard",
+    "deleteConfirm": "Discard this draft?",
+    "issueTitle": "Issue",
+    "issueHint": "Issuing gives the next number and fixes the text and the signer. After that it can only be voided.",
+    "signerName": "Signed by",
+    "signerTitle": "Title",
+    "signerTitleHint": "Optional, e.g. “General Secretary”.",
+    "duesOwe": "This unit owes {amount} on {count} bills.",
+    "noDuesBlocked": "A no-dues certificate can't be issued until they are paid.",
+    "duesHidden": "You can't see this unit's bills. If any are unpaid, issuing stops unless you tick “Issue anyway”.",
+    "allowDues": "Issue anyway, although bills are unpaid",
+    "allowDuesHint": "The amount owed is recorded with the certificate.",
+    "issue": "Issue",
+    "issueConfirm": "Issue this certificate now? Its text can't be changed afterwards.",
+    "issuedNow": "Issued.",
+    "issuedOn": "Issued",
+    "voidTitle": "Void",
+    "voidHint": "For a certificate issued by mistake or withdrawn. Its number stays used and the paper shows “Void”.",
+    "voidReason": "Reason",
+    "void": "Void",
+    "voidConfirm": "Void {certNo}?",
+    "voidedNote": "Void since {date}: {reason}",
+    "duesAtIssue": "Issued while {amount} was owed on the unit.",
+    "print": "Print",
+    "printTitle": "Print certificate",
+    "printNone": "Only an issued certificate can be printed.",
+    "backToCertificate": "Back to the certificate",
+    "panel": {
+      "title": "Certificates",
+      "empty": "No certificates.",
+      "more": "{count} more"
+    },
+    "templates": {
+      "title": "Letter text",
+      "sub": "What each type of certificate says, in Bangla and English.",
+      "hint": "Write the letter with these blanks; each is filled in when the certificate is shown and issued. Changes apply to drafts and to certificates issued afterwards, never to ones already issued.",
+      "placeholdersTitle": "Blanks you can use",
+      "placeholder": {
+        "name": "The person's name (the English name on an English letter, when there is one)",
+        "unit": "The unit's address, unit first",
+        "society": "The society's name",
+        "date": "The day it is issued",
+        "certNo": "The certificate number",
+        "memberNo": "The person's member number",
+        "purpose": "The subject, as typed",
+        "addressee": "Who it is addressed to, as typed"
+      },
+      "customised": "Changed",
+      "reset": "Back to the default",
+      "unknown": "Unknown blanks: {names}. Use only the ones listed above.",
+      "readOnly": "Only someone who may change settings can edit the letter text."
+    },
+    "letter": {
+      "title": {
+        "noc_sale": "NOC for sale",
+        "noc_rent": "NOC for letting",
+        "noc_utility": "NOC for a utility connection",
+        "noc_renovation": "NOC for renovation",
+        "noc_loan": "NOC for a bank loan",
+        "residence": "Residence certificate",
+        "membership": "Membership certificate",
+        "no_dues": "No-dues certificate"
+      },
+      "no": "No.",
+      "date": "Date",
+      "to": "To",
+      "subject": "Subject",
+      "signature": "Signature",
+      "void": "Void"
     }
   }
 }

@@ -4,7 +4,6 @@ import {
   digitVariants,
   regNoKey,
   VEHICLE_LOOKUP_LIMIT,
-  type UnitTie,
   type VehicleCreateInput,
   type VehicleDetail,
   type VehicleKind,
@@ -20,6 +19,7 @@ import { isoDate, todayDate } from '../common/dates.js';
 import { isUniqueViolation } from '../common/prisma-errors.js';
 import { MemberRowsService, placeSelect } from '../members/member-rows.service.js';
 import { auditOf, personNotFound } from '../members/parties.service.js';
+import { unitTies } from '../members/unit-ties.js';
 import { scopeWhere } from '../permissions/caller-access.js';
 import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -209,7 +209,7 @@ export class VehiclesService {
   /** Who owns (at or above), rents or lives in a unit the caller sees vehicles at (404 `unit_not_found`). */
   async unitPeople(actor: Actor, unitId: string): Promise<VehicleUnitPeople> {
     const unit = await this.unitAt(actor, unitId, 'view');
-    const ties = await this.ties(actor.societyId, unit, null);
+    const ties = await unitTies(this.prisma, actor.societyId, unit, null);
     const people = await this.prisma.persons.findMany({
       where: { id: { in: [...new Set(ties.map((tie) => tie.person_id))] }, society_id: actor.societyId },
       select: { id: true, full_name: true, full_name_en: true },
@@ -261,23 +261,7 @@ export class VehiclesService {
   async checkPerson(societyId: string, unit: Unit, personId: string): Promise<void> {
     const person = await this.prisma.persons.findFirst({ where: { id: personId, society_id: societyId }, select: { id: true } });
     if (!person) throw personNotFound();
-    if ((await this.ties(societyId, unit, personId)).length === 0) throw personNotAtUnit();
-  }
-
-  /** Current owners (of the unit or a place above it), renters and residents of a unit; one person may hold several ties. */
-  private ties(societyId: string, unit: Unit, personId: string | null): Promise<{ person_id: string; tie: UnitTie }[]> {
-    return this.prisma.$queryRaw`
-      select o.person_id, 'owner' as tie from ownerships o join locations l on l.id = o.location_id
-        where o.society_id = ${societyId}::uuid and o.end_date is null and o.person_id is not null
-          and starts_with(${unit.path}, l.path) and (${personId}::uuid is null or o.person_id = ${personId}::uuid)
-      union
-      select t.primary_person_id, 'renter' from tenancies t
-        where t.society_id = ${societyId}::uuid and t.unit_id = ${unit.id}::uuid and t.status <> 'ended'
-          and t.primary_person_id is not null and (${personId}::uuid is null or t.primary_person_id = ${personId}::uuid)
-      union
-      select oc.person_id, 'resident' from occupants oc
-        where oc.society_id = ${societyId}::uuid and oc.unit_id = ${unit.id}::uuid and oc.end_date is null
-          and (${personId}::uuid is null or oc.person_id = ${personId}::uuid)`;
+    if ((await unitTies(this.prisma, societyId, unit, personId)).length === 0) throw personNotAtUnit();
   }
 
   /** Runs a write, turning a clash on the registration number into 409 `vehicle_exists`. */
