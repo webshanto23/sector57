@@ -20,6 +20,7 @@ import {
   type MoveUpdateInput,
 } from '@s57/shared';
 import { AuditService } from '../audit/audit.service.js';
+import { unitDues } from '../billing/unit-dues.js';
 import { isoDate } from '../common/dates.js';
 import { isUniqueViolation } from '../common/prisma-errors.js';
 import { scopeWhere } from '../permissions/caller-access.js';
@@ -158,7 +159,7 @@ export class MovesService {
     const kind = toMoveKind(row.kind);
     const open = row.status === 'open';
     const edit = open && actor.access.can('edit', 'tenancies', at);
-    const dues = actor.access.can('view', 'billing', at) ? await this.dues(this.prisma, actor.societyId, row.tenancies.unit_id) : null;
+    const dues = actor.access.can('view', 'billing', at) ? await unitDues(this.prisma, actor.societyId, row.tenancies.unit_id) : null;
     const toRow = await this.toRows(actor.societyId, [row]);
     return {
       ...toRow(row),
@@ -276,7 +277,7 @@ export class MovesService {
       if (kind === 'move_in' ? tenancy.status !== 'pending' : tenancy.status !== 'moving_out' && tenancy.status !== 'active') throw wrongStatus(kind);
       let duesCleared = false;
       if (kind === 'move_out') {
-        const dues = await this.dues(tx, actor.societyId, tenancy.unit_id);
+        const dues = await unitDues(tx, actor.societyId, tenancy.unit_id);
         duesCleared = isZeroMoney(dues.owed);
         if (!duesCleared && !actor.access.can('approve', 'tenancies', { path })) {
           throw new ConflictException({ code: 'dues_outstanding', message: 'Bills on this unit are still unpaid', details: { owed: dues.owed } });
@@ -334,14 +335,6 @@ export class MovesService {
       await this.audit.record({ ...auditOf(actor, 'move_event', 'cancel', id), after: { kind: before.kind } }, tx);
     });
     return this.get(actor, id);
-  }
-
-  /** What is still owed on the unit's bills, whoever they are billed to. */
-  private async dues(client: Prisma.TransactionClient, societyId: string, unitId: string): Promise<{ owed: string; bills: number }> {
-    const [row] = await client.$queryRaw<{ owed: string; bills: number }[]>`
-      SELECT coalesce(sum(total - paid), 0)::numeric(16,2)::text AS owed, count(*)::int AS bills
-      FROM invoices WHERE society_id = ${societyId}::uuid AND unit_id = ${unitId}::uuid AND status IN ('unpaid', 'partial')`;
-    return row!;
   }
 
   /** An open move the caller may edit (404 / 403), else 409 `move_closed`. */

@@ -1,6 +1,6 @@
 # Sector 15 build steps
 
-Status of every step, what it contains, and the decisions still open. Updated 2026-10-13. Codex reviewed every step through 23 and approved them (2026-10-13).
+Status of every step, what it contains, and the decisions still open. Updated 2026-10-24. Steps through 27 are merged into `main`; Steps 28 and 29 await Codex review.
 
 Status key: **Done** (merged to `main`) · **Next** · **Planned** · **Later** (not yet in a milestone).
 
@@ -42,9 +42,12 @@ Schema changes are additive and need Anis's approval first.
 | 21 | Documents library | Done | `step/21-documents` |
 | 22 | M3: Staff and attendance | Done | `step/22-staff` |
 | 23 | M3: Facilities and assets | Done | `step/23-facilities` |
-| 24 | M3: Helpdesk and work orders | Built, awaiting review | `step/24-helpdesk` |
-| 25 | M3: Vehicles, stickers and parking | Built, awaiting review | `step/25-vehicles` |
-| 26 | M3: Payroll | Built, awaiting review | `step/26-payroll` |
+| 24 | M3: Helpdesk and work orders | Done | `step/24-helpdesk` |
+| 25 | M3: Vehicles, stickers and parking | Done | `step/25-vehicles` |
+| 26 | M3: Payroll | Done | `step/26-payroll` |
+| 27 | M3: Bills for several units, printing bills together | Done | `step/27-bulk-bills` |
+| 28 | Records: Certificates and NOCs | Built, awaiting review | `step/28-certificates` |
+| 29 | Records: Occupancy, members and renter-list reports | Built, awaiting review | `step/29-records-reports` |
 
 The step numbers are names, not the build order. Order changed on 2026-10-08: Steps 3 and 8 moved to the end so the forms use the real location tree (Step 9) and the file storage from Step 7, and residents submit while the office reviews in the same release.
 
@@ -676,7 +679,7 @@ Built 2026-10-12 on `step/21-documents` (branched from `step/20-moves-directory`
 - **Tests:** `test/documents.e2e-spec.ts` (7): upload, list, file download and its audit row; bad files, wrong kinds, missing title or file; person documents by area with the NID hidden from viewers; the per-record limit; place documents by area; rename, archive and restore; form files, vouchers and other societies kept out.
 - **Checked:** `pnpm check` and the whole e2e suite (20 files, 289 tests). The library and the panels rendered in Bangla and English against the dev servers; uploading was not clicked through in a browser, and the 375/820/1440 checks stay in the deferred pass.
 
-## Milestone 3: Operations — Planned
+## Milestone 3: Operations — Done
 
 Draft plan, 2026-10-12. It covers the mockup's **Operations** nav group: Staff and HRM (`hrm`), Facilities and assets (`facilities`), Work orders (`work`), Helpdesk (`helpdesk`), Vehicles and stickers (`vehicles`). Nothing here is confirmed: each step still gets its own scope note, and the items marked **(decide)** need Anis before that step starts.
 
@@ -756,7 +759,7 @@ Built 2026-10-13 on `step/23-facilities` (branched from `step/22-staff`). Anis s
 - **Tests:** `test/facilities.e2e-spec.ts` (10): facilities and the fund rule; area scope (404 outside the area, 403 without the grant); numbering; custodians in or above the area; linking a paid expense by voucher; status changes and the approver; moving a facility moves its assets, and archiving; upkeep due and done; asset papers; CSV; other societies kept out. Shared helpers in `contracts/facilities.spec.ts` (6) and the `AST` number format.
 - **Checked:** `pnpm check` and the whole e2e suite (22 files, 310 tests). All eight new pages rendered (200) in Bangla and English against the dev servers, with a demo facility and asset that were removed afterwards; the forms were not clicked through in a browser, and the 375/820/1440 checks stay in the deferred pass.
 
-### Step 24: Helpdesk and work orders — Built, awaiting review
+### Step 24: Helpdesk and work orders — Done
 
 On `step/24-helpdesk` (branched from `chore/web-auth-headers`). Anis said "start" to the scope note (2026-10-13), so the proposals stand: the office alone opens tickets; resolving needs `helpdesk.edit` and a note, closing, cancelling and reopening need `helpdesk.approve`; a cost when finishing a work order also needs `expenses.create` (without it, finish with no cost), the expense is dated the finishing day; words: Ticket অভিযোগ, Work order কাজের আদেশ, Helpdesk হেল্পডেস্ক. Built in four parts: (1) schema and shared, (2) tickets API, (3) work orders API, (4) web.
 
@@ -811,7 +814,7 @@ The plan:
   - `/dashboard/work`: list and detail; finishing one asks for the cost, which becomes the expense.
   - The overview gets the mockup's Helpdesk card (the three most urgent) with `helpdesk.view`.
 
-### Step 25: Vehicles, stickers and parking — Built, awaiting review
+### Step 25: Vehicles, stickers and parking — Done
 
 On `step/25-vehicles` (branched from `step/24-helpdesk`). Anis decided (2026-10-13): stickers free by default and valid to 31 December by default, both changeable in one setting `vehicle_stickers` (prefix, `calendar | fiscal`, optional fee billed to the unit); no guard lookup screen on the web for now. Built in four parts; rules in `docs/rules/vehicles.md`.
 
@@ -841,7 +844,7 @@ On `step/25-vehicles` (branched from `step/24-helpdesk`). Anis decided (2026-10-
   - An A4 sticker sheet to print, and CSV.
 - **Web:** `/dashboard/vehicles` with tabs Vehicles, Stickers and Parking, and a Vehicles panel on unit and person pages.
 
-### Step 26: Payroll — Built, awaiting review
+### Step 26: Payroll — Done
 
 On `step/26-payroll` (branched from `step/25-vehicles`). Anis confirmed the scope on 2026-10-13: each payslip is charged to a fund (the default unless separate funds is on), paying books one expense per fund; absent days are deducted at salary ÷ days in the month, half days at half that, leave and off days are paid; a run can be voided before or after paying, and the month prepared again. No salary advances. Rules in `docs/rules/payroll.md`.
 
@@ -868,7 +871,7 @@ On `step/26-payroll` (branched from `step/25-vehicles`). Anis confirmed the scop
   - An A5 payslip through `PrintSheet`.
   - The overview's "This week" card shows an approved run not yet paid.
 
-### Step 27: Bills for several units, printing bills together — Built, awaiting review
+### Step 27: Bills for several units, printing bills together — Done
 
 On `step/27-bulk-bills` (branched from `step/26-payroll`). Anis asked for it on 2026-10-15 because owners and renters change, so recurring schedules can't cover every charge. Decided: different charges per unit, amounts typed by hand (no part-month maths), earlier bills for the same charge and months only warn, a unit whose lines pay into two funds gets one bill per fund, and the bills of a batch, or any ticked bills, print together. No migration. Rules in `docs/rules/billing.md`.
 
@@ -896,6 +899,33 @@ On `step/27-bulk-bills` (branched from `step/26-payroll`). Anis asked for it on 
 | Salary expenses | One per fund per run (confirmed 2026-10-13) | Step 26 |
 | Order | 22 → 23 → 24 → 25 → 26 (decided 2026-10-12; 25 can still move first) | Step 23 |
 
+## Step 28: Certificates and NOCs — Built, awaiting review
+
+Built 2026-10-24 on `step/28-certificates` (from `main` after PR #28). The first item of the "Records and administration" group; plan approved by Anis, who took the proposals: no fee, no public request form yet, no QR or verification page, the signer typed at issue above a line for a wet signature.
+
+- **Migration `20_certificates`** (additive): `certificates` (type, letter language, person, unit, addressee, purpose; status `draft | issued | void`; frozen at issue: `cert_no`, `body`, signer name and title, `dues_owed`, who and when; void fields). Checks keep the issue and void fields together; trigger `certificates_guard` lets a draft change or be deleted, makes issuing the only way out of a draft, then allows only the one void (and the society cascade). Numbering kind `certificate`: `CRT-YY-NNNN`, restarting each fiscal year.
+- **Module `certificates`** (area-scoped through the certificate's unit), in the catalogue, seed and role matrix (Records).
+- **Shared** (`contracts/certificates.ts`): eight types (`noc_sale`, `noc_rent`, `noc_utility`, `noc_renovation`, `noc_loan`, `residence`, `membership`, `no_dues`); `CERTIFICATE_TIES` (sale, letting, renovation and loan NOCs for owners only; utility and no-dues for owners and renters; residence and membership for anyone at the unit); templates with placeholders (`{name}`, `{unit}`, `{society}`, `{date}`, `{certNo}`, `{memberNo}`, `{purpose}`, `{addressee}`), `renderCertificate`, `certificateTemplatesOf` (setting `certificate_templates` over the defaults), `duesDecision`, `unitText`.
+- **API** (`src/certificates`): list (search by number, name or phone; type, status, place, unit, person), detail (a draft's letter as it would issue today; the unit's dues with `billing.view`), `unit-people`, create, edit and delete drafts, `issue` (`certificates.approve`: person checked again, then dues: 409 `certificate_dues_outstanding` for a no-dues certificate, `certificate_dues_unpaid` for others without `allowDues`; numbered and frozen in one transaction), `void` (once, with a reason), `print` (issued or void), `templates` (read with `certificates.view`, changed with `settings.edit`). Each change writes its own audit row.
+- **Refactor:** the current-ties query moved from `VehiclesService` to `members/unit-ties.ts`, and the unit's unpaid bills from `MovesService` to `billing/unit-dues.ts`; vehicles, moves and certificates share them.
+- **Web:** nav item Records > Certificates; `/dashboard/certificates` (counts, search, filters, cards on phones), `/new` (type with who may get it, unit and person picker that greys out people who don't fit), `/[id]` (draft editor and discard, issue with signer and "issue anyway", void, letter text), `/[id]/print` (A4 letter in the letter's own language, "Void" stamp), `/templates` (per-type Bangla and English text, placeholder list, back to default). A Certificates panel on unit and person pages.
+- **Tests:** shared unit tests (numbering, rendering, templates, dues, ties, `unitText`); `test/certificates.e2e-spec.ts` (11): unit people by area, ties and membership on create, Block C / Block D scope and other societies, search, draft edits, dues hold, "issue anyway" and the no-dues block, frozen issued rows (API and trigger), the person checked again at issue, two issued at once without a gap, print, void once, discarding a draft, templates.
+- **Checked:** `pnpm check`, the whole e2e suite (29 files, 362 tests), and `next build` (all five pages compile). The pages were not opened in a browser (no admin session in this run); the 375/820/1440 checks stay in the deferred pass.
+
+## Step 29: Occupancy, members and renter-list reports — Built, awaiting review
+
+Built 2026-10-24 on `step/29-records-reports` (branched from `step/28-certificates`). Anis said to proceed without answering the two open questions, so Claude used the proposals: these three reports only (no Operations reports yet), and no NID on the renter list. No migration.
+
+- **Shared** (`contracts/records-reports.ts`): `occupancyQuery` / `occupancyReportSchema` (`occupancyFiguresOf`, `sharePercent`), `membersReportQuery` / `membersReportSchema` (`MEMBERS_REPORT_LIMIT` 2,000), `rentersReportQuery` / `rentersReportSchema` (`RENTERS_REPORT_LIMIT` 3,000); `REPORT_KEYS` gains `occupancy`, `members`, `renters`.
+- **API** (`src/reports`, read-only, CSV at `/<report>/csv?lang=` behind the module's `export`):
+  - Occupancy by area `GET /reports/occupancy?parentId=` (`units.view`, area-scoped): active units per place under the parent by `units.occupancy` (owner lives there, rented, vacant) and the occupied percent; drill-down and breadcrumbs as for collection; a unit row shows its own occupancy.
+  - Members `GET /reports/members?from=&to=&locationId=` (`members.view`): memberships by status, and who joined in the range (this month by default, 400 `invalid_range`), with member number, phone and the membership's place. A scoped caller sees memberships recorded at a place in their area.
+  - Renters `GET /reports/renters?locationId=` (`members.export`, scoped on it): tenancies active or moving out, in address order, with the renter (person or organisation, the contact's phone), kind, start, household size (current occupants of the tenancy) and police form; totals. 403 `thana_sharing_off` while `share_renters_with_thana` is off. Never the NID.
+  - `reports/area-tree.ts` (`AreaTree`, `inScope`, `reaches`) now holds the place, children and breadcrumbs walk for every area report; collection and arrears use it with `billing`.
+- **Web:** three cards on `/dashboard/reports` (the nav item also shows with `units` or `members`); `/dashboard/reports/occupancy` (stat cards, drill-down table with bars, a unit's own occupancy chip), `/dashboard/reports/members` (status cards, date range, joiners), `/dashboard/reports/renters` (totals, "never the NID" note, A4 print for the police station, CSV; a note instead while sharing is off).
+- **Tests:** `records-reports.spec.ts` (shared); `test/records-reports.e2e-spec.ts` (9): occupancy figures, drill-down and natural order, Block C / Block D scope, CSV and its grant; members counts, joiners, range and place filter, scope, CSV; renters refused while sharing is off, scope on `members.export`, person and organisation renters, household and police-form totals, no NID in JSON or CSV.
+- **Checked:** `pnpm check` and the whole e2e suite (30 files, 371 tests; one run had a single failure in `forms.e2e-spec.ts` that passed alone and on the next full run). `next build` was not run because the dev web server was using `.next`; typecheck and lint cover the pages. Not opened in a browser; the 375/820/1440 checks stay deferred.
+
 ## Later: beyond milestone 3
 
 These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.
@@ -907,15 +937,15 @@ These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs
 - Community board (`board`)
 
 **Records and administration**
-- Documents (`documents`)
-- Certificates and NOC (`certs`)
-- Reports (`reports`): the finance reports came in Step 17; others (members, property) later
-- Society settings (`settings`): the finance toggles come in Step 11; module on/off switches later
+- Documents (`documents`): built in Step 21
+- Certificates and NOC (`certs`): built in Step 28
+- Reports (`reports`): the finance reports came in Step 17; occupancy, members and the renter list in Step 29
+- Society settings (`settings`): the finance toggles came in Step 11; other settings sit beside the module they control (stickers, helpdesk response time, certificate letter text). Module on/off switches moved to Product (decided 2026-10-24): roles already hide unused modules for one society. If finding settings becomes a problem, a small "all settings" index page linking to each is enough.
 - Audit log viewer (`audit`): built in Step 17; the log itself is written from Step 4/5
 
 **Member app:** the mockup's member-facing view (residents see their own bills, notices and requests).
 
-**Product:** onboarding a second society (society picked by host instead of `DEFAULT_SOCIETY_SLUG`), and the deploy script for the DigitalOcean droplet.
+**Product:** onboarding a second society (society picked by host instead of `DEFAULT_SOCIETY_SLUG`), module on/off switches per society (a `modules` setting that drops a module's permissions, nav, routes and overview cards for everyone, data kept; planned as Step 30, deferred 2026-10-24), and the deploy script for the DigitalOcean droplet.
 
 **Out of scope for v1:** visitor and gate management, online payment, reporting to RAJUK or City Corporation.
 

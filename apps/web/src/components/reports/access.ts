@@ -6,10 +6,17 @@ const MODULES: Record<ReportKey, PermissionModule[]> = {
   collection: ["billing"],
   arrears: ["billing"],
   income: ["ledger"],
+  occupancy: ["units"],
+  members: ["members"],
+  renters: ["members"],
 };
 
+/** Reports that are themselves an export: the renter list goes to the police station. */
+const EXPORT_ONLY: ReportKey[] = ["renters"];
+
 /** May the user open this report? Only hides links and pages; the API checks every request. */
-export const canSeeReport = (access: Access, report: ReportKey): boolean => MODULES[report].some((module) => canAnywhere(access, module));
+export const canSeeReport = (access: Access, report: ReportKey): boolean =>
+  MODULES[report].some((module) => canAnywhere(access, module, EXPORT_ONLY.includes(report) ? "export" : "view"));
 
 /** May the user download this report's CSV (`view` and `export` on a module behind it)? */
 export const canExportReport = (access: Access, report: ReportKey): boolean =>

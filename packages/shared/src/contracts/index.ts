@@ -31,3 +31,5 @@ export * from './helpdesk.js';
 export * from './work-orders.js';
 export * from './vehicles.js';
 export * from './payroll.js';
+export * from './certificates.js';
+export * from './records-reports.js';

@@ -752,6 +752,7 @@ model persons {
   staff             staff[]
   tickets_reported  tickets[]
   vehicles          vehicles[]
+  certificates      certificates[]
 
   @@unique([society_id, nid], map: "persons_nid_uq", where: raw("(nid IS NOT NULL)"))
   @@unique([society_id, phone], map: "persons_phone_uq", where: raw("(phone IS NOT NULL)"))
@@ -858,6 +859,7 @@ model societies {
   parking_slots           parking_slots[]
   payroll_runs            payroll_runs[]
   payslips                payslips[]
+  certificates            certificates[]
 }
 
 model society_settings {
@@ -911,6 +913,7 @@ model units {
   tenancies     tenancies[]
   vehicles      vehicles[]
   parking_slots parking_slots[]
+  certificates  certificates[]
   locations     locations       @relation(fields: [location_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   societies     societies       @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
@@ -988,6 +991,9 @@ model users {
   payroll_runs_approved                   payroll_runs[]            @relation("payroll_runs_approved_byTousers")
   payroll_runs_paid                       payroll_runs[]            @relation("payroll_runs_paid_byTousers")
   payroll_runs_voided                     payroll_runs[]            @relation("payroll_runs_voided_byTousers")
+  certificates_issued                     certificates[]            @relation("certificates_issued_byTousers")
+  certificates_voided                     certificates[]            @relation("certificates_voided_byTousers")
+  certificates_created                    certificates[]            @relation("certificates_created_byTousers")
   persons                                 persons?                  @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   societies                               societies                 @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
@@ -1478,4 +1484,43 @@ model payroll_run_expenses {
 
   @@id([run_id, expense_id])
   @@unique([run_id, fund_id], map: "payroll_run_expenses_fund_uq")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// A certificate or NOC for a person at a unit (Step 28). Issued ones are voided, never deleted or
+/// edited (trigger certificates_guard, SQL only); a draft may be deleted.
+model certificates {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id   String    @db.Uuid
+  cert_no      String?
+  type         String
+  lang         String    @default("bn")
+  person_id    String    @db.Uuid
+  unit_id      String    @db.Uuid
+  addressee    String?
+  purpose      String?
+  status       String    @default("draft")
+  body         String?
+  signer_name  String?
+  signer_title String?
+  dues_owed    Decimal?  @db.Decimal(14, 2)
+  issued_at    DateTime? @db.Timestamptz(6)
+  issued_by    String?   @db.Uuid
+  voided_at    DateTime? @db.Timestamptz(6)
+  voided_by    String?   @db.Uuid
+  void_reason  String?
+  created_by   String?   @db.Uuid
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime  @default(now()) @db.Timestamptz(6)
+  societies    societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  persons      persons   @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  units        units     @relation(fields: [unit_id], references: [location_id], onDelete: NoAction, onUpdate: NoAction)
+  users_issued users?    @relation("certificates_issued_byTousers", fields: [issued_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_voided users?    @relation("certificates_voided_byTousers", fields: [voided_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users        users?    @relation("certificates_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([society_id, cert_no], map: "certificates_no_uq", where: raw("(cert_no IS NOT NULL)"))
+  @@index([society_id, status, created_at(sort: Desc)], map: "certificates_society_idx")
+  @@index([unit_id], map: "certificates_unit_idx")
+  @@index([person_id], map: "certificates_person_idx")
 }

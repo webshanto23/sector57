@@ -28,6 +28,8 @@ Proposed words for the later Operations steps; final only once Anis agrees, befo
 | **Facility** | সুবিধা | A shared place the society runs (hall, mosque, playground, generator room). |
 | **Asset** | সম্পদ | A thing the society owns and keeps track of (generator, pump, CCTV, furniture). |
 | **Sticker** | স্টিকার | The numbered vehicle sticker issued to a unit's vehicle for a year. |
+| **Certificate** | সনদ | A numbered letter the society issues about a person at a unit (residence, membership, no dues). Proposed with Step 28. |
+| **NOC** | অনাপত্তিপত্র | A no-objection certificate for selling, letting, renovating, a utility connection or a bank loan. Proposed with Step 28. |
 
 ## In code
 

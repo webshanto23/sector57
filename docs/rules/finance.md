@@ -1,4 +1,4 @@
-# Finance setup, ledger, reports and overview (Steps 11, 17, 18)
+# Finance setup, ledger, reports and overview (Steps 11, 17, 18, 29)
 
 Billing, payments, donations and expenses have their own files; this one holds the rules they all share.
 
@@ -20,7 +20,9 @@ Billing, payments, donations and expenses have their own files; this one holds t
 
 - Reports live in `src/reports`, read-only. Figures that must agree with the fund statements are built from `ledger_entries`, not from the source tables.
 - CSV goes through `csvFile` (BOM, CRLF, formula text defused) on a `/csv` route behind the module's `export`.
-- Area reports respect the caller's `billing.view` scope; a place is reachable when the caller holds the grant there or their area lies under it (404 otherwise).
+- Area reports respect the caller's scope for the report's module (`billing.view` for collection and arrears, `units.view` for occupancy); a place is reachable when the caller holds the grant there or their area lies under it (404 otherwise). Use `AreaTree` and `inScope` from `reports/area-tree.ts`, never a copy.
+- Records reports (Step 29, `RecordsReportsService` and `RecordsReportsController`): occupancy counts active units by the stored `units.occupancy`; members are scoped through `memberships.location_id` (a scoped caller never sees memberships without a place); the renter list for the police station needs `members.export` for the page itself, scopes on that grant, and answers 403 `thana_sharing_off` while the setting `share_renters_with_thana` is not `true`. It never carries the NID.
+- A new report adds its key to `REPORT_KEYS` and its modules to `MODULES` in `apps/web/src/components/reports/access.ts` (list a report that is itself an export in `EXPORT_ONLY`).
 - Long printed lists use the `print-a4` class (named page `a4` in `globals.css`).
 
 ## Overview dashboard
