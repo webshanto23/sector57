@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-ARG NODE_VERSION=24.19.0
+ARG NODE_VERSION=26.12.1
 ARG PNPM_VERSION=12.9.1
 
 FROM node:${NODE_VERSION}-slim AS base
@@ -8,7 +8,8 @@ ARG PNPM_VERSION
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@${PNPM_VERSION} --activate
+# Node 25+ no longer bundles corepack, so install pnpm directly.
+RUN npm install -g pnpm@${PNPM_VERSION}
 
 # Only the manifests, so the install layer is reused until a dependency changes.
 FROM base AS manifests
