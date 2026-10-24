@@ -2184,7 +2184,7 @@
     }
   },
   "Reports": {
-    "sub": "Finance reports. Each shows only what you may see; download a CSV for Excel where you may export.",
+    "sub": "Finance and records reports. Each shows only what you may see; download a CSV for Excel where you may export.",
     "csv": "Download CSV",
     "show": "Show",
     "from": "From",
@@ -2206,6 +2206,18 @@
       "income": {
         "title": "Income and expenditure",
         "body": "A fiscal year's income by charge type and spending by head, against the budget."
+      },
+      "occupancy": {
+        "title": "Occupancy by area",
+        "body": "Units where the owner lives, rented and vacant, for each block, road or building."
+      },
+      "members": {
+        "title": "Members",
+        "body": "Society members by status, and who joined in a date range."
+      },
+      "renters": {
+        "title": "Renter list for the police station",
+        "body": "Current renters with their household and police form. Only while the society shares renter details."
       }
     },
     "dayBook": {
@@ -2310,6 +2322,84 @@
       "partNote": "A part-paid bill's money counts against its lines in their order.",
       "emptyIncome": "No income this year.",
       "emptyExpenditure": "No expenses paid this year."
+    },
+    "occupancy": {
+      "title": "Occupancy by area",
+      "sub": "Units in use, by who lives there: the owner, a renter, or nobody. Open an area to see the next level down.",
+      "top": "Whole society",
+      "occupied": "occupied",
+      "empty": "No units here.",
+      "col": {
+        "area": "Area",
+        "units": "Units",
+        "ownerOccupied": "Owner lives there",
+        "rented": "Rented",
+        "vacant": "Vacant",
+        "percent": "Occupied"
+      },
+      "occupancy": {
+        "owner_occupied": "Owner lives there",
+        "rented": "Rented",
+        "vacant": "Vacant"
+      }
+    },
+    "members": {
+      "title": "Members",
+      "sub": "Registered society members by status (all time), and who joined between two dates.",
+      "joinedTitle": "Joined in this period",
+      "empty": "Nobody joined in this period.",
+      "truncated": "Only the first {count} are listed. Choose a shorter period.",
+      "col": {
+        "memberNo": "Member no.",
+        "name": "Name",
+        "address": "Address",
+        "joinedOn": "Joined",
+        "status": "Status"
+      },
+      "status": {
+        "active": "Active",
+        "lapsed": "Lapsed",
+        "cancelled": "Cancelled"
+      }
+    },
+    "renters": {
+      "title": "Renter list for the police station",
+      "sub": "Current renters in address order, with their household and whether the police form is in.",
+      "off": "Sharing renter details with the police station is turned off. The President can turn it on under Settings.",
+      "noNid": "This list never includes NID numbers.",
+      "empty": "No current renters here.",
+      "truncated": "Only the first {count} are listed. Open a smaller area.",
+      "movingOut": "Moving out",
+      "stats": {
+        "tenancies": "Rented units",
+        "people": "People living there",
+        "policeFormMissing": "Police form missing"
+      },
+      "col": {
+        "unit": "Unit",
+        "renter": "Renter",
+        "renterType": "Kind",
+        "startDate": "Since",
+        "household": "People",
+        "policeForm": "Police form"
+      },
+      "renterType": {
+        "family": "Family",
+        "bachelor": "Bachelor",
+        "office": "Office",
+        "warehouse": "Warehouse",
+        "shop": "Shop",
+        "other": "Other"
+      },
+      "policeForm": {
+        "yes": "Submitted",
+        "no": "Missing"
+      },
+      "printButton": "Print on A4",
+      "printTitle": "Renter list",
+      "printPlace": "Area: {place}",
+      "printDate": "As of {date}",
+      "totalTenancies": "Rented units: {count}"
     }
   },
   "Audit": {

@@ -140,7 +140,7 @@ export const DASHBOARD_NAV: NavGroup[] = [
       { key: "documents", icon: FolderOpen, module: "documents" },
       { key: "certificates", icon: FileBadge, module: "certificates" },
       // Each report needs its own module's view; the item shows with any of them.
-      { key: "reports", icon: ChartColumn, module: "billing", also: ["payments", "donations", "expenses", "ledger"] },
+      { key: "reports", icon: ChartColumn, module: "billing", also: ["payments", "donations", "expenses", "ledger", "units", "members"] },
     ],
   },
   {

@@ -13,6 +13,13 @@ import {
   type IncomeReport,
   type LedgerQuery,
   type LedgerStatement,
+  type MembersReport,
+  type MembersReportQuery,
+  type OccupancyQuery,
+  type OccupancyReport,
+  type ReportKey,
+  type RentersReport,
+  type RentersReportQuery,
   type Transfer,
   type TransferList,
   type TransferListQuery,
@@ -68,6 +75,31 @@ export async function getArrears(query: ArrearsQuery): Promise<ArrearsReport | n
   return data;
 }
 
+/** Null for a place outside the caller's area. */
+export async function getOccupancy(query: OccupancyQuery): Promise<OccupancyReport | null> {
+  const { data, response } = await api.GET("/reports/occupancy", { params: { query }, headers: await authHeaders(), cache: "no-store" });
+  if (response.status === 400 || response.status === 404) return null;
+  if (!data) throw failed("occupancy by area", response.status);
+  return data;
+}
+
+/** Null for a bad range or a place outside the caller's area. */
+export async function getMembersReport(query: MembersReportQuery): Promise<MembersReport | null> {
+  const { data, response } = await api.GET("/reports/members", { params: { query }, headers: await authHeaders(), cache: "no-store" });
+  if (response.status === 400 || response.status === 404) return null;
+  if (!data) throw failed("the members report", response.status);
+  return data;
+}
+
+/** "off" while the society doesn't share renter details with the police station; null for a place out of reach. */
+export async function getRenters(query: RentersReportQuery): Promise<RentersReport | "off" | null> {
+  const { data, error, response } = await api.GET("/reports/renters", { params: { query }, headers: await authHeaders(), cache: "no-store" });
+  if (response.status === 403 && (error as { code?: string } | undefined)?.code === "thana_sharing_off") return "off";
+  if (response.status === 400 || response.status === 404) return null;
+  if (!data) throw failed("the renter list", response.status);
+  return data;
+}
+
 /** Null for a year or fund the API refuses. */
 export async function getIncome(query: IncomeQuery): Promise<IncomeReport | null> {
   const { data, response } = await api.GET("/reports/income", { params: { query }, headers: await authHeaders(), cache: "no-store" });
@@ -89,7 +121,7 @@ export async function getAuditOptions(): Promise<AuditOptions> {
 }
 
 /** The API path of a report's CSV, through the web's `/api` proxy (the browser sends the session cookie). */
-export function csvHref(report: "day-book" | "collection" | "arrears" | "income", query: Record<string, string | undefined>): string {
+export function csvHref(report: ReportKey, query: Record<string, string | undefined>): string {
   const params = new URLSearchParams(Object.entries(query).flatMap(([key, value]) => (value ? [[key, value]] : [])));
   return `/api/reports/${report}/csv?${params.toString()}`;
 }

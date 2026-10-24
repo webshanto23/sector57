@@ -1,5 +1,5 @@
 import { REPORT_KEYS, type Locale, type ReportKey } from "@s57/shared";
-import { BookOpen, ChartColumn, Clock, Scale, type LucideIcon } from "lucide-react";
+import { BookOpen, Building2, ChartColumn, ClipboardList, Clock, IdCard, Scale, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -8,7 +8,15 @@ import { canSeeReport } from "@/components/reports/access";
 import { Link } from "@/i18n/navigation";
 import { getMe } from "@/lib/api/session";
 
-const ICONS: Record<ReportKey, LucideIcon> = { "day-book": BookOpen, collection: ChartColumn, arrears: Clock, income: Scale };
+const ICONS: Record<ReportKey, LucideIcon> = {
+  "day-book": BookOpen,
+  collection: ChartColumn,
+  arrears: Clock,
+  income: Scale,
+  occupancy: Building2,
+  members: IdCard,
+  renters: ClipboardList,
+};
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/dashboard/reports">): Promise<Metadata> {
   const { locale } = await params;
@@ -16,7 +24,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/dashboar
   return { title: t("nav.reports") };
 }
 
-/** The finance reports this user may open. */
+/** The finance and records reports this user may open. */
 export default async function ReportsPage({ params }: PageProps<"/[locale]/dashboard/reports">) {
   const { locale } = await params;
   setRequestLocale(locale as Locale);

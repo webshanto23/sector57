@@ -1,6 +1,6 @@
 # Sector 15 build steps
 
-Status of every step, what it contains, and the decisions still open. Updated 2026-10-24. Steps through 27 are merged into `main`; Step 28 awaits Codex review.
+Status of every step, what it contains, and the decisions still open. Updated 2026-10-24. Steps through 27 are merged into `main`; Steps 28 and 29 await Codex review.
 
 Status key: **Done** (merged to `main`) · **Next** · **Planned** · **Later** (not yet in a milestone).
 
@@ -47,6 +47,7 @@ Schema changes are additive and need Anis's approval first.
 | 26 | M3: Payroll | Done | `step/26-payroll` |
 | 27 | M3: Bills for several units, printing bills together | Done | `step/27-bulk-bills` |
 | 28 | Records: Certificates and NOCs | Built, awaiting review | `step/28-certificates` |
+| 29 | Records: Occupancy, members and renter-list reports | Built, awaiting review | `step/29-records-reports` |
 
 The step numbers are names, not the build order. Order changed on 2026-10-08: Steps 3 and 8 moved to the end so the forms use the real location tree (Step 9) and the file storage from Step 7, and residents submit while the office reviews in the same release.
 
@@ -911,6 +912,20 @@ Built 2026-10-24 on `step/28-certificates` (from `main` after PR #28). The first
 - **Tests:** shared unit tests (numbering, rendering, templates, dues, ties, `unitText`); `test/certificates.e2e-spec.ts` (11): unit people by area, ties and membership on create, Block C / Block D scope and other societies, search, draft edits, dues hold, "issue anyway" and the no-dues block, frozen issued rows (API and trigger), the person checked again at issue, two issued at once without a gap, print, void once, discarding a draft, templates.
 - **Checked:** `pnpm check`, the whole e2e suite (29 files, 362 tests), and `next build` (all five pages compile). The pages were not opened in a browser (no admin session in this run); the 375/820/1440 checks stay in the deferred pass.
 
+## Step 29: Occupancy, members and renter-list reports — Built, awaiting review
+
+Built 2026-10-24 on `step/29-records-reports` (branched from `step/28-certificates`). Anis said to proceed without answering the two open questions, so Claude used the proposals: these three reports only (no Operations reports yet), and no NID on the renter list. No migration.
+
+- **Shared** (`contracts/records-reports.ts`): `occupancyQuery` / `occupancyReportSchema` (`occupancyFiguresOf`, `sharePercent`), `membersReportQuery` / `membersReportSchema` (`MEMBERS_REPORT_LIMIT` 2,000), `rentersReportQuery` / `rentersReportSchema` (`RENTERS_REPORT_LIMIT` 3,000); `REPORT_KEYS` gains `occupancy`, `members`, `renters`.
+- **API** (`src/reports`, read-only, CSV at `/<report>/csv?lang=` behind the module's `export`):
+  - Occupancy by area `GET /reports/occupancy?parentId=` (`units.view`, area-scoped): active units per place under the parent by `units.occupancy` (owner lives there, rented, vacant) and the occupied percent; drill-down and breadcrumbs as for collection; a unit row shows its own occupancy.
+  - Members `GET /reports/members?from=&to=&locationId=` (`members.view`): memberships by status, and who joined in the range (this month by default, 400 `invalid_range`), with member number, phone and the membership's place. A scoped caller sees memberships recorded at a place in their area.
+  - Renters `GET /reports/renters?locationId=` (`members.export`, scoped on it): tenancies active or moving out, in address order, with the renter (person or organisation, the contact's phone), kind, start, household size (current occupants of the tenancy) and police form; totals. 403 `thana_sharing_off` while `share_renters_with_thana` is off. Never the NID.
+  - `reports/area-tree.ts` (`AreaTree`, `inScope`, `reaches`) now holds the place, children and breadcrumbs walk for every area report; collection and arrears use it with `billing`.
+- **Web:** three cards on `/dashboard/reports` (the nav item also shows with `units` or `members`); `/dashboard/reports/occupancy` (stat cards, drill-down table with bars, a unit's own occupancy chip), `/dashboard/reports/members` (status cards, date range, joiners), `/dashboard/reports/renters` (totals, "never the NID" note, A4 print for the police station, CSV; a note instead while sharing is off).
+- **Tests:** `records-reports.spec.ts` (shared); `test/records-reports.e2e-spec.ts` (9): occupancy figures, drill-down and natural order, Block C / Block D scope, CSV and its grant; members counts, joiners, range and place filter, scope, CSV; renters refused while sharing is off, scope on `members.export`, person and organisation renters, household and police-form totals, no NID in JSON or CSV.
+- **Checked:** `pnpm check` and the whole e2e suite (30 files, 371 tests; one run had a single failure in `forms.e2e-spec.ts` that passed alone and on the next full run). `next build` was not run because the dev web server was using `.next`; typecheck and lint cover the pages. Not opened in a browser; the 375/820/1440 checks stay deferred.
+
 ## Later: beyond milestone 3
 
 These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.
@@ -924,13 +939,13 @@ These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs
 **Records and administration**
 - Documents (`documents`): built in Step 21
 - Certificates and NOC (`certs`): built in Step 28
-- Reports (`reports`): the finance reports came in Step 17; others (members, property) later
-- Society settings (`settings`): the finance toggles come in Step 11; module on/off switches later
+- Reports (`reports`): the finance reports came in Step 17; occupancy, members and the renter list in Step 29
+- Society settings (`settings`): the finance toggles came in Step 11; other settings sit beside the module they control (stickers, helpdesk response time, certificate letter text). Module on/off switches moved to Product (decided 2026-10-24): roles already hide unused modules for one society. If finding settings becomes a problem, a small "all settings" index page linking to each is enough.
 - Audit log viewer (`audit`): built in Step 17; the log itself is written from Step 4/5
 
 **Member app:** the mockup's member-facing view (residents see their own bills, notices and requests).
 
-**Product:** onboarding a second society (society picked by host instead of `DEFAULT_SOCIETY_SLUG`), and the deploy script for the DigitalOcean droplet.
+**Product:** onboarding a second society (society picked by host instead of `DEFAULT_SOCIETY_SLUG`), module on/off switches per society (a `modules` setting that drops a module's permissions, nav, routes and overview cards for everyone, data kept; planned as Step 30, deferred 2026-10-24), and the deploy script for the DigitalOcean droplet.
 
 **Out of scope for v1:** visitor and gate management, online payment, reporting to RAJUK or City Corporation.
 

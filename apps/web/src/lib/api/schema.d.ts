@@ -2276,6 +2276,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/reports/occupancy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RecordsReportsController_occupancy"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/occupancy/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RecordsReportsController_occupancyCsv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RecordsReportsController_members"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/members/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RecordsReportsController_membersCsv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/renters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RecordsReportsController_renters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/renters/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RecordsReportsController_rentersCsv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/overview": {
         parameters: {
             query?: never;
@@ -7302,6 +7398,108 @@ export interface components {
                 total: string;
             };
             surplus: string;
+        };
+        OccupancyReportDto_Output: {
+            parent: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            crumbs: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                open: boolean;
+            }[];
+            areas: {
+                units: number;
+                ownerOccupied: number;
+                rented: number;
+                vacant: number;
+                occupiedPercent: number;
+                /** Format: uuid */
+                id: string;
+                name: string;
+                isUnit: boolean;
+                occupancy: ("owner_occupied" | "rented" | "vacant") | null;
+            }[];
+            totals: {
+                units: number;
+                ownerOccupied: number;
+                rented: number;
+                vacant: number;
+                occupiedPercent: number;
+            };
+        };
+        MembersReportDto_Output: {
+            /** Format: date */
+            from: string;
+            /** Format: date */
+            to: string;
+            location: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            counts: {
+                active: number;
+                lapsed: number;
+                cancelled: number;
+            };
+            joined: {
+                memberNo: number;
+                /** Format: uuid */
+                personId: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                address: string[];
+                /** Format: date */
+                joinedOn: string;
+                /** @enum {string} */
+                status: "active" | "lapsed" | "cancelled";
+            }[];
+            truncated: boolean;
+        };
+        RentersReportDto_Output: {
+            /** Format: date */
+            asOf: string;
+            location: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            rows: {
+                /** Format: uuid */
+                tenancyId: string;
+                /** Format: uuid */
+                unitId: string;
+                unit: string;
+                address: string[];
+                renter: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                };
+                phone: string | null;
+                /** @enum {string} */
+                renterType: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+                /** @enum {string} */
+                status: "pending" | "active" | "moving_out" | "ended";
+                /** Format: date */
+                startDate: string;
+                household: number;
+                policeForm: boolean;
+            }[];
+            totals: {
+                tenancies: number;
+                people: number;
+                policeFormMissing: number;
+            };
+            truncated: boolean;
         };
         OverviewDto_Output: {
             /** Format: date */
@@ -13952,6 +14150,133 @@ export interface operations {
             query?: {
                 year?: string;
                 fundId?: string;
+                lang?: "bn" | "en";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RecordsReportsController_occupancy: {
+        parameters: {
+            query?: {
+                parentId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OccupancyReportDto_Output"];
+                };
+            };
+        };
+    };
+    RecordsReportsController_occupancyCsv: {
+        parameters: {
+            query?: {
+                parentId?: string;
+                lang?: "bn" | "en";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RecordsReportsController_members: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                locationId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MembersReportDto_Output"];
+                };
+            };
+        };
+    };
+    RecordsReportsController_membersCsv: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                locationId?: string;
+                lang?: "bn" | "en";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RecordsReportsController_renters: {
+        parameters: {
+            query?: {
+                locationId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RentersReportDto_Output"];
+                };
+            };
+        };
+    };
+    RecordsReportsController_rentersCsv: {
+        parameters: {
+            query?: {
+                locationId?: string;
                 lang?: "bn" | "en";
             };
             header?: never;
