@@ -1,6 +1,6 @@
 # Auth (Step 4)
 
-- Migration `2_auth`: `user_sessions` (refresh tokens stored as SHA-256 hashes) and `users.failed_login_count` / `locked_until`.
+- Migration `02_auth`: `user_sessions` (refresh tokens stored as SHA-256 hashes) and `users.failed_login_count` / `locked_until`.
 - API `auth` module: `POST /auth/login`, `/auth/refresh`, `/auth/logout`, `GET /me`, `POST /me/password`. Access JWT 60 min (`jose`, HS256, `JWT_SECRET` ≥ 32 chars, required), refresh token 7 days and rotated on every use (an old token coming back revokes the whole family). 4 wrong passwords lock the account for 60 min; unknown phones get identical answers.
 - Every route needs a login unless marked `@Public()` (global `AuthGuard`).
 - The global `CsrfGuard` checks `Origin` against `WEB_ORIGIN` and a double-submit token (`s57_csrf` cookie echoed in `X-CSRF-Token`) on every unsafe method; `@SkipCsrf()` is for pre-login forms only. Cookie and header names are in `AUTH_COOKIES` / `CSRF_HEADER` in shared.

@@ -19,7 +19,7 @@
     "studio": "prisma studio --config prisma7.config.ts",
     "generate": "prisma generate --config prisma7.config.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.seed.json",
-    "migrate:resolve-baseline": "prisma migrate resolve --applied 0_init --config prisma7.config.ts"
+    "migrate:resolve-baseline": "prisma migrate resolve --applied 00_init --config prisma7.config.ts"
   },
   "keywords": [],
   "author": "",

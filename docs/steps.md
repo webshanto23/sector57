@@ -53,14 +53,14 @@ The step numbers are names, not the build order. Order changed on 2026-10-08: St
 ## Step 0: Foundations — Done
 
 - **Monorepo:** pnpm + Turborepo; `apps/api` (NestJS 12), `apps/web` (Next.js 16), `packages/db` (Prisma 7), `packages/shared`.
-- **Database:** schema from `docs/schema-phase1.sql` as migration `0_init`; databases must be UTF8. Idempotent seed: society, location levels, permission catalogue, starter roles (no users).
+- **Database:** schema from `docs/schema-phase1.sql` as migration `00_init`; databases must be UTF8. Idempotent seed: society, location levels, permission catalogue, starter roles (no users).
 - **Shared:** `bn.json` / `en.json`, NFC helper, Bangla digits and `৳` formatting, `pick(bn, en)`, zod basics (phone, uuid, pagination), society contract, Vitest tests.
 - **API:** helmet, nestjs-pino, nestjs-zod pipe, throttler, cookie-parser, swagger (dev only, `/docs`), env validation, global exception filter, `SocietyContext` (society from `DEFAULT_SOCIETY_SLUG`). Routes `GET /health`, `GET /society`.
 - **Web:** `next-intl` (Bangla at `/`, English at `/en/`), Noto Bengali fonts, theme toggle, locale switch, mockup kit components (`src/components/kit`), dev gallery at `/dev/components`, typed `openapi-fetch` client.
 
 ## Step 1: Public site shell, home and notices — Done
 
-- **API:** `GET /public/notices` (paged, `?category=`), `GET /public/notices/:id`, `GET /public/pages/:slug`. Public, read-only, `@SkipThrottle`. Migration `1_notices_public_idx`.
+- **API:** `GET /public/notices` (paged, `?category=`), `GET /public/notices/:id`, `GET /public/pages/:slug`. Public, read-only, `@SkipThrottle`. Migration `01_notices_public_idx`.
 - **Web:** `(site)` route group with header, nav, mobile nav and footer; home and notices pages; `revalidate = 60`.
 - **Content:** home and footer content is JSON in `site_pages` (`homeContentSchema`, `siteInfoSchema`). Notice categories are fixed keys (`NOTICE_CATEGORIES`).
 - **Seed:** `home` and `site` pages only if missing; demo notices only outside production.
@@ -92,7 +92,7 @@ Branch `step/04-auth`. Scope confirmed by Anis on 2026-10-10 and built the same 
 - Lock the account for 60 minutes after 4 wrong passwords in a row; the login form shows how many attempts are left. After the lock ends the user gets 4 attempts again.
 - Password reset: only the super admin resets a password, to a random one. The user is **not** forced to change it. SMS OTP comes later.
 
-**Schema (migration `2_auth`, additive, needs approval)**
+**Schema (migration `02_auth`, additive, needs approval)**
 - New table `user_sessions`: `id`, `society_id`, `user_id`, `token_hash` (SHA-256 of the refresh token, unique), `family_id`, `expires_at`, `created_at`, `last_used_at`, `ip_address`, `user_agent`, `revoked_at`.
 - New columns on `users`: `failed_login_count smallint not null default 0`, `locked_until timestamptz`.
 
@@ -272,10 +272,10 @@ Branch `step/09-property`, branched from `step/07-cms`. Scope confirmed by Anis 
 **Decisions (Anis, 2026-10-10)**
 - No spreadsheet import (there is no Excel data yet). Instead an "add many" generator: a name prefix, a number range and optional letters (`Road 1` to `Road 24`, `Flat 1A` to `Flat 6D`), in Bangla or ASCII digits, up to 300 at a time.
 - Levels may be skipped: a location may sit at any level deeper than its parent (a plot can hold units directly, a building can hold flats without storeys).
-- Migration `3_property` approved: unique `(society_id, path)`; unique top-level names per society (the old unique let null parents repeat); unique holding `code` per society when set; trigram index on `locations.name`.
+- Migration `03_property` approved: unique `(society_id, path)`; unique top-level names per society (the old unique let null parents repeat); unique holding `code` per society when set; trigram index on `locations.name`.
 - Moving a branch to another parent comes later (it changes who can see it, since scope is by path).
 
-**Schema (migration `3_property`)**
+**Schema (migration `03_property`)**
 - The four indexes above, plus an ICU collation `natural_sort` (`und-u-kn`) on `locations.name`, so `ORDER BY name` gives রোড ১, রোড ২, রোড ১০ (and Road 2 before Road 10). The collation is deterministic, so the unique indexes still work. For Anis: this changes the column's collation (not in the approved list); it needs a Postgres built with ICU (FlyEnv and the Docker image both are).
 - `prisma migrate dev` cannot create a shadow database with the dev user, so the SQL was written by hand and applied with `migrate deploy`; `prisma migrate diff` against the schema shows no drift.
 
@@ -317,14 +317,14 @@ Branch `step/10-members`, branched from `step/09-property`. Scope confirmed by A
 **Decisions (Anis, 2026-10-11)**
 - No bulk import (there is no member list yet).
 - The move-in/move-out checklist (`moves`) and the resident directory (`directory`) are a follow-up step.
-- Migration `4_members` approved (below).
+- Migration `04_members` approved (below).
 - Occupancy is derived: `rented` while a tenancy is active or moving out; otherwise `owner_occupied` when the unit or a location above it has a current owner; otherwise `vacant`. A pending tenancy (not moved in) doesn't make a unit rented. Household rows don't count. Occupancy can no longer be typed in.
 
 **Words (Anis, 2026-10-11, see `docs/glossary.md`)**
 - The page and menu item are "Owners & renters / মালিক ও ভাড়াটিয়া"; people who live in a unit are "Residents / বাসিন্দা"; "Member / সদস্য" is kept for registered society members (Steps 3 + 8: the membership form and approval, and the "Society member" chip on a person's page). Code names (`members` module, route and URL) are unchanged.
 - A renter who is a person is added as a resident (head of the renter's household) when the tenancy is created. An owner of the unit or a place above it becomes a resident with "Lives here" (`POST /occupants` with `personId`; any other person by id is 400 `invalid_person`). In the list, an owner or renter who heads that household is shown once.
 
-**Schema (migration `4_members`)**
+**Schema (migration `04_members`)**
 - `persons.updated_at`; trigram indexes on `persons.full_name_en` and `organisations.name`; a check constraint on `occupants.relation` (fixed keys, labels in i18n); a partial unique index `tenancies_open_unit_uq` (one open tenancy per unit), which replaces the plain `tenancies_unit_idx` on the same rows. Applied with `migrate deploy`; `prisma migrate diff` shows no drift.
 
 **Rules**
@@ -367,10 +367,10 @@ Branch `step/03-forms`, branched from `step/10-members`. Scope confirmed by Anis
 **Decisions (Anis, 2026-10-11)**
 - Spam protection: rate limits and a honeypot only (no captcha, no OTP; there is no SMS gateway).
 - No thana export in this step; `share_renters_with_thana` stays unused.
-- Migration `5_forms` approved, including the `memberships` table.
+- Migration `05_forms` approved, including the `memberships` table.
 - The four other services on the mockup (vehicle sticker, facility booking, NOC, complaint) are shown as "coming soon".
 
-**Schema (migration `5_forms`)**
+**Schema (migration `05_forms`)**
 - `form_submissions`: `location_id` (area scope), `reference` (unique per society, e.g. `M-7KQ3XP2A`), `phone`, `person_id` (set on approval), `review_note`, `reviewed_at`, `updated_at`; a check on `form_key` (`membership`, `renter_registration`); indexes for the queue, the phone checks and the location.
 - `memberships`: `person_id`, `location_id` (the property it was granted for), `member_no` (unique per society), `status` (`active`, `lapsed`, `cancelled`), `joined_on`, `ended_on`, `submission_id`. At most one active membership per person (partial unique index). Applied with `migrate deploy`; `prisma migrate diff` shows no drift.
 
@@ -437,7 +437,7 @@ The office bills every unit, takes cash at the counter, hands each payer a print
 
 ### What the phase-1 finance schema is missing
 
-The tables in `0_init` are a good base. Reviewing them against the screens shows these gaps; each step's migration adds only its own part, all additive.
+The tables in `00_init` are a good base. Reviewing them against the screens shows these gaps; each step's migration adds only its own part, all additive.
 
 | Gap | Proposed addition | Step |
 |---|---|---|
@@ -459,7 +459,7 @@ The tables in `0_init` are a good base. Reviewing them against the screens shows
 
 Built 2026-10-11 on `step/11-finance-setup` (branched from `step/03-forms`). Decided by Anis: the number formats below, and ledger rows record the account (`cash` or `bank`).
 
-- **Migration `6_finance_setup`:** `document_sequences`; `funds.closed_at`, `created_at` and one default fund per society (partial unique index); `charge_types.archived_at`; `ledger_entries` gets `opening` as a source, `account` (`cash`/`bank`, default `cash`), `created_by` and `reverses_id` (a row is reversed at most once). A trigger refuses `UPDATE`, `DELETE` and `TRUNCATE` on `ledger_entries`; the only delete it lets through is the cascade from deleting a whole society.
+- **Migration `06_finance_setup`:** `document_sequences`; `funds.closed_at`, `created_at` and one default fund per society (partial unique index); `charge_types.archived_at`; `ledger_entries` gets `opening` as a source, `account` (`cash`/`bank`, default `cash`), `created_by` and `reverses_id` (a row is reversed at most once). A trigger refuses `UPDATE`, `DELETE` and `TRUNCATE` on `ledger_entries`; the only delete it lets through is the cascade from deleting a whole society.
 - **Settings** (`/dashboard/settings`, `GET`/`PATCH /settings`, `settings.view`/`edit`): separate facility funds, sharing renters with the thana, fiscal year start month (the `societies` column; locked once the ledger has any entry, 409 `fiscal_year_locked`), receipt header (`receipt_header`, falls back to the society's name and phone). Keys are `SETTING_KEYS` in shared; `PATCH` takes only changed keys and refuses unknown ones. Turning separate funds off needs every other fund closed (409 `funds_open`).
 - **Funds** (`/dashboard/settings/funds`, `ledger.*`): `GET /funds` (balances per account from the ledger, the live opening, `openingEditable`), `POST /funds` (only while separate funds are on), `PUT /funds/:id` (rename), `POST /funds/:id/close` (not the default fund, zero in both accounts, no active charge type), `PUT /funds/:id/opening` (date, cash, bank; zero allowed). The opening can be corrected until the fund has any other entry; a correction writes reversing rows, never edits. Not tied to a facility location yet: that comes with the facilities module.
 - **Charge types** (`/dashboard/settings/charge-types`, `billing.*`): `GET /charge-types` (with the open funds to pick from), `POST`, `PUT /:id`, `POST /:id/archive` and `/restore`. Reading needs `billing.view` anywhere; changes need a society-wide billing grant (403 `beyond_your_permissions`). With separate funds off only the default fund is accepted (400 `invalid_fund`). Kinds are `due`, `fee`, `fine`.
@@ -474,7 +474,7 @@ Built 2026-10-11 on `step/11-finance-setup` (branched from `step/03-forms`). Dec
 
 Built 2026-10-11 on `step/12-bills` (branched from `main` after PR #8). Decided by Anis: earlier arrears are typed per unit; late fees are manual `fine` lines only.
 
-- **Migration `7_bills`:** `invoices` gets `kind` (`regular`, `opening`, `membership`), `fund_id` (required; earlier rows get the default fund), `membership_id`, `bill_to_snapshot jsonb`, `void_reason`, `voided_at`, `voided_by`. Checks: exactly one payer (person or organisation); a membership bill has a membership and no unit, every other bill a unit; a void bill has its reason, time and user, and nothing else does. At most one non-void opening bill per unit (partial unique index). `invoice_lines` gets `description_en` and `position` (line order on the bill). `billing_run_id` waits for Step 13.
+- **Migration `07_bills`:** `invoices` gets `kind` (`regular`, `opening`, `membership`), `fund_id` (required; earlier rows get the default fund), `membership_id`, `bill_to_snapshot jsonb`, `void_reason`, `voided_at`, `voided_by`. Checks: exactly one payer (person or organisation); a membership bill has a membership and no unit, every other bill a unit; a void bill has its reason, time and user, and nothing else does. At most one non-void opening bill per unit (partial unique index). `invoice_lines` gets `description_en` and `position` (line order on the bill). `billing_run_id` waits for Step 13.
 - **Bill-to rule** (`pickBillTo` in shared, unit-tested): the renter when the unit bills its renter and the tenancy is `active` or `moving_out`; otherwise the current owners of the unit, else of the nearest location above that has any; among co-owners the largest share, then the earliest start. Nobody: 400 `no_bill_to`. The API side is `BillToService` (`src/billing`), batched for lists.
 - **API** (`billing.*`, area-scoped through the unit's path; membership bills have no unit, so only a society-wide billing role sees or makes them):
   - `GET /invoices`: paged, newest first. `q` matches the bill number, unit name or code, or bill-to name (snapshot), in either digit form. Filters: `status` (stored statuses or derived `overdue`), `kind`, `areaId`, `month` (issue month), `unitId`, `personId`, `organisationId`. `totals` for the stat cards (billed and count, collected, outstanding, overdue count, earlier arrears and units), summed in SQL within the caller's area and the area, month, unit and payer filters; earlier arrears ignore the month.
@@ -493,7 +493,7 @@ Built 2026-10-11 on `step/12-bills` (branched from `main` after PR #8). Decided 
 
 Built 2026-10-11 on `step/13-recurring` (branched from `main` after PR #9 and #10). Decided by Anis: fixed amounts with **rates by area** (the society's charges differ by building; rent itself stays between owner and renter and is not billed), no per-square-foot rates, units and tenancies that start mid-month are billed from the next run (no part months).
 
-- **Migration `8_billing_runs`:** `charge_schedules` gets `name_bn` (required; earlier rows take the charge type's name), `name_en`, `due_days` (0 to 365, default 15) and `updated_at`, plus an index on due active schedules. New `charge_schedule_rates` (schedule, location, amount above zero; one per schedule and location). New `billing_runs` (month as its first day, `manual` or `auto`, `done` or `failed` with the error, who started it, start and finish, bill count, total, skipped units as JSON). `invoices.billing_run_id`.
+- **Migration `08_billing_runs`:** `charge_schedules` gets `name_bn` (required; earlier rows take the charge type's name), `name_en`, `due_days` (0 to 365, default 15) and `updated_at`, plus an index on due active schedules. New `charge_schedule_rates` (schedule, location, amount above zero; one per schedule and location). New `billing_runs` (month as its first day, `manual` or `auto`, `done` or `failed` with the error, who started it, start and finish, bill count, total, skipped units as JSON). `invoices.billing_run_id`.
 - **Rules** (pure helpers in shared, unit-tested): periods are whole months; `next_run_on` is the first day of the next period to bill. A run for a month bills every period from `next_run_on` up to that month, oldest first (missed months are caught up), one line per period, then moves the schedule on; a one-off bills once and ends; nothing after the end month. A unit pays the rate of the nearest location on its path that has one (the unit itself first), else the schedule's amount. Resuming a paused schedule skips the paused months, keeping its rhythm.
 - **Schedules** (`/dashboard/recurring`; reading needs `billing.view`, changes a society-wide billing grant, 403 `beyond_your_permissions`): `GET /schedules`, `POST`, `PUT /:id`, `POST /:id/pause`, `/resume`, `/end`. A new schedule starts this month or later (400 `start_in_past`; dues from before are earlier arrears). The area and each rate's location must be the society's (400 `location_not_found`) and rates must sit inside the area (400 `rate_outside_scope`). Once it has made bills, its charge type, frequency and first month are fixed (409 `schedule_in_use`). Ended schedules can't change (409 `schedule_ended`). Never deleted.
 - **Runs** (society-wide billing roles): `GET /billing-runs/preview?month=` (writes nothing: bills, lines, total, per schedule its months and whether it is blocked by an archived charge type or closed fund, the first 500 lines with the bill-to and where the rate came from, and the units left out with the reason: `no_bill_to`, `inactive`, `already_billed`), `POST /billing-runs` (`month` this month or earlier, 400 `future_month`), `GET /billing-runs` (history). A run is one transaction under the society's run lock (`lockBillingRun`, also taken by schedule changes): one bill per unit and fund, one line per schedule and period (text "name (month)" in both languages), dated today and due after the smallest `due_days` among its lines, bill-to as on the day, numbers reserved as a block (`NumberingService.reserve`). A second run at the same time waits and then finds nothing due; `invoice_lines_once_uq` is the backstop. An unexpected error rolls everything back and is recorded as a failed run.
@@ -506,7 +506,7 @@ Built 2026-10-11 on `step/13-recurring` (branched from `main` after PR #9 and #1
 
 Built 2026-10-11 on `step/14-collection` (branched from `step/13-recurring`). Decided by Anis: no credit or over-payment (paying ahead means billing those months first, "Bill ahead"); receipts on A5 with an office counterfoil; no SMS (its own step once a provider is chosen).
 
-- **Migration `9_payments`:** `payments` gets `unit_id` (null only for a membership fee), `payer_snapshot`, `note`, `voided_at`, `voided_by`, `handover_id`, `print_count`. Checks: at most one payer (Step 15 donations may be anonymous); a void has its reason, time and user, and nothing else does. New `cash_handovers` (collector, payment count, expected (frozen when confirmed), counted, note, confirmed by and at); checks that nobody confirms their own and that the confirm fields come together. Indexes for cash in hand, by date, unit, payer, handover, and `payment_allocations` by bill.
+- **Migration `09_payments`:** `payments` gets `unit_id` (null only for a membership fee), `payer_snapshot`, `note`, `voided_at`, `voided_by`, `handover_id`, `print_count`. Checks: at most one payer (Step 15 donations may be anonymous); a void has its reason, time and user, and nothing else does. New `cash_handovers` (collector, payment count, expected (frozen when confirmed), counted, note, confirmed by and at); checks that nobody confirms their own and that the confirm fields come together. Indexes for cash in hand, by date, unit, payer, handover, and `payment_allocations` by bill.
 - **Rules** (pure helpers in shared `contracts/payments.ts`, unit-tested): `allocate` settles the ticked bills oldest first (due date, bill date, number), so only the last can end `partial`; more than they owe is refused (`amount_exceeds_due`, no credit), and so is an amount that doesn't reach every ticked bill (`bill_not_reached`). `statusAfterPayment`, `collectorMayVoid`.
 - **API** (module `src/payments`; `payments.*`, area-scoped through the payment's unit; a membership fee has no unit, so only a society-wide collector takes or sees it):
   - `GET /collect/lookup?q=|unitId=|personId=` (`payments.create`): units in the caller's area by name, code, or who their open bills went to (name or phone, either digit form), and members (society-wide only, by name, phone or number), each with open bills oldest first, what is due and the possible payers (the bills' bill-tos).
