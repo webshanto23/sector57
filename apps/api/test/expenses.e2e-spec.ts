@@ -164,21 +164,21 @@ describe('Expenses and budgets (e2e)', () => {
       const own = await request_({}, users.approver);
       expect((await send('post', `/expenses/${own.id}/approve`, users.approver).expect(403)).body.code).toBe('cannot_approve_own');
       await send('post', `/expenses/${made.id}/approve`, users.treasurer).expect(403);
-      await send('post', `/expenses/${made.id}/pay`, users.treasurer).send({ account: 'cash' }).expect(409);
+      await send('post', `/expenses/${made.id}/pay`, users.treasurer).send({ method: 'cash' }).expect(409);
       const ok = detail(await send('post', `/expenses/${made.id}/approve`, users.approver).expect(200));
       expect(ok).toMatchObject({ status: 'approved', approved: { by: expect.any(String) } });
       await send('patch', `/expenses/${made.id}`, users.clerk).send({ headId: ids.repairs, description: 'x', amount: '1', spentOn: today() }).expect(409);
 
       const before = await balance(ids.general);
-      await send('post', `/expenses/${made.id}/pay`, users.clerk).send({ account: 'cash' }).expect(403);
-      const paid = detail(await send('post', `/expenses/${made.id}/pay`, users.treasurer).send({ account: 'cash' }).expect(200));
+      await send('post', `/expenses/${made.id}/pay`, users.clerk).send({ method: 'cash' }).expect(403);
+      const paid = detail(await send('post', `/expenses/${made.id}/pay`, users.treasurer).send({ method: 'cash' }).expect(200));
       expect(paid.status).toBe('paid');
       expect(paid.voucherNo).toMatch(/^EXP-\d{2}-\d{4}$/);
       expect(paid.paid).toMatchObject({ account: 'cash' });
       expect(await balance(ids.general)).toBe(subtractMoney(before, '1500.50'));
       const row = await prisma.ledger_entries.findFirstOrThrow({ where: { source_type: 'expense', source_id: made.id } });
       expect(row).toMatchObject({ direction: 'out', account: 'cash', memo: paid.voucherNo });
-      expect((await send('post', `/expenses/${made.id}/pay`, users.treasurer).send({ account: 'cash' }).expect(409)).body.code).toBe('expense_not_approved');
+      expect((await send('post', `/expenses/${made.id}/pay`, users.treasurer).send({ method: 'cash' }).expect(409)).body.code).toBe('expense_not_approved');
     });
 
     it('lets the requester edit and an approver reject with a reason, while pending', async () => {
@@ -196,16 +196,16 @@ describe('Expenses and budgets (e2e)', () => {
 
     it('refuses more than the fund holds in that account, and a closed fund', async () => {
       const big = await approved({ amount: '6000' });
-      const refused = await send('post', `/expenses/${big.id}/pay`, users.treasurer).send({ account: 'bank' }).expect(409);
+      const refused = await send('post', `/expenses/${big.id}/pay`, users.treasurer).send({ method: 'bank' }).expect(409);
       expect(refused.body.code).toBe('fund_insufficient');
       expect(await prisma.ledger_entries.count({ where: { source_type: 'expense', source_id: big.id } })).toBe(0);
       // Cash holds enough.
-      detail(await send('post', `/expenses/${big.id}/pay`, users.treasurer).send({ account: 'cash' }).expect(200));
+      detail(await send('post', `/expenses/${big.id}/pay`, users.treasurer).send({ method: 'cash' }).expect(200));
 
       await separateFunds(true);
       const mosque = await approved({ fundId: ids.mosque, amount: '50' });
       await prisma.funds.update({ where: { id: ids.mosque }, data: { closed_at: new Date() } });
-      expect((await send('post', `/expenses/${mosque.id}/pay`, users.treasurer).send({ account: 'cash' }).expect(409)).body.code).toBe('fund_closed');
+      expect((await send('post', `/expenses/${mosque.id}/pay`, users.treasurer).send({ method: 'cash' }).expect(409)).body.code).toBe('fund_closed');
       await prisma.funds.update({ where: { id: ids.mosque }, data: { closed_at: null } });
       expect((await send('post', '/expenses', users.clerk).send({ headId: ids.repairs, fundId: ids.otherFund, description: 'x', amount: '1', spentOn: today() }).expect(400)).body.code).toBe(
         'invalid_fund',
@@ -219,7 +219,7 @@ describe('Expenses and budgets (e2e)', () => {
       // The mosque fund holds ৳100 cash: only one of these may be paid.
       const a = await approved({ fundId: ids.mosque, amount: '70' });
       const b = await approved({ fundId: ids.mosque, amount: '70' });
-      const results = await Promise.all([a, b].map((e) => send('post', `/expenses/${e.id}/pay`, users.treasurer).send({ account: 'cash' })));
+      const results = await Promise.all([a, b].map((e) => send('post', `/expenses/${e.id}/pay`, users.treasurer).send({ method: 'cash' })));
       expect(results.map((r) => r.status).sort((x, y) => x - y)).toEqual([200, 409]);
       expect(await balance(ids.mosque)).toBe('30.00');
       await separateFunds(false);
@@ -227,15 +227,29 @@ describe('Expenses and budgets (e2e)', () => {
 
     it('gives vouchers numbers without gaps', async () => {
       const made = await Promise.all([1, 2, 3].map(() => approved({ amount: '1' })));
-      const paid = await Promise.all(made.map((e) => send('post', `/expenses/${e.id}/pay`, users.treasurer).send({ account: 'bank' }).expect(200)));
+      const paid = await Promise.all(made.map((e) => send('post', `/expenses/${e.id}/pay`, users.treasurer).send({ method: 'bank' }).expect(200)));
       const numbers = paid.map((res) => Number(detail(res).voucherNo!.slice(-4))).sort((x, y) => x - y);
       expect(numbers[2]! - numbers[0]!).toBe(2);
       expect(new Set(numbers).size).toBe(3);
     });
 
+    it('pays by cheque or wallet from the bank, with the reference', async () => {
+      const made = await approved({ amount: '250' });
+      const refused = await send('post', `/expenses/${made.id}/pay`, users.treasurer).send({ method: 'cheque' }).expect(400);
+      expect(refused.body.issues).toEqual([{ path: 'methodRef', message: 'method_ref_required' }]);
+      await send('post', `/expenses/${made.id}/pay`, users.treasurer).send({ account: 'cash' }).expect(400);
+
+      const before = await prisma.ledger_entries.count({ where: { fund_id: ids.general, account: 'bank' } });
+      const paid = detail(await send('post', `/expenses/${made.id}/pay`, users.treasurer).send({ method: 'cheque', methodRef: '771204' }).expect(200));
+      expect(paid.paid).toMatchObject({ account: 'bank', method: 'cheque', methodRef: '771204' });
+      const row = await prisma.ledger_entries.findFirstOrThrow({ where: { source_type: 'expense', source_id: made.id } });
+      expect(row).toMatchObject({ direction: 'out', account: 'bank' });
+      expect(await prisma.ledger_entries.count({ where: { fund_id: ids.general, account: 'bank' } })).toBe(before + 1);
+    });
+
     it('voids a paid expense with a reversing row, and an approved one with none', async () => {
       const paid = await approved({ amount: '200' });
-      await send('post', `/expenses/${paid.id}/pay`, users.treasurer).send({ account: 'cash' }).expect(200);
+      await send('post', `/expenses/${paid.id}/pay`, users.treasurer).send({ method: 'cash' }).expect(200);
       const before = await balance(ids.general);
       await send('post', `/expenses/${paid.id}/void`, users.treasurer).send({ reason: 'ভুল' }).expect(403);
       const voided = detail(await send('post', `/expenses/${paid.id}/void`, users.approver).send({ reason: 'দ্বিগুণ লেখা' }).expect(200));
@@ -285,7 +299,7 @@ describe('Expenses and budgets (e2e)', () => {
       await get(url, users.viewer).expect(404);
       const again = detail(await send('post', `/expenses/${made.id}/vouchers`, users.clerk).attach('file', pdf(), 'bill.pdf').expect(201));
       await send('post', `/expenses/${made.id}/approve`, users.approver).expect(200);
-      await send('post', `/expenses/${made.id}/pay`, users.treasurer).send({ account: 'cash' }).expect(200);
+      await send('post', `/expenses/${made.id}/pay`, users.treasurer).send({ method: 'cash' }).expect(200);
       expect((await send('post', `/expenses/${made.id}/vouchers/${again.vouchers[0]!.id}/remove`, users.clerk).expect(409)).body.code).toBe('expense_voucher_locked');
       // A bill that arrives after payment can still be added.
       detail(await send('post', `/expenses/${made.id}/vouchers`, users.treasurer).attach('file', pdf(), 'late.pdf').expect(201));
@@ -322,7 +336,7 @@ describe('Expenses and budgets (e2e)', () => {
       });
       await get(`/expenses/${other.id}`).expect(404);
       for (const action of ['approve', 'pay', 'void', 'reject']) {
-        await send('post', `/expenses/${other.id}/${action}`).send({ reason: 'x', account: 'cash' }).expect(404);
+        await send('post', `/expenses/${other.id}/${action}`).send({ reason: 'x', method: 'cash' }).expect(404);
       }
       await send('patch', `/expenses/${other.id}`).send({ headId: ids.repairs, description: 'x', amount: '1', spentOn: today() }).expect(404);
       const list = expenseListSchema.parse((await get('/expenses?pageSize=100').expect(200)).body);

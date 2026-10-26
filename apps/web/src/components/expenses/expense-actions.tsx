@@ -1,11 +1,12 @@
 "use client";
 
-import { compareMoney, formatTaka, LEDGER_ACCOUNTS, type ExpenseDetail, type ExpenseOptions, type LedgerAccount, type Locale } from "@s57/shared";
+import { accountOfMethod, compareMoney, formatTaka, type ExpenseDetail, type ExpenseOptions, type Locale } from "@s57/shared";
 import { Ban, Check, Pencil, Wallet, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { ConfirmButton } from "@/components/admin/confirm-button";
 import { FormStatus, Note } from "@/components/admin/form-status";
+import { methodBody, methodReady, PaymentMethodField, type MethodValue } from "@/components/finance/payment-method-field";
 import { Card, Field, inputClass } from "@/components/kit";
 import { useSubmit } from "@/components/property/use-submit";
 import { Button } from "@/components/ui/button";
@@ -76,30 +77,29 @@ function Pay({ expense }: { expense: ExpenseDetail }) {
   const locale = useLocale() as Locale;
   const { status, run } = useSubmit();
   const balance = expense.fundBalance ?? { cash: "0.00", bank: "0.00" };
-  const [account, setAccount] = useState<LedgerAccount>(compareMoney(balance.cash, expense.amount) >= 0 || compareMoney(balance.bank, expense.amount) < 0 ? "cash" : "bank");
+  const cashEnough = compareMoney(balance.cash, expense.amount) >= 0 || compareMoney(balance.bank, expense.amount) < 0;
+  const [paidBy, setPaidBy] = useState<MethodValue>({ method: cashEnough ? "cash" : "bank", methodRef: "" });
+  const account = accountOfMethod(paidBy.method);
   const short = compareMoney(balance[account], expense.amount) < 0;
 
   return (
     <Card className="grid gap-3">
       <h2 className="text-[15px]">{t("payTitle")}</h2>
-      <Field label={t("account")} htmlFor="expense-pay-account">
-        <select id="expense-pay-account" className={inputClass} value={account} onChange={(e) => setAccount(e.target.value as LedgerAccount)}>
-          {LEDGER_ACCOUNTS.map((option) => (
-            <option key={option} value={option}>
-              {t("accountOption", { account: tAccount(option), balance: formatTaka(balance[option], locale) })}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <p className="text-[13px] text-muted-foreground">
+        {(["cash", "bank"] as const).map((option) => t("accountOption", { account: tAccount(option), balance: formatTaka(balance[option], locale) })).join(" · ")}
+      </p>
+      <div className="grid gap-3 min-[600px]:grid-cols-2">
+        <PaymentMethodField id="expense-pay" value={paidBy} onChange={setPaidBy} />
+      </div>
       {short ? <Note tone="warn">{t("insufficient", { balance: formatTaka(balance[account], locale) })}</Note> : null}
       <div>
         <ConfirmButton
           label={t("pay", { amount: formatTaka(expense.amount, locale) })}
           question={t("payQuestion", { amount: formatTaka(expense.amount, locale) })}
           icon={Wallet}
-          disabled={short}
+          disabled={short || !methodReady(paidBy)}
           onConfirm={async () => {
-            await run(() => api.POST("/expenses/{id}/pay", { params: { path: { id: expense.id } }, body: { account } }), t("paidNow"));
+            await run(() => api.POST("/expenses/{id}/pay", { params: { path: { id: expense.id } }, body: methodBody(paidBy) }), t("paidNow"));
           }}
         />
       </div>

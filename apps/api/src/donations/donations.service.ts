@@ -5,6 +5,7 @@ import {
   digitVariants,
   fiscalYearOf,
   payerSnapshotSchema,
+  storedMethod,
   TIME_ZONE,
   type DonationCreate,
   type DonationDetail,
@@ -42,7 +43,7 @@ const rowSelect = {
   amount: true,
   purpose: true,
   funds: { select: { id: true, name_bn: true, name_en: true } },
-  payments: { select: { receipt_no: true, payer_snapshot: true, voided_at: true, users: userName } },
+  payments: { select: { receipt_no: true, method: true, payer_snapshot: true, voided_at: true, users: userName } },
 } satisfies Prisma.donationsSelect;
 type Row = Prisma.donationsGetPayload<{ select: typeof rowSelect }>;
 
@@ -201,11 +202,13 @@ export class DonationsService {
   // -------------------------------------------------------------------------
 
   /**
-   * Records a donation with its receipt and its ledger row, in one transaction. A new donor
-   * is found by phone first, else added; the receipt keeps the donor as on the day.
+   * Records a donation with its receipt and its ledger row (in the account the method lands
+   * in), in one transaction. A new donor is found by phone first, else added; the receipt
+   * keeps the donor as on the day.
    */
   async create(actor: Actor, input: DonationCreate): Promise<DonationDetail> {
     const today = isoDate(todayDate());
+    const paidBy = storedMethod(input);
     const id = await this.prisma.$transaction(async (tx) => {
       const fund = await this.fund(tx, actor.societyId, input.fundId ?? null);
       const donor = await this.donor(tx, actor.societyId, input.donor);
@@ -224,7 +227,8 @@ export class DonationsService {
           unit_id: null,
           payer_snapshot: snapshot ?? Prisma.DbNull,
           amount,
-          method: 'cash',
+          method: paidBy.method,
+          method_ref: paidBy.ref,
           received_by: actor.userId,
           received_at: receivedAt,
           note: input.note,
@@ -251,7 +255,7 @@ export class DonationsService {
           entry_date: day(today),
           direction: 'in',
           amount,
-          account: 'cash',
+          account: paidBy.account,
           source_type: 'donation',
           source_id: donation.id,
           memo: number.formatted,
@@ -268,6 +272,8 @@ export class DonationsService {
             fundId: fund.id,
             purpose: input.purpose,
             amount: input.amount,
+            method: paidBy.method,
+            methodRef: paidBy.ref,
             note: input.note,
           },
         },
@@ -454,6 +460,7 @@ function toRow(row: Row): DonationRow {
     receivedAt: row.received_at.toISOString(),
     receivedDay: isoDate(todayDate(row.received_at)),
     amount: row.amount.toFixed(2),
+    method: row.payments.method as DonationRow['method'],
     donor: row.payments.payer_snapshot === null ? null : payerSnapshotSchema.parse(row.payments.payer_snapshot),
     fund: { id: row.funds.id, nameBn: row.funds.name_bn, nameEn: row.funds.name_en },
     purpose: row.purpose,

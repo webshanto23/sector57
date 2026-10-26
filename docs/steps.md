@@ -49,6 +49,7 @@ Schema changes are additive and need Anis's approval first.
 | 28 | Records: Certificates and NOCs | Built, awaiting review | `step/28-certificates` |
 | 29 | Records: Occupancy, members and renter-list reports | Built, awaiting review | `step/29-records-reports` |
 | 30 | A4 bill print to the mock (`docs/mocks/sector57-bill-a4-8rows.png`) | Planned, decisions open | `step/30-bill-a4` |
+| 31 | Payment methods on every money entry (cash, bank, cheque, mobile) | Built, awaiting review | `step/31-payment-methods` |
 
 The step numbers are names, not the build order. Order changed on 2026-10-08: Steps 3 and 8 moved to the end so the forms use the real location tree (Step 9) and the file storage from Step 7, and residents submit while the office reviews in the same release.
 
@@ -457,7 +458,7 @@ The tables in `00_init` are a good base. Reviewing them against the screens show
 | Expenses can't be paid, voided or numbered | `expenses.voucher_no`, `created_at`, `paid_at`, `paid_by`, `reject_reason`, `voided_at`, `voided_by`, `void_reason`; status `void` | 16 |
 | Donations have no receipt of their own | none: a donation creates a `payments` row (the receipt) with no allocations; the ledger row comes from the donation, not the payment, so it isn't counted twice | 15 |
 
-`payments.method` keeps its check, but the API accepts only `cash` in milestone 2 (online payment is out of scope).
+`payments.method` keeps its check, but the API accepts only `cash` in milestone 2 (online payment is out of scope). Step 31 opened it up: every money entry records its method (still no gateway).
 
 ### Step 11: Finance setup — Done
 
@@ -963,6 +964,18 @@ Added 2026-10-26. The bill prints to the mock `docs/mocks/sector57-bill-a4-8rows
 | Email and registration number | Add to the `receipt_header` setting and its form (JSON, no migration) | Scope note |
 | Office hours and notes | A setting; generic wording if empty | Scope note |
 | Bills longer than the page (up to 20 lines; about 8 fill it at the mock's spacing) | Compact rows and merged payment/notes above about 10 lines, always one page | Scope note |
+
+## Step 31: Payment methods — Built, awaiting review
+
+Asked for by Anis on 2026-10-26: record how every amount was paid, without any gateway (SSLCommerz, Stripe and the like stay out). Built on `step/31-payment-methods` (from `main` after PR #30) in three parts in one session. Decided by Anis: mobile-wallet money lands in the **bank** account (no third ledger account); a cheque counts on the day it is taken (a bounced one is voided); the reference is required for cheque and mobile, optional for a bank deposit, never kept for cash.
+
+- **Migration `21_payment_methods`:** `payments.method` takes `cash`, `bank`, `cheque`, `mobile`, plus `method_ref` (cash has none, cheque and mobile must). `expenses` and `payroll_runs` get `paid_method` and `paid_method_ref`, back-filled from `paid_account`; a check keeps method and account in step (cash ↔ cash, the rest ↔ bank). Hand-entered rows that said cheque or mobile got `-` as their reference. Prisma does not wrap a migration in a transaction, so the old check is dropped with `IF EXISTS` (the first try on the dev database had half-applied).
+- **Shared (`contracts/finance.ts`):** `PAYMENT_METHODS`, `accountOfMethod`, `methodNeedsRef`, `refineMethodRef` (`method_ref_required` on `methodRef`), `storedMethod` (drops a reference typed for cash). `POST /payments` and `/donations` take `method` (default `cash`) and `methodRef`; `POST /expenses/:id/pay` and `/payroll/:id/pay` take `method` + `methodRef` **instead of** `account`. Receipts, donation rows, expense details and payroll runs return the method and reference. Labels in `Finance.method`.
+- **API:** the ledger row goes to the method's account; the audit rows record method and reference. The cash handover, the collector's "in hand" figure and `inHand=true` count cash only; "today" counts every method.
+- **Web:** `PaymentMethodField` (`components/finance/payment-method-field.tsx`: picker, reference box, "goes to: Cash/Bank") on the collect, donation, expense-pay and payroll-pay forms; the receipt (live preview, payer copy and counterfoil) prints the method and reference instead of a fixed "Cash"; the expense detail, voucher and payroll steps show "Bank (Cheque · 771204)" through `paidFrom` (`components/finance/method-text.ts`).
+- **Tests:** `payment-methods.spec.ts` in shared; e2e for receipts (cheque refused without a reference, mobile and cheque to the bank, cash reference dropped, only cash in hand and handed over), expenses (cheque from the bank, `account` refused), donations (mobile to the bank) and payroll (mobile without a reference refused). Existing e2e send `method` instead of `account`.
+- **Checked:** the six affected e2e files (81 tests) and `pnpm check`. The forms were not opened in a browser; the 375/820/1440 checks stay in the deferred pass.
+- **Not in this step:** a by-method breakdown in the reports, the method on the receipts and donations lists, cheque clearing, a separate mobile-wallet account, fund transfers (they already pick their accounts). `payments.service.ts` is 713 lines and was not split.
 
 ## Later: beyond milestone 3
 

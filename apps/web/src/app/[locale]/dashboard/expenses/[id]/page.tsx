@@ -6,6 +6,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Note } from "@/components/admin/form-status";
 import { ExpenseActions } from "@/components/expenses/expense-actions";
 import { ExpenseStatusChip } from "@/components/expenses/expenses-table";
+import { paidFrom } from "@/components/finance/method-text";
 import { VoucherPrint } from "@/components/expenses/voucher-print";
 import { VouchersPanel } from "@/components/expenses/vouchers-panel";
 import { Card, PageHeader } from "@/components/kit";
@@ -29,7 +30,7 @@ export default async function ExpensePage({ params }: PageProps<"/[locale]/dashb
   setRequestLocale(locale);
 
   const me = await requirePermission("expenses");
-  const [t, tAccount, expense] = await Promise.all([getTranslations("Expenses"), getTranslations("Finance.funds"), getExpense(id)]);
+  const [t, tAccount, tMethod, expense] = await Promise.all([getTranslations("Expenses"), getTranslations("Finance.funds"), getTranslations("Finance.method"), getExpense(id)]);
   if (!expense) notFound();
   const options = expense.can.edit ? await getExpenseOptions() : null;
   const at = (value: string) => formatDate(value, locale, "stamp");
@@ -42,7 +43,7 @@ export default async function ExpensePage({ params }: PageProps<"/[locale]/dashb
     expense.paid
       ? {
           key: "paid",
-          text: t("detail.paidStep", { by: expense.paid.by ?? t("detail.someone"), date: at(expense.paid.at), account: tAccount(expense.paid.account), no: expense.voucherNo ?? "" }),
+          text: t("detail.paidStep", { by: expense.paid.by ?? t("detail.someone"), date: at(expense.paid.at), account: paidFrom(tAccount(expense.paid.account), tMethod(expense.paid.method), expense.paid.methodRef, expense.paid.method === "cash"), no: expense.voucherNo ?? "" }),
         }
       : null,
     expense.void ? { key: "void", text: t("detail.voidStep", { by: expense.void.by ?? t("detail.someone"), date: at(expense.void.at), reason: expense.void.reason }) } : null,

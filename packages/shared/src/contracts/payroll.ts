@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { addMoney, fromPaisa, moneySchema, subtractMoney, toPaisa } from '../money.js';
 import { optionalText, text } from '../schemas.js';
-import { documentHeaderSchema, fundOptionSchema, LEDGER_ACCOUNTS } from './finance.js';
+import { documentHeaderSchema, fundOptionSchema, LEDGER_ACCOUNTS, paymentMethodSchema, paymentRefSchema, refineMethodRef } from './finance.js';
 import { isoDay } from './members.js';
 import { addDays, daysBetween } from './reports.js';
 import { isoMonth, STAFF_KINDS, type StaffKind } from './staff.js';
@@ -130,8 +130,8 @@ export const payslipEditSchema = z.object({
 export type PayslipEditValues = z.input<typeof payslipEditSchema>;
 export type PayslipEditInput = z.output<typeof payslipEditSchema>;
 
-/** `POST /payroll/:id/pay`: the account the salaries leave and the expense head they are booked under. */
-export const payrollPaySchema = z.object({ account: z.enum(LEDGER_ACCOUNTS), headId: z.uuid() });
+/** `POST /payroll/:id/pay`: how the salaries are paid (the method decides the account) and the expense head they are booked under. */
+export const payrollPaySchema = z.object({ method: paymentMethodSchema, methodRef: paymentRefSchema, headId: z.uuid() }).superRefine(refineMethodRef);
 export type PayrollPayInput = z.infer<typeof payrollPaySchema>;
 
 /** `POST /payroll/:id/void`. */
@@ -205,6 +205,8 @@ export const payrollRunSchema = z.object({
   paidBy: userRef.nullable(),
   paidAt: instant.nullable(),
   paidAccount: z.enum(LEDGER_ACCOUNTS).nullable(),
+  paidMethod: paymentMethodSchema.nullable(),
+  paidMethodRef: z.string().nullable(),
   expenseHead: nameRef.nullable(),
   voidedBy: userRef.nullable(),
   voidedAt: instant.nullable(),

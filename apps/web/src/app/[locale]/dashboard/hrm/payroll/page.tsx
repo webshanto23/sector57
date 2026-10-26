@@ -2,6 +2,7 @@ import { addMoney, formatDate, formatNumber, formatTaka, isoMonth, pick, subtrac
 import { Banknote, MinusCircle, Users, Wallet } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { paidFrom } from "@/components/finance/method-text";
 import { Card, Chip, DataTable, inputClass, PageHeader, StatCard, type Column } from "@/components/kit";
 import { PayrollActions, PreparePayroll } from "@/components/payroll/payroll-actions";
 import { PAYROLL_STATUS_TONES } from "@/components/payroll/payroll-status";
@@ -78,7 +79,7 @@ export default async function PayrollPage({ params, searchParams }: PageProps<"/
 }
 
 async function RunView({ run, view, meId, locale }: { run: PayrollRun; view: Awaited<ReturnType<typeof getPayrollMonth>>; meId: string; locale: Locale }) {
-  const [t, tAccount] = await Promise.all([getTranslations("Payroll"), getTranslations("Finance.funds")]);
+  const [t, tAccount, tMethod] = await Promise.all([getTranslations("Payroll"), getTranslations("Finance.funds"), getTranslations("Finance.method")]);
   const n = (value: number) => formatNumber(value, locale);
   const taka = (amount: string) => formatTaka(amount, locale);
   const when = (at: string) => formatDate(at, locale, "short");
@@ -86,7 +87,7 @@ async function RunView({ run, view, meId, locale }: { run: PayrollRun; view: Awa
   const steps = [
     t("steps.prepared", { name: who(run.preparedBy), date: when(run.preparedAt) }),
     run.approvedAt ? t("steps.approved", { name: who(run.approvedBy), date: when(run.approvedAt) }) : null,
-    run.paidAt && run.paidAccount ? t("steps.paid", { name: who(run.paidBy), account: tAccount(run.paidAccount), date: when(run.paidAt) }) : null,
+    run.paidAt && run.paidAccount ? t("steps.paid", { name: who(run.paidBy), account: paidFrom(tAccount(run.paidAccount), run.paidMethod && tMethod(run.paidMethod), run.paidMethodRef, run.paidMethod === "cash"), date: when(run.paidAt) }) : null,
     run.voidedAt ? t("steps.voided", { name: who(run.voidedBy), date: when(run.voidedAt), reason: run.voidReason ?? "" }) : null,
   ].filter((step): step is string => step !== null);
   const deductions = addMoney(run.totals.attendanceDeduction, run.totals.deductions);

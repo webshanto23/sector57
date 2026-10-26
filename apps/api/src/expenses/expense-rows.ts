@@ -41,6 +41,8 @@ export const detailSelect = {
   reject_reason: true,
   paid_at: true,
   paid_account: true,
+  paid_method: true,
+  paid_method_ref: true,
   voided_at: true,
   void_reason: true,
   users_expenses_approved_byTousers: userName,

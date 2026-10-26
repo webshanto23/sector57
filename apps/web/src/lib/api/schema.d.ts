@@ -6226,6 +6226,8 @@ export interface components {
                 /** Format: date */
                 receivedDay: string;
                 amount: string;
+                /** @enum {string} */
+                method: "cash" | "bank" | "cheque" | "mobile";
                 payer: {
                     /** @enum {string} */
                     kind: "person" | "organisation";
@@ -6276,6 +6278,8 @@ export interface components {
             /** Format: date */
             receivedDay: string;
             amount: string;
+            /** @enum {string} */
+            method: "cash" | "bank" | "cheque" | "mobile";
             payer: {
                 /** @enum {string} */
                 kind: "person" | "organisation";
@@ -6305,6 +6309,7 @@ export interface components {
                 confirmed: boolean;
             } | null;
             invoiceNos: string[];
+            methodRef: string | null;
             note: string | null;
             allocations: {
                 /** Format: uuid */
@@ -6361,6 +6366,12 @@ export interface components {
                 /** Format: uuid */
                 id: string;
             };
+            /**
+             * @default cash
+             * @enum {string}
+             */
+            method: "cash" | "bank" | "cheque" | "mobile";
+            methodRef?: string | null;
             note?: string | null;
         };
         PaymentPrintDto_Output: {
@@ -6468,6 +6479,8 @@ export interface components {
                 /** Format: date */
                 receivedDay: string;
                 amount: string;
+                /** @enum {string} */
+                method: "cash" | "bank" | "cheque" | "mobile";
                 donor: {
                     /** @enum {string} */
                     kind: "person" | "organisation";
@@ -6557,6 +6570,8 @@ export interface components {
             /** Format: date */
             receivedDay: string;
             amount: string;
+            /** @enum {string} */
+            method: "cash" | "bank" | "cheque" | "mobile";
             donor: {
                 /** @enum {string} */
                 kind: "person" | "organisation";
@@ -6598,6 +6613,8 @@ export interface components {
                 /** Format: date */
                 receivedDay: string;
                 amount: string;
+                /** @enum {string} */
+                method: "cash" | "bank" | "cheque" | "mobile";
                 payer: {
                     /** @enum {string} */
                     kind: "person" | "organisation";
@@ -6627,6 +6644,7 @@ export interface components {
                     confirmed: boolean;
                 } | null;
                 invoiceNos: string[];
+                methodRef: string | null;
                 note: string | null;
                 allocations: {
                     /** Format: uuid */
@@ -6700,6 +6718,12 @@ export interface components {
             fundId?: string | null;
             purpose?: string | null;
             amount: string;
+            /**
+             * @default cash
+             * @enum {string}
+             */
+            method: "cash" | "bank" | "cheque" | "mobile";
+            methodRef?: string | null;
             note?: string | null;
         };
         DonationPrintDto_Output: {
@@ -6853,6 +6877,9 @@ export interface components {
                 at: string;
                 /** @enum {string} */
                 account: "cash" | "bank";
+                /** @enum {string} */
+                method: "cash" | "bank" | "cheque" | "mobile";
+                methodRef: string | null;
             } | null;
             void: {
                 by: string | null;
@@ -6912,7 +6939,8 @@ export interface components {
         };
         ExpensePayDto: {
             /** @enum {string} */
-            account: "cash" | "bank";
+            method: "cash" | "bank" | "cheque" | "mobile";
+            methodRef?: string | null;
         };
         ExpenseHeadInputDto: {
             nameBn: string;
@@ -9532,6 +9560,8 @@ export interface components {
                 } | null;
                 paidAt: string | null;
                 paidAccount: ("cash" | "bank") | null;
+                paidMethod: ("cash" | "bank" | "cheque" | "mobile") | null;
+                paidMethodRef: string | null;
                 expenseHead: {
                     /** Format: uuid */
                     id: string;
@@ -9671,6 +9701,8 @@ export interface components {
             } | null;
             paidAt: string | null;
             paidAccount: ("cash" | "bank") | null;
+            paidMethod: ("cash" | "bank" | "cheque" | "mobile") | null;
+            paidMethodRef: string | null;
             expenseHead: {
                 /** Format: uuid */
                 id: string;
@@ -9776,7 +9808,8 @@ export interface components {
         };
         PayrollPayDto: {
             /** @enum {string} */
-            account: "cash" | "bank";
+            method: "cash" | "bank" | "cheque" | "mobile";
+            methodRef?: string | null;
             /** Format: uuid */
             headId: string;
         };

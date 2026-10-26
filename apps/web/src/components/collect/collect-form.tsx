@@ -18,6 +18,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { FormStatus, Note } from "@/components/admin/form-status";
 import { InvoiceStatusChip } from "@/components/billing/status-chip";
+import { CASH, methodBody, methodReady, PaymentMethodField, type MethodValue } from "@/components/finance/payment-method-field";
 import { Card, Field, inputClass } from "@/components/kit";
 import { useSubmit } from "@/components/property/use-submit";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,7 @@ export function CollectForm({
   const [touched, setTouched] = useState(false);
   const [payerId, setPayerId] = useState(initial?.payers[0]?.id ?? "");
   const [note, setNote] = useState("");
+  const [paidBy, setPaidBy] = useState<MethodValue>(CASH);
 
   function choose(next: CollectAccount | null) {
     setAccount(next);
@@ -121,6 +123,7 @@ export function CollectForm({
             };
           }),
           amount: parsed.data,
+          ...methodBody(paidBy),
           collectedBy: collector,
           note: note.trim() || null,
           mark: null,
@@ -128,12 +131,13 @@ export function CollectForm({
       : null;
 
   async function save() {
-    if (!account || !payer || !parsed.success || problem) return;
+    if (!account || !payer || !parsed.success || problem || !methodReady(paidBy)) return;
     const body = {
       ...(account.kind === "unit" ? { unitId: account.id } : { personId: account.id }),
       invoiceIds: bills.map((bill) => bill.id),
       amount: parsed.data,
       payer: { kind: payer.kind, id: payer.id },
+      ...methodBody(paidBy),
       note: note.trim() || null,
     };
     const made = await run(() => api.POST("/payments", { body }));
@@ -276,6 +280,7 @@ export function CollectForm({
                       ))}
                     </select>
                   </Field>
+                  <PaymentMethodField id="collect" value={paidBy} onChange={setPaidBy} />
                   <Field label={t("collectedBy")} htmlFor="collect-by">
                     <input id="collect-by" className={inputClass} value={collector} readOnly />
                   </Field>
@@ -286,7 +291,7 @@ export function CollectForm({
                 <p className="text-[12.5px] text-muted-foreground">{t("amountHint")}</p>
                 {problem ? <p className="text-[13px] text-bad">{problem}</p> : null}
                 <div className="flex flex-wrap items-center gap-3">
-                  <Button type="submit" disabled={busy || Boolean(problem) || !parsed.success || !payer}>
+                  <Button type="submit" disabled={busy || Boolean(problem) || !parsed.success || !payer || !methodReady(paidBy)}>
                     <Printer aria-hidden />
                     {busy ? t("saving") : t("save")}
                   </Button>

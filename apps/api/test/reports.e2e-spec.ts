@@ -115,7 +115,7 @@ describe('Fund ledger and finance reports (e2e)', () => {
       (await send('post', '/expenses', users.requester).send({ headId: ids.repairs, description: 'পাম্প মেরামত', amount, spentOn: today() }).expect(201)).body,
     );
     await send('post', `/expenses/${made.id}/approve`).expect(200);
-    return expenseDetailSchema.parse((await send('post', `/expenses/${made.id}/pay`).send({ account: 'cash' }).expect(200)).body);
+    return expenseDetailSchema.parse((await send('post', `/expenses/${made.id}/pay`).send({ method: 'cash' }).expect(200)).body);
   };
 
   beforeAll(async () => {

@@ -10,6 +10,7 @@ import {
   OPEN_INVOICE_STATUSES,
   payerSnapshotSchema,
   statusAfterPayment,
+  storedMethod,
   TIME_ZONE,
   type CollectAccount,
   type CollectLookup,
@@ -49,6 +50,7 @@ const rowSelect = {
   receipt_no: true,
   received_at: true,
   amount: true,
+  method: true,
   payer_snapshot: true,
   voided_at: true,
   handover_id: true,
@@ -62,6 +64,7 @@ type Row = Prisma.paymentsGetPayload<{ select: typeof rowSelect }>;
 
 const detailSelect = {
   ...rowSelect,
+  method_ref: true,
   note: true,
   print_count: true,
   void_reason: true,
@@ -244,8 +247,8 @@ export class PaymentsService {
       this.prisma.$queryRaw<{ today_count: number; today_amount: string; hand_count: number; hand_amount: string }[]>`
         SELECT (count(*) FILTER (WHERE ${dhakaDay} = ${today}::date))::int AS today_count,
                coalesce(sum(p.amount) FILTER (WHERE ${dhakaDay} = ${today}::date), 0)::numeric(16,2)::text AS today_amount,
-               (count(*) FILTER (WHERE p.handover_id IS NULL))::int AS hand_count,
-               coalesce(sum(p.amount) FILTER (WHERE p.handover_id IS NULL), 0)::numeric(16,2)::text AS hand_amount
+               (count(*) FILTER (WHERE p.handover_id IS NULL AND p.method = 'cash'))::int AS hand_count,
+               coalesce(sum(p.amount) FILTER (WHERE p.handover_id IS NULL AND p.method = 'cash'), 0)::numeric(16,2)::text AS hand_amount
         FROM payments p WHERE ${mine}`,
       this.prisma.$queryRaw<{ count: number; amount: string }[]>`
         SELECT count(DISTINCT h.id)::int AS count, coalesce(sum(p.amount), 0)::numeric(16,2)::text AS amount
@@ -315,6 +318,7 @@ export class PaymentsService {
     const header = await this.settings.receiptHeader(actor.societyId);
     return {
       ...toRow(row),
+      methodRef: row.method_ref,
       note: row.note,
       allocations: [...row.payment_allocations]
         .sort((a, b) => a.invoices.due_date.getTime() - b.invoices.due_date.getTime() || a.invoices.invoice_no.localeCompare(b.invoices.invoice_no))
@@ -347,12 +351,13 @@ export class PaymentsService {
   // -------------------------------------------------------------------------
 
   /**
-   * Takes cash for the ticked bills: allocations oldest first, each bill's `paid` and status,
-   * a receipt number, one `in` ledger row per fund, all in one transaction. The bills are
-   * locked first, so two collectors can't pay the same bill twice.
+   * Takes money for the ticked bills: allocations oldest first, each bill's `paid` and status,
+   * a receipt number, one `in` ledger row per fund (in the account the method lands in), all
+   * in one transaction. The bills are locked first, so two collectors can't pay the same bill twice.
    */
   async create(actor: Actor, input: PaymentCreate): Promise<PaymentDetail> {
     const today = isoDate(todayDate());
+    const paidBy = storedMethod(input);
     const id = await this.prisma.$transaction(async (tx) => {
       const account = await this.account(tx, actor, input);
 
@@ -417,7 +422,8 @@ export class PaymentsService {
           unit_id: account.unit?.id ?? null,
           payer_snapshot: snapshot,
           amount: new Prisma.Decimal(input.amount),
-          method: 'cash',
+          method: paidBy.method,
+          method_ref: paidBy.ref,
           received_by: actor.userId,
           note: input.note,
         },
@@ -445,7 +451,7 @@ export class PaymentsService {
             entry_date: day(today),
             direction: 'in',
             amount: new Prisma.Decimal(amount),
-            account: 'cash',
+            account: paidBy.account,
             source_type: 'payment',
             source_id: payment.id,
             memo: number.formatted,
@@ -461,6 +467,8 @@ export class PaymentsService {
             unitId: account.unit?.id ?? null,
             payer: { kind: input.payer.kind, id: input.payer.id },
             amount: input.amount,
+            method: paidBy.method,
+            methodRef: paidBy.ref,
             allocations: result.allocations,
             note: input.note,
           },
@@ -620,7 +628,7 @@ export class PaymentsService {
     if (query.unitId) and.push(Prisma.sql`p.unit_id = ${query.unitId}::uuid`);
     if (query.personId) and.push(Prisma.sql`p.payer_person_id = ${query.personId}::uuid`);
     if (query.invoiceId) and.push(Prisma.sql`EXISTS (SELECT 1 FROM payment_allocations a WHERE a.payment_id = p.id AND a.invoice_id = ${query.invoiceId}::uuid)`);
-    if (query.inHand) and.push(Prisma.sql`p.handover_id IS NULL AND p.voided_at IS NULL`);
+    if (query.inHand) and.push(Prisma.sql`p.handover_id IS NULL AND p.voided_at IS NULL AND p.method = 'cash'`);
     if (query.q) {
       const terms = digitVariants(query.q).map((term) => {
         const like = likeTerm(term);
@@ -684,6 +692,7 @@ function toRow(row: Row): PaymentRow {
     receivedAt: row.received_at.toISOString(),
     receivedDay: isoDate(todayDate(row.received_at)),
     amount: row.amount.toFixed(2),
+    method: row.method as PaymentRow['method'],
     payer,
     collectedBy: { id: row.users.id, name: nameOf(row.users) },
     voided: row.voided_at !== null,

@@ -138,9 +138,13 @@ describe('Donations (e2e)', () => {
       expect(made.receipt).toMatchObject({ kind: 'donation', receiptNo: made.receiptNo, allocations: [], note: 'ঈদের আগে', donation: { id: made.id } });
       expect(made.can.void).toBe(true);
 
-      const second = await given({ donor: anonymous, amount: '0.20' });
+      const second = await given({ donor: anonymous, amount: '0.20', method: 'mobile', methodRef: 'নগদ 71XK' });
       expect(second.donor).toBeNull();
       expect(second.receipt.payer).toBeNull();
+      expect(second).toMatchObject({ method: 'mobile', receipt: { method: 'mobile', methodRef: 'নগদ 71XK' } });
+      expect(made.method).toBe('cash');
+      const bank = await prisma.ledger_entries.findFirstOrThrow({ where: { source_type: 'donation', source_id: second.id } });
+      expect(bank.account).toBe('bank');
 
       const entries = await prisma.ledger_entries.findMany({ where: { society_id: societyId, source_id: { in: [made.id, made.paymentId] } } });
       expect(entries).toHaveLength(1);

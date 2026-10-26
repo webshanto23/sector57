@@ -19,7 +19,7 @@
 - **Bilingual data.** Display text is `*_bn` (required) plus `*_en` (optional, falls back to Bangla). Names of people, places and vendors are stored as typed (`persons.full_name`, optional `full_name_en`). Normalise text to Unicode NFC before saving.
 - **Roles and permissions are data.** Never hardcode or check a role by name; check permissions (CASL abilities from `roles`, `permissions`, `role_permissions`, `user_roles`). Seeded roles are only starting points.
 - **Area-scoped access.** A role can be limited to one branch of the location tree (sector > block > road > plot > building > storey > unit); `location_levels` defines the levels per society, `locations` is one self-referencing tree, `units` are leaf locations with an extra row.
-- **Money.** `numeric(14,2)` in BDT (Prisma `Decimal`, never JS floats). Financial rows are never hard-deleted. Cash only; a receipt is issued.
+- **Money.** `numeric(14,2)` in BDT (Prisma `Decimal`, never JS floats). Financial rows are never hard-deleted. Every amount records its payment method (cash, bank, cheque, mobile wallet; no online gateway); a receipt is issued.
 - **The society's identity is data.** Name, logo badge and place line come only from the database (`societies.name_bn/en` plus the `branding` setting); never put them in code or i18n. The web reads them with `getBrand(locale)`; receipts and bills get the badge in `header.mark`.
 - **President toggles** (e.g. sharing renter data with the thana, separate funds) are `society_settings`, not code branches.
 - **Responsive, mobile first.** Tables become cards on phones. Layouts target 375, 820 and 1440 px.

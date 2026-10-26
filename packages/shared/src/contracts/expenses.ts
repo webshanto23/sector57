@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { addMoney, compareMoney, moneyOrZeroSchema, moneySchema, subtractMoney, toPaisa } from '../money.js';
 import { optionalText, pagination, text } from '../schemas.js';
 import { cleanText } from '../text.js';
-import { documentHeaderSchema, fundOptionSchema, LEDGER_ACCOUNTS } from './finance.js';
+import { documentHeaderSchema, fundOptionSchema, LEDGER_ACCOUNTS, paymentMethodSchema, paymentRefSchema, refineMethodRef } from './finance.js';
 import { isoDay, optionalPhone } from './members.js';
 
 // ---------------------------------------------------------------------------
@@ -113,8 +113,8 @@ export type ExpenseInput = z.output<typeof expenseInputSchema>;
 export const expenseReasonSchema = z.object({ reason: text(300) });
 export type ExpenseReason = z.infer<typeof expenseReasonSchema>;
 
-/** `POST /expenses/:id/pay`: which account the money leaves. */
-export const expensePaySchema = z.object({ account: z.enum(LEDGER_ACCOUNTS) });
+/** `POST /expenses/:id/pay`: how it is paid; the method decides the account the money leaves. */
+export const expensePaySchema = z.object({ method: paymentMethodSchema, methodRef: paymentRefSchema }).superRefine(refineMethodRef);
 export type ExpensePay = z.infer<typeof expensePaySchema>;
 
 const userRef = z.object({ id: z.uuid(), name: z.string() });
@@ -185,7 +185,7 @@ export const expenseDetailSchema = expenseRowSchema.omit({ vouchers: true }).ext
   vendor: z.object({ id: z.uuid(), name: z.string(), phone: z.string().nullable() }).nullable(),
   approved: step.nullable(),
   rejected: step.extend({ reason: z.string() }).nullable(),
-  paid: step.extend({ account: z.enum(LEDGER_ACCOUNTS) }).nullable(),
+  paid: step.extend({ account: z.enum(LEDGER_ACCOUNTS), method: paymentMethodSchema, methodRef: z.string().nullable() }).nullable(),
   void: step.extend({ reason: z.string() }).nullable(),
   vouchers: z.array(expenseVoucherSchema),
   /** The fund's balance per account, for whoever may pay (null otherwise). */

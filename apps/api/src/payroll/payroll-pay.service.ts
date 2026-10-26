@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable } from '@nestjs/common';
-import { addMoney, isZeroMoney, type PayrollPayInput, type PayrollRun } from '@s57/shared';
+import { addMoney, isZeroMoney, storedMethod, type PayrollPayInput, type PayrollRun } from '@s57/shared';
 import { AuditService } from '../audit/audit.service.js';
 import { isoDate, todayDate } from '../common/dates.js';
 import { ExpensesService } from '../expenses/expenses.service.js';
@@ -27,6 +27,7 @@ export class PayrollPayService {
   async pay(actor: Actor, id: string, input: PayrollPayInput): Promise<PayrollRun> {
     if (!payrollGrants(actor).expensesCreate) throw new ForbiddenException({ code: 'pay_needs_expenses', message: 'Paying salaries needs the right to create expenses' });
     const today = isoDate(todayDate());
+    const paidBy = storedMethod(input);
     await this.prisma.$transaction(async (tx) => {
       await lockFinanceSetup(tx, actor.societyId);
       const run = await lockedRun(tx, actor, id);
@@ -50,7 +51,7 @@ export class PayrollPayService {
           description: `বেতন ${month}`,
           amount,
           spentOn: today,
-          account: input.account,
+          paidBy,
           requestedBy: run.prepared_by,
           approvedBy: run.approved_by,
           approvedAt: run.approved_at,
@@ -60,9 +61,18 @@ export class PayrollPayService {
       }
       await tx.payroll_runs.update({
         where: { id },
-        data: { status: 'paid', paid_by: actor.userId, paid_at: new Date(), paid_account: input.account, expense_head_id: input.headId, updated_at: new Date() },
+        data: {
+          status: 'paid',
+          paid_by: actor.userId,
+          paid_at: new Date(),
+          paid_account: paidBy.account,
+          paid_method: paidBy.method,
+          paid_method_ref: paidBy.ref,
+          expense_head_id: input.headId,
+          updated_at: new Date(),
+        },
       });
-      await this.audit.record({ ...auditOf(actor, 'pay', id), before: { status: 'approved' }, after: { status: 'paid', account: input.account, headId: input.headId, expenses: booked } }, tx);
+      await this.audit.record({ ...auditOf(actor, 'pay', id), before: { status: 'approved' }, after: { status: 'paid', account: paidBy.account, method: paidBy.method, methodRef: paidBy.ref, headId: input.headId, expenses: booked } }, tx);
     });
     return this.payroll.get(actor, id);
   }

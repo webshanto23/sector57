@@ -273,6 +273,7 @@ describe('Facilities and assets (e2e)', () => {
           paid_at: new Date(),
           paid_by: users.admin.id,
           paid_account: 'cash',
+          paid_method: 'cash',
         },
       });
       const linked = assetDetailSchema.parse((await send('patch', `/assets/${asset.pump.id}`).send({ expenseVoucherNo: voucher.toLowerCase() }).expect(200)).body);

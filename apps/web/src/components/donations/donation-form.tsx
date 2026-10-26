@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { FormStatus } from "@/components/admin/form-status";
 import { donationLine, Receipt, type ReceiptData } from "@/components/collect/receipt";
+import { CASH, methodBody, methodReady, PaymentMethodField, type MethodValue } from "@/components/finance/payment-method-field";
 import { Card, Field, inputClass } from "@/components/kit";
 import { useSubmit } from "@/components/property/use-submit";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,7 @@ export function DonationForm({
   const [purpose, setPurpose] = useState("");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
+  const [paidBy, setPaidBy] = useState<MethodValue>(CASH);
 
   async function find() {
     if (q.trim().length < 2) return;
@@ -104,6 +106,7 @@ export function DonationForm({
             },
           ],
           amount: parsed.data,
+          ...methodBody(paidBy),
           collectedBy: collector,
           note: note.trim() || null,
           mark: null,
@@ -111,14 +114,15 @@ export function DonationForm({
       : null;
 
   async function save() {
-    if (!donorInput || !parsed.success) return;
-    const body: DonationCreateInput = {
+    if (!donorInput || !parsed.success || !methodReady(paidBy)) return;
+    const body = {
       donor: donorInput,
       fundId: options.separateFunds ? fundId : null,
       purpose: purposeText,
       amount: parsed.data,
+      ...methodBody(paidBy),
       note: note.trim() || null,
-    };
+    } satisfies DonationCreateInput;
     const made = await run(() => api.POST("/donations", { body }));
     if (made) router.push(`/dashboard/donations/${made.id}?print=1`);
   }
@@ -282,6 +286,7 @@ export function DonationForm({
             <Field label={t("note")} htmlFor="donation-note">
               <input id="donation-note" className={inputClass} value={note} maxLength={300} onChange={(e) => setNote(e.target.value)} />
             </Field>
+            <PaymentMethodField id="donation" value={paidBy} onChange={setPaidBy} />
             <Field label={t("receivedBy")} htmlFor="donation-by">
               <input id="donation-by" className={inputClass} value={collector} readOnly />
             </Field>
@@ -289,7 +294,7 @@ export function DonationForm({
           <p className="text-[12.5px] text-muted-foreground">{t("purposeHint")}</p>
           {problem && amount !== "" ? <p className="text-[13px] text-bad">{problem}</p> : null}
           <div>
-            <Button type="submit" disabled={busy || !donorInput || !parsed.success}>
+            <Button type="submit" disabled={busy || !donorInput || !parsed.success || !methodReady(paidBy)}>
               <Printer aria-hidden />
               {busy ? t("saving") : t("save")}
             </Button>

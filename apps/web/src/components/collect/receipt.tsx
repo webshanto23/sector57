@@ -1,4 +1,4 @@
-import { amountInWords, formatDate, formatTaka, localDigits, pick, type DocumentHeader, type Locale, type PaymentDetail } from "@s57/shared";
+import { amountInWords, formatDate, formatTaka, localDigits, pick, type DocumentHeader, type Locale, type PaymentDetail, type PaymentMethod } from "@s57/shared";
 import { useTranslations } from "next-intl";
 import { DocumentHead, Stamp } from "@/components/print/document-head";
 
@@ -16,6 +16,9 @@ export type ReceiptData = {
   /** `invoiceNo` is null on a donation's line; `detail` (the fund) is printed under the label instead. */
   items: { key: string; label: string; invoiceNo: string | null; detail?: string | null; amount: string; total: string }[];
   amount: string;
+  method: PaymentMethod;
+  /** The cheque number, or the wallet and transaction ID. */
+  methodRef: string | null;
   collectedBy: string;
   note: string | null;
   mark: "duplicate" | "void" | null;
@@ -55,6 +58,8 @@ export function receiptOf(
           total: allocation.total,
         })),
     amount: payment.amount,
+    method: payment.method,
+    methodRef: payment.methodRef,
     collectedBy: payment.collectedBy.name,
     note: payment.note,
     mark: payment.voided ? "void" : mark,
@@ -73,6 +78,8 @@ export function donationLine(t: (key: "donation" | "donationFor", values?: { pur
 export function Receipt({ data, locale, print = false }: { data: ReceiptData; locale: Locale; print?: boolean }) {
   const t = useTranslations("Collect.receipt");
   const tc = useTranslations("Collect");
+  const tMethod = useTranslations("Finance.method");
+  const paidBy = [tMethod(data.method), data.methodRef].filter(Boolean).join(" · ");
   const no = data.receiptNo ?? "—";
   const day = formatDate(data.date, locale);
   const payer = data.payer ? pick(data.payer.name, data.payer.nameEn, locale) : t("anonymous");
@@ -131,7 +138,7 @@ export function Receipt({ data, locale, print = false }: { data: ReceiptData; lo
       {data.note ? <p className="text-[12.5px] text-muted-foreground">{t("note", { note: data.note })}</p> : null}
       <div className="flex flex-wrap items-center justify-between gap-2 text-[12.5px] text-muted-foreground">
         <span>{t("collectedBy", { name: data.collectedBy })}</span>
-        <span>{t("cash")}</span>
+        <span>{paidBy}</span>
       </div>
     </div>
   );
@@ -184,6 +191,7 @@ export function Receipt({ data, locale, print = false }: { data: ReceiptData; lo
           <span>{t("collectedBy", { name: data.collectedBy })}</span>
           <span className="num text-[14px]">{formatTaka(data.amount, locale)}</span>
         </div>
+        <span className="text-[11px]">{paidBy}</span>
         <div className="flex justify-end pt-3 text-[11px] text-muted-foreground">
           <span className="border-t border-line pt-1">{t("signature")}</span>
         </div>

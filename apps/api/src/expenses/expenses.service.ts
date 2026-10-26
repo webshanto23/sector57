@@ -3,12 +3,15 @@ import { Prisma } from '@s57/db';
 import {
   budgetFigures,
   fiscalYearOf,
+  storedMethod,
   type ExpenseDetail,
   type ExpenseInput,
   type ExpensePay,
   type ExpenseReason,
   type ExpenseVoucher,
   type LedgerAccount,
+  type PaymentMethod,
+  type StoredMethod,
 } from '@s57/shared';
 import { AuditService } from '../audit/audit.service.js';
 import { isoDate, todayDate } from '../common/dates.js';
@@ -92,7 +95,10 @@ export class ExpensesService {
       vendor: row.vendors ? { id: row.vendors.id, name: row.vendors.name, phone: row.vendors.phone } : null,
       approved: step(row.approved_at, row.users_expenses_approved_byTousers),
       rejected: rejected && row.reject_reason ? { ...rejected, reason: row.reject_reason } : null,
-      paid: paid && row.paid_account ? { ...paid, account: row.paid_account as LedgerAccount } : null,
+      paid:
+        paid && row.paid_account
+          ? { ...paid, account: row.paid_account as LedgerAccount, method: (row.paid_method ?? row.paid_account) as PaymentMethod, methodRef: row.paid_method_ref }
+          : null,
       void: voided && row.void_reason ? { ...voided, reason: row.void_reason } : null,
       vouchers,
       fundBalance: balance,
@@ -199,7 +205,7 @@ export class ExpensesService {
   }
 
   /**
-   * Pays an approved expense from the fund's cash or bank: a voucher number, the payment
+   * Pays an approved expense from the fund's cash or bank (the method decides which): a voucher number, the payment
    * details and an `out` ledger row, in one transaction. Taken under the finance setup lock,
    * so two payments (or a payment and closing the fund) never both see the same balance.
    */
@@ -210,7 +216,7 @@ export class ExpensesService {
       const row = await this.locked(tx, actor, id);
       if (row.status !== 'approved') throw conflict('expense_not_approved', 'Only an approved expense can be paid');
       if (!actionsFor(actor, row).pay) throw beyondPermissions();
-      await settleIn(tx, this.money, actor, id, row, input.account, today);
+      await settleIn(tx, this.money, actor, id, row, storedMethod(input), today);
     });
     return this.get(actor, id);
   }
@@ -242,7 +248,7 @@ export class ExpensesService {
   async bookPaidIn(
     tx: Tx,
     actor: Actor,
-    input: ExpenseInput & { account: LedgerAccount; requestedBy: string | null; approvedBy: string; approvedAt: Date },
+    input: ExpenseInput & { paidBy: StoredMethod; requestedBy: string | null; approvedBy: string; approvedAt: Date },
   ): Promise<{ id: string; voucherNo: string }> {
     const refs = await this.refs(tx, actor.societyId, input);
     const row = await tx.expenses.create({
@@ -262,7 +268,7 @@ export class ExpensesService {
       select: { id: true, fund_id: true, amount: true },
     });
     await this.audit.record({ ...auditOf(actor, 'create', row.id), after: { headId: input.headId, fundId: refs.fundId, description: input.description, amount: input.amount, spentOn: input.spentOn } }, tx);
-    const voucherNo = await settleIn(tx, this.money, actor, row.id, row, input.account, isoDate(todayDate()));
+    const voucherNo = await settleIn(tx, this.money, actor, row.id, row, input.paidBy, isoDate(todayDate()));
     return { id: row.id, voucherNo };
   }
 
