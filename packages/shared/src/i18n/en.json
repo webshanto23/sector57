@@ -1271,7 +1271,18 @@
       "phone": "Phone",
       "preview": "Preview",
       "save": "Save settings",
-      "saving": "Saving…"
+      "saving": "Saving…",
+      "email": "Email",
+      "regNo": "Registration number",
+      "officeHoursBn": "Office hours (Bangla)",
+      "officeHoursEn": "Office hours (English)",
+      "billPaper": "Bill paper",
+      "billPaperHint": "The papers bills may print on. Each device remembers the paper it last used; untick a paper nobody has a printer for.",
+      "paperOffered": "Papers offered",
+      "paperDefault": "Prints unless someone picks",
+      "billNoteBn": "Notes on the bill (Bangla)",
+      "billNoteEn": "Notes on the bill (English)",
+      "billNoteHint": "One point per line, printed on A4 bills. Left empty, the bill prints two general points."
     },
     "funds": {
       "sub": "What each fund holds in cash and at the bank, and its opening balance.",
@@ -1543,6 +1554,41 @@
       "listTitle": "List of bills",
       "listDate": "Printed on {date}",
       "listCount": "{count} bills"
+    },
+    "printA4": {
+      "billedTo": "Billed to",
+      "details": "Bill details",
+      "memberNo": "Member no.",
+      "phone": "Phone",
+      "period": "Billing period",
+      "dueDate": "Due date",
+      "regNo": "Reg. No. {no}",
+      "line": "#",
+      "description": "Description",
+      "amount": "Amount (৳)",
+      "subtotal": "Subtotal",
+      "paid": "Paid",
+      "payable": "Total payable",
+      "inWords": "Amount in words",
+      "otherDue": "This unit has {count} other unpaid bills: {amount}.",
+      "payment": "Payment",
+      "payBy": "Pay by",
+      "payAt": "Pay at the society office.",
+      "hours": "Office hours: {hours}.",
+      "payKeep": "Quote the bill number and keep the money receipt.",
+      "notes": "Notes",
+      "note1": "Report any billing error to the office.",
+      "note2": "Keep this bill until your payment is confirmed.",
+      "preparedBy": "Prepared by",
+      "treasurer": "Treasurer",
+      "signatory": "Authorised signatory",
+      "tear": "Office copy · tear here",
+      "billNo": "Bill no.",
+      "payerUnit": "Bill to / unit",
+      "stamp": "Received stamp",
+      "generated": "Computer-generated bill · Printed {at}",
+      "page": "Page 1 of 1",
+      "counterAmount": "Amount"
     }
   },
   "Recurring": {
@@ -3745,6 +3791,14 @@
       "subject": "Subject",
       "signature": "Signature",
       "void": "Void"
+    }
+  },
+  "Print": {
+    "paper": "Paper",
+    "format": {
+      "a4": "A4",
+      "a5": "A5",
+      "thermal80": "Thermal 80 mm"
     }
   }
 }

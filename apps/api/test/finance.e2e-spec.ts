@@ -149,6 +149,26 @@ describe('Finance setup (e2e)', () => {
       await setSettings({ fiscalYearStartMonth: 7 }).expect(200);
     });
 
+    it('saves the bill paper choices and the new header contacts', async () => {
+      const bill = { default: 'a5', offered: ['a4', 'a5'], noteBn: ' বিল রাখুন।\nভুল হলে জানান। ', noteEn: '' };
+      for (const [wrong, code] of [
+        [{ ...bill, offered: ['a4', 'thermal80'] }, 'print_format_unsupported'],
+        [{ ...bill, offered: ['a4'] }, 'print_default_not_offered'],
+      ] as const) {
+        const res = await setSettings({ printFormats: { bill: wrong } }).expect(400);
+        expect(JSON.stringify(res.body)).toContain(code);
+      }
+      expect((await setSettings({ receiptHeader: { nameBn: 'সমিতি', email: 'office@' } }).expect(400)).body.code).toBe('validation_failed');
+
+      const header = { nameBn: 'সমিতি', email: 'office@sector15.org', regNo: 'DSS-1234/2019', officeHoursBn: 'শনি–বৃহস্পতি, সকাল ১০টা–সন্ধ্যা ৬টা' };
+      const res = await setSettings({ printFormats: { bill }, receiptHeader: header }).expect(200);
+      expect(societySettingsSchema.parse(res.body)).toMatchObject({
+        printFormats: { bill: { default: 'a5', offered: ['a4', 'a5'], noteBn: 'বিল রাখুন।\nভুল হলে জানান।', noteEn: null } },
+        receiptHeader: { email: 'office@sector15.org', regNo: 'DSS-1234/2019', officeHoursEn: null, phone: null },
+      });
+      await setSettings({ printFormats: { bill: { default: 'a4', offered: ['a4', 'a5'] } } }).expect(200);
+    });
+
     it('edits the society profile, which the public header reads', async () => {
       const name = `সমিতি ${MARK}`;
       const before = societySettingsSchema.parse((await get('/settings', users.viewer).expect(200)).body);

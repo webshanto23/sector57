@@ -4,6 +4,7 @@ import { optionalText, pagination, text } from '../schemas.js';
 import { cleanText } from '../text.js';
 import { CHARGE_KINDS, fundOptionSchema, documentHeaderSchema } from './finance.js';
 import { isoDay, partySchema, RENTED_STATUSES, type TenancyStatus } from './members.js';
+import { printFormatsSchema } from './print.js';
 import type { BillTo } from './property.js';
 
 // ---------------------------------------------------------------------------
@@ -207,6 +208,10 @@ export const invoiceDetailSchema = invoiceRowSchema.extend({
   ),
   /** What a printed bill shows at the top. */
   header: documentHeaderSchema,
+  /** The unit's other unpaid and part-paid bills (never this one), for a note on the printed bill. */
+  otherDue: z.object({ owed: z.string(), bills: z.number().int().min(0) }),
+  /** Which papers the society offers for bills, and the note they print. */
+  print: printFormatsSchema.shape.bill,
   /** Whether the caller may void it now (`billing.approve` there, and nothing paid). */
   can: z.object({ void: z.boolean() }),
 });

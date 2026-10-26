@@ -2,10 +2,13 @@ import { ConflictException, Injectable } from '@nestjs/common';
 import type { Prisma } from '@s57/db';
 import {
   brandingOf,
+  printFormatsOf,
   receiptHeaderSchema,
   SETTING_KEYS,
   type Branding,
+  type BillPrintSettings,
   type DocumentHeader,
+  type PrintFormats,
   type ReceiptHeader,
   type SettingKey,
   type SettingsInput,
@@ -16,6 +19,19 @@ import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { SocietyService } from '../society/society.service.js';
 import { lockFinanceSetup } from './numbering.service.js';
+
+// Until the office saves a header, receipts print the society's own name and contacts.
+const headerFromSociety = (society: { name_bn: string; name_en: string | null; address: string | null; phone: string | null }): ReceiptHeader => ({
+  nameBn: society.name_bn,
+  nameEn: society.name_en,
+  addressBn: society.address,
+  addressEn: null,
+  phone: society.phone,
+  email: null,
+  regNo: null,
+  officeHoursBn: null,
+  officeHoursEn: null,
+});
 
 type Client = Pick<PrismaService, 'societies' | 'society_settings' | 'ledger_entries'>;
 
@@ -46,15 +62,15 @@ export class SettingsService {
     const value = (key: SettingKey) => rows.find((row) => row.key === SETTING_KEYS[key])?.value;
     const header = receiptHeaderSchema.safeParse(value('receiptHeader'));
     return {
+      printFormats: printFormatsOf(value('printFormats')),
       profile: { nameBn: society.name_bn, nameEn: society.name_en, ...brandingOf(value('branding'), society.name_bn) },
       shareRentersWithThana: value('shareRentersWithThana') === true,
       separateFacilityFunds: value('separateFacilityFunds') === true,
       fiscalYearStartMonth: society.fiscal_year_start_month,
       fiscalYearLocked: ledgerRow !== null,
-      // Until the office saves one, receipts print the society's own name and contacts.
       receiptHeader: header.success
         ? header.data
-        : { nameBn: society.name_bn, nameEn: society.name_en, addressBn: society.address, addressEn: null, phone: society.phone },
+        : headerFromSociety(society),
     };
   }
 
@@ -72,7 +88,16 @@ export class SettingsService {
     const { mark } = brandingOf(value(SETTING_KEYS.branding), society.name_bn);
     return header.success
       ? { ...header.data, mark }
-      : { nameBn: society.name_bn, nameEn: society.name_en, addressBn: society.address, addressEn: null, phone: society.phone, mark };
+      : { ...headerFromSociety(society), mark };
+  }
+
+  /** Which papers bills may print on, and the note they carry. */
+  async billPrint(societyId: string): Promise<BillPrintSettings> {
+    const row = await this.prisma.society_settings.findUnique({
+      where: { society_id_key: { society_id: societyId, key: SETTING_KEYS.printFormats } },
+      select: { value: true },
+    });
+    return printFormatsOf(row?.value).bill;
   }
 
   /** Is the society keeping facility money (mosque, gym) in funds of their own? */
@@ -102,6 +127,7 @@ export class SettingsService {
         shareRentersWithThana: input.shareRentersWithThana,
         separateFacilityFunds: input.separateFacilityFunds,
         receiptHeader: input.receiptHeader satisfies ReceiptHeader | undefined,
+        printFormats: input.printFormats satisfies PrintFormats | undefined,
         branding: input.profile && ({ mark: input.profile.mark, placeBn: input.profile.placeBn, placeEn: input.profile.placeEn } satisfies Branding),
       };
       for (const [key, value] of Object.entries(values) as [SettingKey, Prisma.InputJsonValue | undefined][]) {

@@ -17,6 +17,7 @@ import { FormStatus, Note } from "@/components/admin/form-status";
 import { CheckField } from "@/components/cms/fields";
 import { Card, Field, inputClass } from "@/components/kit";
 import { Logo } from "@/components/site/logo";
+import { BillPaperCard, toBillPaper } from "./bill-paper-card";
 import { useSubmit } from "@/components/property/use-submit";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
@@ -24,7 +25,17 @@ import { refreshPublicSite } from "@/lib/actions/public-site";
 import { api } from "@/lib/api/client";
 import { todayInDhaka } from "@/lib/dhaka-time";
 
-type Header = { nameBn: string; nameEn: string; addressBn: string; addressEn: string; phone: string };
+type Header = {
+  nameBn: string;
+  nameEn: string;
+  addressBn: string;
+  addressEn: string;
+  phone: string;
+  email: string;
+  regNo: string;
+  officeHoursBn: string;
+  officeHoursEn: string;
+};
 
 const toHeader = (h: SocietySettings["receiptHeader"]): Header => ({
   nameBn: h.nameBn,
@@ -32,6 +43,10 @@ const toHeader = (h: SocietySettings["receiptHeader"]): Header => ({
   addressBn: h.addressBn ?? "",
   addressEn: h.addressEn ?? "",
   phone: h.phone ?? "",
+  email: h.email ?? "",
+  regNo: h.regNo ?? "",
+  officeHoursBn: h.officeHoursBn ?? "",
+  officeHoursEn: h.officeHoursEn ?? "",
 });
 
 type Profile = { nameBn: string; nameEn: string; mark: string; placeBn: string; placeEn: string };
@@ -59,12 +74,14 @@ export function SettingsForm({ settings, canEdit }: { settings: SocietySettings;
   const [month, setMonth] = useState(settings.fiscalYearStartMonth);
   const [header, setHeader] = useState(() => toHeader(settings.receiptHeader));
   const [profile, setProfile] = useState(() => toProfile(settings.profile));
+  const [paper, setPaper] = useState(() => toBillPaper(settings.printFormats.bill));
 
   const year = fiscalYearOf(todayInDhaka(), month);
   const monthName = (m: number) =>
     new Intl.DateTimeFormat(locale === "bn" ? "bn-BD" : "en-GB", { month: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2026, m - 1, 1)));
   const headerChanged = JSON.stringify(header) !== JSON.stringify(toHeader(saved.receiptHeader));
   const profileChanged = JSON.stringify(profile) !== JSON.stringify(toProfile(saved.profile));
+  const paperChanged = JSON.stringify(paper) !== JSON.stringify(toBillPaper(saved.printFormats.bill));
   const readOnly = !canEdit || busy;
 
   async function save() {
@@ -75,11 +92,13 @@ export function SettingsForm({ settings, canEdit }: { settings: SocietySettings;
     // Blank fields become null in the API.
     if (headerChanged) body.receiptHeader = header;
     if (profileChanged) body.profile = profile;
+    if (paperChanged) body.printFormats = { bill: paper };
     const result = await run(() => api.PATCH("/settings", { body }));
     if (result) {
       setSaved(result);
       setHeader(toHeader(result.receiptHeader));
       setProfile(toProfile(result.profile));
+      setPaper(toBillPaper(result.printFormats.bill));
       if (profileChanged) {
         // The name and badge are on every public page and in the header above.
         await refreshPublicSite().catch(() => undefined);
@@ -92,7 +111,7 @@ export function SettingsForm({ settings, canEdit }: { settings: SocietySettings;
     }
   }
 
-  const headerField = (key: keyof Header, label: string, extra: { lang?: string; required?: boolean } = {}) => (
+  const headerField = (key: keyof Header, label: string, extra: { lang?: string; required?: boolean; type?: string } = {}) => (
     <Field label={label} htmlFor={`header-${key}`}>
       <input
         id={`header-${key}`}
@@ -222,6 +241,10 @@ export function SettingsForm({ settings, canEdit }: { settings: SocietySettings;
           {headerField("addressBn", t("addressBn"))}
           {headerField("addressEn", t("addressEn"), { lang: "en" })}
           {headerField("phone", t("phone"))}
+          {headerField("email", t("email"), { type: "email", lang: "en" })}
+          {headerField("regNo", t("regNo"))}
+          {headerField("officeHoursBn", t("officeHoursBn"))}
+          {headerField("officeHoursEn", t("officeHoursEn"), { lang: "en" })}
         </div>
         <div aria-label={t("preview")} className="rounded-[10px] border border-dashed border-line bg-surface-2 p-4 text-center">
           <p className="text-xs font-semibold text-muted-foreground uppercase">{t("preview")}</p>
@@ -232,12 +255,16 @@ export function SettingsForm({ settings, canEdit }: { settings: SocietySettings;
             </p>
           ) : null}
           {header.addressBn ? <p className="text-[12.5px] text-muted-foreground">{header.addressBn}</p> : null}
-          {header.phone ? <p className="text-[12.5px] text-muted-foreground">{localDigits(header.phone, locale)}</p> : null}
+          {header.phone || header.email ? (
+            <p className="text-[12.5px] text-muted-foreground">{[header.phone && localDigits(header.phone, locale), header.email].filter(Boolean).join(" · ")}</p>
+          ) : null}
           <p className="mt-2 border-t border-line pt-2 text-[12.5px]">
             <span className="num font-semibold">{formatTaka(SAMPLE_AMOUNT, locale)}</span> · {amountInWords(SAMPLE_AMOUNT, locale)}
           </p>
         </div>
       </Card>
+
+      <BillPaperCard value={paper} onChange={setPaper} disabled={readOnly} />
 
       <FormStatus status={status} />
       {canEdit ? (

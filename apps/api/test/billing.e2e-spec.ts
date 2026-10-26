@@ -383,4 +383,25 @@ describe('Bills (e2e)', () => {
       await expect(prisma.invoices.update({ where: { id: made.id }, data: { status: 'void' } })).rejects.toThrow();
     });
   });
+
+  describe('the printed bill', () => {
+    it('notes the unit’s other unpaid bills, never itself or void ones, with the bill formats', async () => {
+      const open = await prisma.invoices.findMany({
+        where: { society_id: societyId, unit_id: ids.c3, status: { in: ['unpaid', 'partial'] } },
+        select: { total: true, paid: true },
+      });
+      const owed = open.reduce((sum, row) => sum.plus(row.total.minus(row.paid)), new Prisma.Decimal(0));
+      const first = await create(bill(ids.c3, [line(ids.service, '400')]));
+      const voided = await create(bill(ids.c3, [line(ids.service, '900')]));
+      await send('post', `/invoices/${voided.id}/void`).send({ reason: 'ভুল' }).expect(200);
+      const second = await create(bill(ids.c3, [line(ids.service, '250')]));
+      await prisma.invoices.update({ where: { id: second.id }, data: { paid: new Prisma.Decimal('50'), status: 'partial' } });
+
+      const read = async (id: string) => invoiceDetailSchema.parse((await get(`/invoices/${id}`).expect(200)).body);
+      expect((await read(first.id)).otherDue).toEqual({ owed: owed.plus(200).toFixed(2), bills: open.length + 1 });
+      expect((await read(second.id)).otherDue).toEqual({ owed: owed.plus(400).toFixed(2), bills: open.length + 1 });
+      expect((await read(voided.id)).otherDue).toEqual({ owed: owed.plus(600).toFixed(2), bills: open.length + 2 });
+      expect((await read(first.id)).print).toEqual({ default: 'a4', offered: ['a4', 'a5'], noteBn: null, noteEn: null });
+    });
+  });
 });
