@@ -8,9 +8,10 @@ import { PrintSheet } from "@/components/print/print-sheet";
 import { Button } from "@/components/ui/button";
 import { BillA4Sheet } from "./bill-a4";
 import { BillA5Sheet } from "./bill-a5";
+import { BillThermalSheet } from "./bill-thermal";
 
 /**
- * "Print bill" with the paper picker: A4 or A5, as the society offers, remembered on this
+ * "Print bill" with the paper picker: A4, A5 or thermal, as the society offers, remembered on this
  * device. A void bill prints with a large "Void". Follows the page language.
  */
 export function BillPrint({ invoice }: { invoice: InvoiceDetail }) {
@@ -33,5 +34,7 @@ export function BillPrint({ invoice }: { invoice: InvoiceDetail }) {
 
 /** The bill itself on the chosen paper; also used to print several bills together. */
 export function BillSheet({ invoice, format }: { invoice: InvoiceDetail; format: PrintFormat }) {
-  return format === "a4" ? <BillA4Sheet invoice={invoice} /> : <BillA5Sheet invoice={invoice} />;
+  if (format === "a4") return <BillA4Sheet invoice={invoice} />;
+  if (format === "thermal80") return <BillThermalSheet invoice={invoice} />;
+  return <BillA5Sheet invoice={invoice} />;
 }

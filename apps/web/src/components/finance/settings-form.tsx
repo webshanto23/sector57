@@ -17,7 +17,7 @@ import { FormStatus, Note } from "@/components/admin/form-status";
 import { CheckField } from "@/components/cms/fields";
 import { Card, Field, inputClass } from "@/components/kit";
 import { Logo } from "@/components/site/logo";
-import { BillPaperCard, toBillPaper } from "./bill-paper-card";
+import { PaperCard, toPaper } from "./paper-card";
 import { useSubmit } from "@/components/property/use-submit";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
@@ -74,14 +74,14 @@ export function SettingsForm({ settings, canEdit }: { settings: SocietySettings;
   const [month, setMonth] = useState(settings.fiscalYearStartMonth);
   const [header, setHeader] = useState(() => toHeader(settings.receiptHeader));
   const [profile, setProfile] = useState(() => toProfile(settings.profile));
-  const [paper, setPaper] = useState(() => toBillPaper(settings.printFormats.bill));
+  const [paper, setPaper] = useState(() => toPaper(settings.printFormats));
 
   const year = fiscalYearOf(todayInDhaka(), month);
   const monthName = (m: number) =>
     new Intl.DateTimeFormat(locale === "bn" ? "bn-BD" : "en-GB", { month: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2026, m - 1, 1)));
   const headerChanged = JSON.stringify(header) !== JSON.stringify(toHeader(saved.receiptHeader));
   const profileChanged = JSON.stringify(profile) !== JSON.stringify(toProfile(saved.profile));
-  const paperChanged = JSON.stringify(paper) !== JSON.stringify(toBillPaper(saved.printFormats.bill));
+  const paperChanged = JSON.stringify(paper) !== JSON.stringify(toPaper(saved.printFormats));
   const readOnly = !canEdit || busy;
 
   async function save() {
@@ -92,13 +92,13 @@ export function SettingsForm({ settings, canEdit }: { settings: SocietySettings;
     // Blank fields become null in the API.
     if (headerChanged) body.receiptHeader = header;
     if (profileChanged) body.profile = profile;
-    if (paperChanged) body.printFormats = { bill: paper };
+    if (paperChanged) body.printFormats = paper;
     const result = await run(() => api.PATCH("/settings", { body }));
     if (result) {
       setSaved(result);
       setHeader(toHeader(result.receiptHeader));
       setProfile(toProfile(result.profile));
-      setPaper(toBillPaper(result.printFormats.bill));
+      setPaper(toPaper(result.printFormats));
       if (profileChanged) {
         // The name and badge are on every public page and in the header above.
         await refreshPublicSite().catch(() => undefined);
@@ -264,7 +264,7 @@ export function SettingsForm({ settings, canEdit }: { settings: SocietySettings;
         </div>
       </Card>
 
-      <BillPaperCard value={paper} onChange={setPaper} disabled={readOnly} />
+      <PaperCard value={paper} onChange={setPaper} disabled={readOnly} />
 
       <FormStatus status={status} />
       {canEdit ? (

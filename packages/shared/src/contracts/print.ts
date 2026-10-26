@@ -13,9 +13,10 @@ export const PRINT_FORMATS = ['a4', 'a5', 'thermal80'] as const;
 export type PrintFormat = (typeof PRINT_FORMATS)[number];
 export const printFormatSchema = z.enum(PRINT_FORMATS);
 
-/** The formats each document type has a layout for. Thermal joins bills in Step 30b. */
+/** The formats each document type has a layout for. Receipts cover bill payments and donations. */
 export const PRINT_SUPPORT = {
-  bill: ['a4', 'a5'],
+  bill: ['a4', 'a5', 'thermal80'],
+  receipt: ['a5', 'thermal80'],
 } as const satisfies Record<string, readonly PrintFormat[]>;
 export type PrintDocument = keyof typeof PRINT_SUPPORT;
 
@@ -32,13 +33,18 @@ export type PrintChoice = z.infer<typeof printChoiceSchema>;
 /** The `print_formats` setting as read. Bills also carry the note printed on them. */
 export const printFormatsSchema = z.object({
   bill: printChoiceSchema.extend({ noteBn: z.string().nullable(), noteEn: z.string().nullable() }),
+  receipt: printChoiceSchema,
 });
 export type PrintFormats = z.infer<typeof printFormatsSchema>;
 export type BillPrintSettings = PrintFormats['bill'];
 
-/** What a society prints before it saves a choice: A4 bills, with A5 offered too. */
+/**
+ * What a society prints before it saves a choice: A4 bills with A5 offered too, and A5
+ * receipts. Thermal is offered only once the office ticks it.
+ */
 export const DEFAULT_PRINT_FORMATS: PrintFormats = {
   bill: { default: 'a4', offered: ['a4', 'a5'], noteBn: null, noteEn: null },
+  receipt: { default: 'a5', offered: ['a5'] },
 };
 
 /** Keeps a choice to formats the document has a layout for; the default falls back to the first one left. */
@@ -51,9 +57,14 @@ function supportedChoice<T extends PrintChoice>(document: PrintDocument, choice:
 
 /** The saved setting, or the defaults for anything missing or no longer valid. */
 export function printFormatsOf(value: unknown): PrintFormats {
-  const parsed = printFormatsSchema.safeParse(value);
-  if (!parsed.success) return DEFAULT_PRINT_FORMATS;
-  return { bill: supportedChoice('bill', parsed.data.bill, DEFAULT_PRINT_FORMATS.bill) };
+  const saved = (typeof value === 'object' && value !== null ? value : {}) as Record<string, unknown>;
+  // Each document on its own: a setting saved before receipts had a choice still keeps its bills.
+  const bill = printFormatsSchema.shape.bill.safeParse(saved.bill);
+  const receipt = printChoiceSchema.safeParse(saved.receipt);
+  return {
+    bill: bill.success ? supportedChoice('bill', bill.data, DEFAULT_PRINT_FORMATS.bill) : DEFAULT_PRINT_FORMATS.bill,
+    receipt: receipt.success ? supportedChoice('receipt', receipt.data, DEFAULT_PRINT_FORMATS.receipt) : DEFAULT_PRINT_FORMATS.receipt,
+  };
 }
 
 /** For a choice's `superRefine`: only formats the document has, each once, and the default among them. */
@@ -68,12 +79,17 @@ function refineChoice(document: PrintDocument) {
   };
 }
 
-/** `PATCH /settings` `printFormats`. */
-export const printFormatsInputSchema = z.object({
-  bill: printChoiceSchema
-    .extend({ offered: z.array(printFormatSchema).min(1), noteBn: optionalText(BILL_NOTE_MAX), noteEn: optionalText(BILL_NOTE_MAX) })
-    .superRefine(refineChoice('bill')),
-});
+const offeredInput = z.array(printFormatSchema).min(1);
+
+/** `PATCH /settings` `printFormats`: the documents being changed; the others keep what is saved. */
+export const printFormatsInputSchema = z
+  .object({
+    bill: printChoiceSchema
+      .extend({ offered: offeredInput, noteBn: optionalText(BILL_NOTE_MAX), noteEn: optionalText(BILL_NOTE_MAX) })
+      .superRefine(refineChoice('bill')),
+    receipt: printChoiceSchema.extend({ offered: offeredInput }).superRefine(refineChoice('receipt')),
+  })
+  .partial();
 
 /**
  * Which paper prints: a one-off pick, else this device's remembered choice, else the society's

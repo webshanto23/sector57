@@ -6,14 +6,17 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { flushSync } from "react-dom";
 import { FormStatus, type Status } from "@/components/admin/form-status";
+import { PrintFormatPicker, usePrintFormat } from "@/components/print/print-format";
 import { PrintSheet } from "@/components/print/print-sheet";
 import { Button } from "@/components/ui/button";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { api } from "@/lib/api/client";
 import { donationLine, Receipt, receiptOf } from "./receipt";
+import { ReceiptThermal } from "./receipt-thermal";
 
 /**
- * Prints the receipt on A5 with its office counterfoil. Each print is counted first: the
+ * Prints the receipt on A5 with its office counterfoil, or on an 80 mm thermal roll, as the
+ * society offers and this device last picked. Each print is counted first: the
  * first is the original, every later one says "Duplicate". `autoPrint` (right after saving)
  * prints once without a click.
  */
@@ -27,6 +30,7 @@ export function ReceiptPrint({ payment, autoPrint, donationId }: { payment: Paym
   const [mark, setMark] = useState<"duplicate" | null>(payment.printCount > 0 ? "duplicate" : null);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<Status>(null);
+  const [format, setFormat] = usePrintFormat("receipt", payment.print);
 
   async function print() {
     setBusy(true);
@@ -65,8 +69,11 @@ export function ReceiptPrint({ payment, autoPrint, donationId }: { payment: Paym
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const data = receiptOf(payment, locale, mark, (purpose) => donationLine(tReceipt, purpose));
+
   return (
     <div className="grid gap-2">
+      <PrintFormatPicker choice={payment.print} value={format} onChange={setFormat} />
       <Button type="button" onClick={() => void print()} disabled={busy}>
         <Printer aria-hidden />
         {payment.printCount === 0 ? t("print") : t("reprint")}
@@ -76,7 +83,11 @@ export function ReceiptPrint({ payment, autoPrint, donationId }: { payment: Paym
       </p>
       <FormStatus status={status} />
       <PrintSheet>
-        <Receipt data={receiptOf(payment, locale, mark, (purpose) => donationLine(tReceipt, purpose))} locale={locale} print />
+        {format === "thermal80" ? (
+          <ReceiptThermal data={data} locale={locale} />
+        ) : (
+          <Receipt data={data} locale={locale} print />
+        )}
       </PrintSheet>
     </div>
   );

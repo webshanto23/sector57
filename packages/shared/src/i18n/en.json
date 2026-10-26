@@ -1276,13 +1276,14 @@
       "regNo": "Registration number",
       "officeHoursBn": "Office hours (Bangla)",
       "officeHoursEn": "Office hours (English)",
-      "billPaper": "Bill paper",
-      "billPaperHint": "The papers bills may print on. Each device remembers the paper it last used; untick a paper nobody has a printer for.",
-      "paperOffered": "Papers offered",
+      "billPaper": "Paper",
+      "billPaperHint": "The papers bills and receipts may print on. Each device remembers the paper it last used; untick a paper nobody has a printer for. Thermal means an 80 mm roll.",
       "paperDefault": "Prints unless someone picks",
       "billNoteBn": "Notes on the bill (Bangla)",
       "billNoteEn": "Notes on the bill (English)",
-      "billNoteHint": "One point per line, printed on A4 bills. Left empty, the bill prints two general points."
+      "billNoteHint": "One point per line, printed on A4 and thermal bills. Left empty, general points print instead.",
+      "paperBills": "Bills",
+      "paperReceipts": "Receipts (bill payments and donations)"
     },
     "funds": {
       "sub": "What each fund holds in cash and at the bank, and its opening balance.",
@@ -1779,7 +1780,8 @@
       "donationTitle": "Donation receipt",
       "anonymous": "Anonymous donor",
       "donation": "Donation",
-      "donationFor": "Donation: {purpose}"
+      "donationFor": "Donation: {purpose}",
+      "total": "Total"
     },
     "list": {
       "title": "Receipts",

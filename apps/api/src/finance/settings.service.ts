@@ -8,6 +8,7 @@ import {
   type Branding,
   type BillPrintSettings,
   type DocumentHeader,
+  type PrintChoice,
   type PrintFormats,
   type ReceiptHeader,
   type SettingKey,
@@ -100,6 +101,15 @@ export class SettingsService {
     return printFormatsOf(row?.value).bill;
   }
 
+  /** Which papers receipts (bill payments and donations) may print on. */
+  async receiptPrint(societyId: string): Promise<PrintChoice> {
+    const row = await this.prisma.society_settings.findUnique({
+      where: { society_id_key: { society_id: societyId, key: SETTING_KEYS.printFormats } },
+      select: { value: true },
+    });
+    return printFormatsOf(row?.value).receipt;
+  }
+
   /** Is the society keeping facility money (mosque, gym) in funds of their own? */
   async separateFunds(societyId: string, client: Pick<PrismaService, 'society_settings'> = this.prisma): Promise<boolean> {
     const row = await client.society_settings.findUnique({
@@ -127,7 +137,8 @@ export class SettingsService {
         shareRentersWithThana: input.shareRentersWithThana,
         separateFacilityFunds: input.separateFacilityFunds,
         receiptHeader: input.receiptHeader satisfies ReceiptHeader | undefined,
-        printFormats: input.printFormats satisfies PrintFormats | undefined,
+        // Only the documents sent change; the others keep what is saved.
+        printFormats: input.printFormats && ({ ...before.printFormats, ...input.printFormats } satisfies PrintFormats),
         branding: input.profile && ({ mark: input.profile.mark, placeBn: input.profile.placeBn, placeEn: input.profile.placeEn } satisfies Branding),
       };
       for (const [key, value] of Object.entries(values) as [SettingKey, Prisma.InputJsonValue | undefined][]) {

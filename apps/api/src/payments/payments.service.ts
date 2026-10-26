@@ -315,7 +315,7 @@ export class PaymentsService {
   }
 
   private async detail(actor: Actor, row: Prisma.paymentsGetPayload<{ select: typeof detailSelect }>): Promise<PaymentDetail> {
-    const header = await this.settings.receiptHeader(actor.societyId);
+    const [header, print] = await Promise.all([this.settings.receiptHeader(actor.societyId), this.settings.receiptPrint(actor.societyId)]);
     return {
       ...toRow(row),
       methodRef: row.method_ref,
@@ -342,6 +342,7 @@ export class PaymentsService {
       printCount: row.print_count,
       void: row.voided_at && row.void_reason ? { reason: row.void_reason, at: row.voided_at.toISOString(), by: row.users_voided ? nameOf(row.users_voided) : null } : null,
       header,
+      print,
       can: { void: mayVoidReceipt(actor, { ...row, donation: row.donations !== null, path: row.units?.locations.path ?? null }) },
     };
   }
