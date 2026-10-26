@@ -51,7 +51,7 @@ export default async function AttendancePage({ params, searchParams }: PageProps
         <label htmlFor="attendance-date" className="text-[13.5px] font-semibold">
           {t("date")}
         </label>
-        <input id="attendance-date" name="date" type="date" max={today} defaultValue={date} className={`${inputClass} w-auto`} />
+        <input id="attendance-date" name="date" type="date" max={today} defaultValue={date} className={`${inputClass} sm:w-auto!`} />
         <Button type="submit" variant="outline">
           {t("show")}
         </Button>

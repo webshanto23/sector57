@@ -114,7 +114,7 @@ export default async function StaffPage({ params, searchParams }: PageProps<"/[l
       <form method="get" role="search" className="mb-3.5 flex flex-wrap items-center gap-2.5">
         {query.areaId ? <input type="hidden" name="areaId" value={query.areaId} /> : null}
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} />
-        <select name="designation" defaultValue={query.designation ?? ""} aria-label={t("col.designation")} className={`${inputClass} w-auto`}>
+        <select name="designation" defaultValue={query.designation ?? ""} aria-label={t("col.designation")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allDesignations")}</option>
           {list.designations.map((designation) => (
             <option key={designation.bn} value={designation.bn}>
@@ -122,7 +122,7 @@ export default async function StaffPage({ params, searchParams }: PageProps<"/[l
             </option>
           ))}
         </select>
-        <select name="kind" defaultValue={query.kind ?? ""} aria-label={t("col.kind")} className={`${inputClass} w-auto`}>
+        <select name="kind" defaultValue={query.kind ?? ""} aria-label={t("col.kind")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allKinds")}</option>
           {STAFF_KINDS.map((kind) => (
             <option key={kind} value={kind}>
@@ -130,7 +130,7 @@ export default async function StaffPage({ params, searchParams }: PageProps<"/[l
             </option>
           ))}
         </select>
-        <select name="state" defaultValue={query.state} aria-label={t("stateLabel")} className={`${inputClass} w-auto`}>
+        <select name="state" defaultValue={query.state} aria-label={t("stateLabel")} className={`${inputClass} sm:w-auto!`}>
           {STAFF_STATES.map((state) => (
             <option key={state} value={state}>
               {t(`state.${state}`)}

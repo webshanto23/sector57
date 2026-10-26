@@ -71,7 +71,7 @@ export default async function VehiclesPage({ params, searchParams }: PageProps<"
         {query.unitId ? <input type="hidden" name="unitId" value={query.unitId} /> : null}
         {query.personId ? <input type="hidden" name="personId" value={query.personId} /> : null}
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} />
-        <select name="kind" defaultValue={query.kind ?? ""} aria-label={t("kindLabel")} className={`${inputClass} w-auto`}>
+        <select name="kind" defaultValue={query.kind ?? ""} aria-label={t("kindLabel")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allKinds")}</option>
           {VEHICLE_KINDS.map((kind) => (
             <option key={kind} value={kind}>
@@ -79,7 +79,7 @@ export default async function VehiclesPage({ params, searchParams }: PageProps<"
             </option>
           ))}
         </select>
-        <select name="view" defaultValue={query.view} aria-label={t("viewLabel")} className={`${inputClass} w-auto`}>
+        <select name="view" defaultValue={query.view} aria-label={t("viewLabel")} className={`${inputClass} sm:w-auto!`}>
           {VEHICLE_VIEWS.map((view) => (
             <option key={view} value={view}>
               {t(`view.${view}`)}

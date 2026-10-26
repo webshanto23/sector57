@@ -2,7 +2,7 @@
 
 Status of every step, what it contains, and the decisions still open. Updated 2026-10-24. Steps through 27 are merged into `main`; Steps 28 and 29 await Codex review.
 
-Status key: **Done** (merged to `main`) · **Next** · **Planned** · **Later** (not yet in a milestone).
+Status key: **Done** (merged to `main`) · **Built, awaiting review** (on its branch, waiting for Codex and Anis) · **Next** · **Planned** · **Later** (not yet in a milestone) · **Deferred** (moved to a later list on purpose).
 
 ## How a step runs
 
@@ -48,6 +48,7 @@ Schema changes are additive and need Anis's approval first.
 | 27 | M3: Bills for several units, printing bills together | Done | `step/27-bulk-bills` |
 | 28 | Records: Certificates and NOCs | Built, awaiting review | `step/28-certificates` |
 | 29 | Records: Occupancy, members and renter-list reports | Built, awaiting review | `step/29-records-reports` |
+| 30 | A4 bill print to the mock (`docs/mocks/sector57-bill-a4-8rows.png`) | Planned, decisions open | `step/30-bill-a4` |
 
 The step numbers are names, not the build order. Order changed on 2026-10-08: Steps 3 and 8 moved to the end so the forms use the real location tree (Step 9) and the file storage from Step 7, and residents submit while the office reviews in the same release.
 
@@ -409,9 +410,9 @@ Branch `step/03-forms`, branched from `step/10-members`. Scope confirmed by Anis
 
 ---
 
-## Milestone 2: finance — Later
+## Milestone 2: finance — Done
 
-Draft plan, 2026-10-11. Nothing here is confirmed: each step still gets its own scope note, and the decisions marked **(decide)** need Anis before that step starts. The mockup screens are `overview`, `billing`, `collect` (form plus receipt) and the resident app's bills tab; `recurring`, `donations` and `expenses` have no mockup yet, so they follow the `billing` list and `collect` form patterns.
+Steps 11–18 are done and merged; Step 19 (resident bills) waits for the member app. Below is the plan as drafted on 2026-10-11, kept for its decisions; each step's own section says what was built. The mockup screens are `overview`, `billing`, `collect` (form plus receipt) and the resident app's bills tab; `recurring`, `donations` and `expenses` have no mockup yet, so they follow the `billing` list and `collect` form patterns.
 
 ### Goal
 
@@ -899,6 +900,23 @@ On `step/27-bulk-bills` (branched from `step/26-payroll`). Anis asked for it on 
 | Salary expenses | One per fund per run (confirmed 2026-10-13) | Step 26 |
 | Order | 22 → 23 → 24 → 25 → 26 (decided 2026-10-12; 25 can still move first) | Step 23 |
 
+## Records and administration (Steps 28–29) — Built, awaiting review
+
+Planned 2026-10-24 from the mockup's Records group. Documents (Step 21), the finance reports and the audit log viewer (Step 17) already existed, so the group added certificates and NOCs (Step 28) and the non-finance reports (Step 29). Module on/off switches with one settings screen (first planned as Step 30) were dropped from the group the same day: for one society, roles already hide modules nobody uses, so it moved to the Product list for onboarding a second society.
+
+- Step 29 is branched from Step 28: merge 28 first, then 29.
+
+### Open decisions
+
+| Decision | Current choice | Needed before |
+|---|---|---|
+| Glossary words: Certificate = সনদ, NOC = অনাপত্তিপত্র | Proposed in `docs/glossary.md` ("To agree") | Merging Step 28 |
+| Certificate fee | None for now; later a charge type that bills the unit | A society asks for one |
+| Public NOC request form | Later; the office enters requests (`noc` stays in `UPCOMING_FORMS`) | With the member app |
+| QR code or verification page on certificates | No for v1 | – |
+| Reports beyond the three in Step 29 (monthly attendance summary, open tickets by area) | Not now; Claude used the proposal because Anis said proceed without choosing | Anis asks |
+| NID on the renter list for the thana | Left out; if wanted, only for those who may edit the person | Anis asks |
+
 ## Step 28: Certificates and NOCs — Built, awaiting review
 
 Built 2026-10-24 on `step/28-certificates` (from `main` after PR #28). The first item of the "Records and administration" group; plan approved by Anis, who took the proposals: no fee, no public request form yet, no QR or verification page, the signer typed at issue above a line for a wet signature.
@@ -926,6 +944,26 @@ Built 2026-10-24 on `step/29-records-reports` (branched from `step/28-certificat
 - **Tests:** `records-reports.spec.ts` (shared); `test/records-reports.e2e-spec.ts` (9): occupancy figures, drill-down and natural order, Block C / Block D scope, CSV and its grant; members counts, joiners, range and place filter, scope, CSV; renters refused while sharing is off, scope on `members.export`, person and organisation renters, household and police-form totals, no NID in JSON or CSV.
 - **Checked:** `pnpm check` and the whole e2e suite (30 files, 371 tests; one run had a single failure in `forms.e2e-spec.ts` that passed alone and on the next full run). `next build` was not run because the dev web server was using `.next`; typecheck and lint cover the pages. Not opened in a browser; the 375/820/1440 checks stay deferred.
 
+## Step 30: A4 bill print to the mock — Planned, decisions open
+
+Added 2026-10-26. The bill prints to the mock `docs/mocks/sector57-bill-a4-8rows.png` on a full A4 page, replacing the A5 bill in the receipt layout (`BillSheet` in `components/billing/bill-print.tsx`, used by the single and the "Print all" bill prints). Anis will talk it through before the scope note; nothing is built yet.
+
+**Gap found (2026-10-26):**
+- **Page.** Print CSS defaults to `@page` A5 with an 8 mm margin; `.print-a4` has a 12 mm margin for long lists. The mock is A4 with no page margin (the green header band bleeds to the edges, about 36 mm tall) and about 13 mm padding inside, filling the page with the counterfoil and footer at the bottom. Needs a new named A4 page with margin 0 and a sheet of 210 × just under 297 mm; the A5 default stays for receipts, vouchers and payslips unless decided otherwise. With margin 0 there are no CSS page-number margin boxes, so "Page 1 of 1" holds only if a bill always fits one page.
+- **Components.** A4 header variant (badge about 15 mm, name, address, contact line on the left; "BILL", number and a status chip on the right; `Kantha` below); `DocumentHead` stays as is for the A5 papers. `Logo` needs a size. Billed-to and bill-details cards (adds `billTo.phone`), a numbered line table with a header row, totals with a solid "Total payable" box and the amount in words, payment and notes cards, three signature lines (prepared by, treasurer, authorised signatory), an office counterfoil with a "received stamp" box, and a footer (computer-generated, printed at, page). Sizes in pt for A4. The "Void" stamp stays. The A4 bills list (`bills-list-sheet.tsx`) is unchanged.
+- **Data the mock shows that bills don't have:** society email and registration number (not in the `receipt_header` setting); a period per line (only the bill has one); previous due and adjustments (a bill stands alone: total, paid, due); office hours and notes text (society-specific, so a setting, not code or i18n; "late fee" promises something the system doesn't do); a member ID like `MEM-00142` (we have a member number).
+
+### Open decisions
+
+| Decision | Proposal | Needed before |
+|---|---|---|
+| A4 for bills only, or also receipts, donation receipts, vouchers and payslips | Bills only | Scope note |
+| Per-line period column | Drop it (no migration) | Scope note |
+| Previous due and adjustments | Payable = this bill's due (subtotal, less paid); at most an "other unpaid bills ৳X" note | Scope note |
+| Email and registration number | Add to the `receipt_header` setting and its form (JSON, no migration) | Scope note |
+| Office hours and notes | A setting; generic wording if empty | Scope note |
+| Bills longer than the page (up to 20 lines; about 8 fill it at the mock's spacing) | Compact rows and merged payment/notes above about 10 lines, always one page | Scope note |
+
 ## Later: beyond milestone 3
 
 These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.
@@ -936,7 +974,7 @@ These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs
 - Elections and voting (`voting`) (remove this when planning, it will be done later or mostly physical)
 - Community board (`board`)
 
-**Records and administration**
+**Records and administration** (done apart from review; see Steps 28–29 above)
 - Documents (`documents`): built in Step 21
 - Certificates and NOC (`certs`): built in Step 28
 - Reports (`reports`): the finance reports came in Step 17; occupancy, members and the renter list in Step 29
@@ -945,12 +983,14 @@ These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs
 
 **Member app:** the mockup's member-facing view (residents see their own bills, notices and requests).
 
-**Product:** onboarding a second society (society picked by host instead of `DEFAULT_SOCIETY_SLUG`), module on/off switches per society (a `modules` setting that drops a module's permissions, nav, routes and overview cards for everyone, data kept; planned as Step 30, deferred 2026-10-24), and the deploy script for the DigitalOcean droplet.
+**Product:** onboarding a second society (society picked by host instead of `DEFAULT_SOCIETY_SLUG`), module on/off switches per society (a `modules` setting that drops a module's permissions, nav, routes and overview cards for everyone, data kept; first planned as Step 30, deferred 2026-10-24; the number now belongs to the A4 bill print), and the deploy script for the DigitalOcean droplet.
 
 **Out of scope for v1:** visitor and gate management, online payment, reporting to RAJUK or City Corporation.
 
 ## Pending chores
 
-- Visual checks at 375, 820 and 1440 px for Steps 0–2 (deferred; use CDP viewport emulation).
+- Visual checks at 375, 820 and 1440 px for every step so far (deferred; use CDP viewport emulation).
+- Click-through in a browser of the Step 28 and 29 pages (they rendered only through `tsc`, lint and, for Step 28, `next build`).
+- Codex review of Steps 28 and 29, then merge 28 before 29.
 - Finish the CI workflow (Anis).
-- Update the "Current state" section of `CLAUDE.md`: Steps 1 and 2 are merged and the GitHub remote exists.
+- After each new migration, apply it to the test database too (`TEST_DATABASE_URL`): `migrate:deploy` and the seed.

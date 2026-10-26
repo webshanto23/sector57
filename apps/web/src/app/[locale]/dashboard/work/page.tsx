@@ -105,14 +105,14 @@ export default async function WorkOrdersPage({ params, searchParams }: PageProps
         {query.staffId ? <input type="hidden" name="staffId" value={query.staffId} /> : null}
         {query.vendorId ? <input type="hidden" name="vendorId" value={query.vendorId} /> : null}
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} />
-        <select name="view" defaultValue={query.view} aria-label={t("viewLabel")} className={`${inputClass} w-auto`}>
+        <select name="view" defaultValue={query.view} aria-label={t("viewLabel")} className={`${inputClass} sm:w-auto!`}>
           {WORK_ORDER_VIEWS.map((key) => (
             <option key={key} value={key}>
               {t(`view.${key}`)}
             </option>
           ))}
         </select>
-        <select name="source" defaultValue={query.source ?? ""} aria-label={t("source")} className={`${inputClass} w-auto`}>
+        <select name="source" defaultValue={query.source ?? ""} aria-label={t("source")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allSources")}</option>
           {WORK_ORDER_SOURCES.map((key) => (
             <option key={key} value={key}>

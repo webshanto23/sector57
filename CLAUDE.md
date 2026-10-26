@@ -66,7 +66,7 @@ Keep each step small and cheap in tokens.
 
 ## Current state (2026-10-24)
 
-- Steps 0–27 are done and merged into `main` (GitHub remote `origin`; Step 27 as PR #27, migration folders zero-padded in PR #28). Step 28 (certificates and NOCs) is committed on `step/28-certificates` and Step 29 (occupancy, members and renter-list reports) is built on `step/29-records-reports` (branched from it); both await Codex review. Module on/off switches (once Step 30) are deferred to the Product work for a second society.
+- Steps 0–27 are done and merged into `main` (GitHub remote `origin`; Step 27 as PR #27, migration folders zero-padded in PR #28). Step 28 (certificates and NOCs) is committed on `step/28-certificates` and Step 29 (occupancy, members and renter-list reports) is built on `step/29-records-reports` (branched from it); both await Codex review. Step 30 (A4 bill print to `docs/mocks/sector57-bill-a4-8rows.png`) is planned with decisions open; nothing built. Module on/off switches (first planned as Step 30) are deferred to the Product work for a second society.
 - The full step list with status and open decisions is in `docs/steps.md`; keep it updated as steps move.
 - Visual checks at 375/820/1440 are deferred. When they resume, use CDP viewport emulation (headless Chrome won't go below about 500 px with `--window-size`).
 - Still open: on an existing database built from the SQL file, run `pnpm --filter @s57/db migrate:resolve-baseline` once.

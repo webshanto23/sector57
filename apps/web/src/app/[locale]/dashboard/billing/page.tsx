@@ -160,7 +160,7 @@ export default async function BillingPage({ params, searchParams }: PageProps<"/
           query[key] ? <input key={key} type="hidden" name={key} value={query[key]} /> : null,
         )}
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} />
-        <select name="status" defaultValue={query.status ?? ""} aria-label={t("col.status")} className={`${inputClass} w-auto`}>
+        <select name="status" defaultValue={query.status ?? ""} aria-label={t("col.status")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allStatus")}</option>
           {INVOICE_FILTERS.map((status) => (
             <option key={status} value={status}>
@@ -168,7 +168,7 @@ export default async function BillingPage({ params, searchParams }: PageProps<"/
             </option>
           ))}
         </select>
-        <select name="kind" defaultValue={query.kind ?? ""} aria-label={t("col.charge")} className={`${inputClass} w-auto`}>
+        <select name="kind" defaultValue={query.kind ?? ""} aria-label={t("col.charge")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allKinds")}</option>
           {INVOICE_KINDS.map((kind) => (
             <option key={kind} value={kind}>
@@ -176,7 +176,7 @@ export default async function BillingPage({ params, searchParams }: PageProps<"/
             </option>
           ))}
         </select>
-        <input type="month" name="month" defaultValue={query.month ?? ""} aria-label={t("monthLabel")} className={`${inputClass} w-auto`} />
+        <input type="month" name="month" defaultValue={query.month ?? ""} aria-label={t("monthLabel")} className={`${inputClass} sm:w-auto!`} />
         <Button type="submit" variant="outline">
           {t("filter")}
         </Button>

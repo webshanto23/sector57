@@ -98,13 +98,13 @@ export default async function DonationsPage({ params, searchParams }: PageProps<
         {(["purpose", "personId", "organisationId"] as const).map((key) => (query[key] ? <input key={key} type="hidden" name={key} value={query[key]} /> : null))}
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} />
         <Field label={t("from")} htmlFor="from">
-          <input id="from" type="date" name="from" defaultValue={query.from ?? ""} className={`${inputClass} w-auto`} />
+          <input id="from" type="date" name="from" defaultValue={query.from ?? ""} className={`${inputClass} sm:w-auto!`} />
         </Field>
         <Field label={t("to")} htmlFor="to">
-          <input id="to" type="date" name="to" defaultValue={query.to ?? ""} className={`${inputClass} w-auto`} />
+          <input id="to" type="date" name="to" defaultValue={query.to ?? ""} className={`${inputClass} sm:w-auto!`} />
         </Field>
         {showFund ? (
-          <select name="fundId" defaultValue={query.fundId ?? ""} aria-label={t("col.fund")} className={`${inputClass} w-auto`}>
+          <select name="fundId" defaultValue={query.fundId ?? ""} aria-label={t("col.fund")} className={`${inputClass} sm:w-auto!`}>
             <option value="">{t("allFunds")}</option>
             {list.totals.byFund.map(({ fund }) => (
               <option key={fund.id} value={fund.id}>
@@ -113,7 +113,7 @@ export default async function DonationsPage({ params, searchParams }: PageProps<
             ))}
           </select>
         ) : null}
-        <select name="status" defaultValue={query.status ?? ""} aria-label={t("col.status")} className={`${inputClass} w-auto`}>
+        <select name="status" defaultValue={query.status ?? ""} aria-label={t("col.status")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allStatus")}</option>
           <option value="valid">{t("valid")}</option>
           <option value="void">{t("void")}</option>

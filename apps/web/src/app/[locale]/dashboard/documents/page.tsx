@@ -65,7 +65,7 @@ export default async function DocumentsPage({ params, searchParams }: PageProps<
       <form method="get" role="search" className="mb-3.5 flex flex-wrap items-center gap-2.5">
         {query.archived ? <input type="hidden" name="archived" value="true" /> : null}
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} />
-        <select name="docType" defaultValue={query.docType ?? ""} aria-label={t("docType")} className={`${inputClass} w-auto`}>
+        <select name="docType" defaultValue={query.docType ?? ""} aria-label={t("docType")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allTypes")}</option>
           {DOCUMENT_TYPES.society.map((type) => (
             <option key={type} value={type}>

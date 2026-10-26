@@ -70,7 +70,7 @@ export default async function RunPage({ params, searchParams }: PageProps<"/[loc
         <form method="get" className="flex flex-wrap items-end gap-2.5">
           <label className="grid gap-1 text-[13px] font-medium">
             {t("month")}
-            <input type="month" name="month" defaultValue={month} max={thisMonth} className={`${inputClass} w-auto`} />
+            <input type="month" name="month" defaultValue={month} max={thisMonth} className={`${inputClass} sm:w-auto!`} />
           </label>
           <Button type="submit" variant="outline">
             {t("show")}

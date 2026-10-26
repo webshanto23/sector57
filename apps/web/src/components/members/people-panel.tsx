@@ -386,7 +386,7 @@ function OpenTenancy({ row, can, submit }: { row: Tenancy; can: LocationPeople["
           <div className="flex flex-wrap items-center gap-3">
             <select
               aria-label={t("statusLabel")}
-              className={`${inputClass} w-auto`}
+              className={`${inputClass} sm:w-auto!`}
               value={row.status}
               disabled={submit.busy}
               onChange={(e) => void patch({ status: e.target.value as OpenStatus })}

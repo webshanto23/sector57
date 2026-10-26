@@ -87,10 +87,10 @@ export default async function CollectionPage({ params, searchParams }: PageProps
       <form method="get" className="mb-3.5 flex flex-wrap items-end gap-2.5">
         {report.parent ? <input type="hidden" name="parentId" value={report.parent.id} /> : null}
         <Field label={tReports("from")} htmlFor="collection-from">
-          <input id="collection-from" type="date" name="from" defaultValue={report.from} className={`${inputClass} w-auto`} />
+          <input id="collection-from" type="date" name="from" defaultValue={report.from} className={`${inputClass} sm:w-auto!`} />
         </Field>
         <Field label={tReports("to")} htmlFor="collection-to">
-          <input id="collection-to" type="date" name="to" defaultValue={report.to} className={`${inputClass} w-auto`} />
+          <input id="collection-to" type="date" name="to" defaultValue={report.to} className={`${inputClass} sm:w-auto!`} />
         </Field>
         <Button type="submit" variant="outline">
           {tReports("show")}

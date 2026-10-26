@@ -36,7 +36,7 @@ export default async function MaintenanceDuePage({ params, searchParams }: PageP
 
       <form method="get" className="mb-3.5 flex flex-wrap items-center gap-2.5">
         {query.areaId ? <input type="hidden" name="areaId" value={query.areaId} /> : null}
-        <select name="within" defaultValue={String(query.within)} aria-label={t("withinLabel")} className={`${inputClass} w-auto`}>
+        <select name="within" defaultValue={String(query.within)} aria-label={t("withinLabel")} className={`${inputClass} sm:w-auto!`}>
           {WINDOWS.map((days) => (
             <option key={days} value={days}>
               {t("within", { days })}

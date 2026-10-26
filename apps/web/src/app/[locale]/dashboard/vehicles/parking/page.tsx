@@ -63,7 +63,7 @@ export default async function ParkingPage({ params, searchParams }: PageProps<"/
 
       <form method="get" role="search" className="mb-3.5 flex flex-wrap items-center gap-2.5">
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} />
-        <select name="view" defaultValue={query.view} aria-label={t("viewLabel")} className={`${inputClass} w-auto`}>
+        <select name="view" defaultValue={query.view} aria-label={t("viewLabel")} className={`${inputClass} sm:w-auto!`}>
           {PARKING_VIEWS.map((view) => (
             <option key={view} value={view}>
               {t(`view.${view}`)}

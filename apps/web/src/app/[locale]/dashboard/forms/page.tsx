@@ -102,7 +102,7 @@ export default async function FormsQueuePage({ params, searchParams }: PageProps
       <form method="get" role="search" className="mb-3.5 flex flex-wrap items-center gap-2.5">
         {query.areaId ? <input type="hidden" name="areaId" value={query.areaId} /> : null}
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} />
-        <select name="status" defaultValue={query.status ?? ""} aria-label={t("col.status")} className={`${inputClass} w-auto`}>
+        <select name="status" defaultValue={query.status ?? ""} aria-label={t("col.status")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allStatuses")}</option>
           {FORM_STATUSES.map((status) => (
             <option key={status} value={status}>
@@ -110,7 +110,7 @@ export default async function FormsQueuePage({ params, searchParams }: PageProps
             </option>
           ))}
         </select>
-        <select name="formKey" defaultValue={query.formKey ?? ""} aria-label={t("col.form")} className={`${inputClass} w-auto`}>
+        <select name="formKey" defaultValue={query.formKey ?? ""} aria-label={t("col.form")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allForms")}</option>
           {FORM_KEYS.map((key) => (
             <option key={key} value={key}>

@@ -152,7 +152,7 @@ export default async function InvoicePage({ params }: PageProps<"/[locale]/dashb
             </div>
             {open && canCollect ? (
               <Link
-                href={{ pathname: "/dashboard/collect", query: billTo.unit ? { unitId: billTo.unit.id } : { personId: billTo.id } }}
+                href={{ pathname: "/dashboard/collect", query: { ...(billTo.unit ? { unitId: billTo.unit.id } : { personId: billTo.id }), invoiceId: invoice.id } }}
                 className={`${buttonVariants()} mt-1`}
               >
                 <Banknote aria-hidden />

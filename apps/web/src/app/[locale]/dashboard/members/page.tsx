@@ -155,7 +155,7 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
       <form method="get" role="search" className="mb-3.5 flex flex-wrap items-center gap-2.5">
         {query.areaId ? <input type="hidden" name="areaId" value={query.areaId} /> : null}
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} />
-        <select name="role" defaultValue={query.role ?? ""} aria-label={t("col.role")} className={`${inputClass} w-auto`}>
+        <select name="role" defaultValue={query.role ?? ""} aria-label={t("col.role")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allRoles")}</option>
           {MEMBER_ROLES.map((role) => (
             <option key={role} value={role}>
@@ -163,7 +163,7 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
             </option>
           ))}
         </select>
-        <select name="verification" defaultValue={query.verification ?? ""} aria-label={t("col.status")} className={`${inputClass} w-auto`}>
+        <select name="verification" defaultValue={query.verification ?? ""} aria-label={t("col.status")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allVerification")}</option>
           <option value="pending">{t("verificationFilter.pending")}</option>
           <option value="verified">{t("verificationFilter.verified")}</option>

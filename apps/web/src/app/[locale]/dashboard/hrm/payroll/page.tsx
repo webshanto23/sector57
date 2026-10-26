@@ -45,7 +45,7 @@ export default async function PayrollPage({ params, searchParams }: PageProps<"/
         <label htmlFor="payroll-month" className="text-[13.5px] font-semibold">
           {t("month")}
         </label>
-        <input id="payroll-month" name="month" type="month" max={thisMonth} defaultValue={month} className={`${inputClass} w-auto`} />
+        <input id="payroll-month" name="month" type="month" max={thisMonth} defaultValue={month} className={`${inputClass} sm:w-auto!`} />
         <Button type="submit" variant="outline">
           {t("show")}
         </Button>

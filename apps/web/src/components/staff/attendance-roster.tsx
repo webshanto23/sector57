@@ -129,7 +129,7 @@ export function AttendanceRoster({ day }: { day: AttendanceDay }) {
                           <input
                             type="time"
                             aria-label={t("inTime")}
-                            className={`${inputClass} w-auto`}
+                            className={`${inputClass} sm:w-auto!`}
                             value={draft.inTime}
                             onChange={(e) => set(item.staff.id, { inTime: e.target.value })}
                           />
@@ -139,7 +139,7 @@ export function AttendanceRoster({ day }: { day: AttendanceDay }) {
                           <input
                             type="time"
                             aria-label={t("outTime")}
-                            className={`${inputClass} w-auto`}
+                            className={`${inputClass} sm:w-auto!`}
                             value={draft.outTime}
                             onChange={(e) => set(item.staff.id, { outTime: e.target.value })}
                           />

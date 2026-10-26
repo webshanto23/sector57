@@ -118,14 +118,14 @@ export default async function HelpdeskPage({ params, searchParams }: PageProps<"
         {query.locationId ? <input type="hidden" name="locationId" value={query.locationId} /> : null}
         {query.staffId ? <input type="hidden" name="staffId" value={query.staffId} /> : null}
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} />
-        <select name="view" defaultValue={query.view} aria-label={t("viewLabel")} className={`${inputClass} w-auto`}>
+        <select name="view" defaultValue={query.view} aria-label={t("viewLabel")} className={`${inputClass} sm:w-auto!`}>
           {TICKET_VIEWS.map((key) => (
             <option key={key} value={key}>
               {t(`view.${key}`)}
             </option>
           ))}
         </select>
-        <select name="category" defaultValue={query.category ?? ""} aria-label={t("categoryLabel")} className={`${inputClass} w-auto`}>
+        <select name="category" defaultValue={query.category ?? ""} aria-label={t("categoryLabel")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allCategories")}</option>
           {TICKET_CATEGORIES.map((key) => (
             <option key={key} value={key}>
@@ -133,7 +133,7 @@ export default async function HelpdeskPage({ params, searchParams }: PageProps<"
             </option>
           ))}
         </select>
-        <select name="priority" defaultValue={query.priority ?? ""} aria-label={t("priorityLabel")} className={`${inputClass} w-auto`}>
+        <select name="priority" defaultValue={query.priority ?? ""} aria-label={t("priorityLabel")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allPriorities")}</option>
           {TICKET_PRIORITIES.map((key) => (
             <option key={key} value={key}>
