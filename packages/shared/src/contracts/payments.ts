@@ -5,6 +5,7 @@ import { cleanText } from '../text.js';
 import { billToSnapshotSchema, invoiceRowSchema, type InvoiceStatus } from './billing.js';
 import { documentHeaderSchema, paymentMethodSchema, paymentRefSchema, refineMethodRef } from './finance.js';
 import { isoDay } from './members.js';
+import { printChoiceSchema } from './print.js';
 
 // ---------------------------------------------------------------------------
 // Settling bills (pure; money is decimal strings, arithmetic in paisa)
@@ -224,6 +225,8 @@ export const paymentDetailSchema = paymentRowSchema.extend({
   printCount: z.number().int().min(0),
   void: z.object({ reason: z.string(), at: z.iso.datetime({ offset: true }), by: z.string().nullable() }).nullable(),
   header: documentHeaderSchema,
+  /** Which papers the society offers for receipts. */
+  print: printChoiceSchema,
   can: z.object({ void: z.boolean() }),
 });
 export type PaymentDetail = z.infer<typeof paymentDetailSchema>;

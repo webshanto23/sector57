@@ -326,6 +326,12 @@ describe('Cash collection, receipts and handover (e2e)', () => {
       await send('post', `/payments/${first!.id}/print`, users.treasurerD).expect(404);
     });
 
+    it('says which papers the receipt may print on', async () => {
+      const [first] = paymentListSchema.parse((await get('/payments?collectorId=me', users.collectorC).expect(200)).body).items;
+      const receipt = paymentDetailSchema.parse((await get(`/payments/${first!.id}`, users.collectorC).expect(200)).body);
+      expect(receipt.print).toEqual({ default: 'a5', offered: ['a5'] });
+    });
+
     it('has no delete route: receipts are only voided', async () => {
       const [first] = paymentListSchema.parse((await get('/payments').expect(200)).body).items;
       await send('delete', `/payments/${first!.id}`).expect(404);

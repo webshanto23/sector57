@@ -41,6 +41,13 @@ export function usePrintFormat(document: PrintDocument, choice: PrintChoice): [P
   return [pickFormat(choice, device, picked), pick];
 }
 
+/** A choice without the thermal roll (printing many documents at once); falls back to A5 if nothing else is offered. */
+export function onSheets(choice: PrintChoice): PrintChoice {
+  const offered: PrintFormat[] = choice.offered.filter((format) => format !== "thermal80");
+  if (offered.length === 0) return { default: "a5", offered: ["a5"] };
+  return { default: offered.includes(choice.default) ? choice.default : offered[0]!, offered };
+}
+
 /** "Paper: A4 / A5", shown only when the society offers more than one. */
 export function PrintFormatPicker({ choice, value, onChange }: { choice: PrintChoice; value: PrintFormat; onChange: (format: PrintFormat) => void }) {
   const t = useTranslations("Print");

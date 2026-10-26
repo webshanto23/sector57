@@ -981,6 +981,16 @@ Added 2026-10-26. The bill prints to the mock `docs/mocks/sector57-bill-a4-8rows
 | Office hours and notes | A setting; generic wording if empty | Decided |
 | Bills longer than the page (up to 20 lines; about 8 fill it at the mock's spacing) | Compact rows and merged payment/notes above about 10 lines, always one page | Decided |
 
+## Step 30b: Thermal receipts and bills — Built, awaiting review
+
+Built 2026-10-26 on `step/30b-thermal` (from `step/30-bill-a4` after its commit `b70d725`). Decided by Anis: 80 mm only for now, receipts first, each device remembers its paper, the society can hide papers. No migration.
+
+- **Shared:** `PRINT_SUPPORT` gains `thermal80` for bills and the new `receipt` (`a5`, `thermal80`); `print_formats.receipt` (default A5 only, thermal opt-in); `printFormatsOf` reads each document on its own; the `printFormats` input is partial and the API merges it over what is saved.
+- **API:** `SettingsService.receiptPrint`; the receipt detail (payments and donations) carries `print`.
+- **Web:** `ThermalSheet` measures an off-screen copy and sets `@page thermal80 { size: 80mm <length> }` (checked in headless Chrome: `80mm auto` is ignored, a bare `80mm` cuts 80 × 80 mm pages, a measured length prints one strip). `receipt-thermal.tsx` and `bill-thermal.tsx` (text only, outlined badge, two-line items, "Duplicate"/"Void" as a reserved text line). Paper picker on receipt print; "Save and print" uses the device's paper. "Print all" leaves thermal out (`onSheets`). Settings card "Paper" (`finance/paper-card.tsx`) with bills and receipts.
+- **Tests:** `print.spec.ts` (12); e2e: receipt paper saved alone keeps the bill choice, receipts refuse A4, the receipt detail's `print`.
+- **Checked:** the finance, payments, donations and billing e2e files and `pnpm check`. **Not checked:** a real thermal printer, and the pages in a browser (no admin login in this session).
+
 ## Step 31: Payment methods — Built, awaiting review
 
 Asked for by Anis on 2026-10-26: record how every amount was paid, without any gateway (SSLCommerz, Stripe and the like stay out). Built on `step/31-payment-methods` (from `main` after PR #30) in three parts in one session. Decided by Anis: mobile-wallet money lands in the **bank** account (no third ledger account); a cheque counts on the day it is taken (a bounced one is voided); the reference is required for cheque and mobile, optional for a bank deposit, never kept for cash.

@@ -152,10 +152,10 @@ describe('Finance setup (e2e)', () => {
     it('saves the bill paper choices and the new header contacts', async () => {
       const bill = { default: 'a5', offered: ['a4', 'a5'], noteBn: ' বিল রাখুন।\nভুল হলে জানান। ', noteEn: '' };
       for (const [wrong, code] of [
-        [{ ...bill, offered: ['a4', 'thermal80'] }, 'print_format_unsupported'],
-        [{ ...bill, offered: ['a4'] }, 'print_default_not_offered'],
+        [{ receipt: { default: 'a4', offered: ['a4'] } }, 'print_format_unsupported'],
+        [{ bill: { ...bill, offered: ['a4'] } }, 'print_default_not_offered'],
       ] as const) {
-        const res = await setSettings({ printFormats: { bill: wrong } }).expect(400);
+        const res = await setSettings({ printFormats: wrong }).expect(400);
         expect(JSON.stringify(res.body)).toContain(code);
       }
       expect((await setSettings({ receiptHeader: { nameBn: 'সমিতি', email: 'office@' } }).expect(400)).body.code).toBe('validation_failed');
@@ -167,6 +167,15 @@ describe('Finance setup (e2e)', () => {
         receiptHeader: { email: 'office@sector15.org', regNo: 'DSS-1234/2019', officeHoursEn: null, phone: null },
       });
       await setSettings({ printFormats: { bill: { default: 'a4', offered: ['a4', 'a5'] } } }).expect(200);
+    });
+
+    it('saves the receipt paper on its own, keeping the bill choice', async () => {
+      const bill = { default: 'thermal80', offered: ['a4', 'thermal80'], noteBn: 'নোট', noteEn: null };
+      await setSettings({ printFormats: { bill } }).expect(200);
+      expect((await setSettings({ printFormats: { receipt: { default: 'a5', offered: ['a5', 'a4'] } } }).expect(400)).body.code).toBe('validation_failed');
+      const res = await setSettings({ printFormats: { receipt: { default: 'thermal80', offered: ['a5', 'thermal80'] } } }).expect(200);
+      expect(societySettingsSchema.parse(res.body).printFormats).toEqual({ bill, receipt: { default: 'thermal80', offered: ['a5', 'thermal80'] } });
+      await prisma.society_settings.deleteMany({ where: { society_id: societyId, key: 'print_formats' } });
     });
 
     it('edits the society profile, which the public header reads', async () => {

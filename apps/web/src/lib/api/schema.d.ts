@@ -5361,6 +5361,11 @@ export interface components {
                     noteBn: string | null;
                     noteEn: string | null;
                 };
+                receipt: {
+                    /** @enum {string} */
+                    default: "a4" | "a5" | "thermal80";
+                    offered: ("a4" | "a5" | "thermal80")[];
+                };
             };
         };
         SettingsInputDto: {
@@ -5386,12 +5391,17 @@ export interface components {
                 placeEn?: string | null;
             };
             printFormats?: {
-                bill: {
+                bill?: {
                     /** @enum {string} */
                     default: "a4" | "a5" | "thermal80";
                     offered: ("a4" | "a5" | "thermal80")[];
                     noteBn?: string | null;
                     noteEn?: string | null;
+                };
+                receipt?: {
+                    /** @enum {string} */
+                    default: "a4" | "a5" | "thermal80";
+                    offered: ("a4" | "a5" | "thermal80")[];
                 };
             };
         };
@@ -6435,6 +6445,11 @@ export interface components {
                 officeHoursEn: string | null;
                 mark: string;
             };
+            print: {
+                /** @enum {string} */
+                default: "a4" | "a5" | "thermal80";
+                offered: ("a4" | "a5" | "thermal80")[];
+            };
             can: {
                 void: boolean;
             };
@@ -6785,6 +6800,11 @@ export interface components {
                     /** @default null */
                     officeHoursEn: string | null;
                     mark: string;
+                };
+                print: {
+                    /** @enum {string} */
+                    default: "a4" | "a5" | "thermal80";
+                    offered: ("a4" | "a5" | "thermal80")[];
                 };
                 can: {
                     void: boolean;

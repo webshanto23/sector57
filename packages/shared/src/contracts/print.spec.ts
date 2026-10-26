@@ -33,9 +33,14 @@ describe('printFormatsOf', () => {
     expect(printFormatsOf({ bill: 'a4' })).toEqual(DEFAULT_PRINT_FORMATS);
   });
 
-  it('drops formats bills have no layout for, and moves the default with them', () => {
-    const saved = { bill: { default: 'thermal80', offered: ['thermal80', 'a5'], noteBn: 'নোট', noteEn: null } };
-    expect(printFormatsOf(saved)).toEqual({ bill: { default: 'a5', offered: ['a5'], noteBn: 'নোট', noteEn: null } });
+  it('keeps saved bills when receipts were never saved', () => {
+    const bill = { default: 'thermal80', offered: ['a4', 'thermal80'], noteBn: null, noteEn: null };
+    expect(printFormatsOf({ bill })).toEqual({ bill, receipt: DEFAULT_PRINT_FORMATS.receipt });
+  });
+
+  it('drops formats a document has no layout for, and moves the default with them', () => {
+    const saved = { bill: { default: 'a5', offered: ['a5'], noteBn: null, noteEn: null }, receipt: { default: 'a4', offered: ['a4', 'thermal80'] } };
+    expect(printFormatsOf(saved).receipt).toEqual({ default: 'thermal80', offered: ['thermal80'] });
   });
 });
 
@@ -46,8 +51,17 @@ describe('printFormatsInputSchema', () => {
     expect(printFormatsInputSchema.parse(bill({ noteBn: ' এক\nদুই ' })).bill).toMatchObject({ noteBn: 'এক\nদুই', noteEn: null });
   });
 
-  it('refuses a format bills lack, a format twice, a default not offered and an empty list', () => {
-    expect(issues(printFormatsInputSchema.safeParse(bill({ offered: ['a4', 'thermal80'] })))).toEqual(['bill.offered:print_format_unsupported']);
+  it('takes thermal for bills and receipts, and one document alone', () => {
+    expect(printFormatsInputSchema.safeParse(bill({ offered: ['a4', 'thermal80'] })).success).toBe(true);
+    expect(printFormatsInputSchema.parse({ receipt: { default: 'thermal80', offered: ['a5', 'thermal80'] } })).toEqual({
+      receipt: { default: 'thermal80', offered: ['a5', 'thermal80'] },
+    });
+  });
+
+  it('refuses a format a document lacks, a format twice, a default not offered and an empty list', () => {
+    expect(issues(printFormatsInputSchema.safeParse({ receipt: { default: 'a5', offered: ['a5', 'a4'] } }))).toEqual([
+      'receipt.offered:print_format_unsupported',
+    ]);
     expect(issues(printFormatsInputSchema.safeParse(bill({ offered: ['a4', 'a4'] })))).toEqual(['bill.offered:print_format_twice']);
     expect(issues(printFormatsInputSchema.safeParse(bill({ offered: ['a5'] })))).toEqual(['bill.default:print_default_not_offered']);
     expect(printFormatsInputSchema.safeParse(bill({ offered: [] })).success).toBe(false);

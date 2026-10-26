@@ -5,7 +5,7 @@ import { List, Printer } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { flushSync } from "react-dom";
-import { PrintFormatPicker, usePrintFormat } from "@/components/print/print-format";
+import { onSheets, PrintFormatPicker, usePrintFormat } from "@/components/print/print-format";
 import { PrintSheet } from "@/components/print/print-sheet";
 import { Button } from "@/components/ui/button";
 import { BillSheet } from "./bill-print";
@@ -18,8 +18,9 @@ import { BillsListSheet } from "./bills-list-sheet";
 export function BillsPrint({ invoices, today }: { invoices: InvoiceDetail[]; today: string }) {
   const t = useTranslations("Billing.printMany");
   const [mode, setMode] = useState<"bills" | "list">("bills");
-  // The setting is the society's, so every bill carries the same one.
-  const [format, setFormat] = usePrintFormat("bill", invoices[0]!.print);
+  // The setting is the society's, so every bill carries the same one. Never a roll for many bills.
+  const choice = onSheets(invoices[0]!.print);
+  const [format, setFormat] = usePrintFormat("bill", choice);
 
   function print(next: "bills" | "list") {
     // Render the chosen layout before the browser takes its snapshot.
@@ -29,7 +30,7 @@ export function BillsPrint({ invoices, today }: { invoices: InvoiceDetail[]; tod
 
   return (
     <>
-      <PrintFormatPicker choice={invoices[0]!.print} value={format} onChange={setFormat} />
+      <PrintFormatPicker choice={choice} value={format} onChange={setFormat} />
       <Button type="button" variant="outline" onClick={() => print("list")}>
         <List aria-hidden />
         {t("printList")}
