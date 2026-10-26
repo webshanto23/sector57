@@ -39,6 +39,7 @@ import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { addressOf, beyondPermissions, TreeService } from '../property/tree.service.js';
 import { BillToService, type BillableUnit } from './bill-to.service.js';
+import { unitsDues } from './unit-dues.js';
 
 type Tx = Prisma.TransactionClient;
 
@@ -70,6 +71,7 @@ export const invoiceSelect = {
   total: true,
   paid: true,
   bill_to_snapshot: true,
+  unit_id: true,
   created_at: true,
   void_reason: true,
   voided_at: true,
@@ -158,14 +160,24 @@ export class InvoicesService {
   /** Full bills for rows the caller may already see, in the same order, with one receipt header for all. */
   async details(actor: Actor, rows: InvoiceRowData[]): Promise<InvoiceDetail[]> {
     const today = isoDate(todayDate());
-    const [allocations, header] = await Promise.all([
+    const unitIds = [...new Set(rows.flatMap((row) => (row.unit_id ? [row.unit_id] : [])))];
+    const [allocations, header, print, dues] = await Promise.all([
       this.prisma.payment_allocations.findMany({
         where: { invoice_id: { in: rows.map((row) => row.id) } },
         select: { invoice_id: true, amount: true, payments: { select: { id: true, receipt_no: true, received_at: true, voided_at: true } } },
         orderBy: [{ payments: { received_at: 'asc' } }, { payment_id: 'asc' }],
       }),
       this.settings.receiptHeader(actor.societyId),
+      this.settings.billPrint(actor.societyId),
+      unitsDues(this.prisma, actor.societyId, unitIds),
     ]);
+    const otherDue = (row: Row) => {
+      const unit = row.unit_id ? dues.get(row.unit_id) : undefined;
+      if (!unit) return { owed: '0.00', bills: 0 };
+      // The bill itself is in the unit's sum while it is unpaid or part-paid.
+      const own = row.status === 'unpaid' || row.status === 'partial';
+      return { owed: (own ? unit.owed.minus(row.total.minus(row.paid)) : unit.owed).toFixed(2), bills: unit.bills - (own ? 1 : 0) };
+    };
     return rows.map((row) => ({
       ...toInvoiceRow(row, today),
       fund: toFundOption(row.funds),
@@ -189,6 +201,8 @@ export class InvoicesService {
           voided: allocation.payments.voided_at !== null,
         })),
       header,
+      otherDue: otherDue(row),
+      print,
       can: { void: row.status === 'unpaid' && row.paid.isZero() && allowed(actor.access, 'approve', pathOf(row)) },
     }));
   }

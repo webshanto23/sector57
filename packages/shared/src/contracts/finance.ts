@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { moneyOrZeroSchema, optionalMoneySchema } from '../money.js';
-import { optionalText, text } from '../schemas.js';
+import { optionalEmail, optionalText, text } from '../schemas.js';
 import { isoDay } from './members.js';
+import { printFormatsInputSchema, printFormatsSchema } from './print.js';
 import { brandingSchema } from './society.js';
 
 // ---------------------------------------------------------------------------
@@ -18,6 +19,8 @@ export const SETTING_KEYS = {
   receiptHeader: 'receipt_header',
   /** Logo badge and place line (`brandingSchema`); the name itself is the `societies` row. */
   branding: 'branding',
+  /** Which papers each document prints on (`printFormatsSchema`). */
+  printFormats: 'print_formats',
 } as const;
 export type SettingKey = keyof typeof SETTING_KEYS;
 
@@ -28,6 +31,11 @@ export const receiptHeaderSchema = z.object({
   addressBn: z.string().nullable(),
   addressEn: z.string().nullable(),
   phone: z.string().nullable(),
+  // Added for the A4 bill; headers saved before then have none.
+  email: z.string().nullable().default(null),
+  regNo: z.string().nullable().default(null),
+  officeHoursBn: z.string().nullable().default(null),
+  officeHoursEn: z.string().nullable().default(null),
 });
 export type ReceiptHeader = z.infer<typeof receiptHeaderSchema>;
 
@@ -41,6 +49,11 @@ export const receiptHeaderInputSchema = z.object({
   addressBn: optionalText(300),
   addressEn: optionalText(300),
   phone: optionalText(60),
+  email: optionalEmail,
+  /** The society's registration number, e.g. with the Department of Social Services. */
+  regNo: optionalText(60),
+  officeHoursBn: optionalText(120),
+  officeHoursEn: optionalText(120),
 });
 
 /** The society's name (`societies`) and branding, as the website header shows them. */
@@ -67,6 +80,7 @@ export const societySettingsSchema = z.object({
   fiscalYearLocked: z.boolean(),
   receiptHeader: receiptHeaderSchema,
   profile: societyProfileSchema,
+  printFormats: printFormatsSchema,
 });
 export type SocietySettings = z.infer<typeof societySettingsSchema>;
 
@@ -78,6 +92,7 @@ export const settingsInputSchema = z
     fiscalYearStartMonth: z.number().int().min(1).max(12),
     receiptHeader: receiptHeaderInputSchema,
     profile: societyProfileInputSchema,
+    printFormats: printFormatsInputSchema,
   })
   .partial()
   .strict();

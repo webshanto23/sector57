@@ -11,6 +11,7 @@ export * from './media.js';
 export * from './property.js';
 export * from './members.js';
 export * from './forms.js';
+export * from './print.js';
 export * from './finance.js';
 export * from './billing.js';
 export * from './billing-batch.js';

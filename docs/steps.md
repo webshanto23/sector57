@@ -945,9 +945,24 @@ Built 2026-10-24 on `step/29-records-reports` (branched from `step/28-certificat
 - **Tests:** `records-reports.spec.ts` (shared); `test/records-reports.e2e-spec.ts` (9): occupancy figures, drill-down and natural order, Block C / Block D scope, CSV and its grant; members counts, joiners, range and place filter, scope, CSV; renters refused while sharing is off, scope on `members.export`, person and organisation renters, household and police-form totals, no NID in JSON or CSV.
 - **Checked:** `pnpm check` and the whole e2e suite (30 files, 371 tests; one run had a single failure in `forms.e2e-spec.ts` that passed alone and on the next full run). `next build` was not run because the dev web server was using `.next`; typecheck and lint cover the pages. Not opened in a browser; the 375/820/1440 checks stay deferred.
 
-## Step 30: A4 bill print to the mock — Planned, decisions open
+## Step 30: Print formats and the A4 bill — Built, awaiting review
 
-Added 2026-10-26. The bill prints to the mock `docs/mocks/sector57-bill-a4-8rows.png` on a full A4 page, replacing the A5 bill in the receipt layout (`BillSheet` in `components/billing/bill-print.tsx`, used by the single and the "Print all" bill prints). Anis will talk it through before the scope note; nothing is built yet.
+Added 2026-10-26. The bill prints to the mock `docs/mocks/sector57-bill-a4-8rows.png` on a full A4 page (`BillSheet` in `components/billing/bill-print.tsx`, used by the single and the "Print all" bill prints). Nothing is built yet.
+
+**Print formats (decided by Anis, 2026-10-26):** A4 does not replace A5; the paper is chosen at print time.
+- Formats `a4`, `a5`, `thermal80`. Only 80 mm thermal for now; the format list is data so `thermal58` or others can be added later without reshaping anything.
+- Three layers: a society setting `print_formats` (per document type: the default format and which formats are offered, so a society without a thermal printer hides it), then the device's own choice remembered in the browser, then a one-off picker on the print page. The device choice is ignored if the society no longer offers it.
+- Each format is its own layout over one shared print model (header, billed-to, lines, totals, amount in words, status), so a new format or document type does not touch the data side.
+- Thermal prints through the browser and the printer's driver (Bangla is rasterised; no ESC/POS). Black only, two-line rows, no counterfoil. Not offered for "Print all".
+- **Split:** Step 30 = the format mechanism, the shared bill print model, the new A4 bill and the current A5 bill moved onto the model. Step 30b (later, with a printer to test on) = thermal, receipts first, then bills. Vouchers, payslips and donation receipts join the picker one at a time after that.
+
+**Built 2026-10-26** on `step/30-bill-a4` (from `step/32-expense-lines`; merge 31, 32, then 30). No migration.
+- **Shared:** `contracts/print.ts` (`PRINT_FORMATS`, `PRINT_SUPPORT`, `print_formats` setting and input schema with `print_format_unsupported`, `print_format_twice`, `print_default_not_offered`; `printFormatsOf`, `pickFormat`, `billDensity`, `notePoints`). `receipt_header` gains `email`, `regNo`, `officeHoursBn/En` (older saved headers read them as null).
+- **API:** `GET/PATCH /settings` carry `printFormats`; the bill detail (and `GET /invoices/print`) adds `otherDue` (`billing/unit-dues.ts` `unitsDues`, one grouped query) and `print`.
+- **Web:** `bill-print.tsx` is now the paper picker plus `BillSheet(format)`; the old layout moved unchanged to `bill-a5.tsx`; the new `bill-a4.tsx` follows the mock without the period column, previous due or adjustments. Picker on the bill page and "Print all" (`components/print/print-format.tsx`, remembered per device). `Logo` takes `size="lg"`. Settings: four new header fields and a "Bill paper" card (`finance/bill-paper-card.tsx`).
+- **Tests:** `print.spec.ts` (10); e2e in `finance.e2e-spec.ts` (settings round trip and refusals) and `billing.e2e-spec.ts` (`otherDue` leaves out the bill itself and void bills; default formats).
+- **Checked:** the affected e2e files and `pnpm check`. **Not checked:** the A4 print against the mock in a browser (no admin login in this session).
+- `invoices.service.ts` is about 610 lines and was not split.
 
 **Gap found (2026-10-26):**
 - **Page.** Print CSS defaults to `@page` A5 with an 8 mm margin; `.print-a4` has a 12 mm margin for long lists. The mock is A4 with no page margin (the green header band bleeds to the edges, about 36 mm tall) and about 13 mm padding inside, filling the page with the counterfoil and footer at the bottom. Needs a new named A4 page with margin 0 and a sheet of 210 × just under 297 mm; the A5 default stays for receipts, vouchers and payslips unless decided otherwise. With margin 0 there are no CSS page-number margin boxes, so "Page 1 of 1" holds only if a bill always fits one page.
@@ -958,12 +973,13 @@ Added 2026-10-26. The bill prints to the mock `docs/mocks/sector57-bill-a4-8rows
 
 | Decision | Proposal | Needed before |
 |---|---|---|
-| A4 for bills only, or also receipts, donation receipts, vouchers and payslips | Bills only | Scope note |
-| Per-line period column | Drop it (no migration) | Scope note |
-| Previous due and adjustments | Payable = this bill's due (subtotal, less paid); at most an "other unpaid bills ৳X" note | Scope note |
-| Email and registration number | Add to the `receipt_header` setting and its form (JSON, no migration) | Scope note |
-| Office hours and notes | A setting; generic wording if empty | Scope note |
-| Bills longer than the page (up to 20 lines; about 8 fill it at the mock's spacing) | Compact rows and merged payment/notes above about 10 lines, always one page | Scope note |
+| A4 for bills only, or also receipts, donation receipts, vouchers and payslips | Bills only in Step 30; the others join the format picker later | Decided |
+| Thermal width | 80 mm only for now; more widths can be added as formats | Decided |
+| Per-line period column | Drop it (no migration) | Decided |
+| Previous due and adjustments | Payable = this bill's due (subtotal, less paid); at most an "other unpaid bills ৳X" note | Decided |
+| Email and registration number | Add to the `receipt_header` setting and its form (JSON, no migration) | Decided |
+| Office hours and notes | A setting; generic wording if empty | Decided |
+| Bills longer than the page (up to 20 lines; about 8 fill it at the mock's spacing) | Compact rows and merged payment/notes above about 10 lines, always one page | Decided |
 
 ## Step 31: Payment methods — Built, awaiting review
 

@@ -279,4 +279,13 @@
   .print-portal .print-a4 tr {
     break-inside: avoid;
   }
+  /* The A4 bill: no page margin, so its green band reaches the paper's edges; the sheet
+     itself is a hair under 297 mm so it never spills onto a second page. */
+  @page bill-a4 {
+    size: A4 portrait;
+    margin: 0;
+  }
+  .print-portal .print-bill-a4 {
+    page: bill-a4;
+  }
 }

@@ -5337,6 +5337,14 @@ export interface components {
                 addressBn: string | null;
                 addressEn: string | null;
                 phone: string | null;
+                /** @default null */
+                email: string | null;
+                /** @default null */
+                regNo: string | null;
+                /** @default null */
+                officeHoursBn: string | null;
+                /** @default null */
+                officeHoursEn: string | null;
             };
             profile: {
                 nameBn: string;
@@ -5344,6 +5352,15 @@ export interface components {
                 mark: string;
                 placeBn: string | null;
                 placeEn: string | null;
+            };
+            printFormats: {
+                bill: {
+                    /** @enum {string} */
+                    default: "a4" | "a5" | "thermal80";
+                    offered: ("a4" | "a5" | "thermal80")[];
+                    noteBn: string | null;
+                    noteEn: string | null;
+                };
             };
         };
         SettingsInputDto: {
@@ -5356,6 +5373,10 @@ export interface components {
                 addressBn?: string | null;
                 addressEn?: string | null;
                 phone?: string | null;
+                email?: string | null;
+                regNo?: string | null;
+                officeHoursBn?: string | null;
+                officeHoursEn?: string | null;
             };
             profile?: {
                 nameBn: string;
@@ -5363,6 +5384,15 @@ export interface components {
                 mark: string;
                 placeBn?: string | null;
                 placeEn?: string | null;
+            };
+            printFormats?: {
+                bill: {
+                    /** @enum {string} */
+                    default: "a4" | "a5" | "thermal80";
+                    offered: ("a4" | "a5" | "thermal80")[];
+                    noteBn?: string | null;
+                    noteEn?: string | null;
+                };
             };
         };
         FundListDto_Output: {
@@ -5613,7 +5643,26 @@ export interface components {
                     addressBn: string | null;
                     addressEn: string | null;
                     phone: string | null;
+                    /** @default null */
+                    email: string | null;
+                    /** @default null */
+                    regNo: string | null;
+                    /** @default null */
+                    officeHoursBn: string | null;
+                    /** @default null */
+                    officeHoursEn: string | null;
                     mark: string;
+                };
+                otherDue: {
+                    owed: string;
+                    bills: number;
+                };
+                print: {
+                    /** @enum {string} */
+                    default: "a4" | "a5" | "thermal80";
+                    offered: ("a4" | "a5" | "thermal80")[];
+                    noteBn: string | null;
+                    noteEn: string | null;
                 };
                 can: {
                     void: boolean;
@@ -5707,7 +5756,26 @@ export interface components {
                 addressBn: string | null;
                 addressEn: string | null;
                 phone: string | null;
+                /** @default null */
+                email: string | null;
+                /** @default null */
+                regNo: string | null;
+                /** @default null */
+                officeHoursBn: string | null;
+                /** @default null */
+                officeHoursEn: string | null;
                 mark: string;
+            };
+            otherDue: {
+                owed: string;
+                bills: number;
+            };
+            print: {
+                /** @enum {string} */
+                default: "a4" | "a5" | "thermal80";
+                offered: ("a4" | "a5" | "thermal80")[];
+                noteBn: string | null;
+                noteEn: string | null;
             };
             can: {
                 void: boolean;
@@ -6211,6 +6279,14 @@ export interface components {
                 addressBn: string | null;
                 addressEn: string | null;
                 phone: string | null;
+                /** @default null */
+                email: string | null;
+                /** @default null */
+                regNo: string | null;
+                /** @default null */
+                officeHoursBn: string | null;
+                /** @default null */
+                officeHoursEn: string | null;
                 mark: string;
             };
         };
@@ -6349,6 +6425,14 @@ export interface components {
                 addressBn: string | null;
                 addressEn: string | null;
                 phone: string | null;
+                /** @default null */
+                email: string | null;
+                /** @default null */
+                regNo: string | null;
+                /** @default null */
+                officeHoursBn: string | null;
+                /** @default null */
+                officeHoursEn: string | null;
                 mark: string;
             };
             can: {
@@ -6453,6 +6537,14 @@ export interface components {
                 addressBn: string | null;
                 addressEn: string | null;
                 phone: string | null;
+                /** @default null */
+                email: string | null;
+                /** @default null */
+                regNo: string | null;
+                /** @default null */
+                officeHoursBn: string | null;
+                /** @default null */
+                officeHoursEn: string | null;
                 mark: string;
             };
         };
@@ -6684,6 +6776,14 @@ export interface components {
                     addressBn: string | null;
                     addressEn: string | null;
                     phone: string | null;
+                    /** @default null */
+                    email: string | null;
+                    /** @default null */
+                    regNo: string | null;
+                    /** @default null */
+                    officeHoursBn: string | null;
+                    /** @default null */
+                    officeHoursEn: string | null;
                     mark: string;
                 };
                 can: {
@@ -6933,6 +7033,14 @@ export interface components {
                 addressBn: string | null;
                 addressEn: string | null;
                 phone: string | null;
+                /** @default null */
+                email: string | null;
+                /** @default null */
+                regNo: string | null;
+                /** @default null */
+                officeHoursBn: string | null;
+                /** @default null */
+                officeHoursEn: string | null;
                 mark: string;
             };
             can: {
@@ -9077,6 +9185,14 @@ export interface components {
                 addressBn: string | null;
                 addressEn: string | null;
                 phone: string | null;
+                /** @default null */
+                email: string | null;
+                /** @default null */
+                regNo: string | null;
+                /** @default null */
+                officeHoursBn: string | null;
+                /** @default null */
+                officeHoursEn: string | null;
                 mark: string;
             };
             items: {
@@ -9510,6 +9626,14 @@ export interface components {
                 addressBn: string | null;
                 addressEn: string | null;
                 phone: string | null;
+                /** @default null */
+                email: string | null;
+                /** @default null */
+                regNo: string | null;
+                /** @default null */
+                officeHoursBn: string | null;
+                /** @default null */
+                officeHoursEn: string | null;
                 mark: string;
             };
             society: string;
@@ -9851,6 +9975,14 @@ export interface components {
                 addressBn: string | null;
                 addressEn: string | null;
                 phone: string | null;
+                /** @default null */
+                email: string | null;
+                /** @default null */
+                regNo: string | null;
+                /** @default null */
+                officeHoursBn: string | null;
+                /** @default null */
+                officeHoursEn: string | null;
                 mark: string;
             };
             month: string;
