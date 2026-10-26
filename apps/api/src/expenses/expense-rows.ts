@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@s57/db';
-import { expenseActions, type ExpenseActions, type ExpenseRow, type ExpenseStatus } from '@s57/shared';
+import { expenseActions, type ExpenseActions, type ExpenseLine, type ExpenseRow, type ExpenseStatus, type PaymentMethod } from '@s57/shared';
 import { isoDate } from '../common/dates.js';
 import type { CallerAccess } from '../permissions/caller-access.js';
 import type { Actor } from '../permissions/permissions.decorators.js';
@@ -17,25 +17,37 @@ export const userName = { select: { id: true, phone: true, persons: { select: { 
 export type UserName = { id: string; phone: string; persons: { full_name: string } | null };
 export const nameOf = (user: UserName) => user.persons?.full_name ?? user.phone;
 
+const nameSelect = { select: { id: true, name_bn: true, name_en: true } } as const;
+
+export const lineSelect = {
+  id: true,
+  expense_head_id: true,
+  vendor_id: true,
+  description: true,
+  amount: true,
+  expense_heads: nameSelect,
+  vendors: { select: { id: true, name: true, phone: true } },
+} satisfies Prisma.expense_linesSelect;
+
 export const rowSelect = {
   id: true,
   status: true,
-  description: true,
+  title: true,
   amount: true,
+  method: true,
+  method_ref: true,
   spent_on: true,
   voucher_no: true,
   created_at: true,
   requested_by: true,
-  expense_heads: { select: { id: true, name_bn: true, name_en: true } },
-  funds: { select: { id: true, name_bn: true, name_en: true } },
-  vendors: { select: { id: true, name: true, phone: true } },
+  funds: nameSelect,
+  expense_lines: { select: lineSelect, orderBy: { position: 'asc' } },
   users_expenses_requested_byTousers: userName,
 } satisfies Prisma.expensesSelect;
 export type Row = Prisma.expensesGetPayload<{ select: typeof rowSelect }>;
 
 export const detailSelect = {
   ...rowSelect,
-  expense_head_id: true,
   approved_at: true,
   rejected_at: true,
   reject_reason: true,
@@ -67,16 +79,32 @@ export function actionsFor(actor: Actor, row: { status: string; requested_by: st
   return expenseActions({ status: row.status as ExpenseStatus, requestedBy: row.requested_by }, actor.userId, grantsOf(actor.access));
 }
 
+const nameRef = (row: { id: string; name_bn: string; name_en: string | null }) => ({ id: row.id, nameBn: row.name_bn, nameEn: row.name_en });
+
+export function toLine(line: Row['expense_lines'][number]): ExpenseLine {
+  return {
+    id: line.id,
+    head: nameRef(line.expense_heads),
+    vendor: line.vendors ? { id: line.vendors.id, name: line.vendors.name, phone: line.vendors.phone } : null,
+    description: line.description,
+    amount: line.amount.toFixed(2),
+  };
+}
+
 export function toRow(row: Row): ExpenseRow {
   const requester = row.users_expenses_requested_byTousers;
+  const first = row.expense_lines[0]!;
   return {
     id: row.id,
     status: row.status as ExpenseStatus,
-    head: { id: row.expense_heads.id, nameBn: row.expense_heads.name_bn, nameEn: row.expense_heads.name_en },
-    fund: { id: row.funds.id, nameBn: row.funds.name_bn, nameEn: row.funds.name_en },
-    vendor: row.vendors ? { id: row.vendors.id, name: row.vendors.name } : null,
-    description: row.description,
+    title: row.title,
+    head: nameRef(first.expense_heads),
+    fund: nameRef(row.funds),
+    vendor: first.vendors ? { id: first.vendors.id, name: first.vendors.name } : null,
+    description: first.description,
+    lines: row.expense_lines.length,
     amount: row.amount.toFixed(2),
+    method: row.method as PaymentMethod,
     spentOn: isoDate(row.spent_on),
     voucherNo: row.voucher_no,
     requestedBy: requester ? { id: requester.id, name: nameOf(requester) } : null,

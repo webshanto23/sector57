@@ -183,7 +183,7 @@ export default async function DayBookPage({ params, searchParams }: PageProps<"/
           ? section(t("donations"), book.donations.total, <DataTable columns={donationColumns} rows={book.donations.items} rowKey={(row) => row.id} caption={t("donations")} empty={t("empty")} />)
           : null}
         {book.expenses
-          ? section(t("expenses"), book.expenses.total, <DataTable columns={expenseColumns} rows={book.expenses.items} rowKey={(row) => row.id} caption={t("expenses")} empty={t("empty")} />)
+          ? section(t("expenses"), book.expenses.total, <DataTable columns={expenseColumns} rows={book.expenses.items} rowKey={(row) => row.lineId} caption={t("expenses")} empty={t("empty")} />)
           : null}
         {book.transfers
           ? section(t("transfers"), null, <DataTable columns={transferColumns} rows={book.transfers.items} rowKey={(row) => row.id} caption={t("transfers")} empty={t("empty")} />)

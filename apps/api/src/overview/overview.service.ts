@@ -243,7 +243,14 @@ export class OverviewService {
       this.prisma.expenses.count({ where }),
       this.prisma.expenses.findMany({
         where,
-        select: { id: true, description: true, amount: true, created_at: true, users_expenses_requested_byTousers: userName },
+        select: {
+          id: true,
+          title: true,
+          amount: true,
+          created_at: true,
+          expense_lines: { select: { description: true }, orderBy: { position: 'asc' }, take: 1 },
+          users_expenses_requested_byTousers: userName,
+        },
         orderBy: [{ created_at: 'desc' }, { id: 'desc' }],
         take: OVERVIEW_ITEMS,
       }),
@@ -252,7 +259,7 @@ export class OverviewService {
       count,
       items: rows.map((row) => ({
         id: row.id,
-        description: row.description,
+        description: row.title ?? row.expense_lines[0]?.description ?? '',
         amount: row.amount.toFixed(2),
         requestedBy: row.users_expenses_requested_byTousers ? userRef(row.users_expenses_requested_byTousers) : null,
         at: row.created_at.toISOString(),

@@ -6767,6 +6767,7 @@ export interface components {
                 id: string;
                 /** @enum {string} */
                 status: "pending" | "approved" | "rejected" | "paid" | "void";
+                title: string | null;
                 head: {
                     /** Format: uuid */
                     id: string;
@@ -6785,7 +6786,10 @@ export interface components {
                     name: string;
                 } | null;
                 description: string;
+                lines: number;
                 amount: string;
+                /** @enum {string} */
+                method: "cash" | "bank" | "cheque" | "mobile";
                 /** Format: date */
                 spentOn: string;
                 voucherNo: string | null;
@@ -6830,26 +6834,17 @@ export interface components {
             id: string;
             /** @enum {string} */
             status: "pending" | "approved" | "rejected" | "paid" | "void";
-            head: {
-                /** Format: uuid */
-                id: string;
-                nameBn: string;
-                nameEn: string | null;
-            };
+            title: string | null;
             fund: {
                 /** Format: uuid */
                 id: string;
                 nameBn: string;
                 nameEn: string | null;
             };
-            vendor: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                phone: string | null;
-            } | null;
             description: string;
             amount: string;
+            /** @enum {string} */
+            method: "cash" | "bank" | "cheque" | "mobile";
             /** Format: date */
             spentOn: string;
             voucherNo: string | null;
@@ -6860,6 +6855,25 @@ export interface components {
             } | null;
             /** Format: date-time */
             createdAt: string;
+            lines: {
+                /** Format: uuid */
+                id: string;
+                head: {
+                    /** Format: uuid */
+                    id: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                };
+                vendor: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    phone: string | null;
+                } | null;
+                description: string;
+                amount: string;
+            }[];
+            methodRef: string | null;
             approved: {
                 by: string | null;
                 /** Format: date-time */
@@ -6900,13 +6914,19 @@ export interface components {
                 cash: string;
                 bank: string;
             } | null;
-            budget: {
+            budgets: {
+                head: {
+                    /** Format: uuid */
+                    id: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                };
                 year: string;
                 amount: string;
                 used: string;
                 remaining: string;
                 over: boolean;
-            } | null;
+            }[];
             header: {
                 nameBn: string;
                 nameEn: string | null;
@@ -6925,14 +6945,20 @@ export interface components {
             };
         };
         ExpenseInputDto: {
-            /** Format: uuid */
-            headId: string;
+            title?: string | null;
             fundId?: string | null;
-            vendorId?: string | null;
-            description: string;
-            amount: string;
+            /** @enum {string} */
+            method: "cash" | "bank" | "cheque" | "mobile";
+            methodRef?: string | null;
             /** Format: date */
             spentOn: string;
+            lines: {
+                /** Format: uuid */
+                headId: string;
+                vendorId?: string | null;
+                description: string;
+                amount: string;
+            }[];
         };
         ExpenseReasonDto: {
             reason: string;
@@ -7221,6 +7247,8 @@ export interface components {
                 items: {
                     /** Format: uuid */
                     id: string;
+                    /** Format: uuid */
+                    lineId: string;
                     voucherNo: string;
                     /** Format: date-time */
                     at: string;

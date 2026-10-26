@@ -45,7 +45,7 @@ function Decide({ expense }: { expense: ExpenseDetail }) {
     <Card className="grid gap-3">
       <h2 className="text-[15px]">{t("decideTitle")}</h2>
       <p className="text-[13.5px] text-muted-foreground">{t("decideHint")}</p>
-      {expense.budget?.over ? <Note tone="warn">{t("overBudget")}</Note> : null}
+      {expense.budgets.some((budget) => budget.over) ? <Note tone="warn">{t("overBudget")}</Note> : null}
       <div>
         <Button type="button" disabled={busy} onClick={() => void run(() => api.POST("/expenses/{id}/approve", path), t("approvedNow"))}>
           <Check aria-hidden />
@@ -77,8 +77,8 @@ function Pay({ expense }: { expense: ExpenseDetail }) {
   const locale = useLocale() as Locale;
   const { status, run } = useSubmit();
   const balance = expense.fundBalance ?? { cash: "0.00", bank: "0.00" };
-  const cashEnough = compareMoney(balance.cash, expense.amount) >= 0 || compareMoney(balance.bank, expense.amount) < 0;
-  const [paidBy, setPaidBy] = useState<MethodValue>({ method: cashEnough ? "cash" : "bank", methodRef: "" });
+  // The method chosen with the request; the cheque number or wallet reference may come now.
+  const [paidBy, setPaidBy] = useState<MethodValue>({ method: expense.method, methodRef: expense.methodRef ?? "" });
   const account = accountOfMethod(paidBy.method);
   const short = compareMoney(balance[account], expense.amount) < 0;
 

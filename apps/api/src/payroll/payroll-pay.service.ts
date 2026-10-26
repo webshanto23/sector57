@@ -45,12 +45,12 @@ export class PayrollPayService {
       for (const [fundId, amount] of byFund) {
         if (isZeroMoney(amount)) continue;
         const expense = await this.expenses.bookPaidIn(tx, actor, {
-          headId: input.headId,
+          title: null,
           fundId,
-          vendorId: null,
-          description: `বেতন ${month}`,
-          amount,
+          method: paidBy.method,
+          methodRef: paidBy.ref,
           spentOn: today,
+          lines: [{ headId: input.headId, vendorId: null, description: `বেতন ${month}`, amount }],
           paidBy,
           requestedBy: run.prepared_by,
           approvedBy: run.approved_by,

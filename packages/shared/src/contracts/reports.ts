@@ -51,8 +51,10 @@ const donationLine = receiptLine.omit({ unit: true }).extend({
   purpose: z.string().nullable(),
 });
 
+/** One line of a paid expense: an expense with several lines shows one row per line. */
 const expenseLine = z.object({
   id: z.uuid(),
+  lineId: z.uuid(),
   voucherNo: z.string(),
   at: z.iso.datetime({ offset: true }),
   head: nameRef,

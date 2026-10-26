@@ -20,7 +20,7 @@ export async function ExpensesTable({ rows, locale, empty, showFund }: { rows: E
       header: t("expense"),
       cell: (row) => (
         <Link href={`/dashboard/expenses/${row.id}`} className="grid font-semibold text-fg">
-          <span className={row.status === "void" ? "line-through" : ""}>{row.description}</span>
+          <span className={row.status === "void" ? "line-through" : ""}>{row.title ?? row.description}</span>
           <span className="text-[12px] font-normal text-muted-foreground">
             {formatDate(row.spentOn, locale, "short")}
             {row.voucherNo ? <span className="font-mono"> · {row.voucherNo}</span> : null}
@@ -28,7 +28,7 @@ export async function ExpensesTable({ rows, locale, empty, showFund }: { rows: E
         </Link>
       ),
     },
-    { key: "head", header: t("head"), cell: (row) => pick(row.head.nameBn, row.head.nameEn, locale) },
+    { key: "head", header: t("head"), cell: (row) => `${pick(row.head.nameBn, row.head.nameEn, locale)}${row.lines > 1 ? ` +${row.lines - 1}` : ""}` },
     ...(showFund ? [{ key: "fund", header: t("fund"), cell: (row: ExpenseRow) => pick(row.fund.nameBn, row.fund.nameEn, locale) }] : []),
     { key: "vendor", header: t("vendor"), cell: (row) => row.vendor?.name ?? "—" },
     {

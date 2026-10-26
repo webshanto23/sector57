@@ -44,13 +44,13 @@ export class BudgetsService {
       }),
       this.prisma.budgets.findMany({ where: { society_id: actor.societyId, fiscal_year: year.label }, select: { expense_head_id: true, amount: true } }),
       this.prisma.$queryRaw<{ head_id: string; approved: string; paid: string }[]>`
-        SELECT expense_head_id AS head_id,
-               coalesce(sum(amount) FILTER (WHERE status = 'approved'), 0)::numeric(16,2)::text AS approved,
-               coalesce(sum(amount) FILTER (WHERE status = 'paid'), 0)::numeric(16,2)::text AS paid
-        FROM expenses
-        WHERE society_id = ${actor.societyId}::uuid AND status IN ('approved', 'paid')
-          AND spent_on BETWEEN ${year.start}::date AND ${year.end}::date
-        GROUP BY expense_head_id`,
+        SELECT l.expense_head_id AS head_id,
+               coalesce(sum(l.amount) FILTER (WHERE e.status = 'approved'), 0)::numeric(16,2)::text AS approved,
+               coalesce(sum(l.amount) FILTER (WHERE e.status = 'paid'), 0)::numeric(16,2)::text AS paid
+        FROM expense_lines l JOIN expenses e ON e.id = l.expense_id
+        WHERE e.society_id = ${actor.societyId}::uuid AND e.status IN ('approved', 'paid')
+          AND e.spent_on BETWEEN ${year.start}::date AND ${year.end}::date
+        GROUP BY l.expense_head_id`,
       this.prisma.budgets.findMany({ where: { society_id: actor.societyId }, distinct: ['fiscal_year'], select: { fiscal_year: true } }),
     ]);
     const budgetBy = new Map(budgets.map((row) => [row.expense_head_id, row.amount.toFixed(2)]));

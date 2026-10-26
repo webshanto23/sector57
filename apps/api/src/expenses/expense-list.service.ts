@@ -19,7 +19,7 @@ export class ExpenseListService {
   async list(actor: Actor, query: ExpenseListQuery): Promise<ExpenseList> {
     const { page, pageSize } = query;
     const where = Prisma.join(this.filters(actor, query), ' AND ');
-    const from = Prisma.sql`expenses e LEFT JOIN vendors v ON v.id = e.vendor_id`;
+    const from = Prisma.sql`expenses e`;
     const [ids, [figures], summary] = await Promise.all([
       this.prisma.$queryRaw<{ id: string }[]>`
         SELECT e.id FROM ${from} WHERE ${where}
@@ -88,16 +88,18 @@ export class ExpenseListService {
   private filters(actor: Actor, query: ExpenseListQuery): Prisma.Sql[] {
     const and = [Prisma.sql`e.society_id = ${actor.societyId}::uuid`];
     if (query.status) and.push(Prisma.sql`e.status = ${query.status}`);
-    if (query.headId) and.push(Prisma.sql`e.expense_head_id = ${query.headId}::uuid`);
+    if (query.headId) and.push(Prisma.sql`EXISTS (SELECT 1 FROM expense_lines l WHERE l.expense_id = e.id AND l.expense_head_id = ${query.headId}::uuid)`);
     if (query.fundId) and.push(Prisma.sql`e.fund_id = ${query.fundId}::uuid`);
-    if (query.vendorId) and.push(Prisma.sql`e.vendor_id = ${query.vendorId}::uuid`);
+    if (query.vendorId) and.push(Prisma.sql`EXISTS (SELECT 1 FROM expense_lines l WHERE l.expense_id = e.id AND l.vendor_id = ${query.vendorId}::uuid)`);
     if (query.from) and.push(Prisma.sql`e.spent_on >= ${query.from}::date`);
     if (query.to) and.push(Prisma.sql`e.spent_on <= ${query.to}::date`);
     if (query.requestedBy === 'me') and.push(Prisma.sql`e.requested_by = ${actor.userId}::uuid`);
     if (query.q) {
       const terms = digitVariants(query.q).map((term) => {
         const like = likeTerm(term);
-        return Prisma.sql`(e.description ILIKE ${like} OR e.voucher_no ILIKE ${like} OR v.name ILIKE ${like})`;
+        return Prisma.sql`(e.title ILIKE ${like} OR e.voucher_no ILIKE ${like} OR EXISTS (
+          SELECT 1 FROM expense_lines l LEFT JOIN vendors v ON v.id = l.vendor_id
+          WHERE l.expense_id = e.id AND (l.description ILIKE ${like} OR v.name ILIKE ${like})))`;
       });
       and.push(Prisma.sql`(${Prisma.join(terms, ' OR ')})`);
     }

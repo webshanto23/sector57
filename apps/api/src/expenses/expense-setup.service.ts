@@ -117,19 +117,19 @@ export class ExpenseSetupService {
   private async heads(societyId: string, id?: string): Promise<ExpenseHead[]> {
     const rows = await this.prisma.expense_heads.findMany({
       where: { society_id: societyId, ...(id ? { id } : {}) },
-      select: { id: true, name_bn: true, name_en: true, archived_at: true, _count: { select: { expenses: true } } },
+      select: { id: true, name_bn: true, name_en: true, archived_at: true, _count: { select: { expense_lines: true } } },
       orderBy: [{ archived_at: { sort: 'desc', nulls: 'first' } }, { name_bn: 'asc' }],
     });
-    return rows.map((row) => ({ id: row.id, nameBn: row.name_bn, nameEn: row.name_en, archived: row.archived_at !== null, used: row._count.expenses }));
+    return rows.map((row) => ({ id: row.id, nameBn: row.name_bn, nameEn: row.name_en, archived: row.archived_at !== null, used: row._count.expense_lines }));
   }
 
   private async vendors(societyId: string, id?: string): Promise<Vendor[]> {
     const rows = await this.prisma.vendors.findMany({
       where: { society_id: societyId, ...(id ? { id } : {}) },
-      select: { id: true, name: true, phone: true, service: true, archived_at: true, _count: { select: { expenses: true } } },
+      select: { id: true, name: true, phone: true, service: true, archived_at: true, _count: { select: { expense_lines: true } } },
       orderBy: [{ archived_at: { sort: 'desc', nulls: 'first' } }, { name: 'asc' }, { id: 'asc' }],
     });
-    return rows.map((row) => ({ id: row.id, name: row.name, phone: row.phone, service: row.service, archived: row.archived_at !== null, used: row._count.expenses }));
+    return rows.map((row) => ({ id: row.id, name: row.name, phone: row.phone, service: row.service, archived: row.archived_at !== null, used: row._count.expense_lines }));
   }
 
   private async head(societyId: string, id: string): Promise<ExpenseHead> {
