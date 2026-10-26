@@ -31,7 +31,7 @@ export function ConfirmButton({
 
   if (!asking) {
     return (
-      <Button type="button" variant={destructive ? "destructive" : "outline"} disabled={disabled} onClick={() => setAsking(true)}>
+      <Button type="button" variant={destructive ? "destructive" : "outline"} disabled={disabled} onClick={() => setAsking(true)} className="whitespace-normal text-left">
         {Icon ? <Icon aria-hidden /> : null}
         {label}
       </Button>

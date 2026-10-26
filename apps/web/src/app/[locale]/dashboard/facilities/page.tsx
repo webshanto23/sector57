@@ -81,7 +81,7 @@ export default async function FacilitiesPage({ params, searchParams }: PageProps
 
       <form method="get" role="search" className="mb-3.5 flex flex-wrap items-center gap-2.5">
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} />
-        <select name="kind" defaultValue={query.kind ?? ""} aria-label={t("kindLabel")} className={`${inputClass} w-auto`}>
+        <select name="kind" defaultValue={query.kind ?? ""} aria-label={t("kindLabel")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allKinds")}</option>
           {FACILITY_KINDS.map((kind) => (
             <option key={kind} value={kind}>
@@ -89,7 +89,7 @@ export default async function FacilitiesPage({ params, searchParams }: PageProps
             </option>
           ))}
         </select>
-        <select name="state" defaultValue={query.state} aria-label={t("stateLabel")} className={`${inputClass} w-auto`}>
+        <select name="state" defaultValue={query.state} aria-label={t("stateLabel")} className={`${inputClass} sm:w-auto!`}>
           {FACILITY_STATES.map((state) => (
             <option key={state} value={state}>
               {t(`state.${state}`)}

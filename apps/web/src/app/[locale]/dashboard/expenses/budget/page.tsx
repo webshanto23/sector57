@@ -38,7 +38,7 @@ export default async function BudgetPage({ params, searchParams }: PageProps<"/[
             <label htmlFor="budget-year" className="sr-only">
               {t("year")}
             </label>
-            <select id="budget-year" name="year" defaultValue={budget.year} className={`${inputClass} w-auto`}>
+            <select id="budget-year" name="year" defaultValue={budget.year} className={`${inputClass} sm:w-auto!`}>
               {budget.years.map((option) => (
                 <option key={option} value={option}>
                   {option}

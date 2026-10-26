@@ -70,7 +70,7 @@ export default async function StickersPage({ params, searchParams }: PageProps<"
 
       <form method="get" role="search" className="mb-3.5 flex flex-wrap items-end gap-2.5">
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("stickerSearchPlaceholder")} aria-label={t("stickerSearchLabel")} />
-        <select name="state" defaultValue={query.state ?? ""} aria-label={t("col.state")} className={`${inputClass} w-auto`}>
+        <select name="state" defaultValue={query.state ?? ""} aria-label={t("col.state")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allStates")}</option>
           {STICKER_STATES.map((state) => (
             <option key={state} value={state}>
@@ -79,7 +79,7 @@ export default async function StickersPage({ params, searchParams }: PageProps<"
           ))}
         </select>
         <Field label={t("validUntilBy")} htmlFor="sticker-valid-by">
-          <input id="sticker-valid-by" type="date" name="validUntilBy" defaultValue={query.validUntilBy ?? ""} className={`${inputClass} w-auto`} />
+          <input id="sticker-valid-by" type="date" name="validUntilBy" defaultValue={query.validUntilBy ?? ""} className={`${inputClass} sm:w-auto!`} />
         </Field>
         <Button type="submit" variant="outline">
           {t("filter")}

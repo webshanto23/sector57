@@ -87,7 +87,7 @@ export function MoveActions({ move, today }: { move: MoveDetail; today: string }
           {owes ? <Note tone="warn">{move.can.overrideDues ? t("overrideNote") : t("duesBlock")}</Note> : null}
           {move.kind === "move_out" && move.dues === null ? <Note>{t("duesHidden")}</Note> : null}
           <Field label={t(`completeDate.${move.kind}`)} htmlFor="move-complete-date">
-            <input id="move-complete-date" type="date" className={`${inputClass} w-auto`} value={date} max={today} onChange={(e) => setDate(e.target.value)} />
+            <input id="move-complete-date" type="date" className={`${inputClass} sm:w-auto!`} value={date} max={today} onChange={(e) => setDate(e.target.value)} />
           </Field>
           <div>
             <ConfirmButton

@@ -37,7 +37,7 @@ export default async function AuditPage({ params, searchParams }: PageProps<"/[l
 
   const select = (id: string, name: (typeof FILTERS)[number], label: string, all: string, values: { value: string; label: string }[]) => (
     <Field label={label} htmlFor={id}>
-      <select id={id} name={name} defaultValue={query[name] ?? ""} className={`${inputClass} w-auto max-w-[220px]`}>
+      <select id={id} name={name} defaultValue={query[name] ?? ""} className={`${inputClass} sm:w-auto! max-w-[220px]`}>
         <option value="">{all}</option>
         {values.map((option) => (
           <option key={option.value} value={option.value}>
@@ -65,10 +65,10 @@ export default async function AuditPage({ params, searchParams }: PageProps<"/[l
         {select("audit-type", "entityType", t("entityType"), t("allTypes"), options.entityTypes.map((type) => ({ value: type, label: type })))}
         {select("audit-action", "action", t("action"), t("allActions"), options.actions.map((action) => ({ value: action, label: action })))}
         <Field label={t("from")} htmlFor="audit-from">
-          <input id="audit-from" type="date" name="from" defaultValue={query.from ?? ""} className={`${inputClass} w-auto`} />
+          <input id="audit-from" type="date" name="from" defaultValue={query.from ?? ""} className={`${inputClass} sm:w-auto!`} />
         </Field>
         <Field label={t("to")} htmlFor="audit-to">
-          <input id="audit-to" type="date" name="to" defaultValue={query.to ?? ""} className={`${inputClass} w-auto`} />
+          <input id="audit-to" type="date" name="to" defaultValue={query.to ?? ""} className={`${inputClass} sm:w-auto!`} />
         </Field>
         <Button type="submit" variant="outline">
           {t("show")}

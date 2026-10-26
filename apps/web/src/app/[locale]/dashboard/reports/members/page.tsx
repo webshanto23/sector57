@@ -83,10 +83,10 @@ export default async function MembersReportPage({ params, searchParams }: PagePr
       <form method="get" className="mb-3.5 flex flex-wrap items-end gap-2.5">
         {report.location ? <input type="hidden" name="locationId" value={report.location.id} /> : null}
         <Field label={tReports("from")} htmlFor="members-from">
-          <input id="members-from" type="date" name="from" defaultValue={report.from} className={`${inputClass} w-auto`} />
+          <input id="members-from" type="date" name="from" defaultValue={report.from} className={`${inputClass} sm:w-auto!`} />
         </Field>
         <Field label={tReports("to")} htmlFor="members-to">
-          <input id="members-to" type="date" name="to" defaultValue={report.to} className={`${inputClass} w-auto`} />
+          <input id="members-to" type="date" name="to" defaultValue={report.to} className={`${inputClass} sm:w-auto!`} />
         </Field>
         <Button type="submit" variant="outline">
           {tReports("show")}

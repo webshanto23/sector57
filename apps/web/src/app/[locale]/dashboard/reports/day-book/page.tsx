@@ -143,7 +143,7 @@ export default async function DayBookPage({ params, searchParams }: PageProps<"/
         </Link>
         <form method="get" className="flex flex-wrap items-end gap-2.5">
           <Field label={t("date")} htmlFor="day-book-date">
-            <input id="day-book-date" type="date" name="date" defaultValue={book.date} max={today} className={`${inputClass} w-auto`} />
+            <input id="day-book-date" type="date" name="date" defaultValue={book.date} max={today} className={`${inputClass} sm:w-auto!`} />
           </Field>
           <Button type="submit" variant="outline">
             {tReports("show")}

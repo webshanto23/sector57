@@ -108,7 +108,7 @@ export default async function UsersPage({ params, searchParams }: PageProps<"/[l
 
       <form method="get" role="search" className="mb-3.5 flex flex-wrap items-center gap-2.5">
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} />
-        <select name="status" defaultValue={query.status ?? ""} aria-label={t("status")} className={`${inputClass} w-auto`}>
+        <select name="status" defaultValue={query.status ?? ""} aria-label={t("status")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allStatuses")}</option>
           {USER_STATUSES.map((status) => (
             <option key={status} value={status}>
@@ -116,7 +116,7 @@ export default async function UsersPage({ params, searchParams }: PageProps<"/[l
             </option>
           ))}
         </select>
-        <select name="roleId" defaultValue={query.roleId ?? ""} aria-label={t("roles")} className={`${inputClass} w-auto max-w-[220px]`}>
+        <select name="roleId" defaultValue={query.roleId ?? ""} aria-label={t("roles")} className={`${inputClass} sm:w-auto! max-w-[220px]`}>
           <option value="">{t("allRoles")}</option>
           {options.roles.map((role) => (
             <option key={role.id} value={role.id}>

@@ -86,7 +86,7 @@ export default async function IncomePage({ params, searchParams }: PageProps<"/[
 
       <form method="get" className="mb-3.5 flex flex-wrap items-end gap-2.5">
         <Field label={t("year")} htmlFor="income-year">
-          <select id="income-year" name="year" defaultValue={report.year} className={`${inputClass} w-auto`}>
+          <select id="income-year" name="year" defaultValue={report.year} className={`${inputClass} sm:w-auto!`}>
             {report.years.map((year) => (
               <option key={year} value={year}>
                 {localDigits(year, locale)}
@@ -96,7 +96,7 @@ export default async function IncomePage({ params, searchParams }: PageProps<"/[
         </Field>
         {report.funds.length > 1 ? (
           <Field label={t("fund")} htmlFor="income-fund">
-            <select id="income-fund" name="fundId" defaultValue={report.fundId ?? ""} className={`${inputClass} w-auto`}>
+            <select id="income-fund" name="fundId" defaultValue={report.fundId ?? ""} className={`${inputClass} sm:w-auto!`}>
               <option value="">{t("allFunds")}</option>
               {report.funds.map((fund) => (
                 <option key={fund.id} value={fund.id}>

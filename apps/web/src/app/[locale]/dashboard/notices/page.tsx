@@ -94,7 +94,7 @@ export default async function NoticesAdminPage({ params, searchParams }: PagePro
 
       <form method="get" role="search" className="mb-3.5 flex flex-wrap items-center gap-2.5">
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} />
-        <select name="category" defaultValue={query.category ?? ""} aria-label={t("category")} className={`${inputClass} w-auto`}>
+        <select name="category" defaultValue={query.category ?? ""} aria-label={t("category")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allCategories")}</option>
           {NOTICE_CATEGORIES.map((category) => (
             <option key={category} value={category}>
@@ -102,7 +102,7 @@ export default async function NoticesAdminPage({ params, searchParams }: PagePro
             </option>
           ))}
         </select>
-        <select name="status" defaultValue={query.status ?? ""} aria-label={t("status")} className={`${inputClass} w-auto`}>
+        <select name="status" defaultValue={query.status ?? ""} aria-label={t("status")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allStatuses")}</option>
           {NOTICE_STATUSES.map((status) => (
             <option key={status} value={status}>

@@ -81,7 +81,7 @@ export default async function ExpensesPage({ params, searchParams }: PageProps<"
 
       <form method="get" role="search" className="mb-3.5 flex flex-wrap items-end gap-2.5">
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} />
-        <select name="status" defaultValue={query.status ?? ""} aria-label={t("col.status")} className={`${inputClass} w-auto`}>
+        <select name="status" defaultValue={query.status ?? ""} aria-label={t("col.status")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allStatus")}</option>
           {EXPENSE_STATUSES.map((status) => (
             <option key={status} value={status}>
@@ -89,7 +89,7 @@ export default async function ExpensesPage({ params, searchParams }: PageProps<"
             </option>
           ))}
         </select>
-        <select name="headId" defaultValue={query.headId ?? ""} aria-label={t("col.head")} className={`${inputClass} w-auto`}>
+        <select name="headId" defaultValue={query.headId ?? ""} aria-label={t("col.head")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allHeads")}</option>
           {options.heads.map((head) => (
             <option key={head.id} value={head.id}>
@@ -98,7 +98,7 @@ export default async function ExpensesPage({ params, searchParams }: PageProps<"
           ))}
         </select>
         {showFund ? (
-          <select name="fundId" defaultValue={query.fundId ?? ""} aria-label={t("col.fund")} className={`${inputClass} w-auto`}>
+          <select name="fundId" defaultValue={query.fundId ?? ""} aria-label={t("col.fund")} className={`${inputClass} sm:w-auto!`}>
             <option value="">{t("allFunds")}</option>
             {options.funds.map((fund) => (
               <option key={fund.id} value={fund.id}>
@@ -108,7 +108,7 @@ export default async function ExpensesPage({ params, searchParams }: PageProps<"
           </select>
         ) : null}
         {options.vendors.length ? (
-          <select name="vendorId" defaultValue={query.vendorId ?? ""} aria-label={t("col.vendor")} className={`${inputClass} w-auto`}>
+          <select name="vendorId" defaultValue={query.vendorId ?? ""} aria-label={t("col.vendor")} className={`${inputClass} sm:w-auto!`}>
             <option value="">{t("allVendors")}</option>
             {options.vendors.map((vendor) => (
               <option key={vendor.id} value={vendor.id}>
@@ -118,10 +118,10 @@ export default async function ExpensesPage({ params, searchParams }: PageProps<"
           </select>
         ) : null}
         <Field label={t("from")} htmlFor="from">
-          <input id="from" type="date" name="from" defaultValue={query.from ?? ""} className={`${inputClass} w-auto`} />
+          <input id="from" type="date" name="from" defaultValue={query.from ?? ""} className={`${inputClass} sm:w-auto!`} />
         </Field>
         <Field label={t("to")} htmlFor="to">
-          <input id="to" type="date" name="to" defaultValue={query.to ?? ""} className={`${inputClass} w-auto`} />
+          <input id="to" type="date" name="to" defaultValue={query.to ?? ""} className={`${inputClass} sm:w-auto!`} />
         </Field>
         {canCreate ? (
           <label className="flex items-center gap-2 py-2 text-[13.5px]">

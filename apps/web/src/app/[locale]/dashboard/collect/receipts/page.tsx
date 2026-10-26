@@ -67,12 +67,12 @@ export default async function ReceiptsPage({ params, searchParams }: PageProps<"
         {(["unitId", "personId", "invoiceId"] as const).map((key) => (query[key] ? <input key={key} type="hidden" name={key} value={query[key]} /> : null))}
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} />
         <Field label={t("from")} htmlFor="from">
-          <input id="from" type="date" name="from" defaultValue={query.from ?? ""} className={`${inputClass} w-auto`} />
+          <input id="from" type="date" name="from" defaultValue={query.from ?? ""} className={`${inputClass} sm:w-auto!`} />
         </Field>
         <Field label={t("to")} htmlFor="to">
-          <input id="to" type="date" name="to" defaultValue={query.to ?? ""} className={`${inputClass} w-auto`} />
+          <input id="to" type="date" name="to" defaultValue={query.to ?? ""} className={`${inputClass} sm:w-auto!`} />
         </Field>
-        <select name="status" defaultValue={query.status ?? ""} aria-label={t("col.status")} className={`${inputClass} w-auto`}>
+        <select name="status" defaultValue={query.status ?? ""} aria-label={t("col.status")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allStatus")}</option>
           <option value="valid">{t("valid")}</option>
           <option value="void">{t("void")}</option>

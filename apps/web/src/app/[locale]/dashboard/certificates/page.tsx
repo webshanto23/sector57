@@ -78,7 +78,7 @@ export default async function CertificatesPage({ params, searchParams }: PagePro
         {query.unitId ? <input type="hidden" name="unitId" value={query.unitId} /> : null}
         {query.personId ? <input type="hidden" name="personId" value={query.personId} /> : null}
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} />
-        <select name="type" defaultValue={query.type ?? ""} aria-label={t("typeLabel")} className={`${inputClass} w-auto`}>
+        <select name="type" defaultValue={query.type ?? ""} aria-label={t("typeLabel")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allTypes")}</option>
           {CERTIFICATE_TYPES.map((type) => (
             <option key={type} value={type}>
@@ -86,7 +86,7 @@ export default async function CertificatesPage({ params, searchParams }: PagePro
             </option>
           ))}
         </select>
-        <select name="status" defaultValue={query.status ?? ""} aria-label={t("statusLabel")} className={`${inputClass} w-auto`}>
+        <select name="status" defaultValue={query.status ?? ""} aria-label={t("statusLabel")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allStatuses")}</option>
           {CERTIFICATE_STATUSES.map((status) => (
             <option key={status} value={status}>

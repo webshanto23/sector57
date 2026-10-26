@@ -29,7 +29,7 @@ export default async function DashboardLayout({ children, params }: LayoutProps<
   return (
     <>
       <SiteHeader brand={brand} wide actions={<UserMenu me={me} locale={locale} />} />
-      <div className="mx-auto grid w-full max-w-[1440px] flex-1 min-[861px]:grid-cols-[68px_minmax(0,1fr)] min-[1181px]:grid-cols-[248px_minmax(0,1fr)]">
+      <div className="mx-auto grid w-full max-w-[1440px] flex-1 content-start min-[861px]:grid-cols-[68px_minmax(0,1fr)] min-[1181px]:grid-cols-[248px_minmax(0,1fr)]">
         <DashboardSidebar visible={visibleNavKeys(me.access)} />
         <main id="main" className="min-w-0 px-4 pt-5 pb-10">
           {children}

@@ -77,7 +77,7 @@ export default async function LedgerPage({ params, searchParams }: PageProps<"/[
       <form method="get" className="mb-3.5 flex flex-wrap items-end gap-2.5">
         {manyFunds ? (
           <Field label={t("fund")} htmlFor="ledger-fund">
-            <select id="ledger-fund" name="fundId" defaultValue={statement.fundId ?? ""} className={`${inputClass} w-auto`}>
+            <select id="ledger-fund" name="fundId" defaultValue={statement.fundId ?? ""} className={`${inputClass} sm:w-auto!`}>
               <option value="">{t("allFunds")}</option>
               {statement.funds.map((fund) => (
                 <option key={fund.id} value={fund.id}>
@@ -89,7 +89,7 @@ export default async function LedgerPage({ params, searchParams }: PageProps<"/[
           </Field>
         ) : null}
         <Field label={t("account")} htmlFor="ledger-account">
-          <select id="ledger-account" name="account" defaultValue={statement.account ?? ""} className={`${inputClass} w-auto`}>
+          <select id="ledger-account" name="account" defaultValue={statement.account ?? ""} className={`${inputClass} sm:w-auto!`}>
             <option value="">{t("bothAccounts")}</option>
             {LEDGER_ACCOUNTS.map((account) => (
               <option key={account} value={account}>
@@ -99,10 +99,10 @@ export default async function LedgerPage({ params, searchParams }: PageProps<"/[
           </select>
         </Field>
         <Field label={t("from")} htmlFor="ledger-from">
-          <input id="ledger-from" type="date" name="from" defaultValue={statement.from} className={`${inputClass} w-auto`} />
+          <input id="ledger-from" type="date" name="from" defaultValue={statement.from} className={`${inputClass} sm:w-auto!`} />
         </Field>
         <Field label={t("to")} htmlFor="ledger-to">
-          <input id="ledger-to" type="date" name="to" defaultValue={statement.to} className={`${inputClass} w-auto`} />
+          <input id="ledger-to" type="date" name="to" defaultValue={statement.to} className={`${inputClass} sm:w-auto!`} />
         </Field>
         <Button type="submit" variant="outline">
           {t("show")}

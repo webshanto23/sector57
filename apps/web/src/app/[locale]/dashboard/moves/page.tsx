@@ -79,7 +79,7 @@ export default async function MovesPage({ params, searchParams }: PageProps<"/[l
       <form method="get" role="search" className="mb-3.5 flex flex-wrap items-center gap-2.5">
         {query.areaId ? <input type="hidden" name="areaId" value={query.areaId} /> : null}
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} />
-        <select name="kind" defaultValue={query.kind ?? ""} aria-label={t("col.kind")} className={`${inputClass} w-auto`}>
+        <select name="kind" defaultValue={query.kind ?? ""} aria-label={t("col.kind")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allKinds")}</option>
           {MOVE_KINDS.map((kind) => (
             <option key={kind} value={kind}>
@@ -87,7 +87,7 @@ export default async function MovesPage({ params, searchParams }: PageProps<"/[l
             </option>
           ))}
         </select>
-        <select name="status" defaultValue={query.status ?? ""} aria-label={t("col.status")} className={`${inputClass} w-auto`}>
+        <select name="status" defaultValue={query.status ?? ""} aria-label={t("col.status")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allStatuses")}</option>
           {MOVE_STATUSES.map((status) => (
             <option key={status} value={status}>

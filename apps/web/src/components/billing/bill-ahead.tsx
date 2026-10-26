@@ -58,7 +58,7 @@ export function BillAhead({ unitId, min, max }: { unitId: string; min: string; m
             <input
               id={`ahead-${unitId}`}
               type="month"
-              className={`${inputClass} w-auto`}
+              className={`${inputClass} sm:w-auto!`}
               value={month}
               min={min}
               max={max}

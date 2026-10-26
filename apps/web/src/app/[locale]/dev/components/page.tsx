@@ -158,7 +158,7 @@ export default async function ComponentsPage({ params }: PageProps<"/[locale]/de
         <h2>{L("টেবিল (ফোনে কার্ড)", "Table (cards on phones)")}</h2>
         <div className="flex flex-wrap gap-2">
           <SearchInput placeholder={L("ইনভয়েস বা ইউনিট খুঁজুন", "Search invoice or unit")} aria-label={L("খুঁজুন", "Search")} />
-          <select className={`${inputClass} w-auto`} aria-label={L("অবস্থা", "Status")}>
+          <select className={`${inputClass} sm:w-auto!`} aria-label={L("অবস্থা", "Status")}>
             <option>{L("সব অবস্থা", "All status")}</option>
           </select>
         </div>

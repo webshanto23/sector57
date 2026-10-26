@@ -123,7 +123,7 @@ export default async function AssetsPage({ params, searchParams }: PageProps<"/[
       <form method="get" role="search" className="mb-3.5 flex flex-wrap items-center gap-2.5">
         {query.areaId ? <input type="hidden" name="areaId" value={query.areaId} /> : null}
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} />
-        <select name="facilityId" defaultValue={query.facilityId ?? ""} aria-label={t("facility")} className={`${inputClass} w-auto`}>
+        <select name="facilityId" defaultValue={query.facilityId ?? ""} aria-label={t("facility")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allFacilities")}</option>
           {options.facilities.map((facility) => (
             <option key={facility.id} value={facility.id}>
@@ -131,7 +131,7 @@ export default async function AssetsPage({ params, searchParams }: PageProps<"/[
             </option>
           ))}
         </select>
-        <select name="category" defaultValue={query.category ?? ""} aria-label={t("category")} className={`${inputClass} w-auto`}>
+        <select name="category" defaultValue={query.category ?? ""} aria-label={t("category")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allCategories")}</option>
           {list.categories.map((category) => (
             <option key={category} value={category}>
@@ -139,7 +139,7 @@ export default async function AssetsPage({ params, searchParams }: PageProps<"/[
             </option>
           ))}
         </select>
-        <select name="state" defaultValue={query.state} aria-label={t("stateLabel")} className={`${inputClass} w-auto`}>
+        <select name="state" defaultValue={query.state} aria-label={t("stateLabel")} className={`${inputClass} sm:w-auto!`}>
           {ASSET_STATES.map((state) => (
             <option key={state} value={state}>
               {t(`state.${state}`)}

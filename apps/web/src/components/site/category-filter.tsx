@@ -24,7 +24,7 @@ export function CategoryFilter({ value }: { value?: NoticeCategory | undefined }
         id="notice-category"
         name="category"
         defaultValue={value ?? ""}
-        className={`${inputClass} w-auto`}
+        className={`${inputClass} sm:w-auto!`}
         onChange={(event) => {
           const category = event.currentTarget.value;
           router.replace(category ? { pathname, query: { category } } : pathname);

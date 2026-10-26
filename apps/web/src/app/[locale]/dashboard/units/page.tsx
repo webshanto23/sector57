@@ -129,7 +129,7 @@ export default async function UnitsPage({ params, searchParams }: PageProps<"/[l
       <form method="get" role="search" className="mb-3.5 flex flex-wrap items-center gap-2.5">
         {query.areaId ? <input type="hidden" name="areaId" value={query.areaId} /> : null}
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={tUnits("searchPlaceholder")} aria-label={tUnits("searchLabel")} />
-        <select name="unitType" defaultValue={query.unitType ?? ""} aria-label={t("unitTypeLabel")} className={`${inputClass} w-auto`}>
+        <select name="unitType" defaultValue={query.unitType ?? ""} aria-label={t("unitTypeLabel")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{tUnits("allTypes")}</option>
           {UNIT_TYPES.map((type) => (
             <option key={type} value={type}>
@@ -137,7 +137,7 @@ export default async function UnitsPage({ params, searchParams }: PageProps<"/[l
             </option>
           ))}
         </select>
-        <select name="occupancy" defaultValue={query.occupancy ?? ""} aria-label={t("occupancyLabel")} className={`${inputClass} w-auto`}>
+        <select name="occupancy" defaultValue={query.occupancy ?? ""} aria-label={t("occupancyLabel")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{tUnits("allOccupancy")}</option>
           {OCCUPANCIES.map((value) => (
             <option key={value} value={value}>
