@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/dashboar
   const { id } = await params;
   await requirePermission("expenses");
   const expense = await getExpense(id);
-  return expense ? { title: expense.voucherNo ?? expense.description } : {};
+  return expense ? { title: expense.voucherNo ?? expense.title ?? expense.description } : {};
 }
 
 /** One expense: what it is for, every step so far, its vouchers, the next step and the printable voucher. */
@@ -52,7 +52,7 @@ export default async function ExpensePage({ params }: PageProps<"/[locale]/dashb
   return (
     <>
       <PageHeader
-        title={expense.description}
+        title={expense.title ?? expense.description}
         sub={
           <span className="inline-flex flex-wrap items-center gap-2">
             {expense.voucherNo ? <span className="font-mono">{expense.voucherNo}</span> : null}
@@ -76,22 +76,39 @@ export default async function ExpensePage({ params }: PageProps<"/[locale]/dashb
               <span className="num text-2xl font-bold">{formatTaka(expense.amount, locale)}</span>
             </div>
             <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-[13.5px]">
-              <dt className="text-muted-foreground">{t("col.head")}</dt>
-              <dd>{pick(expense.head.nameBn, expense.head.nameEn, locale)}</dd>
               <dt className="text-muted-foreground">{t("col.fund")}</dt>
               <dd>{pick(expense.fund.nameBn, expense.fund.nameEn, locale)}</dd>
-              <dt className="text-muted-foreground">{t("col.vendor")}</dt>
-              <dd>{expense.vendor ? [expense.vendor.name, expense.vendor.phone].filter(Boolean).join(" · ") : "—"}</dd>
+              {expense.paid ? null : (
+                <>
+                  <dt className="text-muted-foreground">{t("detail.method")}</dt>
+                  <dd>{[tMethod(expense.method), expense.methodRef].filter(Boolean).join(" · ")}</dd>
+                </>
+              )}
             </dl>
-            {expense.budget ? (
-              <p className={`num text-[13px] ${expense.budget.over ? "text-bad" : "text-muted-foreground"}`}>
-                {t(expense.budget.over ? "detail.budgetOver" : "detail.budget", {
-                  year: expense.budget.year,
-                  amount: formatTaka(expense.budget.amount, locale),
-                  remaining: formatTaka(expense.budget.remaining.replace(/^-/, ""), locale),
+            <ul className="grid divide-y divide-border border-y border-border text-[13.5px]">
+              {expense.lines.map((line) => (
+                <li key={line.id} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 py-2">
+                  <span className="grid min-w-0">
+                    <span className="font-semibold">{line.description}</span>
+                    <span className="text-[12.5px] text-muted-foreground">
+                      {pick(line.head.nameBn, line.head.nameEn, locale)}
+                      {line.vendor ? ` · ${[line.vendor.name, line.vendor.phone].filter(Boolean).join(" · ")}` : ""}
+                    </span>
+                  </span>
+                  <span className="num">{formatTaka(line.amount, locale)}</span>
+                </li>
+              ))}
+            </ul>
+            {expense.budgets.map((budget) => (
+              <p key={budget.head.id} className={`num text-[13px] ${budget.over ? "text-bad" : "text-muted-foreground"}`}>
+                {pick(budget.head.nameBn, budget.head.nameEn, locale)}:{" "}
+                {t(budget.over ? "detail.budgetOver" : "detail.budget", {
+                  year: budget.year,
+                  amount: formatTaka(budget.amount, locale),
+                  remaining: formatTaka(budget.remaining.replace(/^-/, ""), locale),
                 })}
               </p>
-            ) : null}
+            ))}
           </Card>
 
           <Card className="grid gap-2">
@@ -115,8 +132,8 @@ export default async function ExpensePage({ params }: PageProps<"/[locale]/dashb
               <VoucherPrint expense={expense} />
             </Card>
           ) : null}
-          {canAnywhere(me.access, "budgets") && expense.budget ? (
-            <Link href={{ pathname: "/dashboard/expenses/budget", query: { year: expense.budget.year } }} className="text-[13.5px] font-semibold text-primary">
+          {canAnywhere(me.access, "budgets") && expense.budgets[0] ? (
+            <Link href={{ pathname: "/dashboard/expenses/budget", query: { year: expense.budgets[0].year } }} className="text-[13.5px] font-semibold text-primary">
               {t("detail.openBudget")}
             </Link>
           ) : null}

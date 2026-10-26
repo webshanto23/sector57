@@ -1976,7 +1976,15 @@
       "saving": "Saving…",
       "cancel": "Cancel",
       "badAmount": "Type an amount above zero with at most two decimals.",
-      "noHeads": "There are no expense heads yet. Someone with \"Heads and vendors\" access adds them first."
+      "noHeads": "There are no expense heads yet. Someone with \"Heads and vendors\" access adds them first.",
+      "lineLabel": "Item {n}",
+      "removeLine": "Remove item {n}",
+      "remove": "Remove",
+      "addLine": "Add more",
+      "recordTitle": "Title (optional)",
+      "recordTitleHint": "e.g. Monthly purchases",
+      "refLater": "The cheque number or wallet reference can also be added when it is paid.",
+      "total": "{count, plural, one {Total for # item} other {Total for # items}}"
     },
     "detail": {
       "back": "All expenses",
@@ -1992,7 +2000,8 @@
       "waiting": "Waiting for someone else to approve it.",
       "budget": "Budget {year}: {amount}, {remaining} left",
       "budgetOver": "Budget {year}: {amount}, over by {remaining}",
-      "openBudget": "Open the budget"
+      "openBudget": "Open the budget",
+      "method": "To be paid by"
     },
     "actions": {
       "edit": "Edit request",
@@ -2042,7 +2051,9 @@
       "prepared": "Prepared by",
       "approvedBy": "Approved by",
       "received": "Receiver's signature",
-      "void": "Void"
+      "void": "Void",
+      "titleRow": "Title",
+      "amount": "Amount"
     },
     "budget": {
       "title": "Budget",

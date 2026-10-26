@@ -21,10 +21,8 @@ export function VoucherPrint({ expense }: { expense: ExpenseDetail }) {
   if (!expense.paid || !expense.voucherNo) return null;
 
   const rows: [string, string][] = [
-    [t("head"), pick(expense.head.nameBn, expense.head.nameEn, locale)],
+    ...(expense.title ? [[t("titleRow"), expense.title] as [string, string]] : []),
     [t("fund"), `${pick(expense.fund.nameBn, expense.fund.nameEn, locale)} · ${paidFrom(tAccount(expense.paid.account), tMethod(expense.paid.method), expense.paid.methodRef, expense.paid.method === "cash")}`],
-    [t("paidTo"), expense.vendor ? [expense.vendor.name, expense.vendor.phone].filter(Boolean).join(" · ") : "—"],
-    [t("description"), expense.description],
     [t("spentOn"), formatDate(expense.spentOn, locale)],
   ];
 
@@ -52,6 +50,26 @@ export function VoucherPrint({ expense }: { expense: ExpenseDetail }) {
                 </div>
               ))}
             </dl>
+            <table className="w-full border-collapse text-[12.5px]">
+              <thead>
+                <tr className="border-b border-line text-left text-muted-foreground">
+                  <th className="py-1 pr-2 font-normal">{t("description")}</th>
+                  <th className="py-1 pr-2 font-normal">{t("head")}</th>
+                  <th className="py-1 pr-2 font-normal">{t("paidTo")}</th>
+                  <th className="py-1 text-right font-normal">{t("amount")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {expense.lines.map((line) => (
+                  <tr key={line.id} className="border-b border-dashed border-line align-top">
+                    <td className="py-1 pr-2">{line.description}</td>
+                    <td className="py-1 pr-2">{pick(line.head.nameBn, line.head.nameEn, locale)}</td>
+                    <td className="py-1 pr-2">{line.vendor ? [line.vendor.name, line.vendor.phone].filter(Boolean).join(" · ") : "—"}</td>
+                    <td className="num py-1 text-right whitespace-nowrap">{formatTaka(line.amount, locale)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
             <div className="flex items-center justify-between gap-3 border-y border-dashed border-line py-2 font-semibold">
               <span className="min-w-0">{t("words", { words: amountInWords(expense.amount, locale) })}</span>
               <span className="num text-lg whitespace-nowrap">{formatTaka(expense.amount, locale)}</span>

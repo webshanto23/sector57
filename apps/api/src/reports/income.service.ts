@@ -81,12 +81,13 @@ export class IncomeService {
     const [donations] = await this.prisma.$queryRaw<{ amount: string }[]>`
       SELECT coalesce(sum(${signedIn} * le.amount), 0)::numeric(16,2)::text AS amount
       FROM ledger_entries le WHERE ${inYear} AND le.source_type = 'donation'`;
-    // An expense's `out` row spends; its void's `in` row takes that back.
+    // An expense's `out` row spends; its void's `in` row takes that back. The row is for the
+    // expense's total, so each line counts its own amount under its head.
     const spent = await this.prisma.$queryRaw<{ head_id: string; spent: string }[]>`
-      SELECT e.expense_head_id AS head_id, sum(-${signedIn} * le.amount)::numeric(16,2)::text AS spent
-      FROM ledger_entries le JOIN expenses e ON e.id = le.source_id
+      SELECT l.expense_head_id AS head_id, sum(-${signedIn} * l.amount)::numeric(16,2)::text AS spent
+      FROM ledger_entries le JOIN expense_lines l ON l.expense_id = le.source_id
       WHERE ${inYear} AND le.source_type = 'expense'
-      GROUP BY e.expense_head_id`;
+      GROUP BY l.expense_head_id`;
     // Budgets are per society, not per fund: shown only for the whole society.
     const showBudgets = canBudgets && !query.fundId;
     const budgets = showBudgets

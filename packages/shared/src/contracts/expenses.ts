@@ -97,17 +97,37 @@ export type ExpenseOptions = z.infer<typeof expenseOptionsSchema>;
 // Expenses
 // ---------------------------------------------------------------------------
 
-/** `POST /expenses`, `PATCH /expenses/:id` (only while pending). Without `fundId` the default fund pays. */
-export const expenseInputSchema = z.object({
+/** Most lines one expense may hold. */
+export const MAX_EXPENSE_LINES = 20;
+
+/** One item of an expense: its head, vendor (each line may differ), what it was for and the amount. */
+export const expenseLineInputSchema = z.object({
   headId: z.uuid(),
-  fundId: z.uuid().nullish(),
   vendorId: z.uuid().nullish(),
   description: text(500),
   amount: moneySchema,
+});
+export type ExpenseLineInputValues = z.input<typeof expenseLineInputSchema>;
+export type ExpenseLineInput = z.output<typeof expenseLineInputSchema>;
+
+/**
+ * `POST /expenses`, `PATCH /expenses/:id` (only while pending). One date, one fund (the default
+ * one without `fundId`) and one payment method for the whole record; the amount is the sum of
+ * the lines. A cheque number or wallet reference may wait until it is paid.
+ */
+export const expenseInputSchema = z.object({
+  title: optionalText(200),
+  fundId: z.uuid().nullish(),
+  method: paymentMethodSchema,
+  methodRef: paymentRefSchema,
   spentOn: isoDay,
+  lines: z.array(expenseLineInputSchema).min(1).max(MAX_EXPENSE_LINES),
 });
 export type ExpenseInputValues = z.input<typeof expenseInputSchema>;
 export type ExpenseInput = z.output<typeof expenseInputSchema>;
+
+/** The record's total: the sum of its lines. */
+export const expenseTotal = (lines: readonly { amount: string }[]): string => addMoney('0', ...lines.map((line) => line.amount));
 
 /** `POST /expenses/:id/reject` and `/void`. */
 export const expenseReasonSchema = z.object({ reason: text(300) });
@@ -120,14 +140,18 @@ export type ExpensePay = z.infer<typeof expensePaySchema>;
 const userRef = z.object({ id: z.uuid(), name: z.string() });
 const nameRef = z.object({ id: z.uuid(), nameBn: z.string(), nameEn: z.string().nullable() });
 
+/** A list row. `head`, `vendor` and `description` are the first line's; `lines` counts them all. */
 export const expenseRowSchema = z.object({
   id: z.uuid(),
   status: z.enum(EXPENSE_STATUSES),
+  title: z.string().nullable(),
   head: nameRef,
   fund: nameRef,
   vendor: z.object({ id: z.uuid(), name: z.string() }).nullable(),
   description: z.string(),
+  lines: z.number().int().min(1),
   amount: z.string(),
+  method: paymentMethodSchema,
   spentOn: isoDay,
   voucherNo: z.string().nullable(),
   requestedBy: userRef.nullable(),
@@ -180,9 +204,19 @@ export type ExpenseVoucher = z.infer<typeof expenseVoucherSchema>;
 
 const step = z.object({ by: z.string().nullable(), at: z.iso.datetime({ offset: true }) });
 
-/** `GET /expenses/:id`: every step so far, the vouchers and what the caller may do. */
-export const expenseDetailSchema = expenseRowSchema.omit({ vouchers: true }).extend({
+export const expenseLineSchema = z.object({
+  id: z.uuid(),
+  head: nameRef,
   vendor: z.object({ id: z.uuid(), name: z.string(), phone: z.string().nullable() }).nullable(),
+  description: z.string(),
+  amount: z.string(),
+});
+export type ExpenseLine = z.infer<typeof expenseLineSchema>;
+
+/** `GET /expenses/:id`: its lines, every step so far, the vouchers and what the caller may do. */
+export const expenseDetailSchema = expenseRowSchema.omit({ vouchers: true, head: true, vendor: true, lines: true }).extend({
+  lines: z.array(expenseLineSchema).min(1),
+  methodRef: z.string().nullable(),
   approved: step.nullable(),
   rejected: step.extend({ reason: z.string() }).nullable(),
   paid: step.extend({ account: z.enum(LEDGER_ACCOUNTS), method: paymentMethodSchema, methodRef: z.string().nullable() }).nullable(),
@@ -190,8 +224,8 @@ export const expenseDetailSchema = expenseRowSchema.omit({ vouchers: true }).ext
   vouchers: z.array(expenseVoucherSchema),
   /** The fund's balance per account, for whoever may pay (null otherwise). */
   fundBalance: z.object({ cash: z.string(), bank: z.string() }).nullable(),
-  /** The budget line for the expense's head and fiscal year, when one is set. */
-  budget: z.object({ year: z.string(), amount: z.string(), used: z.string(), remaining: z.string(), over: z.boolean() }).nullable(),
+  /** The budget lines for the expense's heads in its fiscal year, for heads that have one. */
+  budgets: z.array(z.object({ head: nameRef, year: z.string(), amount: z.string(), used: z.string(), remaining: z.string(), over: z.boolean() })),
   /** What the payment voucher prints at the top. */
   header: documentHeaderSchema,
   can: z.object({ edit: z.boolean(), approve: z.boolean(), reject: z.boolean(), pay: z.boolean(), void: z.boolean(), upload: z.boolean() }),

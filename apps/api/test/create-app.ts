@@ -46,3 +46,12 @@ export async function createTestApp(
   await app.init();
   return app;
 }
+
+/**
+ * A one-line expense request (Step 32) from the flat fields older tests post: head, vendor,
+ * description and amount go on the line; anything else (`fundId`, `spentOn`, `method`) on the record.
+ */
+export function expenseBody(fields: { headId: string; description: string; amount: string; vendorId?: string | null; [key: string]: unknown }) {
+  const { headId, vendorId, description, amount, ...record } = fields;
+  return { method: 'cash', ...record, lines: [{ headId, vendorId, description, amount }] };
+}

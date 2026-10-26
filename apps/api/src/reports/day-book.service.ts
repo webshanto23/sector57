@@ -65,14 +65,14 @@ export class DayBookService {
       : null;
     const expenses = sections('expenses')
       ? await this.prisma.$queryRaw<
-          { id: string; voucher_no: string; paid_at: Date; head_id: string; head_bn: string; head_en: string | null; description: string; account: string; amount: string; paid_by: string | null; void: boolean }[]
+          { id: string; line_id: string; voucher_no: string; paid_at: Date; head_id: string; head_bn: string; head_en: string | null; description: string; account: string; amount: string; paid_by: string | null; void: boolean }[]
         >`
-          SELECT e.id, e.voucher_no, e.paid_at, h.id AS head_id, h.name_bn AS head_bn, h.name_en AS head_en, e.description,
-                 e.paid_account AS account, e.amount::text AS amount, coalesce(pe.full_name, u.phone) AS paid_by, e.status = 'void' AS void
-          FROM expenses e JOIN expense_heads h ON h.id = e.expense_head_id
+          SELECT e.id, l.id AS line_id, e.voucher_no, e.paid_at, h.id AS head_id, h.name_bn AS head_bn, h.name_en AS head_en, l.description,
+                 e.paid_account AS account, l.amount::text AS amount, coalesce(pe.full_name, u.phone) AS paid_by, e.status = 'void' AS void
+          FROM expenses e JOIN expense_lines l ON l.expense_id = e.id JOIN expense_heads h ON h.id = l.expense_head_id
           LEFT JOIN users u ON u.id = e.paid_by LEFT JOIN persons pe ON pe.id = u.person_id
           WHERE e.society_id = ${societyId}::uuid AND e.paid_at IS NOT NULL AND (e.paid_at AT TIME ZONE ${TIME_ZONE})::date = ${on}::date
-          ORDER BY e.paid_at, e.voucher_no`
+          ORDER BY e.paid_at, e.voucher_no, l.position`
       : null;
     const ledger = sections('ledger');
     const transfers = ledger
@@ -139,6 +139,7 @@ export class DayBookService {
         ? {
             items: expenses.map((row) => ({
               id: row.id,
+              lineId: row.line_id,
               voucherNo: row.voucher_no,
               at: row.paid_at.toISOString(),
               head: nameRef(row.head_id, row.head_bn, row.head_en),

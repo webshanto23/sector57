@@ -67,12 +67,12 @@ export class WorkOrderActionsService {
       await this.move(tx, id, row, { status: 'done', completed_on: dayOf(input.completedOn), completion_note: input.note });
       const expenseId = cost
         ? await this.expenses.createIn(tx, actor, {
-            headId: input.headId!,
+            title: null,
             fundId: await this.fundFor(tx, actor.societyId, row),
-            vendorId: row.vendors?.id ?? null,
-            description: `${row.wo_no}: ${row.title}`,
-            amount: cost,
+            method: 'cash',
+            methodRef: null,
             spentOn: input.completedOn,
+            lines: [{ headId: input.headId!, vendorId: row.vendors?.id ?? null, description: `${row.wo_no}: ${row.title}`, amount: cost }],
           })
         : null;
       if (expenseId) await tx.work_orders.update({ where: { id }, data: { expense_id: expenseId } });

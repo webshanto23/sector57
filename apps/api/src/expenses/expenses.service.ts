@@ -1,7 +1,7 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { Prisma } from '@s57/db';
 import {
-  budgetFigures,
+  expenseTotal,
   fiscalYearOf,
   storedMethod,
   type ExpenseDetail,
@@ -16,15 +16,15 @@ import {
 import { AuditService } from '../audit/audit.service.js';
 import { isoDate, todayDate } from '../common/dates.js';
 import { fundBalances } from '../finance/balances.js';
-import { fundClosed } from '../finance/funds.service.js';
 import { lockFinanceSetup, NumberingService } from '../finance/numbering.service.js';
 import { SettingsService } from '../finance/settings.service.js';
 import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { beyondPermissions } from '../property/tree.service.js';
 import { documentContentType } from '../storage/document.js';
+import { budgetsFor, checkRefs, writeLines } from './expense-lines.js';
 import { reverseIn, settleIn } from './expense-money.js';
-import { actionsFor, auditOf, bad, changed, conflict, day, detailSelect, expenseNotFound, nameOf, toRow, userName, VOUCHER_ENTITY, type UserName } from './expense-rows.js';
+import { actionsFor, auditOf, bad, changed, conflict, day, detailSelect, expenseNotFound, lineSelect, nameOf, toLine, toRow, userName, VOUCHER_ENTITY, type UserName } from './expense-rows.js';
 
 export { expenseNotFound } from './expense-rows.js';
 
@@ -60,7 +60,8 @@ export class ExpensesService {
     const spentOn = isoDate(row.spent_on);
     const society = await this.prisma.societies.findUniqueOrThrow({ where: { id: actor.societyId }, select: { fiscal_year_start_month: true } });
     const year = fiscalYearOf(spentOn, society.fiscal_year_start_month);
-    const [docs, header, balance, budget, used] = await Promise.all([
+    const lines = row.expense_lines.map(toLine);
+    const [docs, header, balance, budgets] = await Promise.all([
       this.prisma.documents.findMany({
         where: { society_id: actor.societyId, entity_type: VOUCHER_ENTITY, entity_id: id },
         select: { id: true, file_url: true, file_name: true, uploaded_at: true, users: userName },
@@ -68,17 +69,8 @@ export class ExpensesService {
       }),
       this.settings.receiptHeader(actor.societyId),
       can.pay ? fundBalances(this.prisma, row.funds.id) : Promise.resolve(null),
-      this.prisma.budgets.findUnique({
-        where: { society_id_fiscal_year_expense_head_id: { society_id: actor.societyId, fiscal_year: year.label, expense_head_id: row.expense_head_id } },
-        select: { amount: true },
-      }),
-      this.prisma.$queryRaw<{ approved: string; paid: string }[]>`
-        SELECT coalesce(sum(amount) FILTER (WHERE status = 'approved'), 0)::numeric(16,2)::text AS approved,
-               coalesce(sum(amount) FILTER (WHERE status = 'paid'), 0)::numeric(16,2)::text AS paid
-        FROM expenses WHERE society_id = ${actor.societyId}::uuid AND expense_head_id = ${row.expense_head_id}::uuid
-          AND spent_on BETWEEN ${year.start}::date AND ${year.end}::date`,
+      budgetsFor(this.prisma, actor.societyId, lines.map((line) => line.head), year),
     ]);
-    const figures = budget ? budgetFigures(budget.amount.toFixed(2), used[0]!.approved, used[0]!.paid) : null;
     const step = (at: Date | null, user: UserName | null) => (at ? { at: at.toISOString(), by: user ? nameOf(user) : null } : null);
     const vouchers: ExpenseVoucher[] = docs.map((doc) => ({
       id: doc.id,
@@ -90,9 +82,11 @@ export class ExpensesService {
     const rejected = step(row.rejected_at, row.users_expenses_rejected_byTousers);
     const paid = step(row.paid_at, row.users_expenses_paid_byTousers);
     const voided = step(row.voided_at, row.users_expenses_voided_byTousers);
+    const { head: _head, vendor: _vendor, lines: _count, ...base } = toRow(row);
     return {
-      ...toRow(row),
-      vendor: row.vendors ? { id: row.vendors.id, name: row.vendors.name, phone: row.vendors.phone } : null,
+      ...base,
+      lines,
+      methodRef: row.method_ref,
       approved: step(row.approved_at, row.users_expenses_approved_byTousers),
       rejected: rejected && row.reject_reason ? { ...rejected, reason: row.reject_reason } : null,
       paid:
@@ -102,10 +96,7 @@ export class ExpensesService {
       void: voided && row.void_reason ? { ...voided, reason: row.void_reason } : null,
       vouchers,
       fundBalance: balance,
-      budget:
-        budget && figures
-          ? { year: year.label, amount: budget.amount.toFixed(2), used: figures.used, remaining: figures.remaining, over: figures.over }
-          : null,
+      budgets,
       header,
       can,
     };
@@ -127,21 +118,12 @@ export class ExpensesService {
    * orders finished with a cost). The caller checks `expenses.create` and the date.
    */
   async createIn(tx: Tx, actor: Actor, input: ExpenseInput): Promise<string> {
-    const refs = await this.refs(tx, actor.societyId, input);
+    const refs = await checkRefs(tx, this.settings, actor.societyId, input);
     const row = await tx.expenses.create({
-      data: {
-        society_id: actor.societyId,
-        expense_head_id: input.headId,
-        fund_id: refs.fundId,
-        vendor_id: input.vendorId ?? null,
-        description: input.description,
-        amount: new Prisma.Decimal(input.amount),
-        spent_on: day(input.spentOn),
-        status: 'pending',
-        requested_by: actor.userId,
-      },
+      data: { ...this.fields(actor, input, refs.fundId), status: 'pending', requested_by: actor.userId },
       select: { id: true },
     });
+    await writeLines(tx, actor.societyId, row.id, input.lines);
     await this.audit.record({ ...auditOf(actor, 'create', row.id), after: { ...input, fundId: refs.fundId } }, tx);
     return row.id;
   }
@@ -153,29 +135,23 @@ export class ExpensesService {
       const row = await this.locked(tx, actor, id);
       if (row.status !== 'pending') throw conflict('expense_not_pending', 'Only a pending expense can be changed');
       if (!actionsFor(actor, row).edit) throw beyondPermissions();
-      const refs = await this.refs(tx, actor.societyId, input, { headId: row.expense_head_id, vendorId: row.vendor_id });
-      await tx.expenses.update({
-        where: { id },
-        data: {
-          expense_head_id: input.headId,
-          fund_id: refs.fundId,
-          vendor_id: input.vendorId ?? null,
-          description: input.description,
-          amount: new Prisma.Decimal(input.amount),
-          spent_on: day(input.spentOn),
-          updated_at: new Date(),
-        },
+      const before = await tx.expense_lines.findMany({ where: { expense_id: id }, select: lineSelect, orderBy: { position: 'asc' } });
+      const refs = await checkRefs(tx, this.settings, actor.societyId, input, {
+        headIds: before.map((line) => line.expense_head_id),
+        vendorIds: before.flatMap((line) => (line.vendor_id ? [line.vendor_id] : [])),
       });
+      await tx.expenses.update({ where: { id }, data: { ...this.fields(actor, input, refs.fundId), updated_at: new Date() } });
+      await writeLines(tx, actor.societyId, id, input.lines);
       await this.audit.record(
         {
           ...auditOf(actor, 'update', id),
           before: {
-            headId: row.expense_head_id,
+            title: row.title,
             fundId: row.fund_id,
-            vendorId: row.vendor_id,
-            description: row.description,
-            amount: row.amount.toFixed(2),
+            method: row.method,
+            methodRef: row.method_ref,
             spentOn: isoDate(row.spent_on),
+            lines: before.map((line) => ({ headId: line.expense_head_id, vendorId: line.vendor_id, description: line.description, amount: line.amount.toFixed(2) })),
           },
           after: { ...input, fundId: refs.fundId },
         },
@@ -250,16 +226,10 @@ export class ExpensesService {
     actor: Actor,
     input: ExpenseInput & { paidBy: StoredMethod; requestedBy: string | null; approvedBy: string; approvedAt: Date },
   ): Promise<{ id: string; voucherNo: string }> {
-    const refs = await this.refs(tx, actor.societyId, input);
+    const refs = await checkRefs(tx, this.settings, actor.societyId, input);
     const row = await tx.expenses.create({
       data: {
-        society_id: actor.societyId,
-        expense_head_id: input.headId,
-        fund_id: refs.fundId,
-        vendor_id: input.vendorId ?? null,
-        description: input.description,
-        amount: new Prisma.Decimal(input.amount),
-        spent_on: day(input.spentOn),
+        ...this.fields(actor, input, refs.fundId),
         status: 'approved',
         requested_by: input.requestedBy,
         approved_by: input.approvedBy,
@@ -267,7 +237,8 @@ export class ExpensesService {
       },
       select: { id: true, fund_id: true, amount: true },
     });
-    await this.audit.record({ ...auditOf(actor, 'create', row.id), after: { headId: input.headId, fundId: refs.fundId, description: input.description, amount: input.amount, spentOn: input.spentOn } }, tx);
+    await writeLines(tx, actor.societyId, row.id, input.lines);
+    await this.audit.record({ ...auditOf(actor, 'create', row.id), after: { ...input, fundId: refs.fundId } }, tx);
     const voucherNo = await settleIn(tx, this.money, actor, row.id, row, input.paidBy, isoDate(todayDate()));
     return { id: row.id, voucherNo };
   }
@@ -303,10 +274,10 @@ export class ExpensesService {
       select: {
         status: true,
         requested_by: true,
-        expense_head_id: true,
+        title: true,
         fund_id: true,
-        vendor_id: true,
-        description: true,
+        method: true,
+        method_ref: true,
         amount: true,
         spent_on: true,
         voucher_no: true,
@@ -316,26 +287,17 @@ export class ExpensesService {
     return row;
   }
 
-  /**
-   * Checks the head, vendor and fund of a request; returns the fund to use (the default one
-   * when none is given). An archived head or vendor is refused unless the expense already had it.
-   */
-  private async refs(tx: Tx, societyId: string, input: ExpenseInput, current?: { headId: string; vendorId: string | null }): Promise<{ fundId: string }> {
-    const head = await tx.expense_heads.findFirst({ where: { id: input.headId, society_id: societyId }, select: { archived_at: true } });
-    if (!head) throw bad('invalid_head', 'Unknown expense head');
-    if (head.archived_at && current?.headId !== input.headId) throw bad('head_archived', 'The expense head is archived');
-    if (input.vendorId) {
-      const vendor = await tx.vendors.findFirst({ where: { id: input.vendorId, society_id: societyId }, select: { archived_at: true } });
-      if (!vendor) throw bad('invalid_vendor', 'Unknown vendor');
-      if (vendor.archived_at && current?.vendorId !== input.vendorId) throw bad('vendor_archived', 'The vendor is archived');
-    }
-    const fund = await tx.funds.findFirst({
-      where: { society_id: societyId, ...(input.fundId ? { id: input.fundId } : { is_default: true }) },
-      select: { id: true, is_default: true, closed_at: true },
-    });
-    if (!fund) throw bad('invalid_fund', 'Unknown fund');
-    if (fund.closed_at) throw fundClosed();
-    if (!fund.is_default && !(await this.settings.separateFunds(societyId, tx))) throw bad('invalid_fund', 'Only the default fund is in use');
-    return { fundId: fund.id };
+  /** The expense row's own fields from a request; the amount is the sum of its lines. */
+  private fields(actor: Actor, input: ExpenseInput, fundId: string) {
+    const method = storedMethod(input);
+    return {
+      society_id: actor.societyId,
+      fund_id: fundId,
+      title: input.title,
+      method: method.method,
+      method_ref: method.ref,
+      amount: new Prisma.Decimal(expenseTotal(input.lines)),
+      spent_on: day(input.spentOn),
+    };
   }
 }

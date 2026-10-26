@@ -20,7 +20,7 @@ import { App } from 'supertest/types.js';
 import { TokensService } from './../src/auth/tokens.service.js';
 import { isoDate, todayDate } from './../src/common/dates.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { createTestApp } from './create-app.js';
+import { createTestApp, expenseBody } from './create-app.js';
 
 const MARK = `e2e-exp-${Date.now()}`;
 const ORIGIN = 'http://localhost:3000';
@@ -62,7 +62,7 @@ describe('Expenses and budgets (e2e)', () => {
   const get = (url: string, caller = users.admin) => request(server()).get(url).set('Cookie', caller.cookie);
   const detail = (res: request.Response): ExpenseDetail => expenseDetailSchema.parse(res.body);
   const request_ = async (body: object = {}, caller = users.clerk): Promise<ExpenseDetail> =>
-    detail(await send('post', '/expenses', caller).send({ headId: ids.repairs, description: 'পানির পাম্প মেরামত', amount: '1500', spentOn: today(), ...body }).expect(201));
+    detail(await send('post', '/expenses', caller).send(expenseBody({ headId: ids.repairs, description: 'পানির পাম্প মেরামত', amount: '1500', spentOn: today(), ...body })).expect(201));
   const approved = async (body: object = {}) => {
     const made = await request_(body);
     return detail(await send('post', `/expenses/${made.id}/approve`, users.approver).expect(200));
@@ -145,7 +145,7 @@ describe('Expenses and budgets (e2e)', () => {
 
       const temp = expenseHeadSchema.parse((await send('post', '/expense-heads', users.treasurer).send({ nameBn: 'অস্থায়ী' }).expect(201)).body);
       expect(expenseHeadSchema.parse((await send('post', `/expense-heads/${temp.id}/archive`, users.treasurer).expect(200)).body).archived).toBe(true);
-      expect((await send('post', '/expenses', users.clerk).send({ headId: temp.id, description: 'x', amount: '1', spentOn: today() }).expect(400)).body.code).toBe('head_archived');
+      expect((await send('post', '/expenses', users.clerk).send(expenseBody({ headId: temp.id, description: 'x', amount: '1', spentOn: today() })).expect(400)).body.code).toBe('head_archived');
 
       const options = expenseOptionsSchema.parse((await get('/expenses/options', users.clerk).expect(200)).body);
       expect(options.heads.map((h) => h.nameBn)).toEqual(['কর্মচারী বেতন', 'মেরামত', 'অস্থায়ী']);
@@ -167,7 +167,7 @@ describe('Expenses and budgets (e2e)', () => {
       await send('post', `/expenses/${made.id}/pay`, users.treasurer).send({ method: 'cash' }).expect(409);
       const ok = detail(await send('post', `/expenses/${made.id}/approve`, users.approver).expect(200));
       expect(ok).toMatchObject({ status: 'approved', approved: { by: expect.any(String) } });
-      await send('patch', `/expenses/${made.id}`, users.clerk).send({ headId: ids.repairs, description: 'x', amount: '1', spentOn: today() }).expect(409);
+      await send('patch', `/expenses/${made.id}`, users.clerk).send(expenseBody({ headId: ids.repairs, description: 'x', amount: '1', spentOn: today() })).expect(409);
 
       const before = await balance(ids.general);
       await send('post', `/expenses/${made.id}/pay`, users.clerk).send({ method: 'cash' }).expect(403);
@@ -181,13 +181,52 @@ describe('Expenses and budgets (e2e)', () => {
       expect((await send('post', `/expenses/${made.id}/pay`, users.treasurer).send({ method: 'cash' }).expect(409)).body.code).toBe('expense_not_approved');
     });
 
+    it('holds several lines: one total, one ledger row, each head and vendor its own', async () => {
+      const made = detail(
+        await send('post', '/expenses', users.clerk)
+          .send({
+            title: ' মাসিক কেনাকাটা ',
+            method: 'cheque',
+            spentOn: today(),
+            lines: [
+              { headId: ids.repairs, vendorId: ids.vendor, description: 'পাম্পের তার', amount: '700.25' },
+              { headId: ids.salaries, description: 'দারোয়ানের ভাতা', amount: '300' },
+            ],
+          })
+          .expect(201),
+      );
+      expect(made).toMatchObject({ title: 'মাসিক কেনাকাটা', amount: '1000.25', method: 'cheque', methodRef: null, description: 'পাম্পের তার' });
+      expect(made.lines.map((line) => [line.head.id, line.vendor?.id ?? null, line.amount])).toEqual([
+        [ids.repairs, ids.vendor, '700.25'],
+        [ids.salaries, null, '300.00'],
+      ]);
+      const listed = expenseListSchema.parse((await get(`/expenses?headId=${ids.salaries}&q=${encodeURIComponent('কেনাকাটা')}`).expect(200)).body);
+      expect(listed.items.map((row) => [row.id, row.lines, row.head.id])).toEqual([[made.id, 2, ids.repairs]]);
+
+      // Editing replaces the lines; the database keeps the total equal to their sum.
+      const edited = detail(
+        await send('patch', `/expenses/${made.id}`, users.clerk)
+          .send({ method: 'cash', spentOn: today(), lines: [{ headId: ids.repairs, description: 'শুধু তার', amount: '50' }] })
+          .expect(200),
+      );
+      expect(edited).toMatchObject({ title: null, amount: '50.00', method: 'cash', lines: [{ description: 'শুধু তার' }] });
+      await expect(prisma.expenses.update({ where: { id: made.id }, data: { amount: '51' } })).rejects.toThrow();
+
+      // Paid: one ledger row for the total, and the lines are fixed.
+      await send('post', `/expenses/${made.id}/approve`, users.approver).expect(200);
+      await send('post', `/expenses/${made.id}/pay`, users.treasurer).send({ method: 'cash' }).expect(200);
+      expect(await prisma.ledger_entries.count({ where: { source_type: 'expense', source_id: made.id } })).toBe(1);
+      await expect(prisma.expense_lines.updateMany({ where: { expense_id: made.id }, data: { description: 'x' } })).rejects.toThrow();
+      expect((await send('post', '/expenses', users.clerk).send({ method: 'cash', spentOn: today(), lines: [] }).expect(400)).body.code).toBe('validation_failed');
+    });
+
     it('lets the requester edit and an approver reject with a reason, while pending', async () => {
       const made = await request_();
-      await send('patch', `/expenses/${made.id}`, users.clerk2).send({ headId: ids.salaries, description: 'x', amount: '1', spentOn: today() }).expect(403);
+      await send('patch', `/expenses/${made.id}`, users.clerk2).send(expenseBody({ headId: ids.salaries, description: 'x', amount: '1', spentOn: today() })).expect(403);
       const edited = detail(
-        await send('patch', `/expenses/${made.id}`, users.clerk).send({ headId: ids.salaries, description: 'আগস্টের বেতন', amount: '0.10', spentOn: today() }).expect(200),
+        await send('patch', `/expenses/${made.id}`, users.clerk).send(expenseBody({ headId: ids.salaries, description: 'আগস্টের বেতন', amount: '0.10', spentOn: today() })).expect(200),
       );
-      expect(edited).toMatchObject({ head: { id: ids.salaries }, amount: '0.10', description: 'আগস্টের বেতন' });
+      expect(edited).toMatchObject({ amount: '0.10', description: 'আগস্টের বেতন', lines: [{ head: { id: ids.salaries }, amount: '0.10' }] });
       await send('post', `/expenses/${made.id}/reject`, users.approver).send({}).expect(400);
       const rejected = detail(await send('post', `/expenses/${made.id}/reject`, users.approver).send({ reason: 'বিল নেই' }).expect(200));
       expect(rejected).toMatchObject({ status: 'rejected', rejected: { reason: 'বিল নেই' }, can: { edit: false, upload: false } });
@@ -207,11 +246,11 @@ describe('Expenses and budgets (e2e)', () => {
       await prisma.funds.update({ where: { id: ids.mosque }, data: { closed_at: new Date() } });
       expect((await send('post', `/expenses/${mosque.id}/pay`, users.treasurer).send({ method: 'cash' }).expect(409)).body.code).toBe('fund_closed');
       await prisma.funds.update({ where: { id: ids.mosque }, data: { closed_at: null } });
-      expect((await send('post', '/expenses', users.clerk).send({ headId: ids.repairs, fundId: ids.otherFund, description: 'x', amount: '1', spentOn: today() }).expect(400)).body.code).toBe(
+      expect((await send('post', '/expenses', users.clerk).send(expenseBody({ headId: ids.repairs, fundId: ids.otherFund, description: 'x', amount: '1', spentOn: today() })).expect(400)).body.code).toBe(
         'invalid_fund',
       );
       await separateFunds(false);
-      expect((await send('post', '/expenses', users.clerk).send({ headId: ids.repairs, fundId: ids.mosque, description: 'x', amount: '1', spentOn: today() }).expect(400)).body.code).toBe('invalid_fund');
+      expect((await send('post', '/expenses', users.clerk).send(expenseBody({ headId: ids.repairs, fundId: ids.mosque, description: 'x', amount: '1', spentOn: today() })).expect(400)).body.code).toBe('invalid_fund');
     });
 
     it('never lets two payments overdraw a fund', async () => {
@@ -267,12 +306,12 @@ describe('Expenses and budgets (e2e)', () => {
     });
 
     it('refuses bad input', async () => {
-      for (const amount of ['0', '-1', '1.001']) await send('post', '/expenses', users.clerk).send({ headId: ids.repairs, description: 'x', amount, spentOn: today() }).expect(400);
+      for (const amount of ['0', '-1', '1.001']) await send('post', '/expenses', users.clerk).send(expenseBody({ headId: ids.repairs, description: 'x', amount, spentOn: today() })).expect(400);
       const tomorrow = isoDate(new Date(Date.now() + 2 * 86_400_000));
-      expect((await send('post', '/expenses', users.clerk).send({ headId: ids.repairs, description: 'x', amount: '1', spentOn: tomorrow }).expect(400)).body.code).toBe('future_date');
-      expect((await send('post', '/expenses', users.clerk).send({ headId: ids.otherHead, description: 'x', amount: '1', spentOn: today() }).expect(400)).body.code).toBe('invalid_head');
-      expect((await send('post', '/expenses', users.clerk).send({ headId: ids.repairs, vendorId: randomUUID(), description: 'x', amount: '1', spentOn: today() }).expect(400)).body.code).toBe('invalid_vendor');
-      await send('post', '/expenses', users.viewer).send({ headId: ids.repairs, description: 'x', amount: '1', spentOn: today() }).expect(403);
+      expect((await send('post', '/expenses', users.clerk).send(expenseBody({ headId: ids.repairs, description: 'x', amount: '1', spentOn: tomorrow })).expect(400)).body.code).toBe('future_date');
+      expect((await send('post', '/expenses', users.clerk).send(expenseBody({ headId: ids.otherHead, description: 'x', amount: '1', spentOn: today() })).expect(400)).body.code).toBe('invalid_head');
+      expect((await send('post', '/expenses', users.clerk).send(expenseBody({ headId: ids.repairs, vendorId: randomUUID(), description: 'x', amount: '1', spentOn: today() })).expect(400)).body.code).toBe('invalid_vendor');
+      await send('post', '/expenses', users.viewer).send(expenseBody({ headId: ids.repairs, description: 'x', amount: '1', spentOn: today() })).expect(403);
     });
   });
 
@@ -332,13 +371,21 @@ describe('Expenses and budgets (e2e)', () => {
     it('keeps each society to itself', async () => {
       const otherUser = await prisma.users.create({ data: { society_id: otherSocietyId, phone: randomPhone(), status: 'active' } });
       const other = await prisma.expenses.create({
-        data: { society_id: otherSocietyId, expense_head_id: ids.otherHead, fund_id: ids.otherFund, description: 'x', amount: '1', spent_on: new Date(), requested_by: otherUser.id },
+        data: {
+          society_id: otherSocietyId,
+          fund_id: ids.otherFund,
+          method: 'cash',
+          amount: '1',
+          spent_on: new Date(),
+          requested_by: otherUser.id,
+          expense_lines: { create: { society_id: otherSocietyId, position: 0, expense_head_id: ids.otherHead, description: 'x', amount: '1' } },
+        },
       });
       await get(`/expenses/${other.id}`).expect(404);
       for (const action of ['approve', 'pay', 'void', 'reject']) {
         await send('post', `/expenses/${other.id}/${action}`).send({ reason: 'x', method: 'cash' }).expect(404);
       }
-      await send('patch', `/expenses/${other.id}`).send({ headId: ids.repairs, description: 'x', amount: '1', spentOn: today() }).expect(404);
+      await send('patch', `/expenses/${other.id}`).send(expenseBody({ headId: ids.repairs, description: 'x', amount: '1', spentOn: today() })).expect(404);
       const list = expenseListSchema.parse((await get('/expenses?pageSize=100').expect(200)).body);
       expect(list.items.map((e) => e.id)).not.toContain(other.id);
     });
@@ -368,9 +415,9 @@ describe('Expenses and budgets (e2e)', () => {
       );
       const repairs = set.lines.find((line) => line.head.id === ids.repairs)!;
       const [{ approved, paid }] = await prisma.$queryRaw<{ approved: string; paid: string }[]>`
-        SELECT coalesce(sum(amount) FILTER (WHERE status = 'approved'), 0)::numeric(16,2)::text AS approved,
-               coalesce(sum(amount) FILTER (WHERE status = 'paid'), 0)::numeric(16,2)::text AS paid
-        FROM expenses WHERE expense_head_id = ${ids.repairs}::uuid`;
+        SELECT coalesce(sum(l.amount) FILTER (WHERE e.status = 'approved'), 0)::numeric(16,2)::text AS approved,
+               coalesce(sum(l.amount) FILTER (WHERE e.status = 'paid'), 0)::numeric(16,2)::text AS paid
+        FROM expense_lines l JOIN expenses e ON e.id = l.expense_id WHERE l.expense_head_id = ${ids.repairs}::uuid`;
       expect(repairs).toMatchObject({ budget: '5000.00', approved, paid, remaining: subtractMoney('5000.00', addMoney(approved, paid)) });
       expect(repairs.over).toBe(true);
       expect(set.lines.find((line) => line.head.id === ids.salaries)!.budget).toBeNull();
@@ -380,7 +427,7 @@ describe('Expenses and budgets (e2e)', () => {
       // The expense page shows its head's budget line.
       const [one] = expenseListSchema.parse((await get(`/expenses?headId=${ids.repairs}&status=paid`).expect(200)).body).items;
       const shown = detail(await get(`/expenses/${one!.id}`).expect(200));
-      expect(shown.budget).toMatchObject({ year, amount: '5000.00', over: true });
+      expect(shown.budgets).toMatchObject([{ head: { id: ids.repairs }, year, amount: '5000.00', over: true }]);
 
       // Zero clears it.
       const cleared = budgetSchema.parse((await send('put', '/budgets', users.budgeter).send({ year, lines: [{ headId: ids.repairs, amount: '0' }] }).expect(200)).body);

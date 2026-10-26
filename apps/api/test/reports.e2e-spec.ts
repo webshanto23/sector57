@@ -28,7 +28,7 @@ import { App } from 'supertest/types.js';
 import { TokensService } from './../src/auth/tokens.service.js';
 import { isoDate, todayDate } from './../src/common/dates.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
-import { createTestApp } from './create-app.js';
+import { createTestApp, expenseBody } from './create-app.js';
 
 const MARK = `e2e-rep-${Date.now()}`;
 const ORIGIN = 'http://localhost:3000';
@@ -112,7 +112,7 @@ describe('Fund ledger and finance reports (e2e)', () => {
   const balanceOf = async (fundId: string) => (await funds()).find((fund) => fund.id === fundId)!.balance;
   const expense = async (amount: string) => {
     const made = expenseDetailSchema.parse(
-      (await send('post', '/expenses', users.requester).send({ headId: ids.repairs, description: 'পাম্প মেরামত', amount, spentOn: today() }).expect(201)).body,
+      (await send('post', '/expenses', users.requester).send(expenseBody({ headId: ids.repairs, description: 'পাম্প মেরামত', amount, spentOn: today() })).expect(201)).body,
     );
     await send('post', `/expenses/${made.id}/approve`).expect(200);
     return expenseDetailSchema.parse((await send('post', `/expenses/${made.id}/pay`).send({ method: 'cash' }).expect(200)).body);

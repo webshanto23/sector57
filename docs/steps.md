@@ -977,6 +977,18 @@ Asked for by Anis on 2026-10-26: record how every amount was paid, without any g
 - **Checked:** the six affected e2e files (81 tests) and `pnpm check`. The forms were not opened in a browser; the 375/820/1440 checks stay in the deferred pass.
 - **Not in this step:** a by-method breakdown in the reports, the method on the receipts and donations lists, cheque clearing, a separate mobile-wallet account, fund transfers (they already pick their accounts). `payments.service.ts` is 713 lines and was not split.
 
+## Step 32: Expenses with several lines — Built, awaiting review
+
+Asked for by Anis on 2026-10-26: one expense record holds several items, added with "Add more" on `/dashboard/expenses/new`. Built on `step/32-expense-lines` (from `step/31-payment-methods`, committed first). Decided by Anis: the old head, vendor and description columns are **dropped** from `expenses`; each line has its own vendor; the record gets an optional title of its own; one record has one date, one fund and **one payment method**.
+
+- **Migration `22_expense_lines`:** `expense_lines` (`position`, `expense_head_id`, `vendor_id`, `description`, `amount > 0`); every existing expense became one line. `expenses` gets `title`, `method` (back-filled from `paid_method`, else cash) and `method_ref`, and loses `expense_head_id`, `vendor_id`, `description`. A deferred constraint trigger keeps `expenses.amount` equal to the sum of at least one line; a guard refuses line changes once the expense is rejected, paid or void.
+- **Shared:** `expenseInputSchema` takes `title`, `fundId`, `method`, `methodRef` (optional until paid), `spentOn` and `lines` (1–`MAX_EXPENSE_LINES` = 20); `expenseTotal`. List rows carry the first line's head, vendor and description plus `lines` (count), `title` and `method`; the detail has `lines`, `methodRef` and `budgets` (one per head with a budget) instead of `budget`. Day-book expense rows are per line (`lineId`).
+- **API:** `checkRefs`, `writeLines` and `budgetsFor` in `expenses/expense-lines.ts`. One voucher, one approval and one `out` ledger row per record, unchanged. Budgets, the income report and the day book count line amounts under line heads; list filters by head or vendor match any line, the search looks at the title, line descriptions and vendors. Payroll and work orders write one line each (work orders plan cash).
+- **Web:** one card per line (`expense-line-card.tsx`: head, amount, description, vendor, remove), "Add more", and a sticky bottom card with title, date, fund, payment method, the total and Save. The pay form starts from the planned method. The detail page lists the lines and each head's budget; the voucher prints an itemised table; the list shows "head +N".
+- **Tests:** shared spec for lines and totals; e2e for several lines (total, per-line head and vendor, edit replaces lines, database refuses a wrong total, one ledger row, lines fixed once paid). Existing e2e post through `expenseBody` (`test/create-app.ts`).
+- **Checked:** the six affected e2e files and `pnpm check`. The form was not opened in a browser; the 375/820/1440 checks stay in the deferred pass.
+- **Not in this step:** different funds or dates per line, vouchers per line, reordering lines.
+
 ## Later: beyond milestone 3
 
 These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.

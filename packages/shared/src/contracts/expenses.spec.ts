@@ -1,4 +1,4 @@
-import { budgetFigures, budgetInputSchema, expenseActions, expenseInputSchema, vendorInputSchema, type ExpenseStatus } from './expenses.js';
+import { budgetFigures, budgetInputSchema, expenseActions, expenseInputSchema, expenseTotal, MAX_EXPENSE_LINES, vendorInputSchema, type ExpenseStatus } from './expenses.js';
 
 const me = '3f0e7a52-9a0c-4a5e-9a52-7b2f8d1c0a01';
 const other = '3f0e7a52-9a0c-4a5e-9a52-7b2f8d1c0a02';
@@ -51,11 +51,23 @@ describe('budgetFigures', () => {
 });
 
 describe('expense inputs', () => {
+  const record = (lines: unknown[], extra: object = {}) => ({ method: 'cash', spentOn: '2026-10-12', lines, ...extra });
+  const line = (description: string, amount: string) => ({ headId: me, description, amount });
+
   it('takes Bangla digits and normalises text', () => {
-    const parsed = expenseInputSchema.parse({ headId: me, description: '  বাতি   বদল ', amount: '১,২০০.৫', spentOn: '2026-10-12' });
-    expect(parsed).toMatchObject({ amount: '1200.50', description: 'বাতি   বদল' });
-    expect(expenseInputSchema.safeParse({ headId: me, description: 'x', amount: '0', spentOn: '2026-10-12' }).success).toBe(false);
-    expect(expenseInputSchema.safeParse({ headId: me, description: ' ', amount: '5', spentOn: '2026-10-12' }).success).toBe(false);
+    const parsed = expenseInputSchema.parse(record([line('  বাতি   বদল ', '১,২০০.৫')]));
+    expect(parsed.lines[0]).toMatchObject({ amount: '1200.50', description: 'বাতি   বদল' });
+    expect(parsed).toMatchObject({ title: null, methodRef: null });
+    expect(expenseInputSchema.safeParse(record([line('x', '0')])).success).toBe(false);
+    expect(expenseInputSchema.safeParse(record([line(' ', '5')])).success).toBe(false);
+  });
+
+  it('needs one to twenty lines and sums them', () => {
+    expect(expenseInputSchema.safeParse(record([])).success).toBe(false);
+    expect(expenseInputSchema.safeParse(record(Array.from({ length: MAX_EXPENSE_LINES + 1 }, () => line('x', '1')))).success).toBe(false);
+    const parsed = expenseInputSchema.parse(record([line('a', '100.25'), line('b', '৫০')], { title: ' মাসিক বাজার ', method: 'cheque' }));
+    expect(parsed.title).toBe('মাসিক বাজার');
+    expect(expenseTotal(parsed.lines)).toBe('150.25');
   });
 
   it('checks a vendor phone and keeps the name as typed', () => {

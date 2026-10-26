@@ -231,8 +231,9 @@ describe('Work orders (e2e)', () => {
       await send('post', `/work-orders/${order.service.id}/done`, users.clerkC).send({ completedOn: today, note: 'সার্ভিস হয়েছে', cost: '১২০০', headId: ids.head }).expect(200),
     );
     expect(finished.expense).toMatchObject({ amount: '1200.00', status: 'pending', open: true });
-    const expense = await prisma.expenses.findUniqueOrThrow({ where: { id: finished.expense!.id } });
-    expect(expense).toMatchObject({ status: 'pending', fund_id: ids.fund, vendor_id: ids.vendor, expense_head_id: ids.head, description: `${order.service.woNo}: পাম্প সার্ভিস ও তেল` });
+    const expense = await prisma.expenses.findUniqueOrThrow({ where: { id: finished.expense!.id }, include: { expense_lines: true } });
+    expect(expense).toMatchObject({ status: 'pending', fund_id: ids.fund, method: 'cash' });
+    expect(expense.expense_lines).toMatchObject([{ vendor_id: ids.vendor, expense_head_id: ids.head, description: `${order.service.woNo}: পাম্প সার্ভিস ও তেল` }]);
     expect(expense.spent_on.toISOString().slice(0, 10)).toBe(today);
     expect(await prisma.ledger_entries.count({ where: { society_id: societyId } })).toBe(before);
 

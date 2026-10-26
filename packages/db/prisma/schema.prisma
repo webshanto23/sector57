@@ -193,21 +193,39 @@ model expense_heads {
   archived_at  DateTime?      @db.Timestamptz(6)
   created_at   DateTime       @default(now()) @db.Timestamptz(6)
   budgets      budgets[]
-  societies    societies      @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  expenses     expenses[]
-  payroll_runs payroll_runs[]
+  societies     societies       @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  expense_lines expense_lines[]
+  payroll_runs  payroll_runs[]
 
   @@unique([society_id, name_bn])
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// One item of an expense; the expense's amount is the sum of its lines (checked at commit).
+model expense_lines {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id      String        @db.Uuid
+  expense_id      String        @db.Uuid
+  position        Int           @db.SmallInt
+  expense_head_id String        @db.Uuid
+  vendor_id       String?       @db.Uuid
+  description     String
+  amount          Decimal       @db.Decimal(14, 2)
+  societies       societies     @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  expenses        expenses      @relation(fields: [expense_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  expense_heads   expense_heads @relation(fields: [expense_head_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  vendors         vendors?      @relation(fields: [vendor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([expense_id, position], map: "expense_lines_position_uq")
+  @@index([expense_head_id], map: "expense_lines_head_idx")
+  @@index([vendor_id], map: "expense_lines_vendor_idx")
+}
+
 model expenses {
   id                                 String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   society_id                         String                @db.Uuid
-  expense_head_id                    String                @db.Uuid
   fund_id                            String                @db.Uuid
-  vendor_id                          String?               @db.Uuid
-  description                        String
+  title                              String?
   amount                             Decimal               @db.Decimal(14, 2)
   spent_on                           DateTime              @db.Date
   status                             String                @default("pending")
@@ -228,22 +246,22 @@ model expenses {
   voided_at                          DateTime?             @db.Timestamptz(6)
   voided_by                          String?               @db.Uuid
   void_reason                        String?
+  method                             String
+  method_ref                         String?
   assets                             assets[]
+  expense_lines                      expense_lines[]
   work_orders                        work_orders[]
   users_expenses_approved_byTousers  users?                @relation("expenses_approved_byTousers", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  expense_heads                      expense_heads         @relation(fields: [expense_head_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   funds                              funds                 @relation(fields: [fund_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_expenses_paid_byTousers      users?                @relation("expenses_paid_byTousers", fields: [paid_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_expenses_rejected_byTousers  users?                @relation("expenses_rejected_byTousers", fields: [rejected_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_expenses_requested_byTousers users?                @relation("expenses_requested_byTousers", fields: [requested_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   societies                          societies             @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  vendors                            vendors?              @relation(fields: [vendor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_expenses_voided_byTousers    users?                @relation("expenses_voided_byTousers", fields: [voided_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   payroll_run_expenses               payroll_run_expenses?
 
   @@unique([society_id, voucher_no], map: "expenses_voucher_uq", where: raw("(voucher_no IS NOT NULL)"))
   @@index([fund_id], map: "expenses_fund_idx")
-  @@index([expense_head_id], map: "expenses_head_idx")
   @@index([society_id, spent_on(sort: Desc)], map: "expenses_society_idx")
   @@index([society_id, status], map: "expenses_status_idx")
 }
@@ -824,6 +842,7 @@ model societies {
   donations               donations[]
   expense_heads           expense_heads[]
   expenses                expenses[]
+  expense_lines           expense_lines[]
   form_submissions        form_submissions[]
   funds                   funds[]
   fund_transfers          fund_transfers[]
@@ -1030,7 +1049,7 @@ model vendors {
   service     String?
   archived_at DateTime?     @db.Timestamptz(6)
   created_at  DateTime      @default(now()) @db.Timestamptz(6)
-  expenses    expenses[]
+  expense_lines expense_lines[]
   assets      assets[]
   work_orders work_orders[]
   societies   societies     @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)

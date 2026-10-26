@@ -258,17 +258,24 @@ describe('Facilities and assets (e2e)', () => {
     it('links a paid expense by its voucher number', async () => {
       const head = await prisma.expense_heads.create({ data: { society_id: societyId, name_bn: 'যন্ত্রপাতি' } });
       const voucher = `EXP-26-${String(Math.floor(Math.random() * 9000) + 1000)}`;
-      await prisma.expenses.create({
+      // Lines are written while it is approved; paying fixes them.
+      const bought = await prisma.expenses.create({
         data: {
           society_id: societyId,
-          expense_head_id: head.id,
           fund_id: ids.defaultFund,
-          description: 'পাম্প কেনা',
+          method: 'cash',
           amount: '45000',
+          expense_lines: { create: { society_id: societyId, position: 0, expense_head_id: head.id, description: 'পাম্প কেনা', amount: '45000' } },
           spent_on: day('2026-04-01'),
-          status: 'paid',
+          status: 'approved',
           approved_by: users.admin.id,
           approved_at: new Date(),
+        },
+      });
+      await prisma.expenses.update({
+        where: { id: bought.id },
+        data: {
+          status: 'paid',
           voucher_no: voucher,
           paid_at: new Date(),
           paid_by: users.admin.id,
