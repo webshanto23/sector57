@@ -1,11 +1,12 @@
 "use client";
 
-import { formatTaka, LEDGER_ACCOUNTS, pick, type LedgerAccount, type Locale, type PayrollMonth, type PayrollRun } from "@s57/shared";
+import { formatTaka, pick, type Locale, type PayrollMonth, type PayrollRun } from "@s57/shared";
 import { Ban, Check, FilePlus2, RefreshCw, Wallet } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { ConfirmButton } from "@/components/admin/confirm-button";
 import { FormStatus, Note } from "@/components/admin/form-status";
+import { CASH, methodBody, methodReady, PaymentMethodField, type MethodValue } from "@/components/finance/payment-method-field";
 import { Card, Field, inputClass } from "@/components/kit";
 import { useSubmit } from "@/components/property/use-submit";
 import { Button } from "@/components/ui/button";
@@ -81,10 +82,9 @@ function Approve({ run }: { run: PayrollRun }) {
 
 function Pay({ run, heads }: { run: PayrollRun; heads: PayrollMonth["heads"] }) {
   const t = useTranslations("Payroll.actions");
-  const tAccount = useTranslations("Finance.funds");
   const locale = useLocale() as Locale;
   const { status, run: submit } = useSubmit();
-  const [account, setAccount] = useState<LedgerAccount>("cash");
+  const [paidBy, setPaidBy] = useState<MethodValue>(CASH);
   const [headId, setHeadId] = useState(heads[0]?.id ?? "");
   const amount = formatTaka(run.totals.net, locale);
 
@@ -105,23 +105,17 @@ function Pay({ run, heads }: { run: PayrollRun; heads: PayrollMonth["heads"] }) 
           </select>
         </Field>
       )}
-      <Field label={t("account")} htmlFor="payroll-pay-account">
-        <select id="payroll-pay-account" className={inputClass} value={account} onChange={(e) => setAccount(e.target.value as LedgerAccount)}>
-          {LEDGER_ACCOUNTS.map((option) => (
-            <option key={option} value={option}>
-              {tAccount(option)}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <div className="grid gap-3 min-[600px]:grid-cols-2">
+        <PaymentMethodField id="payroll-pay" value={paidBy} onChange={setPaidBy} />
+      </div>
       <div>
         <ConfirmButton
           label={t("pay", { amount })}
           question={t("payQuestion", { amount })}
           icon={Wallet}
-          disabled={headId === ""}
+          disabled={headId === "" || !methodReady(paidBy)}
           onConfirm={async () => {
-            await submit(() => api.POST("/payroll/{id}/pay", { ...path(run), body: { account, headId } }), t("paidNow"));
+            await submit(() => api.POST("/payroll/{id}/pay", { ...path(run), body: { ...methodBody(paidBy), headId } }), t("paidNow"));
           }}
         />
       </div>

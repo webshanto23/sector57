@@ -10,6 +10,7 @@ Billing, payments, donations and expenses have their own files; this one holds t
 - Draw invoice, receipt and voucher numbers only with `NumberingService.next(tx, ...)` inside the transaction that saves the record.
 - Society settings are typed keys (`SETTING_KEYS`); read separate funds with `SettingsService.separateFunds`. Charge type changes need a society-wide billing grant.
 - Any money-out path takes `lockFinanceSetup` and checks the account's balance first (409 `fund_insufficient`).
+- Every money entry records how it was paid (Step 31): `method` (`PAYMENT_METHODS`) and a reference, validated with `refineMethodRef` and stored through `storedMethod`, which also gives the ledger account (`accountOfMethod`: cash to cash, everything else to bank). Never take an account from the client on a money-in or money-out form; derive it from the method. A database check keeps method and account in step on `expenses` and `payroll_runs`.
 
 ## Transfers
 

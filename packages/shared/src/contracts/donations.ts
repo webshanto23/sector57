@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { moneySchema } from '../money.js';
 import { optionalText, pagination, text } from '../schemas.js';
 import { cleanText } from '../text.js';
-import { documentHeaderSchema, fundOptionSchema } from './finance.js';
+import { documentHeaderSchema, fundOptionSchema, paymentMethodSchema, paymentRefSchema, refineMethodRef } from './finance.js';
 import { isoDay, optionalPhone } from './members.js';
 import { paymentDetailSchema, payerSnapshotSchema } from './payments.js';
 
@@ -28,8 +28,9 @@ export const donorInputSchema = z.discriminatedUnion('kind', [
 ]);
 export type DonorInput = z.infer<typeof donorInputSchema>;
 
-/** `POST /donations`. Without `fundId` the default fund takes it. */
-export const donationCreateSchema = z.object({
+/** `POST /donations`. Without `fundId` the default fund takes it; without `method`, cash. */
+export const donationCreateSchema = z
+  .object({
   donor: donorInputSchema,
   fundId: z.uuid().nullish(),
   purpose: z
@@ -38,8 +39,11 @@ export const donationCreateSchema = z.object({
     .transform((value) => (value == null ? null : purposeText(value) || null))
     .pipe(z.string().max(DONATION_PURPOSE_MAX).nullable()),
   amount: moneySchema,
+  method: paymentMethodSchema.default('cash'),
+  methodRef: paymentRefSchema,
   note: optionalText(300),
-});
+})
+  .superRefine(refineMethodRef);
 export type DonationCreateInput = z.input<typeof donationCreateSchema>;
 export type DonationCreate = z.output<typeof donationCreateSchema>;
 
@@ -83,6 +87,7 @@ export const donationRowSchema = z.object({
   /** The Dhaka date it was received. */
   receivedDay: isoDay,
   amount: z.string(),
+  method: paymentMethodSchema,
   /** The donor as on the day; null when anonymous. */
   donor: payerSnapshotSchema.nullable(),
   fund: fundRef,

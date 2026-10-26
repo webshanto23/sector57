@@ -3,7 +3,7 @@ import { compareMoney, fromPaisa, moneyOrZeroSchema, moneySchema, toPaisa } from
 import { optionalText, pagination, text } from '../schemas.js';
 import { cleanText } from '../text.js';
 import { billToSnapshotSchema, invoiceRowSchema, type InvoiceStatus } from './billing.js';
-import { documentHeaderSchema } from './finance.js';
+import { documentHeaderSchema, paymentMethodSchema, paymentRefSchema, refineMethodRef } from './finance.js';
 import { isoDay } from './members.js';
 
 // ---------------------------------------------------------------------------
@@ -117,8 +117,9 @@ export type CollectSummary = z.infer<typeof collectSummarySchema>;
 // ---------------------------------------------------------------------------
 
 /**
- * `POST /payments`: cash for open bills of one unit (`unitId`) or one member's membership
+ * `POST /payments`: money for open bills of one unit (`unitId`) or one member's membership
  * bills (`personId`). The amount may be lowered below what the bills owe, never raised above.
+ * Cash unless `method` says otherwise; a cheque or wallet payment needs `methodRef`.
  */
 export const paymentCreateSchema = z
   .object({
@@ -127,9 +128,12 @@ export const paymentCreateSchema = z
     invoiceIds: z.array(z.uuid()).min(1).max(MAX_PAYMENT_INVOICES),
     amount: moneySchema,
     payer: z.object({ kind: z.enum(['person', 'organisation']), id: z.uuid() }),
+    method: paymentMethodSchema.default('cash'),
+    methodRef: paymentRefSchema,
     note: optionalText(300),
   })
   .superRefine((input, ctx) => {
+    refineMethodRef(input, ctx);
     if (!input.unitId === !input.personId) ctx.addIssue({ code: 'custom', path: ['unitId'], message: 'unit_or_person' });
     if (new Set(input.invoiceIds).size !== input.invoiceIds.length) ctx.addIssue({ code: 'custom', path: ['invoiceIds'], message: 'duplicate_invoice' });
   });
@@ -154,6 +158,7 @@ export const paymentRowSchema = z.object({
   /** The Dhaka date it was taken. */
   receivedDay: isoDay,
   amount: z.string(),
+  method: paymentMethodSchema,
   /** Null only for an anonymous donation. */
   payer: payerSnapshotSchema.nullable(),
   collectedBy: userRef,
@@ -208,6 +213,8 @@ export type PaymentAllocation = z.infer<typeof paymentAllocationSchema>;
 
 /** `GET /payments/:id`, with what the receipt prints at the top. */
 export const paymentDetailSchema = paymentRowSchema.extend({
+  /** The cheque number, or the wallet and transaction ID; never set for cash. */
+  methodRef: z.string().nullable(),
   note: z.string().nullable(),
   allocations: z.array(paymentAllocationSchema),
   /** Set when the receipt is a donation's (then `allocations` is empty). */

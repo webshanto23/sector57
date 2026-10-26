@@ -424,6 +424,34 @@ describe('Cash collection, receipts and handover (e2e)', () => {
     });
   });
 
+  describe('payment method', () => {
+    it('books non-cash to the bank, keeps it out of the cash in hand, and needs a reference for cheque or wallet', async () => {
+      const target = await bill(ids.c1, '400');
+      const base = { unitId: ids.c1, invoiceIds: [target.id], amount: '150', payer: rahim() };
+      const refused = await pay({ ...base, method: 'cheque' }, users.collectorC2).expect(400);
+      expect(refused.body.issues).toEqual([{ path: 'methodRef', message: 'method_ref_required' }]);
+
+      const wallet = await paid({ ...base, method: 'mobile', methodRef: 'বিকাশ 8N7A2KQ1' }, users.collectorC2);
+      expect(wallet).toMatchObject({ method: 'mobile', methodRef: 'বিকাশ 8N7A2KQ1', handover: null });
+      const cheque = await paid({ ...base, amount: '50', method: 'cheque', methodRef: '004512' }, users.collectorC2);
+      const entries = await prisma.ledger_entries.findMany({ where: { source_type: 'payment', source_id: { in: [wallet.id, cheque.id] } } });
+      expect(entries.map((e) => e.account)).toEqual(['bank', 'bank']);
+
+      // A reference typed for cash is dropped.
+      const cash = await paid({ ...base, amount: '10', method: 'cash', methodRef: 'left over' }, users.collectorC2);
+      expect(cash).toMatchObject({ method: 'cash', methodRef: null });
+
+      const summary = collectSummarySchema.parse((await get('/collect/summary', users.collectorC2).expect(200)).body);
+      expect(summary.today).toEqual({ count: 3, amount: '210.00' });
+      expect(summary.inHand).toEqual({ count: 1, amount: '10.00' });
+      const inHand = paymentListSchema.parse((await get('/payments?collectorId=me&inHand=true', users.collectorC2).expect(200)).body);
+      expect(inHand.items.map((p) => p.id)).toEqual([cash.id]);
+      const handover = handoverSchema.parse((await send('post', '/handovers', users.collectorC2).expect(201)).body);
+      expect(handover).toMatchObject({ expected: '10.00', paymentCount: 1 });
+      expect((await send('post', '/handovers', users.collectorC2).expect(400)).body.code).toBe('nothing_to_hand_over');
+    });
+  });
+
   describe('the ledger', () => {
     it('agrees with the receipts that aren’t void', async () => {
       const [{ sum }] = await prisma.$queryRaw<{ sum: string }[]>`

@@ -1,6 +1,6 @@
 import { ConflictException } from '@nestjs/common';
 import { Prisma } from '@s57/db';
-import { compareMoney, type LedgerAccount } from '@s57/shared';
+import { compareMoney, type StoredMethod } from '@s57/shared';
 import type { AuditService } from '../audit/audit.service.js';
 import { fundBalances } from '../finance/balances.js';
 import { fundClosed } from '../finance/funds.service.js';
@@ -16,8 +16,9 @@ audit: AuditService;
 numbering: NumberingService;
 }
 
-/** Pays an approved expense: the balance check, a voucher number and the `out` ledger row. */
-export async function settleIn(tx: Tx, deps: ExpenseMoneyDeps, actor: Actor, id: string, row: { fund_id: string; amount: Prisma.Decimal }, account: LedgerAccount, today: string): Promise<string> {
+/** Pays an approved expense: the balance check, a voucher number and the `out` ledger row, from the account the method draws on. */
+export async function settleIn(tx: Tx, deps: ExpenseMoneyDeps, actor: Actor, id: string, row: { fund_id: string; amount: Prisma.Decimal }, paidBy: StoredMethod, today: string): Promise<string> {
+  const account = paidBy.account;
   const fund = await tx.funds.findUniqueOrThrow({ where: { id: row.fund_id }, select: { closed_at: true } });
   if (fund.closed_at) throw fundClosed();
   const balance = (await fundBalances(tx, row.fund_id))[account];
@@ -28,7 +29,12 @@ export async function settleIn(tx: Tx, deps: ExpenseMoneyDeps, actor: Actor, id:
   const number = await deps.numbering.next(tx, actor.societyId, 'voucher', today);
   await tx.expenses.update({
     where: { id },
-    data: { status: 'paid', voucher_no: number.formatted, paid_at: new Date(), paid_by: actor.userId, paid_account: account, updated_at: new Date() },
+    data: { status: 'paid', voucher_no: number.formatted, paid_at: new Date(), paid_by: actor.userId,
+      paid_account: account,
+      paid_method: paidBy.method,
+      paid_method_ref: paidBy.ref,
+      updated_at: new Date(),
+    },
   });
   await tx.ledger_entries.create({
     data: {
@@ -45,7 +51,7 @@ export async function settleIn(tx: Tx, deps: ExpenseMoneyDeps, actor: Actor, id:
     },
   });
   await deps.audit.record(
-    { ...auditOf(actor, 'pay', id), before: { status: 'approved', balance }, after: { status: 'paid', voucherNo: number.formatted, account: account, amount } },
+    { ...auditOf(actor, 'pay', id), before: { status: 'approved', balance }, after: { status: 'paid', voucherNo: number.formatted, account, method: paidBy.method, methodRef: paidBy.ref, amount } },
     tx,
   );
   return number.formatted;

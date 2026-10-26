@@ -69,12 +69,12 @@ export class HandoversService {
     return (await this.rows(actor, [id]))[0]!;
   }
 
-  /** Hands over all the caller's payments not yet handed over and not void. */
+  /** Hands over all the caller's cash payments not yet handed over and not void. Other methods went straight to the bank. */
   async create(actor: Actor): Promise<Handover> {
     const id = await this.prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`handover:${actor.societyId}:${actor.userId}`}, 0))`;
       const open = await tx.payments.findMany({
-        where: { society_id: actor.societyId, received_by: actor.userId, handover_id: null, voided_at: null },
+        where: { society_id: actor.societyId, received_by: actor.userId, method: 'cash', handover_id: null, voided_at: null },
         select: { id: true },
       });
       if (open.length === 0) throw new BadRequestException({ code: 'nothing_to_hand_over', message: 'You have no cash to hand over' });

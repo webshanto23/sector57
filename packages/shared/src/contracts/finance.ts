@@ -91,6 +91,37 @@ export type SettingsInput = z.infer<typeof settingsInputSchema>;
 export const LEDGER_ACCOUNTS = ['cash', 'bank'] as const;
 export type LedgerAccount = (typeof LEDGER_ACCOUNTS)[number];
 
+/**
+ * How money changed hands: cash, a bank deposit or transfer, a cheque, or a mobile wallet
+ * (bKash, Nagad, ...). Recorded only; no gateway is involved.
+ */
+export const PAYMENT_METHODS = ['cash', 'bank', 'cheque', 'mobile'] as const;
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+export const paymentMethodSchema = z.enum(PAYMENT_METHODS);
+
+/** Longest reference: a cheque number, or the wallet and its transaction ID. */
+export const PAYMENT_REF_MAX = 100;
+export const paymentRefSchema = optionalText(PAYMENT_REF_MAX);
+
+/** A cheque or a mobile wallet payment must say which one; a bank deposit may. */
+export const methodNeedsRef = (method: PaymentMethod): boolean => method === 'cheque' || method === 'mobile';
+
+/** Only cash sits in the cash box; every other method lands in the bank account. */
+export const accountOfMethod = (method: PaymentMethod): LedgerAccount => (method === 'cash' ? 'cash' : 'bank');
+
+/** For a schema's `superRefine`: `method_ref_required` on `methodRef` when it is missing. */
+export function refineMethodRef(input: { method: PaymentMethod; methodRef: string | null }, ctx: z.RefinementCtx): void {
+  if (methodNeedsRef(input.method) && !input.methodRef) ctx.addIssue({ code: 'custom', path: ['methodRef'], message: 'method_ref_required' });
+}
+
+/** What is stored: the method, the account it lands in, and the reference (never one for cash). */
+export const storedMethod = (input: { method: PaymentMethod; methodRef: string | null }) => ({
+  method: input.method,
+  ref: input.method === 'cash' ? null : input.methodRef,
+  account: accountOfMethod(input.method),
+});
+export type StoredMethod = ReturnType<typeof storedMethod>;
+
 /** `ledger_entries.source_type`. */
 export const LEDGER_SOURCES = ['opening', 'payment', 'donation', 'expense', 'transfer', 'adjustment'] as const;
 export type LedgerSource = (typeof LEDGER_SOURCES)[number];

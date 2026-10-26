@@ -215,16 +215,17 @@ describe('Payroll (e2e)', () => {
   });
 
   it('pays one expense per fund, or nothing when a fund is short', async () => {
-    expect((await send('post', `/payroll/${run.id}/pay`, users.noExpenses).send({ account: 'cash', headId: ids.salaries }).expect(403)).body.code).toBe('pay_needs_expenses');
+    expect((await send('post', `/payroll/${run.id}/pay`, users.noExpenses).send({ method: 'cash', headId: ids.salaries }).expect(403)).body.code).toBe('pay_needs_expenses');
     // The mosque fund holds ৳100 but owes ৳4,500.30.
-    expect((await send('post', `/payroll/${run.id}/pay`).send({ account: 'cash', headId: ids.salaries }).expect(409)).body.code).toBe('fund_insufficient');
+    expect((await send('post', `/payroll/${run.id}/pay`).send({ method: 'cash', headId: ids.salaries }).expect(409)).body.code).toBe('fund_insufficient');
     expect(await prisma.expenses.count({ where: { society_id: societyId } })).toBe(0);
     expect(await balance(ids.general)).toBe('100000.00');
     expect(parse(await get(`/payroll/${run.id}`).expect(200)).status).toBe('approved');
 
     await opening(ids.mosque, '5000');
-    run = parse(await send('post', `/payroll/${run.id}/pay`).send({ account: 'cash', headId: ids.salaries }).expect(200));
-    expect(run).toMatchObject({ status: 'paid', paidAccount: 'cash', expenseHead: { id: ids.salaries } });
+    expect((await send('post', `/payroll/${run.id}/pay`).send({ method: 'mobile', headId: ids.salaries }).expect(400)).body.code).toBe('validation_failed');
+    run = parse(await send('post', `/payroll/${run.id}/pay`).send({ method: 'cash', headId: ids.salaries }).expect(200));
+    expect(run).toMatchObject({ status: 'paid', paidAccount: 'cash', paidMethod: 'cash', paidMethodRef: null, expenseHead: { id: ids.salaries } });
     expect(run.expenses).toHaveLength(2);
     const expenses = await prisma.expenses.findMany({ where: { society_id: societyId }, orderBy: { amount: 'desc' } });
     expect(expenses.map((e) => [e.fund_id, e.amount.toFixed(2), e.status])).toEqual([

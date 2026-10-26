@@ -4,6 +4,7 @@ import { amountInWords, formatDate, formatTaka, pick, type ExpenseDetail, type L
 import { Printer } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { PrintSheet } from "@/components/print/print-sheet";
+import { paidFrom } from "@/components/finance/method-text";
 import { DocumentHead, Stamp } from "@/components/print/document-head";
 import { Button } from "@/components/ui/button";
 
@@ -15,12 +16,13 @@ import { Button } from "@/components/ui/button";
 export function VoucherPrint({ expense }: { expense: ExpenseDetail }) {
   const t = useTranslations("Expenses.print");
   const tAccount = useTranslations("Finance.funds");
+  const tMethod = useTranslations("Finance.method");
   const locale = useLocale() as Locale;
   if (!expense.paid || !expense.voucherNo) return null;
 
   const rows: [string, string][] = [
     [t("head"), pick(expense.head.nameBn, expense.head.nameEn, locale)],
-    [t("fund"), `${pick(expense.fund.nameBn, expense.fund.nameEn, locale)} · ${tAccount(expense.paid.account)}`],
+    [t("fund"), `${pick(expense.fund.nameBn, expense.fund.nameEn, locale)} · ${paidFrom(tAccount(expense.paid.account), tMethod(expense.paid.method), expense.paid.methodRef, expense.paid.method === "cash")}`],
     [t("paidTo"), expense.vendor ? [expense.vendor.name, expense.vendor.phone].filter(Boolean).join(" · ") : "—"],
     [t("description"), expense.description],
     [t("spentOn"), formatDate(expense.spentOn, locale)],
