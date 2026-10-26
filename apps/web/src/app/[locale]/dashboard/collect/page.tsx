@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/dashboar
 /**
  * The mockup's cash collection page: take a payment beside the live receipt, the caller's
  * figures for today, and "close day and hand over". `?unitId=` or `?personId=` starts with
- * that unit or member.
+ * that unit or member; `?invoiceId=` (from a bill page) ticks only that bill.
  */
 export default async function CollectPage({ params, searchParams }: PageProps<"/[locale]/dashboard/collect">) {
   const { locale: raw } = await params;
@@ -37,6 +37,7 @@ export default async function CollectPage({ params, searchParams }: PageProps<"/
   const id = (key: string) => (typeof search[key] === "string" && UUID.test(search[key]) ? search[key] : undefined);
   const unitId = id("unitId");
   const personId = unitId ? undefined : id("personId");
+  const invoiceId = id("invoiceId");
   const today = todayInDhaka();
 
   const [t, tNav, summary, start, receipts] = await Promise.all([
@@ -70,7 +71,7 @@ export default async function CollectPage({ params, searchParams }: PageProps<"/
 
       {summary && receipts ? (
         <div className="grid gap-3.5">
-          <CollectForm initial={initial} header={summary.header} collector={me.name ?? me.phone} today={today} />
+          <CollectForm initial={initial} startBillId={invoiceId} header={summary.header} collector={me.name ?? me.phone} today={today} />
 
           <div className="grid gap-2.5 min-[600px]:grid-cols-3">
             <StatCard

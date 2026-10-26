@@ -32,11 +32,14 @@ import { Receipt, type ReceiptData } from "./receipt";
  */
 export function CollectForm({
   initial,
+  startBillId,
   header,
   collector,
   today,
 }: {
   initial: CollectAccount | null;
+  /** From a bill page: only this bill starts ticked; the account's other open bills stay listed, unticked. */
+  startBillId?: string;
   header: DocumentHeader;
   collector: string;
   /** `YYYY-MM-DD` in Dhaka, from the server. */
@@ -52,8 +55,9 @@ export function CollectForm({
   const [hits, setHits] = useState<CollectAccount[] | null>(null);
   const [searching, setSearching] = useState(false);
   const [account, setAccount] = useState<CollectAccount | null>(initial);
-  const [ticked, setTicked] = useState<Set<string>>(() => new Set(initial?.bills.map((bill) => bill.id)));
-  const [amount, setAmount] = useState(initial?.due ?? "");
+  const startBill = initial?.bills.find((bill) => bill.id === startBillId) ?? null;
+  const [ticked, setTicked] = useState<Set<string>>(() => new Set(startBill ? [startBill.id] : initial?.bills.map((bill) => bill.id)));
+  const [amount, setAmount] = useState(startBill?.due ?? initial?.due ?? "");
   const [touched, setTouched] = useState(false);
   const [payerId, setPayerId] = useState(initial?.payers[0]?.id ?? "");
   const [note, setNote] = useState("");
