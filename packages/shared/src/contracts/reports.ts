@@ -12,7 +12,7 @@ const crumb = z.object({ id: z.uuid(), name: z.string() });
  * The reports at `/dashboard/reports`. Each needs its source module's `view`; its CSV needs
  * that module's `export` as well. `ledger` covers the income and expenditure statement.
  */
-export const REPORT_KEYS = ['day-book', 'collection', 'arrears', 'income', 'occupancy', 'members', 'renters'] as const;
+export const REPORT_KEYS = ['day-book', 'collection', 'collection-register', 'arrears', 'income', 'occupancy', 'members', 'renters'] as const;
 export type ReportKey = (typeof REPORT_KEYS)[number];
 
 /** Whole percent of `part` in `whole` (rounded down), 0 when `whole` is zero. Exact, on paisa. */

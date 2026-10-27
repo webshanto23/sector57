@@ -3,6 +3,8 @@ import {
   arrearsQuery,
   arrearsReportSchema,
   collectionQuery,
+  collectionRegisterQuery,
+  collectionRegisterSchema,
   collectionReportSchema,
   dayBookQuery,
   dayBookSchema,
@@ -16,6 +18,8 @@ import { z } from 'zod';
 import { createDto } from '../common/create-dto.js';
 import { Authenticated, Can, CurrentActor, type Actor } from '../permissions/permissions.decorators.js';
 import { AreaReportsService } from './area-reports.service.js';
+import { collectionRegisterCsv } from './collection-register-csv.js';
+import { CollectionRegisterService } from './collection-register.service.js';
 import { csvFile } from './csv.js';
 import { DAY_BOOK_MODULES, DayBookService, type Sections } from './day-book.service.js';
 import { IncomeService } from './income.service.js';
@@ -30,6 +34,9 @@ export class DayBookDto extends createDto(dayBookSchema) {}
 export class CollectionQueryDto extends createDto(collectionQuery) {}
 export class CollectionCsvQueryDto extends createDto(collectionQuery.extend(lang.shape)) {}
 export class CollectionReportDto extends createDto(collectionReportSchema) {}
+export class CollectionRegisterQueryDto extends createDto(collectionRegisterQuery) {}
+export class CollectionRegisterCsvQueryDto extends createDto(collectionRegisterQuery.extend(lang.shape)) {}
+export class CollectionRegisterDto extends createDto(collectionRegisterSchema) {}
 export class ArrearsQueryDto extends createDto(arrearsQuery) {}
 export class ArrearsCsvQueryDto extends createDto(arrearsQuery.extend(lang.shape)) {}
 export class ArrearsReportDto extends createDto(arrearsReportSchema) {}
@@ -50,6 +57,7 @@ export class ReportsController {
     private readonly dayBook: DayBookService,
     private readonly areas: AreaReportsService,
     private readonly income: IncomeService,
+    private readonly register: CollectionRegisterService,
   ) {}
 
   /** Bill receipts (`payments.view`, in the caller's area), donations, expenses, transfers and funds, each with its `view`. */
@@ -82,6 +90,24 @@ export class ReportsController {
     this.need(actor, 'billing', 'view');
     const report = await this.areas.collection(actor.access, actor.societyId, query);
     return csvFile(`collection-${report.from}-${report.to}`, collectionCsv(report, query.lang));
+  }
+
+  /** Step 33. 404 `location_not_found` for a place outside the caller's `payments` area. The donations column needs `donations.view`. */
+  @Get('collection-register')
+  @Can('payments', 'view')
+  @ZodResponse({ status: 200, type: CollectionRegisterDto })
+  collectionRegister(@CurrentActor() actor: Actor, @Query() query: CollectionRegisterQueryDto) {
+    return this.register.build(actor.access, actor.societyId, query, actor.access.can('view', 'donations'));
+  }
+
+  /** Donations are in the file only with `donations.view` and `donations.export`. */
+  @Get('collection-register/csv')
+  @Can('payments', 'export')
+  async collectionRegisterCsv(@CurrentActor() actor: Actor, @Query() query: CollectionRegisterCsvQueryDto): Promise<StreamableFile> {
+    this.need(actor, 'payments', 'view');
+    const donations = actor.access.can('view', 'donations') && actor.access.can('export', 'donations');
+    const report = await this.register.build(actor.access, actor.societyId, query, donations);
+    return csvFile(`collection-register-${report.month}`, collectionRegisterCsv(report, query.lang));
   }
 
   @Get('arrears')

@@ -5,6 +5,7 @@ import {
   auditListSchema,
   auditOptionsSchema,
   AUTH_COOKIES,
+  collectionRegisterSchema,
   collectionReportSchema,
   CSRF_HEADER,
   dayBookSchema,
@@ -449,6 +450,66 @@ describe('Fund ledger and finance reports (e2e)', () => {
       expect(yesterday.receipts!.items).toEqual([]);
       await get('/reports/day-book', users.nobody).expect(403);
       await get('/reports/day-book?date=2026-13-01').expect(400);
+    });
+
+    it('collection register: the month’s receipts by day, split per charge in line order, within the caller’s area', async () => {
+      const month = today().slice(0, 7);
+      const report = collectionRegisterSchema.parse((await get('/reports/collection-register').expect(200)).body);
+      expect(report.month).toBe(month);
+      expect(report.columns.map((column) => column.key).sort()).toEqual([ids.fine, ids.mosqueFee, ids.service, 'donation'].sort());
+      expect(report.columns.at(-1)).toMatchObject({ key: 'donation', kind: 'donation' });
+      expect(report.header.nameBn).toBeTruthy();
+      expect(report.levels.map((level) => level.nameBn)).toEqual(['ইউনিট', 'রোড', 'ব্লক']);
+      expect(report.days).toHaveLength(1);
+      const rows = report.days[0]!.rows;
+      expect(rows.map((row) => [row.total, row.void, row.amounts])).toEqual([
+        ['600.00', false, { [ids.service]: '600.00' }],
+        // The second part finishes the service charge, then starts on the fine.
+        ['500.00', false, { [ids.service]: '400.00', [ids.fine]: '100.00' }],
+        ['1000.00', true, { [ids.service]: '1000.00' }],
+        ['1800.00', false, { [ids.service]: '1500.00', [ids.mosqueFee]: '300.00' }],
+        ['1000.00', false, { donation: '1000.00' }],
+      ]);
+      expect(rows[0]).toMatchObject({ payer: 'রহিম উদ্দিন', role: 'owner', places: ['সি-১', 'রোড সি-১', 'ব্লক সি'], method: 'cash' });
+      expect(rows[3]!.places).toEqual(['ডি-১', null, 'ব্লক ডি']);
+      expect(rows[4]).toMatchObject({ payer: null, role: null, places: [null, null, null] });
+      // Voided receipts are listed but never counted; the totals agree with the income report.
+      expect(report.totals).toEqual({
+        amounts: { [ids.service]: '2500.00', [ids.fine]: '100.00', [ids.mosqueFee]: '300.00', donation: '1000.00' },
+        total: '3900.00',
+        receipts: 4,
+      });
+      expect(report).toMatchObject({ activeDays: 1, newMembers: 0 });
+
+      const counted = collectionRegisterSchema.parse((await get('/reports/collection-register?voided=false').expect(200)).body);
+      expect(counted.days[0]!.rows.some((row) => row.void)).toBe(false);
+      const bank = collectionRegisterSchema.parse((await get('/reports/collection-register?method=bank').expect(200)).body);
+      expect(bank.days).toEqual([]);
+      const byClerk = collectionRegisterSchema.parse((await get(`/reports/collection-register?collectorId=${users.clerkC.id}`).expect(200)).body);
+      expect(byClerk.totals).toMatchObject({ total: '1100.00', receipts: 2 });
+      const blockD = collectionRegisterSchema.parse((await get(`/reports/collection-register?locationId=${ids.blockD}`).expect(200)).body);
+      expect(blockD.days[0]!.rows.map((row) => row.total)).toEqual(['1800.00']);
+      expect(blockD.columns.some((column) => column.kind === 'donation')).toBe(false);
+      const past = collectionRegisterSchema.parse((await get('/reports/collection-register?month=2025-01').expect(200)).body);
+      expect(past).toMatchObject({ days: [], totals: { total: '0.00', receipts: 0 }, levels: [] });
+
+      // A Block C collector: Block C receipts only, and no donations without donations.view.
+      const scoped = collectionRegisterSchema.parse((await get('/reports/collection-register', users.clerkC).expect(200)).body);
+      expect(scoped.days[0]!.rows.map((row) => row.total)).toEqual(['600.00', '500.00', '1000.00']);
+      expect(scoped.columns.some((column) => column.kind === 'donation')).toBe(false);
+      await get(`/reports/collection-register?locationId=${ids.blockD}`, users.clerkC).expect(404);
+      await get('/reports/collection-register', users.ledgerViewer).expect(403);
+      await get('/reports/collection-register?month=2026-13').expect(400);
+
+      // The CSV: one row per receipt, a day total and the month total; donations need donations.export.
+      const csv = await get(`/reports/collection-register/csv?lang=en&month=${month}`, users.exporter).expect(200);
+      expect(csv.headers['content-disposition']).toBe(`attachment; filename="collection-register-${month}.csv"`);
+      const lines = csv.text.replace(/^﻿/, '').trimEnd().split('\r\n');
+      expect(lines[0]).toMatch(/^Date,Payer,Role,Months,ইউনিট,রোড,ব্লক,Receipt,Method,Collector,/);
+      expect(lines[0]).not.toContain('Donation');
+      expect(lines).toHaveLength(1 + 4 + 1 + 1);
+      expect(lines.at(-1)).toContain('2900.00');
+      await get('/reports/collection-register/csv', users.clerkC).expect(403);
     });
 
     it('arrears: units with overdue bills, aged, within the caller’s area', async () => {

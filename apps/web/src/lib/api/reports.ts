@@ -7,6 +7,8 @@ import {
   type AuditListQuery,
   type AuditOptions,
   type CollectionQuery,
+  type CollectionRegister,
+  type CollectionRegisterQuery,
   type CollectionReport,
   type DayBook,
   type IncomeQuery,
@@ -68,6 +70,16 @@ export async function getCollection(query: CollectionQuery): Promise<CollectionR
 }
 
 /** Null for a place outside the caller's area. */
+/** Null for a month or filter the API refuses, or a place outside the caller's area. */
+export async function getCollectionRegister(query: Partial<CollectionRegisterQuery>): Promise<CollectionRegister | null> {
+  const { voided, ...rest } = query;
+  const params = { ...rest, ...(voided === undefined ? {} : { voided: String(voided) }) };
+  const { data, response } = await api.GET("/reports/collection-register", { params: { query: params }, headers: await authHeaders(), cache: "no-store" });
+  if (response.status === 400 || response.status === 404) return null;
+  if (!data) throw failed("the collection register", response.status);
+  return data;
+}
+
 export async function getArrears(query: ArrearsQuery): Promise<ArrearsReport | null> {
   const { data, response } = await api.GET("/reports/arrears", { params: { query }, headers: await authHeaders(), cache: "no-store" });
   if (response.status === 400 || response.status === 404) return null;

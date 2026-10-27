@@ -25,6 +25,8 @@ Billing, payments, donations and expenses have their own files; this one holds t
 - Records reports (Step 29, `RecordsReportsService` and `RecordsReportsController`): occupancy counts active units by the stored `units.occupancy`; members are scoped through `memberships.location_id` (a scoped caller never sees memberships without a place); the renter list for the police station needs `members.export` for the page itself, scopes on that grant, and answers 403 `thana_sharing_off` while the setting `share_renters_with_thana` is not `true`. It never carries the NID.
 - A new report adds its key to `REPORT_KEYS` and its modules to `MODULES` in `apps/web/src/components/reports/access.ts` (list a report that is itself an export in `EXPORT_ONLY`).
 - Long printed lists use the `print-a4` class (named page `a4` in `globals.css`).
+- Wide registers print on A4 landscape with the `print-a4-landscape` class (named page `a4-landscape`); the page footer goes in the `@bottom-left` margin box through a page rule the print component adds, because only CSS can count pages (`register-print.tsx`).
+- Collection register (Step 33): a receipt splits over its bills' lines in line order after earlier unvoided receipts (tie-break received_at, id, as in the income report), one column per charge type plus donations; voided receipts are listed but never counted; donations need `donations.view` (CSV: `donations.export`) and drop out under a place filter. The split and totals are the pure rules in `contracts/collection-register.ts`; the screen and the print share `RegisterGrid`.
 
 ## Overview dashboard
 

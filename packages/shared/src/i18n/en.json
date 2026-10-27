@@ -2270,6 +2270,10 @@
         "title": "Collection by area",
         "body": "Billed against collected for each block or road, with the percentage."
       },
+      "collection-register": {
+        "title": "Collection register",
+        "body": "Every receipt of one month, day by day, split by charge, with day and month totals."
+      },
       "arrears": {
         "title": "Arrears",
         "body": "Units with overdue bills, aged 1–30, 31–90 and over 90 days. Prints as a door-to-door list."
@@ -2342,6 +2346,52 @@
         "percent": "Collected"
       },
       "empty": "No areas to show."
+    },
+    "collectionRegister": {
+      "title": "Collection register",
+      "sub": "Receipts day by day, split by charge · {month}",
+      "month": "Month",
+      "place": "Area",
+      "allPlaces": "All areas",
+      "collector": "Collector",
+      "allCollectors": "All collectors",
+      "method": "Payment method",
+      "allMethods": "All methods",
+      "voided": "Show voided (struck, not counted)",
+      "stats": {
+        "collected": "Collected this month",
+        "collectedNote": "{receipts, plural, one {# receipt} other {# receipts}} on {days, plural, one {# day} other {# days}}",
+        "largest": "Largest charge",
+        "largestNone": "Nothing collected yet",
+        "newMembers": "New members",
+        "newMembersNote": "Membership fee paid this month"
+      },
+      "col": {
+        "date": "Date",
+        "payer": "Payer · months",
+        "receipt": "Receipt",
+        "donation": "Donation",
+        "total": "Total"
+      },
+      "role": {
+        "owner": "Owner",
+        "renter": "Renter",
+        "member": "Member"
+      },
+      "dayTotal": "Day total · {count, plural, one {# receipt} other {# receipts}}",
+      "monthTotal": "Month total",
+      "voidMark": "Voided",
+      "empty": "No receipts in this month.",
+      "invalid": "This filter could not be shown, so this month is shown instead.",
+      "printButton": "Print A4",
+      "printTitle": "Daily collection register",
+      "printed": "Printed {date}",
+      "printPage": "Page {page} of {pages}",
+      "sign": {
+        "collector": "Collector",
+        "treasurer": "Treasurer",
+        "secretary": "Secretary"
+      }
     },
     "arrears": {
       "title": "Arrears",

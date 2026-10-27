@@ -288,6 +288,23 @@
   .print-portal .print-bill-a4 {
     page: bill-a4;
   }
+  /* Wide registers (the collection register): A4 landscape with the footer in the bottom
+     margin; its words come from a page rule the register's print adds (register-print.tsx). */
+  @page a4-landscape {
+    size: A4 landscape;
+    margin: 10mm 10mm 14mm;
+    @bottom-left {
+      font-size: 8.5pt;
+      color: #4a544d;
+    }
+  }
+  .print-portal .print-a4-landscape {
+    page: a4-landscape;
+    font-size: 9.5pt;
+  }
+  .print-portal .print-a4-landscape tr {
+    break-inside: avoid;
+  }
   /* An 80 mm thermal roll: its length is set by ThermalSheet (components/print/thermal-sheet.tsx). */
   .print-portal .print-thermal {
     page: thermal80;

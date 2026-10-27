@@ -4,6 +4,7 @@ import { canAnywhere, type Access, type PermissionModule, type ReportKey } from 
 const MODULES: Record<ReportKey, PermissionModule[]> = {
   "day-book": ["payments", "donations", "expenses", "ledger"],
   collection: ["billing"],
+  "collection-register": ["payments"],
   arrears: ["billing"],
   income: ["ledger"],
   occupancy: ["units"],

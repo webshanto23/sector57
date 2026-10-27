@@ -1015,6 +1015,17 @@ Asked for by Anis on 2026-10-26: one expense record holds several items, added w
 - **Checked:** the six affected e2e files and `pnpm check`. The form was not opened in a browser; the 375/820/1440 checks stay in the deferred pass.
 - **Not in this step:** different funds or dates per line, vouchers per line, reordering lines.
 
+## Step 33: Collection register — Built, awaiting review
+
+Asked for by Anis on 2026-10-27, to the mocks `docs/mocks/sector57-collection-register.png` (screen) and `sector57-collection-register-a4.png` (print). Built on `step/33-collection-register` (from `step/30b-thermal`) in four parts. Decided by Anis: one column per charge type plus donations (membership fees are a charge type, so no separate column); no bank-withdrawal row or card; "Renter" alone only when no payer name is recorded; the method filter offers all `PAYMENT_METHODS`; voided receipts are listed (struck, never counted) by default and on the print; three stat cards; the collector filter lists only the month's collectors; the print header comes from the receipt header.
+
+- **Shared (`contracts/collection-register.ts`):** query (`month`, `locationId`, `collectorId`, `method`, `voided`) and response (`levels`, `columns`, `days` with rows and day totals, `totals`, `activeDays`, `newMembers`, `header`). Rules: `splitAcrossLines` (a payment fills its bill's lines in line order after earlier unvoided receipts, exact on paisa), `sumRows` (voided rows never count), `groupByDay`, `largestColumn`.
+- **API:** `GET /reports/collection-register` (`payments.view`, in the caller's area; 404 for a place outside it), donations only with `donations.view` and only without a place filter; tie-break (received_at, id) like the income report. `/csv` needs `payments.export` and carries donations only with `donations.export`. `header` is `settings.receiptHeader()`.
+- **Web:** `/dashboard/reports/collection-register` (card on the reports page): filters (month, area for users who see locations, collector, method, show voided), cards (collected with receipts and days, largest charge, new members), `RegisterGrid` (one table, the date spanning its day, tinted day totals, month total) with day cards on phones, CSV, and "Print A4": `RegisterPrint` on the named page `a4-landscape` (society band, filter line, signature lines for collector, treasurer and secretary; "Printed … · Page x of y" in the bottom margin from a page rule the component adds).
+- **Tests:** shared spec for the split and totals; e2e for columns, split, voided, scope, filters, donations and CSV rights.
+- **Checked:** `reports.e2e-spec.ts` and `pnpm check`. Neither the screen nor the print was opened in a browser (no admin login); a headless test page confirmed A4 landscape and paging, not the footer text.
+- **Not in this step:** a thermal or A5 register, choosing its format through `print_formats`, a bank-withdrawal row, a full list of collectors.
+
 ## Later: beyond milestone 3
 
 These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.
