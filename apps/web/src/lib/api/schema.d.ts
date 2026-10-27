@@ -7572,6 +7572,22 @@ export interface components {
                 receipts: number;
             };
             activeDays: number;
+            header: {
+                nameBn: string;
+                nameEn: string | null;
+                addressBn: string | null;
+                addressEn: string | null;
+                phone: string | null;
+                /** @default null */
+                email: string | null;
+                /** @default null */
+                regNo: string | null;
+                /** @default null */
+                officeHoursBn: string | null;
+                /** @default null */
+                officeHoursEn: string | null;
+                mark: string;
+            };
             newMembers: number;
         };
         ArrearsReportDto_Output: {

@@ -17,6 +17,7 @@ import {
 } from '@s57/shared';
 import { isoDate, todayDate } from '../common/dates.js';
 import type { CallerAccess } from '../permissions/caller-access.js';
+import { SettingsService } from '../finance/settings.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { locationNotFound, pathIds, TreeService } from '../property/tree.service.js';
 import { inScope, reaches } from './area-tree.js';
@@ -71,6 +72,7 @@ export class CollectionRegisterService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tree: TreeService,
+    private readonly settings: SettingsService,
   ) {}
 
   /** 404 `location_not_found` for a place outside the caller's area. */
@@ -105,7 +107,7 @@ export class CollectionRegisterService {
       return this.row(receipt, amounts, own[0]?.role ?? null, months);
     });
 
-    const { levels, placesOf } = await this.levels(societyId, receipts);
+    const [{ levels, placesOf }, header] = await Promise.all([this.levels(societyId, receipts), this.settings.receiptHeader(societyId)]);
     const withPlaces: RegisterRow[] = rows.map((row, index) => ({ ...row, places: placesOf(receipts[index]!.path) }));
     const days = groupByDay(withPlaces);
     return {
@@ -116,6 +118,7 @@ export class CollectionRegisterService {
       totals: sumRows(withPlaces),
       activeDays: days.filter((day) => day.receipts > 0).length,
       newMembers: members.size,
+      header,
     };
   }
 

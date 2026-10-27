@@ -458,6 +458,7 @@ describe('Fund ledger and finance reports (e2e)', () => {
       expect(report.month).toBe(month);
       expect(report.columns.map((column) => column.key).sort()).toEqual([ids.fine, ids.mosqueFee, ids.service, 'donation'].sort());
       expect(report.columns.at(-1)).toMatchObject({ key: 'donation', kind: 'donation' });
+      expect(report.header.nameBn).toBeTruthy();
       expect(report.levels.map((level) => level.nameBn)).toEqual(['ইউনিট', 'রোড', 'ব্লক']);
       expect(report.days).toHaveLength(1);
       const rows = report.days[0]!.rows;

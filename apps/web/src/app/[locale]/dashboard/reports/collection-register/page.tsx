@@ -6,6 +6,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Note } from "@/components/admin/form-status";
 import { Field, inputClass, StatCard } from "@/components/kit";
 import { canExportReport, canSeeReport } from "@/components/reports/access";
+import { RegisterGrid } from "@/components/reports/register-grid";
+import { RegisterPrint } from "@/components/reports/register-print";
 import { RegisterTable } from "@/components/reports/register-table";
 import { ReportHeader } from "@/components/reports/report-header";
 import { Button } from "@/components/ui/button";
@@ -71,12 +73,21 @@ export default async function CollectionRegisterPage({ params, searchParams }: P
       ? t("col.donation")
       : pick(largestColumnDef.nameBn ?? "", largestColumnDef.nameEn, locale)
     : null;
+  const monthLabel = formatDate(`${report.month}-01`, locale, "monthYear");
+  // The print's subtitle: "Sep 2026 · All areas · All collectors", plus the method when one is chosen.
+  const place = shown.locationId ? places.find((option) => option.id === shown.locationId)?.name : t("allPlaces");
+  const filters = [
+    monthLabel,
+    place,
+    shown.collectorId ? collectors.get(shown.collectorId) : t("allCollectors"),
+    shown.method ? tMethod(shown.method) : null,
+  ].filter(Boolean).join(" · ");
 
   return (
     <>
       <ReportHeader
         title={t("title")}
-        sub={t("sub", { month: formatDate(`${report.month}-01`, locale, "monthYear") })}
+        sub={t("sub", { month: monthLabel })}
         csv={
           canExportReport(me.access, "collection-register")
             ? csvHref("collection-register", {
@@ -88,6 +99,13 @@ export default async function CollectionRegisterPage({ params, searchParams }: P
                 lang: locale,
               })
             : null
+        }
+        actions={
+          report.days.length > 0 ? (
+            <RegisterPrint header={report.header} filters={filters}>
+              <RegisterGrid report={report} locale={locale} variant="print" />
+            </RegisterPrint>
+          ) : null
         }
       />
 

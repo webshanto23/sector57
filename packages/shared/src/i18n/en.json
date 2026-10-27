@@ -2382,7 +2382,16 @@
       "monthTotal": "Month total",
       "voidMark": "Voided",
       "empty": "No receipts in this month.",
-      "invalid": "This filter could not be shown, so this month is shown instead."
+      "invalid": "This filter could not be shown, so this month is shown instead.",
+      "printButton": "Print A4",
+      "printTitle": "Daily collection register",
+      "printed": "Printed {date}",
+      "printPage": "Page {page} of {pages}",
+      "sign": {
+        "collector": "Collector",
+        "treasurer": "Treasurer",
+        "secretary": "Secretary"
+      }
     },
     "arrears": {
       "title": "Arrears",

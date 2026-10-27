@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { addMoney, fromPaisa, toPaisa } from '../money.js';
 import { BILL_TO_ROLES } from './billing.js';
-import { PAYMENT_METHODS } from './finance.js';
+import { documentHeaderSchema, PAYMENT_METHODS } from './finance.js';
 import { isoDay } from './members.js';
 import { isoMonth } from './staff.js';
 
@@ -81,6 +81,8 @@ export const collectionRegisterSchema = z.object({
   totals: registerTotals,
   /** Days with at least one counted receipt. */
   activeDays: z.number().int().min(0),
+  /** The society's name, address and logo badge for the A4 print, as on receipts and bills. */
+  header: documentHeaderSchema,
   /** Members whose membership bill was paid on this month (counted receipts only). */
   newMembers: z.number().int().min(0),
 });

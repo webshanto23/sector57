@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { FinanceModule } from '../finance/finance.module.js';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { PropertyModule } from '../property/property.module.js';
 import { AreaReportsService } from './area-reports.service.js';
@@ -15,7 +16,7 @@ import { ReportsController } from './reports.controller.js';
  * collection register; their CSV files.
  */
 @Module({
-  imports: [PrismaModule, PropertyModule],
+  imports: [PrismaModule, PropertyModule, FinanceModule],
   controllers: [ReportsController, RecordsReportsController],
   providers: [DayBookService, AreaReportsService, IncomeService, RecordsReportsService, CollectionRegisterService],
   exports: [AreaReportsService],
