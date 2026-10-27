@@ -2212,6 +2212,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/reports/collection-register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReportsController_collectionRegister"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/collection-register/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ReportsController_collectionRegisterCsv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/reports/arrears": {
         parameters: {
             query?: never;
@@ -7482,6 +7514,65 @@ export interface components {
                 outstanding: string;
                 percent: number;
             };
+        };
+        CollectionRegisterDto_Output: {
+            month: string;
+            levels: {
+                /** Format: uuid */
+                id: string;
+                nameBn: string;
+                nameEn: string | null;
+            }[];
+            columns: {
+                key: string;
+                /** @enum {string} */
+                kind: "charge" | "donation";
+                nameBn: string | null;
+                nameEn: string | null;
+            }[];
+            days: {
+                amounts: {
+                    [key: string]: string;
+                };
+                total: string;
+                receipts: number;
+                /** Format: date */
+                day: string;
+                rows: {
+                    /** Format: uuid */
+                    id: string;
+                    receiptNo: string;
+                    /** Format: date-time */
+                    at: string;
+                    /** Format: date */
+                    day: string;
+                    payer: string | null;
+                    role: ("owner" | "renter" | "member") | null;
+                    months: string[];
+                    places: (string | null)[];
+                    amounts: {
+                        [key: string]: string;
+                    };
+                    total: string;
+                    /** @enum {string} */
+                    method: "cash" | "bank" | "cheque" | "mobile";
+                    collector: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                    };
+                    void: boolean;
+                }[];
+            }[];
+            totals: {
+                amounts: {
+                    [key: string]: string;
+                };
+                total: string;
+                receipts: number;
+            };
+            activeDays: number;
+            newMembers: number;
         };
         ArrearsReportDto_Output: {
             /** Format: date */
@@ -14279,6 +14370,55 @@ export interface operations {
                 from?: string;
                 to?: string;
                 parentId?: string;
+                lang?: "bn" | "en";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ReportsController_collectionRegister: {
+        parameters: {
+            query?: {
+                month?: string;
+                locationId?: string;
+                collectorId?: string;
+                method?: "cash" | "bank" | "cheque" | "mobile";
+                voided?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectionRegisterDto_Output"];
+                };
+            };
+        };
+    };
+    ReportsController_collectionRegisterCsv: {
+        parameters: {
+            query?: {
+                month?: string;
+                locationId?: string;
+                collectorId?: string;
+                method?: "cash" | "bank" | "cheque" | "mobile";
+                voided?: string;
                 lang?: "bn" | "en";
             };
             header?: never;

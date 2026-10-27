@@ -1,5 +1,5 @@
 import { REPORT_KEYS, type Locale, type ReportKey } from "@s57/shared";
-import { BookOpen, Building2, ChartColumn, ClipboardList, Clock, IdCard, Scale, type LucideIcon } from "lucide-react";
+import { BookOpen, Building2, ChartColumn, ClipboardList, Clock, IdCard, ReceiptText, Scale, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -11,6 +11,7 @@ import { getMe } from "@/lib/api/session";
 const ICONS: Record<ReportKey, LucideIcon> = {
   "day-book": BookOpen,
   collection: ChartColumn,
+  "collection-register": ReceiptText,
   arrears: Clock,
   income: Scale,
   occupancy: Building2,
