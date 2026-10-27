@@ -14,3 +14,5 @@
 
 - Dashboard saves that change public content call `refreshPublicSite()` (via `components/cms/use-save.ts`), so the site updates at once.
 - Editable site pages are listed in `EDITABLE_PAGES` / `pageContentSchemas` (shared); a new page needs an entry there and an editor under `components/cms/pages`.
+- Fields that are the same in both languages sit beside `bn`/`en` in the page content (e.g. home `heroAlbumId`); editors pass them as `shared` to `useLocalizedPage`.
+- The home hero slider shows a gallery album chosen in the home editor (`heroAlbumId`), its first `HERO_SLIDES_MAX` photos in gallery order. No upload code of its own: images are managed in the gallery. Saving checks the album belongs to the society; the public page draws the illustration while the album is missing, unpublished or empty, and per photo whose file fails to load.

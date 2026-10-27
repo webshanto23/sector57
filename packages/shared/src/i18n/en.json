@@ -57,7 +57,10 @@
       "allProjects": "All projects",
       "emergency": "Emergency contacts",
       "progress": "{title}: {percent}% complete",
-      "artLabel": "Buildings of our area by the lake"
+      "artLabel": "Buildings of our area by the lake",
+      "slides": "Photos of our area",
+      "slideAlt": "{album}, photo {n}",
+      "showSlide": "Show photo {n}"
     }
   },
   "Notices": {
@@ -707,6 +710,13 @@
         "heroLabel": "Small label above the title",
         "heroTitle": "Title",
         "heroLead": "Introduction",
+        "heroAlbum": "Hero slider",
+        "heroAlbumSub": "The home page shows the first {max} photos of the chosen gallery album, in the album's order. Add, remove and reorder them in the gallery.",
+        "heroAlbumLabel": "Album",
+        "heroAlbumNone": "None (show the illustration)",
+        "heroAlbumOption": "{title} ({count} photos){draft, select, yes { · draft} other {}}",
+        "heroAlbumDraft": "This album is a draft. The home page shows the illustration until you publish it.",
+        "heroAlbumNoAccess": "You need access to the gallery to choose the album.",
         "stats": "Figures",
         "statN": "Figure {n}",
         "statLabel": "Label",

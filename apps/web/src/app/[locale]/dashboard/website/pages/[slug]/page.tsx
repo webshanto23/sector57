@@ -18,7 +18,7 @@ import { SiteInfoEditor } from "@/components/cms/pages/site-info-editor";
 import { PageHeader } from "@/components/kit";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { getSitePageAdmin } from "@/lib/api/cms";
+import { getAlbumsAdmin, getSitePageAdmin } from "@/lib/api/cms";
 import { requirePermission } from "@/lib/api/session";
 
 const isEditable = (slug: string): slug is EditablePage => (EDITABLE_PAGES as readonly string[]).includes(slug);
@@ -40,7 +40,13 @@ export default async function EditPagePage({ params }: PageProps<"/[locale]/dash
   if (!isEditable(slug)) notFound();
 
   const me = await requirePermission("site");
-  const [t, page] = await Promise.all([getTranslations("Cms.pages"), getSitePageAdmin(slug)]);
+  // The home slider's album picker lists albums only for users who may see the gallery.
+  const withAlbums = slug === "home" && canAnywhere(me.access, "gallery", "view");
+  const [t, page, albums] = await Promise.all([
+    getTranslations("Cms.pages"),
+    getSitePageAdmin(slug),
+    withAlbums ? getAlbumsAdmin({ pageSize: 100 }) : null,
+  ]);
   const canSave = canAnywhere(me.access, "site", "edit");
 
   const schema = { home: homeContentSchema, site: siteInfoSchema, developments: developmentsContentSchema }[slug];
@@ -69,7 +75,11 @@ export default async function EditPagePage({ params }: PageProps<"/[locale]/dash
         {invalid ? <Note tone="warn">{t("invalidContent")}</Note> : null}
         {!canSave ? <Note>{t("readOnly")}</Note> : null}
         {slug === "home" ? (
-          <HomeEditor initial={parsed?.success ? homeContentSchema.parse(page.content) : null} canSave={canSave} />
+          <HomeEditor
+            initial={parsed?.success ? homeContentSchema.parse(page.content) : null}
+            canSave={canSave}
+            albums={albums?.items ?? null}
+          />
         ) : slug === "site" ? (
           <SiteInfoEditor initial={parsed?.success ? siteInfoSchema.parse(page.content) : null} canSave={canSave} />
         ) : (

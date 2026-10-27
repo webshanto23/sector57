@@ -1,4 +1,4 @@
-import { developmentsContentSchema, pageSlug, pickContent, siteInfoSchema } from './site-pages.js';
+import { developmentsContentSchema, homeContentSchema, pageSlug, pickContent, siteInfoSchema } from './site-pages.js';
 
 const site = {
   bn: { address: 'বাড়ি ১, রোড ৩', officeHours: 'সকাল ১০টা থেকে সন্ধ্যা ৬টা', phone: '01711-000057' },
@@ -13,6 +13,20 @@ describe('pickContent', () => {
   it('uses English when present', () => {
     const parsed = siteInfoSchema.parse({ ...site, en: { ...site.bn, address: 'House 1, Road 3' } });
     expect(pickContent(parsed, 'en').address).toBe('House 1, Road 3');
+  });
+});
+
+describe('homeContentSchema', () => {
+  const home = { bn: { hero: { label: 'ক', title: 'খ', lead: '' }, stats: [], events: [], emergency: [] } };
+
+  it('keeps content saved before the hero album existed valid', () => {
+    expect(homeContentSchema.parse(home).heroAlbumId).toBeUndefined();
+  });
+
+  it('accepts an album id and rejects anything else', () => {
+    const id = '00000000-0000-4000-8000-000000000057';
+    expect(homeContentSchema.parse({ ...home, heroAlbumId: id }).heroAlbumId).toBe(id);
+    expect(homeContentSchema.safeParse({ ...home, heroAlbumId: 'album-1' }).success).toBe(false);
   });
 });
 

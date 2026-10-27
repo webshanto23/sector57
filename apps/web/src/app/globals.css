@@ -74,6 +74,8 @@
   --accent-brand: #006a4e;
   --accent-brand-strong: #00563f;
   --accent-brand-soft: #e2efe8;
+  /* Light brand green for marks on photos (the slider's active dot); the same in both modes. */
+  --accent-brand-bright: #4fbf8f;
   --on-accent: #ffffff;
   --sun: #c42136;
   --sun-soft: #fbe6e8;

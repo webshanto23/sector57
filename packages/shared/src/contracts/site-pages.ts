@@ -31,7 +31,15 @@ const phone = z.string().regex(/^[0-9+\- ]{3,20}$/);
 /** Icons the home page's emergency contacts may use (mapped to lucide icons in web). */
 export const CONTACT_ICONS = ['siren', 'landmark', 'shield-check', 'stethoscope', 'flame', 'phone'] as const;
 
-/** Slug `home`: content of the public home page that has no table of its own. */
+/** Photos of the hero album the home page slider shows (the album's first ones, in gallery order). */
+export const HERO_SLIDES_MAX = 5;
+
+/**
+ * Slug `home`: content of the public home page that has no table of its own.
+ * `heroAlbumId` (same for both languages) picks a gallery album for the hero
+ * slider; without it, or while that album is unpublished or empty, the site
+ * draws its illustration.
+ */
 export const homeContentSchema = localized(
   z.object({
     hero: z.object({ label: line, title: line, lead: z.string().max(600) }),
@@ -40,7 +48,7 @@ export const homeContentSchema = localized(
     events: z.array(z.object({ date: z.iso.date(), title: line, place: line })).max(6),
     emergency: z.array(z.object({ label: line, phone, icon: z.enum(CONTACT_ICONS) })).max(8),
   }),
-);
+).extend({ heroAlbumId: z.uuid().optional() });
 export type HomeContent = z.infer<typeof homeContentSchema>;
 
 /** Illustrations the site can draw where a photo is missing (ports of the mockup's `art()` scenes). */

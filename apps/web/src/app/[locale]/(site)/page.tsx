@@ -1,4 +1,4 @@
-import { formatDate, localDigits, pick, pickContent, type Locale } from "@s57/shared";
+import { formatDate, HERO_SLIDES_MAX, localDigits, pick, pickContent, type Locale } from "@s57/shared";
 import {
   CalendarDays,
   ChevronRight,
@@ -16,10 +16,11 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Card, Chip, IconTitle, Kantha, ProgressBar } from "@/components/kit";
 import { Art } from "@/components/site/art";
+import { HeroSlider } from "@/components/site/hero-slider";
 import { NOTICE_CATEGORY_STYLE } from "@/components/site/notice-category";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { getDevelopments, getHomeContent, getLatestNotices } from "@/lib/api/public";
+import { getDevelopments, getHeroAlbum, getHomeContent, getLatestNotices } from "@/lib/api/public";
 import { getBrand } from "@/lib/brand";
 import { alternates } from "@/lib/metadata";
 
@@ -57,6 +58,18 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
     getDevelopments(),
   ]);
   const home = content ? pickContent(content, locale) : null;
+  const heroAlbum = content?.heroAlbumId ? await getHeroAlbum(content.heroAlbumId) : null;
+  const albumTitle = heroAlbum ? pick(heroAlbum.titleBn, heroAlbum.titleEn, locale) : "";
+  const slides = (heroAlbum?.photos ?? [])
+    .flatMap((photo) => (photo.url ? [{ ...photo, url: photo.url }] : []))
+    .slice(0, HERO_SLIDES_MAX)
+    .map((photo, index) => ({
+      url: photo.url,
+      alt: photo.captionBn
+        ? pick(photo.captionBn, photo.captionEn, locale)
+        : t("slideAlt", { album: albumTitle, n: localDigits(index + 1, locale) }),
+    }));
+  const art = <Art scene="lake" seed={7} ratio={[4, 3]} label={t("artLabel")} className="h-full" />;
   // Same projects as the developments page: ongoing first, at most three.
   const projects = (developments?.projects ?? [])
     .filter((project) => project.status !== "completed")
@@ -103,7 +116,12 @@ export default async function Home({ params }: PageProps<"/[locale]">) {
             </>
           ) : null}
         </div>
-        <Art scene="lake" seed={7} ratio={[4, 3]} label={t("artLabel")} className="h-full" />
+        {/* Photo frame inset in the card: no padding on the text side (left on desktop, top on phones). */}
+        <div className="px-2.5 pb-2.5 min-[761px]:py-2.5 min-[761px]:pl-0">
+          <div className="h-full overflow-hidden rounded-[8px] bg-[var(--accent-brand-soft)]">
+            {slides.length > 0 ? <HeroSlider slides={slides} fallback={art} /> : art}
+          </div>
+        </div>
       </section>
 
       <div className="mt-0.5 grid grid-cols-[repeat(auto-fit,minmax(min(340px,100%),1fr))] gap-3.5">
