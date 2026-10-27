@@ -19,17 +19,20 @@ export type Localized<T> = { bn: T; en: T };
 /**
  * Form state for page content stored as `{ bn, en? }`. Both languages are always in
  * the form; English is checked and saved only while "Add English version" is on.
+ * `shared` holds fields stored beside `bn`/`en` (the same in both languages).
  */
 export function useLocalizedPage<T extends FieldValues>({
   slug,
   inner,
   initial,
   empty,
+  shared,
 }: {
   slug: EditablePage;
   inner: z.ZodType<T>;
   initial: { bn: T; en?: T } | null;
   empty: T;
+  shared?: Record<string, unknown>;
 }) {
   const [withEn, setWithEn] = useState(Boolean(initial?.en));
   const save = useSave();
@@ -41,7 +44,7 @@ export function useLocalizedPage<T extends FieldValues>({
   });
 
   const submit = form.handleSubmit(async (values) => {
-    const content = withEn ? { bn: values.bn, en: values.en } : { bn: values.bn };
+    const content = { ...shared, ...(withEn ? { bn: values.bn, en: values.en } : { bn: values.bn }) };
     await save.run(() => api.PUT("/site-pages/{slug}", { params: { path: { slug } }, body: { content } }));
   });
 
@@ -53,10 +56,13 @@ export function LocalizedPageForm<T extends FieldValues>({
   page,
   canSave,
   fields,
+  before,
 }: {
   page: ReturnType<typeof useLocalizedPage<T>>;
   canSave: boolean;
   fields: (lang: Lang, form: UseFormReturn<Localized<T>>) => ReactNode;
+  /** A card above the language cards, for the `shared` fields. */
+  before?: ReactNode;
 }) {
   const t = useTranslations("Cms.pages");
   const tAdmin = useTranslations("Admin");
@@ -65,6 +71,7 @@ export function LocalizedPageForm<T extends FieldValues>({
   return (
     <form noValidate onSubmit={submit} className="grid gap-3.5">
       <fieldset disabled={!canSave} className="grid gap-3.5">
+        {before}
         <Card className="grid gap-3.5">
           <SectionTitle title={t("bangla")} />
           {fields("bn", form)}

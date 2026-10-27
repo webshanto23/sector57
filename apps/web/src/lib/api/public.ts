@@ -99,6 +99,15 @@ export async function getAlbum(id: string) {
   return data;
 }
 
+/** The home slider's album; null when it is missing, unpublished or the API is down (the hero then draws its illustration). */
+export async function getHeroAlbum(id: string) {
+  try {
+    return await getAlbum(id);
+  } catch {
+    return null;
+  }
+}
+
 /** The society this site serves; null when the API is unreachable (callers fall back to the i18n name). */
 export async function getSociety() {
   try {

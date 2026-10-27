@@ -43,6 +43,7 @@ describe('Content CMS and file storage (e2e)', () => {
   let systemRoleId: string;
   let admin: { id: string; cookie: string };
   let siteBefore: unknown;
+  let homeBefore: unknown;
   const server = () => app.getHttpServer();
   const onDisk = (key: string) => existsSync(join(mediaDir, ...key.split('/')));
 
@@ -85,6 +86,8 @@ describe('Content CMS and file storage (e2e)', () => {
     admin = await makeUser([systemRoleId]);
     siteBefore = (await prisma.site_pages.findUnique({ where: { society_id_slug: { society_id: societyId, slug: 'site' } } }))
       ?.content;
+    homeBefore = (await prisma.site_pages.findUnique({ where: { society_id_slug: { society_id: societyId, slug: 'home' } } }))
+      ?.content;
   });
 
   afterAll(async () => {
@@ -93,6 +96,12 @@ describe('Content CMS and file storage (e2e)', () => {
         await prisma.site_pages.update({
           where: { society_id_slug: { society_id: societyId, slug: 'site' } },
           data: { content: siteBefore as object },
+        });
+      }
+      if (homeBefore !== undefined) {
+        await prisma.site_pages.update({
+          where: { society_id_slug: { society_id: societyId, slug: 'home' } },
+          data: { content: homeBefore as object },
         });
       }
       const persons = await prisma.persons.findMany({
@@ -215,6 +224,20 @@ describe('Content CMS and file storage (e2e)', () => {
       const viewer = await userWith('site:view');
       await get('/site-pages/home', viewer.cookie).expect(200);
       await send('put', '/site-pages/site', viewer.cookie).send(site('x')).expect(403);
+    });
+
+    it("keeps the home slider's album, but only one of this society", async () => {
+      const home = (heroAlbumId: string) => ({
+        content: { bn: { hero: { label: 'ক', title: 'খ', lead: '' }, stats: [], events: [], emergency: [] }, heroAlbumId },
+      });
+      const own = await prisma.gallery_albums.create({ data: { society_id: societyId, title_bn: `ব্যানার ${MARK}` } });
+      const foreign = await prisma.gallery_albums.create({ data: { society_id: otherSocietyId, title_bn: `বিদেশি ${MARK}` } });
+
+      const saved = await send('put', '/site-pages/home').send(home(own.id)).expect(200);
+      expect(saved.body.content.heroAlbumId).toBe(own.id);
+      const res = await send('put', '/site-pages/home').send(home(foreign.id)).expect(400);
+      expect(res.body.code).toBe('album_not_found');
+      await send('put', '/site-pages/home').send(home(randomUUID())).expect(400);
     });
   });
 

@@ -2,9 +2,11 @@
 
 import { CONTACT_ICONS, homeContentSchema, localDigits, type HomeContent } from "@s57/shared";
 import { useLocale, useTranslations } from "next-intl";
+import { useState } from "react";
 import { useFieldArray, type UseFormReturn } from "react-hook-form";
 import { Field, inputClass } from "@/components/kit";
 import { FieldMessage, TextAreaField, TextField } from "../fields";
+import { HeroAlbumField, type HeroAlbumOption } from "./hero-album-field";
 import { ListEditor } from "./list-editor";
 import { LocalizedPageForm, useLocalizedPage, type Lang, type Localized } from "./localized-page";
 
@@ -13,10 +15,32 @@ type Form = UseFormReturn<Localized<Inner>>;
 
 const EMPTY: Inner = { hero: { label: "", title: "", lead: "" }, stats: [], events: [], emergency: [] };
 
-/** Home page: the hero, the figures under it, upcoming events and emergency contacts. */
-export function HomeEditor({ initial, canSave }: { initial: HomeContent | null; canSave: boolean }) {
-  const page = useLocalizedPage<Inner>({ slug: "home", inner: homeContentSchema.shape.bn, initial, empty: EMPTY });
-  return <LocalizedPageForm page={page} canSave={canSave} fields={(lang, form) => <HomeFields lang={lang} form={form} />} />;
+/** Home page: the hero slider's album, the hero, the figures under it, upcoming events and emergency contacts. */
+export function HomeEditor({
+  initial,
+  canSave,
+  albums,
+}: {
+  initial: HomeContent | null;
+  canSave: boolean;
+  albums: HeroAlbumOption[] | null;
+}) {
+  const [heroAlbumId, setHeroAlbumId] = useState(initial?.heroAlbumId);
+  const page = useLocalizedPage<Inner>({
+    slug: "home",
+    inner: homeContentSchema.shape.bn,
+    initial,
+    empty: EMPTY,
+    shared: { heroAlbumId },
+  });
+  return (
+    <LocalizedPageForm
+      page={page}
+      canSave={canSave}
+      before={<HeroAlbumField albums={albums} value={heroAlbumId} onChange={setHeroAlbumId} />}
+      fields={(lang, form) => <HomeFields lang={lang} form={form} />}
+    />
+  );
 }
 
 function HomeFields({ lang, form }: { lang: Lang; form: Form }) {

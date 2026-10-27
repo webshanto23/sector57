@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import type { Prisma } from '@s57/db';
 import { cleanDeep, pageContentSchemas, type EditablePage, type SitePageAdmin } from '@s57/shared';
 import { ZodValidationException } from 'nestjs-zod';
@@ -42,6 +42,7 @@ export class SitePagesAdminService {
     const parsed = z.object({ content: pageContentSchemas[slug] }).safeParse({ content: cleanDeep(raw) });
     if (!parsed.success) throw new ZodValidationException(parsed.error);
     const content = parsed.data.content as Prisma.InputJsonObject;
+    if (typeof content.heroAlbumId === 'string') await this.assertAlbum(actor.societyId, content.heroAlbumId);
 
     const before = await this.get(actor.societyId, slug);
     await this.prisma.$transaction(async (tx) => {
@@ -73,5 +74,11 @@ export class SitePagesAdminService {
       );
     });
     return this.get(actor.societyId, slug);
+  }
+
+  /** The home slider may only show an album of the same society (it may still be a draft). */
+  private async assertAlbum(societyId: string, albumId: string): Promise<void> {
+    const album = await this.prisma.gallery_albums.findFirst({ where: { id: albumId, society_id: societyId }, select: { id: true } });
+    if (!album) throw new BadRequestException({ code: 'album_not_found', message: 'The hero album does not exist' });
   }
 }
