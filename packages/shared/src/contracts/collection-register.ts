@@ -24,18 +24,20 @@ export const collectionRegisterQuery = z.object({
 });
 export type CollectionRegisterQuery = z.infer<typeof collectionRegisterQuery>;
 
-/** Money columns: each active charge type (in its order), then membership fees and donations. */
-export const REGISTER_COLUMN_KINDS = ['charge', 'membership', 'donation'] as const;
+/**
+ * Money columns: each charge type (active ones, and archived ones the month used), then
+ * donations. Membership fees are a charge type, so they get their own column that way.
+ */
+export const REGISTER_COLUMN_KINDS = ['charge', 'donation'] as const;
 export type RegisterColumnKind = (typeof REGISTER_COLUMN_KINDS)[number];
 
-/** Column keys of the two fixed columns; a charge column's key is its charge type id. */
-export const REGISTER_MEMBERSHIP = 'membership';
+/** Column key of the donations column; a charge column's key is its charge type id. */
 export const REGISTER_DONATION = 'donation';
 
 const registerColumn = z.object({
   key: z.string(),
   kind: z.enum(REGISTER_COLUMN_KINDS),
-  /** The charge type's name; null for the fixed columns (named by the web). */
+  /** The charge type's name; null for the donations column (named by the web). */
   nameBn: z.string().nullable(),
   nameEn: z.string().nullable(),
 });
@@ -72,14 +74,14 @@ export type RegisterTotals = z.infer<typeof registerTotals>;
 
 export const collectionRegisterSchema = z.object({
   month: isoMonth,
-  /** The place columns, from the unit level up, without the society's single top level. */
+  /** The place columns: the levels the listed units sit in, smallest first, without the society's single top level. */
   levels: z.array(z.object({ id: z.uuid(), nameBn: z.string(), nameEn: z.string().nullable() })),
   columns: z.array(registerColumn),
   days: z.array(registerTotals.extend({ day: isoDay, rows: z.array(registerRow) })),
   totals: registerTotals,
   /** Days with at least one counted receipt. */
   activeDays: z.number().int().min(0),
-  /** Members whose membership fee was paid this month (counted receipts only). */
+  /** Members whose membership bill was paid on this month (counted receipts only). */
   newMembers: z.number().int().min(0),
 });
 export type CollectionRegister = z.infer<typeof collectionRegisterSchema>;

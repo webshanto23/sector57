@@ -88,7 +88,7 @@ describe('register totals', () => {
   it('names the largest column, first on a tie', () => {
     const columns: RegisterColumn[] = ['monthly', 'waste', 'membership'].map((key) => ({
       key,
-      kind: key === 'membership' ? 'membership' : 'charge',
+      kind: 'charge',
       nameBn: null,
       nameEn: null,
     }));
