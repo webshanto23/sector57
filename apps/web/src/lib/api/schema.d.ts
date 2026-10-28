@@ -532,6 +532,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/locations/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LocationsController_search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/locations/level-counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LocationsController_levelCounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/locations/{id}": {
         parameters: {
             query?: never;
@@ -590,6 +622,22 @@ export interface paths {
         get: operations["UnitsController_list"];
         put?: never;
         post: operations["UnitsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units/areas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UnitsController_areas"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4196,6 +4244,35 @@ export interface components {
                 delete: boolean;
             };
         };
+        LocationSearchDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                parentId: string | null;
+                name: string;
+                code: string | null;
+                /** Format: uuid */
+                levelId: string;
+                depth: number;
+                levelBn: string;
+                levelEn: string | null;
+                isUnit: boolean;
+                isActive: boolean;
+                childCount: number;
+                unitCount: number;
+                address: string[];
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+        };
+        LevelCountsDto_Output: {
+            items: {
+                /** Format: uuid */
+                levelId: string;
+                count: number;
+            }[];
+        };
         LocationCreateDto: {
             parentId: string | null;
             /** Format: uuid */
@@ -4251,6 +4328,21 @@ export interface components {
                 /** @enum {string} */
                 occupancy: "owner_occupied" | "rented" | "vacant";
                 isActive: boolean;
+                owners: {
+                    /** Format: uuid */
+                    locationId: string;
+                    isUnit: boolean;
+                    levelBn: string;
+                    levelEn: string | null;
+                    owners: {
+                        name: string;
+                        nameEn: string | null;
+                    }[];
+                }[] | null;
+                renters: {
+                    name: string;
+                    nameEn: string | null;
+                }[] | null;
             }[];
             total: number;
             page: number;
@@ -4261,6 +4353,32 @@ export interface components {
                 rented: number;
                 vacant: number;
             };
+        };
+        UnitAreasDto_Output: {
+            area: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                levelBn: string;
+                levelEn: string | null;
+                unitCount: number;
+            } | null;
+            breadcrumb: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                levelBn: string;
+                levelEn: string | null;
+                open: boolean;
+            }[];
+            children: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                levelBn: string;
+                levelEn: string | null;
+                unitCount: number;
+            }[];
         };
         UnitDetailDto_Output: {
             /** Format: uuid */
@@ -11367,6 +11485,51 @@ export interface operations {
             };
         };
     };
+    LocationsController_search: {
+        parameters: {
+            query?: {
+                under?: string;
+                levelId?: string;
+                q?: string;
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationSearchDto_Output"];
+                };
+            };
+        };
+    };
+    LocationsController_levelCounts: {
+        parameters: {
+            query?: {
+                under?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LevelCountsDto_Output"];
+                };
+            };
+        };
+    };
     LocationsController_view: {
         parameters: {
             query?: never;
@@ -11506,6 +11669,10 @@ export interface operations {
                 areaId?: string;
                 unitType?: string;
                 occupancy?: "owner_occupied" | "rented" | "vacant";
+                billTo?: "owner" | "renter";
+                status?: "active" | "inactive";
+                missing?: "owner" | "code" | "size";
+                ownerLives?: "here" | "elsewhere";
             };
             header?: never;
             path?: never;
@@ -11542,6 +11709,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UnitDetailDto_Output"];
+                };
+            };
+        };
+    };
+    UnitsController_areas: {
+        parameters: {
+            query?: {
+                parentId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitAreasDto_Output"];
                 };
             };
         };

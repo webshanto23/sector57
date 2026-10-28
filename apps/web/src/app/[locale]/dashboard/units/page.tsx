@@ -1,23 +1,17 @@
-import {
-  canAnywhere,
-  formatNumber,
-  OCCUPANCIES,
-  pick,
-  unitListQuery,
-  type Locale,
-  type UnitSummary,
-} from "@s57/shared";
-import { Building2, DoorOpen, House, KeyRound, Map, X } from "lucide-react";
+import { canAnywhere, formatNumber, unitListQuery, type Locale, type UnitListItem } from "@s57/shared";
+import { Building2, DoorOpen, House, KeyRound, Map } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Pager } from "@/components/cms/pager";
-import { Chip, DataTable, inputClass, PageHeader, SearchInput, StatCard, type Column } from "@/components/kit";
+import { Chip, DataTable, PageHeader, StatCard, type Column } from "@/components/kit";
 import { OccupancyChip } from "@/components/property/labels";
 import { unitTypeName } from "@/components/property/unit-types";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { getLocation, getUnits, getUnitTypes } from "@/lib/api/property";
+import { getUnitAreas, getUnits, getUnitTypes } from "@/lib/api/property";
 import { requirePermission } from "@/lib/api/session";
+import { UnitFilters } from "./unit-filters";
+import { OwnerLevels, Renters } from "./unit-people";
 
 const PAGE_SIZE = 25;
 
@@ -41,17 +35,21 @@ export default async function UnitsPage({ params, searchParams }: PageProps<"/[l
     areaId: search["areaId"] || undefined,
     unitType: search["unitType"] || undefined,
     occupancy: search["occupancy"] || undefined,
+    billTo: search["billTo"] || undefined,
+    status: search["status"] || undefined,
+    missing: search["missing"] || undefined,
+    ownerLives: search["ownerLives"] || undefined,
     page: search["page"] ?? 1,
     pageSize: PAGE_SIZE,
   });
   const query = parsed.success ? parsed.data : { page: 1, pageSize: PAGE_SIZE };
 
-  const [t, tUnits, tNav, list, area, unitTypes] = await Promise.all([
+  const [t, tUnits, tNav, list, areas, unitTypes] = await Promise.all([
     getTranslations("Property"),
     getTranslations("Property.units"),
     getTranslations("Dashboard.nav"),
     getUnits(query),
-    query.areaId && canAnywhere(me.access, "locations") ? getLocation(query.areaId) : Promise.resolve(null),
+    getUnitAreas(query.areaId),
     getUnitTypes(),
   ]);
   const pages = Math.max(1, Math.ceil(list.total / PAGE_SIZE));
@@ -60,10 +58,14 @@ export default async function UnitsPage({ params, searchParams }: PageProps<"/[l
     ...(query.areaId ? { areaId: query.areaId } : {}),
     ...(query.unitType ? { unitType: query.unitType } : {}),
     ...(query.occupancy ? { occupancy: query.occupancy } : {}),
+    ...(query.billTo ? { billTo: query.billTo } : {}),
+    ...(query.status ? { status: query.status } : {}),
+    ...(query.missing ? { missing: query.missing } : {}),
+    ...(query.ownerLives ? { ownerLives: query.ownerLives } : {}),
   };
   const n = (value: number) => formatNumber(value, locale);
 
-  const columns: Column<UnitSummary>[] = [
+  const columns: Column<UnitListItem>[] = [
     {
       key: "name",
       header: t("name"),
@@ -81,6 +83,12 @@ export default async function UnitsPage({ params, searchParams }: PageProps<"/[l
     },
     { key: "code", header: t("code"), cell: (unit) => (unit.code ? <span className="num">{unit.code}</span> : "—") },
     { key: "type", header: t("unitTypeLabel"), cell: (unit) => unitTypeName(unitTypes, unit.unitType, locale) },
+    ...(canAnywhere(me.access, "ownerships")
+      ? [{ key: "owners", header: tUnits("owners"), cell: (unit: UnitListItem) => <OwnerLevels levels={unit.owners} locale={locale} /> }]
+      : []),
+    ...(canAnywhere(me.access, "tenancies")
+      ? [{ key: "renters", header: tUnits("renter"), cell: (unit: UnitListItem) => <Renters renters={unit.renters} locale={locale} /> }]
+      : []),
     {
       key: "size",
       header: t("size"),
@@ -113,44 +121,7 @@ export default async function UnitsPage({ params, searchParams }: PageProps<"/[l
         <StatCard icon={DoorOpen} label={t("occupancy.vacant")} value={n(list.counts.vacant)} tone="sun" />
       </div>
 
-      {query.areaId ? (
-        <p className="mb-3 flex flex-wrap items-center gap-2 text-[13.5px]">
-          <Chip tone="info" plain>
-            {area?.location ? tUnits("inArea", { name: area.location.name }) : tUnits("inSomeArea")}
-          </Chip>
-          <Link
-            href={{ pathname: "/dashboard/units", query: { ...filters, areaId: undefined } }}
-            className="inline-flex items-center gap-1 font-semibold text-primary"
-          >
-            <X className="size-3.5" aria-hidden />
-            {tUnits("clearArea")}
-          </Link>
-        </p>
-      ) : null}
-
-      <form method="get" role="search" className="mb-3.5 flex flex-wrap items-center gap-2.5">
-        {query.areaId ? <input type="hidden" name="areaId" value={query.areaId} /> : null}
-        <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={tUnits("searchPlaceholder")} aria-label={tUnits("searchLabel")} />
-        <select name="unitType" defaultValue={query.unitType ?? ""} aria-label={t("unitTypeLabel")} className={`${inputClass} sm:w-auto!`}>
-          <option value="">{tUnits("allTypes")}</option>
-          {unitTypes.map((type) => (
-            <option key={type.code} value={type.code}>
-              {pick(type.nameBn, type.nameEn, locale)}
-            </option>
-          ))}
-        </select>
-        <select name="occupancy" defaultValue={query.occupancy ?? ""} aria-label={t("occupancyLabel")} className={`${inputClass} sm:w-auto!`}>
-          <option value="">{tUnits("allOccupancy")}</option>
-          {OCCUPANCIES.map((value) => (
-            <option key={value} value={value}>
-              {t(`occupancy.${value}`)}
-            </option>
-          ))}
-        </select>
-        <Button type="submit" variant="outline">
-          {tUnits("filter")}
-        </Button>
-      </form>
+      <UnitFilters locale={locale} query={filters} areas={areas} unitTypes={unitTypes} ownerships={canAnywhere(me.access, "ownerships")} />
 
       <DataTable columns={columns} rows={list.items} rowKey={(unit) => unit.id} caption={tNav("units")} empty={tUnits("empty")} />
 

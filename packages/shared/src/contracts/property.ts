@@ -162,6 +162,40 @@ export const locationViewSchema = z.object({
 });
 export type LocationView = z.infer<typeof locationViewSchema>;
 
+export const LOCATION_SEARCH_PAGE_SIZE = 48;
+
+/**
+ * `GET /locations/search`: places (never units) inside `under` (or the caller's whole
+ * tree) at one level and/or matching `q` (name or holding code, either digit form).
+ */
+export const locationSearchQuery = z.object({
+  under: z.uuid().optional(),
+  levelId: z.uuid().optional(),
+  q: z.string().transform(cleanText).pipe(z.string().max(100)).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+});
+export type LocationSearchQuery = z.infer<typeof locationSearchQuery>;
+
+/** A search result: the map's card plus the names above it, top first (a single root left out). */
+export const locationHitSchema = locationNodeSchema.extend({ address: z.array(z.string()) });
+export type LocationHit = z.infer<typeof locationHitSchema>;
+
+export const locationSearchSchema = z.object({
+  items: z.array(locationHitSchema),
+  total: z.number().int().min(0),
+  page: z.number().int().min(1),
+  pageSize: z.number().int().min(1),
+});
+export type LocationSearch = z.infer<typeof locationSearchSchema>;
+
+/** `GET /locations/level-counts?under=`: places per level below `under`, in the caller's area (unit level left out). */
+export const levelCountsQuery = z.object({ under: z.uuid().optional() });
+export type LevelCountsQuery = z.infer<typeof levelCountsQuery>;
+export const levelCountsSchema = z.object({
+  items: z.array(z.object({ levelId: z.uuid(), count: z.number().int().min(0) })),
+});
+export type LevelCounts = z.infer<typeof levelCountsSchema>;
+
 /** `POST /locations`. `parentId` null adds a top-level location. Units are added through `/units`. */
 export const locationCreateSchema = z.object({
   parentId: z.uuid().nullable(),
@@ -313,14 +347,55 @@ export const unitDetailSchema = unitSummarySchema.extend({
 });
 export type UnitDetail = z.infer<typeof unitDetailSchema>;
 
-/** `GET /units` query. `q` matches name or holding code (Bangla or ASCII digits); `areaId` keeps units under that location. */
+export const UNIT_STATUSES = ['active', 'inactive'] as const;
+export type UnitStatus = (typeof UNIT_STATUSES)[number];
+/** What a unit lacks: a current owner or a holding number anywhere in its chain, or a size. */
+export const UNIT_MISSING = ['owner', 'code', 'size'] as const;
+export type UnitMissing = (typeof UNIT_MISSING)[number];
+/** Whether a current owner (at any level of the chain) is a current resident of the unit. */
+export const OWNER_LIVES = ['here', 'elsewhere'] as const;
+export type OwnerLives = (typeof OWNER_LIVES)[number];
+
+/**
+ * `GET /units` query. `q` matches name or holding code (Bangla or ASCII digits), and the
+ * name or phone of an owner at any level or the renter the caller may see; `areaId` keeps units under that location.
+ */
 export const unitListQuery = pagination.extend({
   q: z.string().transform(cleanText).pipe(z.string().max(100)).optional(),
   areaId: z.uuid().optional(),
   unitType: unitTypeCode.optional(),
   occupancy: z.enum(OCCUPANCIES).optional(),
+  billTo: z.enum(BILL_TO).optional(),
+  status: z.enum(UNIT_STATUSES).optional(),
+  missing: z.enum(UNIT_MISSING).optional(),
+  ownerLives: z.enum(OWNER_LIVES).optional(),
 });
 export type UnitListQuery = z.infer<typeof unitListQuery>;
+
+/** `GET /units/areas` query: the areas under `parentId`, or the caller's top areas. */
+export const unitAreasQuery = z.object({ parentId: z.uuid().optional() });
+export type UnitAreasQuery = z.infer<typeof unitAreasQuery>;
+
+/** An area (not a unit) to narrow the units list to. */
+export const unitAreaSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  levelBn: z.string(),
+  levelEn: z.string().nullable(),
+  unitCount: z.number().int().min(0),
+});
+export type UnitArea = z.infer<typeof unitAreaSchema>;
+
+/**
+ * `GET /units/areas`, for the units list's area picker with only the `units` permission:
+ * the chosen area, its ancestors (`open` false above the caller's area) and the areas one level down.
+ */
+export const unitAreasSchema = z.object({
+  area: unitAreaSchema.nullable(),
+  breadcrumb: z.array(crumbSchema),
+  children: z.array(unitAreaSchema),
+});
+export type UnitAreas = z.infer<typeof unitAreasSchema>;
 
 /** Units by occupancy for the list's filters (all occupancies, whatever `occupancy` is). */
 export const unitCountsSchema = z.object({
@@ -331,9 +406,35 @@ export const unitCountsSchema = z.object({
 });
 export type UnitCounts = z.infer<typeof unitCountsSchema>;
 
+/** A name as typed, with the optional English form (people only; organisations have one name). */
+export const partyNameSchema = z.object({ name: z.string(), nameEn: z.string().nullable() });
+export type PartyName = z.infer<typeof partyNameSchema>;
+
+/** The current owners at one location in a unit's chain: the unit itself, or a building, plot ... above it. */
+export const unitOwnerLevelSchema = z.object({
+  locationId: z.uuid(),
+  /** The unit's own owners, not a level above. */
+  isUnit: z.boolean(),
+  levelBn: z.string(),
+  levelEn: z.string().nullable(),
+  owners: z.array(partyNameSchema).min(1),
+});
+export type UnitOwnerLevel = z.infer<typeof unitOwnerLevelSchema>;
+
+/**
+ * One row of `GET /units`. `owners` lists every level of the chain that has a current
+ * owner, nearest first (the first is who the bills go to); `renters` is the active or
+ * moving-out tenancy. Each is null when the caller may not view ownerships (tenancies) there.
+ */
+export const unitListItemSchema = unitSummarySchema.extend({
+  owners: z.array(unitOwnerLevelSchema).nullable(),
+  renters: z.array(partyNameSchema).nullable(),
+});
+export type UnitListItem = z.infer<typeof unitListItemSchema>;
+
 /** `GET /units` response. */
 export const unitListSchema = z.object({
-  items: z.array(unitSummarySchema),
+  items: z.array(unitListItemSchema),
   total: z.number().int().min(0),
   page: z.number().int().min(1),
   pageSize: z.number().int().min(1),

@@ -1038,6 +1038,44 @@ Asked for by Anis on 2026-10-28: unit types (residential, shop ...) become each 
 - **Checked:** property and billing e2e files, `pnpm check`. Applied to the dev and test databases. Not opened in a browser.
 - **Not in this step:** per-type billing rates, archiving a type instead of removing it.
 
+## Step 35: More filters on the units list and the property map — Built, awaiting review
+
+Asked for by Anis on 2026-10-28: more filters on `/dashboard/units`. Agreed split: units filters stay on `/units`; level counts go on the property map; full owner and renter lists stay in Directory and the reports. Built on `step/35-units-filters` (from `step/34-unit-types`).
+
+- **Slice 1 (built):** an area picker that narrows one level at a time, plus bill-to and status filters.
+  - **Shared:** `unitListQuery` gains `billTo` and `status` (`UNIT_STATUSES`); `unitAreasQuery` and `unitAreasSchema`.
+  - **API:** `GET /units/areas?parentId=` (`units.view`) gives the chosen area, its breadcrumb and the child areas (no units) with unit counts, inside the caller's `units` scope. `TreeService.tops` (shared with `GET /locations`) gives the caller's top areas. Areas outside scope, units and unknown ids are 404.
+  - **Web:** the filters move to `units/unit-filters.tsx`. The way down uses `AreaCrumbs`; the next level down is a select in the GET form. This replaces the old "only inside X" chip, which needed `locations.view`.
+  - **Tests:** `property.e2e-spec.ts` covers the bill-to and status filters, and a Block C clerk with only `units.view` using `/units/areas` (top, children without units, breadcrumb, 404 outside scope or on a unit, `/locations` refused). `pnpm check` passes. Not opened in a browser.
+- **Slice 2 (built):** Owner and Current renter columns, and search by owner or renter.
+  - Decided by Anis: a plot, a building, a storey and a flat can each have their own owners, so the Owner cell lists every level of the unit's chain that has a current owner. The nearest comes first, in full; it is also who the bills go to. The levels above are muted and named by level. Co-owners show the largest share first, then "+N".
+  - The renter is an active or moving-out tenancy; a pending one isn't shown.
+  - **Shared:** `unitListItemSchema` (the summary plus `owners: UnitOwnerLevel[] | null` and `renters: PartyName[] | null`, where null means not allowed); `partyNameSchema`.
+  - **API:** `UnitPeopleService` (`forUnits` for a page, `matching` for `q`).
+    - Owner names need `ownerships.view` and renter names `tenancies.view` on the unit's path.
+    - `q` also matches an owner at any level or the renter by name (Bangla or English, organisations too) or phone (either digit form), only among the people the caller may view.
+  - **Web:** the columns show only when the caller holds those permissions somewhere (`units/unit-people.tsx`). The search placeholder now mentions owner and phone.
+  - **Tests:** `units-people.e2e-spec.ts` covers levels nearest first, co-owner order, pending tenancies, search by name, phone (Bangla digits), organisation and renter, and no names or search hits without the permission. `pnpm check` passes. Not opened in a browser.
+- **Slice 3 (built):** "Missing data" and "Owner lives" filters on the units list.
+  - **Missing data:** `missing` is `owner` (no current owner at any level of the chain), `code` (no holding number on the unit or any level above, since a plot's number covers its flats) or `size`.
+  - **Owner lives:** `ownerLives` is `here` (a current owner at any level is a current resident of the unit) or `elsewhere` (the unit has an owner, but none lives there, whether it's rented or empty).
+  - **Permission:** `missing=owner` and `ownerLives` keep to the caller's `ownerships.view` area, so a units-only caller gets nothing. The web offers them only with that permission.
+  - **API:** `UnitPeopleService.conditions` runs the chain checks; `missing=size` is a plain Prisma condition.
+  - **Tests:** three more cases in `units-people.e2e-spec.ts`. `pnpm check` passes. Not opened in a browser.
+  - **Open decision:** the occupancy value `owner_occupied` ("মালিক বসবাসরত") only means "has an owner and isn't rented". It doesn't mean the owner lives there; "Owner lives: elsewhere" shows the difference. Renaming the label (for example to "Owner-held") is for Anis to decide.
+- **Slice 4 (built): property map, jump to a level and search.** Anis replaced the planned row of counts with a way to list the places of one level.
+  - **Decided:** the tree stays the default, chips show counts, and there are no extra filters.
+  - **Web:** `LevelBar` (`components/property/level-bar.tsx`) sits on `/property` and every place's page.
+    - It shows a "Map" chip (the tree) and one chip per level below the place, with how many places lie inside. Empty levels are greyed out; the unit level is left out (the "See its units" button opens `/units`).
+    - It also has a name or holding search. The choice lives in the URL as `level`, `q` and `page`.
+    - Results replace the children grid: the same cards plus the address, 48 per page. `loadFinder` (`components/property/finder.ts`) reads the URL.
+  - **Shared:** `locationSearchQuery`, `locationSearchSchema` (the map's card plus `address`), `levelCountsSchema`, `LOCATION_SEARCH_PAGE_SIZE`.
+  - **API:** `LocationSearchService`.
+    - `GET /locations/search?under=&levelId=&q=&page=` and `GET /locations/level-counts?under=`, both `locations.view`.
+    - They return places below `under` (not `under` itself), never units, inside the caller's area; an `under` outside that area is 404.
+    - `scopeSql` (in `tree.service.ts`) is now shared with `UnitPeopleService`.
+  - **Tests:** a "level picker and search" block in `property.e2e-spec.ts` covers one level with addresses (same-named roads), plots straight from a block, digit forms, no units, counts matching search totals, and a Block C viewer's area. `pnpm check` passes. Not opened in a browser.
+
 ## Later: beyond milestone 3
 
 These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.

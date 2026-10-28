@@ -2,8 +2,11 @@ import { INestApplication } from '@nestjs/common';
 import {
   AUTH_COOKIES,
   CSRF_HEADER,
+  levelCountsSchema,
   locationPath,
+  locationSearchSchema,
   locationViewSchema,
+  unitAreasSchema,
   unitDetailSchema,
   unitListSchema,
   type LocationView,
@@ -243,6 +246,17 @@ describe('Property: location tree and units (e2e)', () => {
       const found = unitListSchema.parse((await get(`/units?q=${encodeURIComponent('ফ্ল্যাট 4')}`, admin.cookie).expect(200)).body);
       expect(found.items.map((item) => item.id)).toContain(unit.id);
 
+      const renters = unitListSchema.parse((await get(`/units?areaId=${tree.blockC.id}&billTo=renter`, admin.cookie).expect(200)).body);
+      expect(renters.items.map((item) => item.name)).toEqual(['ফ্ল্যাট ১এ', 'ফ্ল্যাট ১বি']);
+      expect(renters.counts.total).toBe(2);
+      await prisma.locations.update({ where: { id: unit.id }, data: { is_active: false } });
+      const inactive = unitListSchema.parse((await get(`/units?areaId=${tree.blockC.id}&status=inactive`, admin.cookie).expect(200)).body);
+      expect(inactive.items.map((item) => item.id)).toEqual([unit.id]);
+      const active = unitListSchema.parse((await get(`/units?areaId=${tree.blockC.id}&status=active`, admin.cookie).expect(200)).body);
+      expect(active.total).toBe(2);
+      await prisma.locations.update({ where: { id: unit.id }, data: { is_active: true } });
+      await get('/units?status=gone', admin.cookie).expect(400);
+
       const blockC = await view(`/locations/${tree.blockC.id}`, admin.cookie);
       expect(blockC.children.find((child) => child.id === tree.road9.id)!.unitCount).toBe(3);
     });
@@ -299,6 +313,30 @@ describe('Property: location tree and units (e2e)', () => {
       expect(units.items.length).toBeGreaterThan(0);
       expect(units.items.every((unit) => unit.address.includes('ব্লক সি'))).toBe(true);
       await get(`/units/${unitInD}`, manager.cookie).expect(404);
+    });
+
+    it('a Block C clerk with only units:view picks areas inside Block C', async () => {
+      const clerk = await makeUser([{ roleId: await makeRole(['units:view']), scope: tree.blockC.id }]);
+      const top = unitAreasSchema.parse((await get('/units/areas', clerk.cookie).expect(200)).body);
+      expect(top.children.map((child) => child.id)).toEqual([tree.blockC.id]);
+
+      const blockC = unitAreasSchema.parse((await get(`/units/areas?parentId=${tree.blockC.id}`, clerk.cookie).expect(200)).body);
+      expect(blockC.area?.id).toBe(tree.blockC.id);
+      expect(blockC.children.map((child) => child.id)).toContain(tree.road9.id);
+      const road = unitAreasSchema.parse((await get(`/units/areas?parentId=${tree.road9.id}`, clerk.cookie).expect(200)).body);
+      expect(road.breadcrumb.map((crumb) => [crumb.id, crumb.open])).toEqual([
+        [tree.sector.id, false],
+        [tree.blockC.id, true],
+      ]);
+      // Units are not areas: Road 9 holds plots and units, only the plots come back.
+      expect(road.children.length).toBeGreaterThan(0);
+      expect(road.children.every((child) => child.levelEn === 'Plot')).toBe(true);
+
+      await get(`/units/areas?parentId=${tree.blockD.id}`, clerk.cookie).expect(404);
+      await get(`/units/areas?parentId=${tree.sector.id}`, clerk.cookie).expect(404);
+      const unitInC = unitListSchema.parse((await get('/units?pageSize=1', clerk.cookie).expect(200)).body).items[0]!;
+      await get(`/units/areas?parentId=${unitInC.id}`, clerk.cookie).expect(404);
+      await get('/locations', clerk.cookie).expect(403);
     });
 
     it('a Block C manager adds and changes only inside Block C', async () => {
@@ -498,6 +536,57 @@ describe('Property: location tree and units (e2e)', () => {
       const res = await get('/unit-types', reader.cookie).expect(200);
       expect(res.body.items.map((t: { code: string }) => t.code)).toContain('residential');
       await send('put', '/unit-types', reader.cookie).send({ types: [{ id: null, nameBn: 'x', nameEn: null }] }).expect(403);
+    });
+  });
+
+  describe('level picker and search', () => {
+    const search = async (query: string, cookie = admin.cookie) =>
+      locationSearchSchema.parse((await get(`/locations/search?${query}`, cookie).expect(200)).body);
+
+    beforeAll(async () => {
+      await addLocation('blockD', 3, 'রোড ৯');
+    });
+
+    it('lists one level inside a place, with addresses to tell same names apart', async () => {
+      const roads = await search(`under=${tree.sector.id}&levelId=${level(3)}`);
+      const nines = roads.items.filter((item) => item.name === 'রোড ৯');
+      expect(nines.map((item) => item.address.at(-1)).sort((a, b) => (a ?? '').localeCompare(b ?? ''))).toEqual(['ব্লক ডি', 'ব্লক সি']);
+      expect(roads.items.every((item) => item.levelId === level(3) && !item.isUnit)).toBe(true);
+      expect(roads.total).toBe(roads.items.length);
+
+      // Plots straight from the block, past the road level.
+      const plots = await search(`under=${tree.blockC.id}&levelId=${level(4)}`);
+      expect(plots.items.length).toBeGreaterThan(0);
+      expect(plots.items.every((item) => item.levelId === level(4) && item.address.includes('ব্লক সি'))).toBe(true);
+    });
+
+    it('matches names in either digit form and never returns units', async () => {
+      const found = await search(`under=${tree.sector.id}&q=9`);
+      expect(found.items.filter((item) => item.name === 'রোড ৯')).toHaveLength(2);
+      expect(found.items.some((item) => item.id === tree.sector.id)).toBe(false);
+      const flats = await search(`under=${tree.sector.id}&q=${encodeURIComponent('ফ্ল্যাট')}`);
+      expect(flats.items).toEqual([]);
+    });
+
+    it('counts places per level below a place', async () => {
+      const counts = levelCountsSchema.parse((await get(`/locations/level-counts?under=${tree.sector.id}`, admin.cookie).expect(200)).body);
+      const count = (depth: number) => counts.items.find((item) => item.levelId === level(depth))?.count ?? 0;
+      expect(count(2)).toBe((await search(`under=${tree.sector.id}&levelId=${level(2)}`)).total);
+      expect(count(2)).toBeGreaterThanOrEqual(2);
+      expect(count(3)).toBe((await search(`under=${tree.sector.id}&levelId=${level(3)}`)).total);
+      const unitLevel = await prisma.location_levels.findFirstOrThrow({ where: { society_id: societyId, is_unit_level: true } });
+      expect(counts.items.some((item) => item.levelId === unitLevel.id)).toBe(false);
+    });
+
+    it("keeps to the caller's area", async () => {
+      const viewer = await makeUser([{ roleId: await makeRole(['locations:view']), scope: tree.blockC.id }]);
+      const roads = await search(`levelId=${level(3)}`, viewer.cookie);
+      expect(roads.items.length).toBeGreaterThan(0);
+      expect(roads.items.every((item) => item.address.includes('ব্লক সি'))).toBe(true);
+      const blocks = levelCountsSchema.parse((await get('/locations/level-counts', viewer.cookie).expect(200)).body);
+      expect(blocks.items.find((item) => item.levelId === level(2))?.count).toBe(1);
+      await get(`/locations/search?under=${tree.blockD.id}`, viewer.cookie).expect(404);
+      await get(`/locations/level-counts?under=${tree.sector.id}`, viewer.cookie).expect(404);
     });
   });
 });

@@ -1,9 +1,11 @@
 import {
   canAnywhere,
   localDigits,
+  type LevelCounts,
   type Locale,
   type LocationLevel,
   type LocationNode,
+  type LocationSearch,
   type LocationPeople,
   type LocationView,
   type MeWithAccess,
@@ -11,6 +13,7 @@ import {
 import { Building2, Layers, MapPin, Shapes } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Note } from "@/components/admin/form-status";
+import { Pager } from "@/components/cms/pager";
 import { Card, Chip, IconBox, PageHeader } from "@/components/kit";
 import { DocumentsPanel } from "@/components/documents/documents-panel";
 import { PeoplePanel } from "@/components/members/people-panel";
@@ -19,10 +22,14 @@ import { Link } from "@/i18n/navigation";
 import { getUnitTypes } from "@/lib/api/property";
 import { AddPanel } from "./add-panel";
 import { levelName, PropertyBreadcrumb } from "./labels";
+import { LevelBar } from "./level-bar";
 import { LocationEditor } from "./location-editor";
 
-/** One child in the grid: a link to its own page (units go to the units pages). */
-async function ChildCard({ node, locale, unitsOpen }: { node: LocationNode; locale: Locale; unitsOpen: boolean }) {
+/** The level picker and search: what is chosen, the chip counts, and the results (null on the tree). */
+export type Finder = { levelId: string | null; q: string | null; page: number; counts: LevelCounts; result: LocationSearch | null };
+
+/** One child in the grid: a link to its own page (units go to the units pages). Search results add the address. */
+async function ChildCard({ node, locale, unitsOpen, address }: { node: LocationNode; locale: Locale; unitsOpen: boolean; address?: string[] }) {
   const t = await getTranslations("Property");
   const href = node.isUnit ? (unitsOpen ? `/dashboard/units/${node.id}` : null) : `/dashboard/property/${node.id}`;
   const body = (
@@ -35,6 +42,7 @@ async function ChildCard({ node, locale, unitsOpen }: { node: LocationNode; loca
         <Chip plain>{levelName(node, locale)}</Chip>
         {!node.isActive ? <Chip tone="warn">{t("inactive")}</Chip> : null}
       </div>
+      {address?.length ? <p className="text-[12.5px] break-words text-muted-foreground">{address.join(" › ")}</p> : null}
       {node.code ? <p className="num text-[12.5px] text-muted-foreground">{node.code}</p> : null}
       {!node.isUnit ? (
         <p className="text-[12.5px] text-muted-foreground">
@@ -61,12 +69,14 @@ export async function LocationPage({
   view,
   levels,
   people = null,
+  finder,
   me,
   locale,
 }: {
   view: LocationView;
   levels: LocationLevel[];
   people?: LocationPeople | null;
+  finder: Finder;
   me: MeWithAccess;
   locale: Locale;
 }) {
@@ -78,6 +88,8 @@ export async function LocationPage({
   ]);
   const unitsOpen = canAnywhere(me.access, "units");
   const canEditLevels = canAnywhere(me.access, "settings", "edit");
+  const pathname = location ? `/dashboard/property/${location.id}` : "/dashboard/property";
+  const result = finder.result;
 
   return (
     <>
@@ -122,33 +134,73 @@ export async function LocationPage({
         {view.location ? <DocumentsPanel access={me.access} entityType="location" entityId={view.location.id} /> : null}
 
         <section className="grid gap-3" aria-labelledby="children-title">
+          <LevelBar
+            locale={locale}
+            levels={levels}
+            counts={finder.counts}
+            depth={location?.depth ?? 0}
+            pathname={pathname}
+            levelId={finder.levelId}
+            q={finder.q}
+          />
           <div className="flex flex-wrap items-end justify-between gap-3">
             <h2 id="children-title" className="text-[15px]">
-              {location ? t("inside", { name: location.name }) : t("topLevel")}
+              {result ? localDigits(t("found", { count: result.total }), locale) : location ? t("inside", { name: location.name }) : t("topLevel")}
             </h2>
           </div>
-          <AddPanel
-            key={location?.id ?? "top"}
-            parentId={location?.id ?? null}
-            parentDepth={location?.depth ?? 0}
-            levels={levels}
-            unitTypes={unitTypes}
-            canCreate={can.create}
-            canCreateUnit={can.createUnit}
-            existingNames={children.map((child) => child.name)}
-          />
-          {children.length === 0 ? (
-            <div className="rounded-[12px] border border-line bg-surface p-4 text-muted-foreground">
-              {location ? t("empty") : can.create ? t("emptyTop") : t("noAccess")}
-            </div>
+          {result ? (
+            result.items.length === 0 ? (
+              <div className="rounded-[12px] border border-line bg-surface p-4 text-muted-foreground">{t("noMatch")}</div>
+            ) : (
+              <>
+                <ul className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-2.5">
+                  {result.items.map((hit) => (
+                    <li key={hit.id} className="grid">
+                      <ChildCard node={hit} locale={locale} unitsOpen={unitsOpen} address={hit.address} />
+                    </li>
+                  ))}
+                </ul>
+                <Pager
+                  locale={locale}
+                  page={result.page}
+                  pages={Math.max(1, Math.ceil(result.total / result.pageSize))}
+                  href={(target) => ({
+                    pathname,
+                    query: {
+                      ...(finder.levelId ? { level: finder.levelId } : {}),
+                      ...(finder.q ? { q: finder.q } : {}),
+                      ...(target > 1 ? { page: String(target) } : {}),
+                    },
+                  })}
+                />
+              </>
+            )
           ) : (
-            <ul className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-2.5">
-              {children.map((child) => (
-                <li key={child.id} className="grid">
-                  <ChildCard node={child} locale={locale} unitsOpen={unitsOpen} />
-                </li>
-              ))}
-            </ul>
+            <>
+              <AddPanel
+                key={location?.id ?? "top"}
+                parentId={location?.id ?? null}
+                parentDepth={location?.depth ?? 0}
+                levels={levels}
+                unitTypes={unitTypes}
+                canCreate={can.create}
+                canCreateUnit={can.createUnit}
+                existingNames={children.map((child) => child.name)}
+              />
+              {children.length === 0 ? (
+                <div className="rounded-[12px] border border-line bg-surface p-4 text-muted-foreground">
+                  {location ? t("empty") : can.create ? t("emptyTop") : t("noAccess")}
+                </div>
+              ) : (
+                <ul className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-2.5">
+                  {children.map((child) => (
+                    <li key={child.id} className="grid">
+                      <ChildCard node={child} locale={locale} unitsOpen={unitsOpen} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
           )}
         </section>
       </div>

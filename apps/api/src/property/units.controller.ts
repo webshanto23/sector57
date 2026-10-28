@@ -1,5 +1,14 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
-import { unitBulkSchema, unitCreateSchema, unitDetailSchema, unitListQuery, unitListSchema, unitUpdateSchema } from '@s57/shared';
+import {
+  unitAreasQuery,
+  unitAreasSchema,
+  unitBulkSchema,
+  unitCreateSchema,
+  unitDetailSchema,
+  unitListQuery,
+  unitListSchema,
+  unitUpdateSchema,
+} from '@s57/shared';
 import { ZodResponse } from 'nestjs-zod';
 import { SkipAudit } from '../audit/audit.decorators.js';
 import { createDto } from '../common/create-dto.js';
@@ -11,6 +20,8 @@ import { UnitsService } from './units.service.js';
 export class UnitDetailDto extends createDto(unitDetailSchema) {}
 export class UnitListDto extends createDto(unitListSchema) {}
 export class UnitListQueryDto extends createDto(unitListQuery) {}
+export class UnitAreasDto extends createDto(unitAreasSchema) {}
+export class UnitAreasQueryDto extends createDto(unitAreasQuery) {}
 export class UnitCreateDto extends createDto(unitCreateSchema) {}
 export class UnitUpdateDto extends createDto(unitUpdateSchema) {}
 export class UnitBulkDto extends createDto(unitBulkSchema) {}
@@ -26,6 +37,14 @@ export class UnitsController {
   @ZodResponse({ status: 200, type: UnitListDto })
   list(@CurrentActor() actor: Actor, @Query() query: UnitListQueryDto) {
     return this.units.list(actor, query);
+  }
+
+  /** The list's area picker, for callers with the `units` permission only. */
+  @Get('areas')
+  @Can('units', 'view')
+  @ZodResponse({ status: 200, type: UnitAreasDto })
+  areas(@CurrentActor() actor: Actor, @Query() { parentId }: UnitAreasQueryDto) {
+    return this.units.areas(actor, parentId);
   }
 
   @Get(':id')

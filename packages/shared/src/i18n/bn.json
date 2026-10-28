@@ -952,7 +952,7 @@
       "sub": "ফ্ল্যাট, দোকান ও অফিস",
       "total": "মোট ইউনিট",
       "searchLabel": "ইউনিট খুঁজুন",
-      "searchPlaceholder": "নাম বা হোল্ডিং নম্বর",
+      "searchPlaceholder": "নাম, হোল্ডিং, মালিক বা ফোন",
       "allTypes": "সব ধরন",
       "allOccupancy": "সব অবস্থা",
       "filter": "ফিল্টার",
@@ -962,8 +962,38 @@
       "address": "ঠিকানা",
       "empty": "মেলে এমন কোনো ইউনিট নেই।",
       "addHint": "ইউনিট যোগ",
-      "back": "সব ইউনিট"
-    }
+      "back": "সব ইউনিট",
+      "area": "এলাকা",
+      "allAreas": "সব এলাকা",
+      "allIn": "পুরো {name}",
+      "areaOption": "{name} ({count})",
+      "allBillTo": "বিল যাবে: সবাই",
+      "allStatus": "সক্রিয় ও নিষ্ক্রিয়",
+      "active": "সক্রিয়",
+      "owners": "মালিক",
+      "renter": "বর্তমান ভাড়াটিয়া",
+      "more": "+{count}",
+      "allMissing": "সব তথ্য",
+      "missing": {
+        "owner": "মালিক নেই",
+        "code": "হোল্ডিং নম্বর নেই",
+        "size": "আয়তন নেই"
+      },
+      "missingLabel": "যে তথ্য নেই",
+      "allOwnerLives": "মালিক যেখানেই থাকুন",
+      "ownerLivesLabel": "মালিক কোথায় থাকেন",
+      "ownerLives": {
+        "here": "মালিক এখানে থাকেন",
+        "elsewhere": "মালিক অন্যত্র থাকেন"
+      }
+    },
+    "mapView": "মানচিত্র",
+    "levelsLabel": "স্তর অনুযায়ী দেখুন",
+    "findLabel": "জায়গা খুঁজুন",
+    "findPlaceholder": "নাম বা হোল্ডিং নম্বর",
+    "find": "খুঁজুন",
+    "found": "{count, plural, =0 {কোনো জায়গা মেলেনি} other {# টি জায়গা}}",
+    "noMatch": "মেলে এমন কোনো জায়গা নেই।"
   },
   "Members": {
     "sub": "মালিক, ভাড়াটিয়া ও বাসিন্দা",

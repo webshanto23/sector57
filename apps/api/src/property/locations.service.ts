@@ -1,5 +1,4 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
-import { Prisma } from '@s57/db';
 import {
   locationPath,
   type BulkResult,
@@ -35,19 +34,7 @@ export class LocationsService {
 
   /** The top: every top-level location for a whole-society caller, else the caller's own areas. */
   async top(actor: Actor): Promise<LocationView> {
-    const paths = actor.access.paths('view', 'locations');
-    let children;
-    if (paths === 'all') {
-      children = await this.tree.nodes(actor.societyId, Prisma.sql`l.parent_id is null`);
-    } else {
-      // Areas inside another of the caller's areas are reached through that one.
-      const tops = paths.filter((path) => !paths.some((other) => other !== path && path.startsWith(other)));
-      const ids = tops.map((path) => path.split('/').filter(Boolean).at(-1)!);
-      children =
-        ids.length === 0
-          ? []
-          : await this.tree.nodes(actor.societyId, Prisma.sql`l.id in (${Prisma.join(ids.map((id) => Prisma.sql`${id}::uuid`))})`);
-    }
+    const children = await this.tree.tops(actor.access, actor.societyId, 'locations');
     return {
       location: null,
       breadcrumb: [],

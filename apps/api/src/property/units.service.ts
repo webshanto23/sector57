@@ -7,6 +7,9 @@ import {
   toBillTo,
   toOccupancy,
   type BulkResult,
+  type LocationNode,
+  type UnitArea,
+  type UnitAreas,
   type UnitBulkInput,
   type UnitCounts,
   type UnitCreateInput,
@@ -24,8 +27,9 @@ import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { definedOnly, inUse, takenError } from './locations.service.js';
 import { OccupancyService } from './occupancy.service.js';
+import { UnitPeopleService } from './unit-people.service.js';
 import { UnitTypesService } from './unit-types.service.js';
-import { addressOf, beyondPermissions, codeTaken, nameTaken, TreeService } from './tree.service.js';
+import { addressOf, beyondPermissions, codeTaken, locationNotFound, nameTaken, TreeService } from './tree.service.js';
 
 const select = {
   location_id: true,
@@ -62,10 +66,11 @@ export class UnitsService {
     private readonly tree: TreeService,
     private readonly occupancy: OccupancyService,
     private readonly unitTypes: UnitTypesService,
+    private readonly people: UnitPeopleService,
   ) {}
 
   async list(actor: Actor, query: UnitListQuery): Promise<UnitList> {
-    const { page, pageSize, q, areaId, unitType, occupancy } = query;
+    const { page, pageSize, q, areaId, unitType, occupancy, billTo, status, missing, ownerLives } = query;
     const and: Prisma.unitsWhereInput[] = [
       { society_id: actor.societyId },
       scopeWhere(actor.access, 'view', 'units', (prefix) => ({ locations: { path: { startsWith: prefix } } })),
@@ -76,14 +81,23 @@ export class UnitsService {
       and.push(area ? { locations: { path: { startsWith: area.path } } } : { location_id: { in: [] } });
     }
     if (q) {
+      const people = await this.people.matching(actor, q);
       and.push({
-        OR: digitVariants(q).flatMap((term) => [
-          { locations: { name: { contains: term, mode: 'insensitive' as const } } },
-          { locations: { code: { contains: term, mode: 'insensitive' as const } } },
-        ]),
+        OR: [
+          ...digitVariants(q).flatMap((term) => [
+            { locations: { name: { contains: term, mode: 'insensitive' as const } } },
+            { locations: { code: { contains: term, mode: 'insensitive' as const } } },
+          ]),
+          ...(people.length ? [{ location_id: { in: people } }] : []),
+        ],
       });
     }
     if (unitType) and.push({ unit_type: unitType });
+    if (billTo) and.push({ bill_to: billTo });
+    if (status) and.push({ locations: { is_active: status === 'active' } });
+    if (missing === 'size') and.push({ size_sqft: null });
+    const chain = await this.people.conditions(actor, { missing, ownerLives });
+    if (chain) and.push({ location_id: { in: chain } });
     const where = { AND: occupancy ? [...and, { occupancy }] : and };
 
     const [total, rows, groups] = await this.prisma.$transaction([
@@ -110,8 +124,28 @@ export class UnitsService {
       counts.total += count;
       if ((OCCUPANCIES as readonly string[]).includes(group.occupancy)) counts[toOccupancy(group.occupancy)] += count;
     }
-    const names = await this.tree.addressNames(actor.societyId, rows.map((row) => row.locations.path));
-    return { items: rows.map((row) => toSummary(row, names)), total, page, pageSize, counts };
+    const [names, people] = await Promise.all([
+      this.tree.addressNames(actor.societyId, rows.map((row) => row.locations.path)),
+      this.people.forUnits(actor, rows.map((row) => ({ id: row.location_id, path: row.locations.path }))),
+    ]);
+    const items = rows.map((row) => ({ ...toSummary(row, names), ...(people.get(row.location_id) ?? { owners: null, renters: null }) }));
+    return { items, total, page, pageSize, counts };
+  }
+
+  /** The area picker: the caller's top areas, or the areas (not units) under one they may see. */
+  async areas(actor: Actor, parentId: string | undefined): Promise<UnitAreas> {
+    if (!parentId) {
+      const tops = await this.tree.tops(actor.access, actor.societyId, 'units');
+      return { area: null, breadcrumb: [], children: tops.filter((node) => !node.isUnit).map(toArea) };
+    }
+    const row = await this.tree.visible(actor.access, actor.societyId, 'units', parentId);
+    if (row.isUnit) throw locationNotFound();
+    const [area, breadcrumb, children] = await Promise.all([
+      this.tree.node(actor.societyId, parentId),
+      this.tree.breadcrumb(actor.access, actor.societyId, row.path, 'units'),
+      this.tree.children(actor.societyId, parentId),
+    ]);
+    return { area: toArea(area), breadcrumb, children: children.filter((node) => !node.isUnit).map(toArea) };
   }
 
   async get(actor: Actor, id: string): Promise<UnitDetail> {
@@ -278,3 +312,7 @@ const auditOf = (actor: Actor, action: string, entityId: string) => ({
   entityId,
   ip: actor.ip,
 });
+
+function toArea(node: LocationNode): UnitArea {
+  return { id: node.id, name: node.name, levelBn: node.levelBn, levelEn: node.levelEn, unitCount: node.unitCount };
+}

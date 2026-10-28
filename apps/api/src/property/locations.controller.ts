@@ -1,10 +1,21 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post } from '@nestjs/common';
-import { bulkResultSchema, locationBulkSchema, locationCreateSchema, locationUpdateSchema, locationViewSchema } from '@s57/shared';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
+import {
+  bulkResultSchema,
+  levelCountsQuery,
+  levelCountsSchema,
+  locationBulkSchema,
+  locationCreateSchema,
+  locationSearchQuery,
+  locationSearchSchema,
+  locationUpdateSchema,
+  locationViewSchema,
+} from '@s57/shared';
 import { ZodResponse } from 'nestjs-zod';
 import { SkipAudit } from '../audit/audit.decorators.js';
 import { createDto } from '../common/create-dto.js';
 import { IdParamDto } from '../common/id-param.dto.js';
 import { Can, CurrentActor, type Actor } from '../permissions/permissions.decorators.js';
+import { LocationSearchService } from './location-search.service.js';
 import { LocationsService } from './locations.service.js';
 
 export class LocationViewDto extends createDto(locationViewSchema) {}
@@ -12,12 +23,19 @@ export class LocationCreateDto extends createDto(locationCreateSchema) {}
 export class LocationUpdateDto extends createDto(locationUpdateSchema) {}
 export class LocationBulkDto extends createDto(locationBulkSchema) {}
 export class BulkResultDto extends createDto(bulkResultSchema) {}
+export class LocationSearchDto extends createDto(locationSearchSchema) {}
+export class LocationSearchQueryDto extends createDto(locationSearchQuery) {}
+export class LevelCountsDto extends createDto(levelCountsSchema) {}
+export class LevelCountsQueryDto extends createDto(levelCountsQuery) {}
 
 /** The property tree above the units. The service checks every row against the caller's area and writes the audit rows. */
 @Controller('locations')
 @SkipAudit()
 export class LocationsController {
-  constructor(private readonly locations: LocationsService) {}
+  constructor(
+    private readonly locations: LocationsService,
+    private readonly finder: LocationSearchService,
+  ) {}
 
   /** The top of the tree the caller may see. */
   @Get()
@@ -25,6 +43,22 @@ export class LocationsController {
   @ZodResponse({ status: 200, type: LocationViewDto })
   top(@CurrentActor() actor: Actor) {
     return this.locations.top(actor);
+  }
+
+  /** Places at one level and/or matching a name or holding code, inside one place or the caller's tree. */
+  @Get('search')
+  @Can('locations', 'view')
+  @ZodResponse({ status: 200, type: LocationSearchDto })
+  search(@CurrentActor() actor: Actor, @Query() query: LocationSearchQueryDto) {
+    return this.finder.search(actor, query);
+  }
+
+  /** How many places of each level lie below one place (or in the caller's tree). */
+  @Get('level-counts')
+  @Can('locations', 'view')
+  @ZodResponse({ status: 200, type: LevelCountsDto })
+  levelCounts(@CurrentActor() actor: Actor, @Query() { under }: LevelCountsQueryDto) {
+    return this.finder.levelCounts(actor, under);
   }
 
   @Get(':id')

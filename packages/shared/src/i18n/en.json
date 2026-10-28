@@ -952,7 +952,7 @@
       "sub": "Flats, shops and offices",
       "total": "All units",
       "searchLabel": "Search units",
-      "searchPlaceholder": "Name or holding number",
+      "searchPlaceholder": "Name, holding, owner or phone",
       "allTypes": "All types",
       "allOccupancy": "Any occupancy",
       "filter": "Filter",
@@ -962,8 +962,38 @@
       "address": "Address",
       "empty": "No units match.",
       "addHint": "Add units",
-      "back": "All units"
-    }
+      "back": "All units",
+      "area": "Area",
+      "allAreas": "All areas",
+      "allIn": "All of {name}",
+      "areaOption": "{name} ({count})",
+      "allBillTo": "Bills go to: anyone",
+      "allStatus": "Active and inactive",
+      "active": "Active",
+      "owners": "Owner",
+      "renter": "Current renter",
+      "more": "+{count}",
+      "allMissing": "Any data",
+      "missing": {
+        "owner": "No owner",
+        "code": "No holding number",
+        "size": "No size"
+      },
+      "missingLabel": "Missing data",
+      "allOwnerLives": "Owner lives anywhere",
+      "ownerLivesLabel": "Where the owner lives",
+      "ownerLives": {
+        "here": "Owner lives here",
+        "elsewhere": "Owner lives elsewhere"
+      }
+    },
+    "mapView": "Map",
+    "levelsLabel": "View by level",
+    "findLabel": "Find a place",
+    "findPlaceholder": "Name or holding number",
+    "find": "Search",
+    "found": "{count, plural, =0 {No places match} one {# place} other {# places}}",
+    "noMatch": "No places match."
   },
   "Members": {
     "sub": "Owners, renters and residents",
