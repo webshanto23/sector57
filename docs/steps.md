@@ -1026,6 +1026,18 @@ Asked for by Anis on 2026-10-27, to the mocks `docs/mocks/sector57-collection-re
 - **Checked:** `reports.e2e-spec.ts` and `pnpm check`. Neither the screen nor the print was opened in a browser (no admin login); a headless test page confirmed A4 landscape and paging, not the footer text.
 - **Not in this step:** a thermal or A5 register, choosing its format through `print_formats`, a bank-withdrawal row, a full list of collectors.
 
+## Step 34: Unit types — Built, awaiting review
+
+Asked for by Anis on 2026-10-28: unit types (residential, shop ...) become each society's own list, managed like the levels, with a "Unit types" button before "Levels" on the property map. Built on `step/34-unit-types` (from `main`) in one session. Decided by Anis: same permission as levels (`settings.edit`), a foreign key on `units`.
+
+- **Migration `23_unit_types`:** table `unit_types` (`code`, `name_bn`, `name_en`, `sort_order`; code and Bangla name unique per society). Function `unit_types_defaults` seeds the five old types (codes kept), run for every existing society and by an `AFTER INSERT` trigger on `societies`. The `units.unit_type` check constraint is replaced by a foreign key `(society_id, unit_type)` → `unit_types(society_id, code)` (`NO ACTION`, so a society delete still cascades). `charge_schedules.unit_types` keeps codes as before.
+- **Shared:** `unitTypeCode` replaces `UNIT_TYPES`/`toUnitType` (`UnitType` is now `string`); `unitTypeSchema`, `unitTypesInputSchema` (1–`MAX_UNIT_TYPES` = 50 types, names and ids unique).
+- **API:** `GET /unit-types` (any logged-in user; with unit and schedule counts) and `PUT /unit-types` (`settings.edit`, whole list in order, audited). New types get a generated code `t_<12 hex>`; a type used by a unit or any charge schedule can't be removed (`unit_type_in_use`). `UnitTypesService.assertCodes` refuses unknown codes on unit create, bulk, update and on schedules (`invalid_unit_type`).
+- **Web:** `/dashboard/property/unit-types` (`UnitTypesEditor`, like the levels editor) and its button; the add panel, unit form, units list (column and filter), unit page and schedules manager take names from `GET /unit-types` (`unitTypeName`). `Property.unitType.*` labels are gone from i18n.
+- **Tests:** shared spec for the input and code; e2e in `property.e2e-spec.ts` (defaults on a new society, rename/add/reorder/remove keeping codes, in use by unit and by schedule, unknown or other society's code, read vs save rights).
+- **Checked:** property and billing e2e files, `pnpm check`. Applied to the dev and test databases. Not opened in a browser.
+- **Not in this step:** per-type billing rates, archiving a type instead of removing it.
+
 ## Later: beyond milestone 3
 
 These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.

@@ -564,6 +564,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/unit-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UnitTypesController_list"];
+        put: operations["UnitTypesController_replace"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/units": {
         parameters: {
             query?: never;
@@ -4201,6 +4217,24 @@ export interface components {
             code?: string | null;
             isActive?: boolean;
         };
+        UnitTypeListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                code: string;
+                nameBn: string;
+                nameEn: string | null;
+                unitCount: number;
+                scheduleCount: number;
+            }[];
+        };
+        UnitTypesInputDto: {
+            types: {
+                id: string | null;
+                nameBn: string;
+                nameEn?: string | null;
+            }[];
+        };
         UnitListDto_Output: {
             items: {
                 /** Format: uuid */
@@ -4210,8 +4244,7 @@ export interface components {
                 name: string;
                 code: string | null;
                 address: string[];
-                /** @enum {string} */
-                unitType: "residential" | "shop" | "office" | "warehouse" | "other";
+                unitType: string;
                 sizeSqft: string | null;
                 /** @enum {string} */
                 billTo: "owner" | "renter";
@@ -4237,8 +4270,7 @@ export interface components {
             name: string;
             code: string | null;
             address: string[];
-            /** @enum {string} */
-            unitType: "residential" | "shop" | "office" | "warehouse" | "other";
+            unitType: string;
             sizeSqft: string | null;
             /** @enum {string} */
             billTo: "owner" | "renter";
@@ -4263,8 +4295,7 @@ export interface components {
             parentId: string;
             name: string;
             code?: string | null;
-            /** @enum {string} */
-            unitType: "residential" | "shop" | "office" | "warehouse" | "other";
+            unitType: string;
             sizeSqft?: string | null;
             /** @enum {string} */
             billTo: "owner" | "renter";
@@ -4273,8 +4304,7 @@ export interface components {
             /** Format: uuid */
             parentId: string;
             names: string[];
-            /** @enum {string} */
-            unitType: "residential" | "shop" | "office" | "warehouse" | "other";
+            unitType: string;
             sizeSqft?: string | null;
             /** @enum {string} */
             billTo: "owner" | "renter";
@@ -4283,8 +4313,7 @@ export interface components {
             name?: string;
             code?: string | null;
             isActive?: boolean;
-            /** @enum {string} */
-            unitType?: "residential" | "shop" | "office" | "warehouse" | "other";
+            unitType?: string;
             sizeSqft?: string | null;
             /** @enum {string} */
             billTo?: "owner" | "renter";
@@ -6024,7 +6053,7 @@ export interface components {
                     name: string;
                     address: string[];
                 } | null;
-                unitTypes: ("residential" | "shop" | "office" | "warehouse" | "other")[];
+                unitTypes: string[];
                 startMonth: string;
                 endMonth: string | null;
                 nextRunOn: string | null;
@@ -6050,7 +6079,7 @@ export interface components {
             /** @enum {string} */
             generation: "auto" | "manual";
             scopeLocationId: string | null;
-            unitTypes: ("residential" | "shop" | "office" | "warehouse" | "other")[];
+            unitTypes: string[];
             startMonth: string;
             endMonth: string | null;
             dueDays: number;
@@ -6095,7 +6124,7 @@ export interface components {
                 name: string;
                 address: string[];
             } | null;
-            unitTypes: ("residential" | "shop" | "office" | "warehouse" | "other")[];
+            unitTypes: string[];
             startMonth: string;
             endMonth: string | null;
             nextRunOn: string | null;
@@ -11426,6 +11455,48 @@ export interface operations {
             };
         };
     };
+    UnitTypesController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitTypeListDto_Output"];
+                };
+            };
+        };
+    };
+    UnitTypesController_replace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnitTypesInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitTypeListDto_Output"];
+                };
+            };
+        };
+    };
     UnitsController_list: {
         parameters: {
             query?: {
@@ -11433,7 +11504,7 @@ export interface operations {
                 pageSize?: number;
                 q?: string;
                 areaId?: string;
-                unitType?: "residential" | "shop" | "office" | "warehouse" | "other";
+                unitType?: string;
                 occupancy?: "owner_occupied" | "rented" | "vacant";
             };
             header?: never;

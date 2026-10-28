@@ -2,7 +2,7 @@ import {
   canAnywhere,
   formatNumber,
   OCCUPANCIES,
-  UNIT_TYPES,
+  pick,
   unitListQuery,
   type Locale,
   type UnitSummary,
@@ -13,9 +13,10 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Pager } from "@/components/cms/pager";
 import { Chip, DataTable, inputClass, PageHeader, SearchInput, StatCard, type Column } from "@/components/kit";
 import { OccupancyChip } from "@/components/property/labels";
+import { unitTypeName } from "@/components/property/unit-types";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { getLocation, getUnits } from "@/lib/api/property";
+import { getLocation, getUnits, getUnitTypes } from "@/lib/api/property";
 import { requirePermission } from "@/lib/api/session";
 
 const PAGE_SIZE = 25;
@@ -45,12 +46,13 @@ export default async function UnitsPage({ params, searchParams }: PageProps<"/[l
   });
   const query = parsed.success ? parsed.data : { page: 1, pageSize: PAGE_SIZE };
 
-  const [t, tUnits, tNav, list, area] = await Promise.all([
+  const [t, tUnits, tNav, list, area, unitTypes] = await Promise.all([
     getTranslations("Property"),
     getTranslations("Property.units"),
     getTranslations("Dashboard.nav"),
     getUnits(query),
     query.areaId && canAnywhere(me.access, "locations") ? getLocation(query.areaId) : Promise.resolve(null),
+    getUnitTypes(),
   ]);
   const pages = Math.max(1, Math.ceil(list.total / PAGE_SIZE));
   const filters = {
@@ -78,7 +80,7 @@ export default async function UnitsPage({ params, searchParams }: PageProps<"/[l
       cell: (unit) => <span className="whitespace-normal">{unit.address.join(" › ")}</span>,
     },
     { key: "code", header: t("code"), cell: (unit) => (unit.code ? <span className="num">{unit.code}</span> : "—") },
-    { key: "type", header: t("unitTypeLabel"), cell: (unit) => t(`unitType.${unit.unitType}`) },
+    { key: "type", header: t("unitTypeLabel"), cell: (unit) => unitTypeName(unitTypes, unit.unitType, locale) },
     {
       key: "size",
       header: t("size"),
@@ -131,9 +133,9 @@ export default async function UnitsPage({ params, searchParams }: PageProps<"/[l
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={tUnits("searchPlaceholder")} aria-label={tUnits("searchLabel")} />
         <select name="unitType" defaultValue={query.unitType ?? ""} aria-label={t("unitTypeLabel")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{tUnits("allTypes")}</option>
-          {UNIT_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {t(`unitType.${type}`)}
+          {unitTypes.map((type) => (
+            <option key={type.code} value={type.code}>
+              {pick(type.nameBn, type.nameEn, locale)}
             </option>
           ))}
         </select>

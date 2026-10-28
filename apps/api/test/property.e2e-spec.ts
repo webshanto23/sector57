@@ -16,6 +16,7 @@ import { CallerAccess } from './../src/permissions/caller-access.js';
 import type { Actor } from './../src/permissions/permissions.decorators.js';
 import { PrismaService } from './../src/prisma/prisma.service.js';
 import { LevelsService } from './../src/property/levels.service.js';
+import { UnitTypesService } from './../src/property/unit-types.service.js';
 import { createTestApp } from './create-app.js';
 
 const MARK = `e2e-property-${Date.now()}`;
@@ -418,6 +419,85 @@ describe('Property: location tree and units (e2e)', () => {
       const res = await get('/location-levels', admin.cookie).expect(200);
       expect(res.body.items.length).toBeGreaterThanOrEqual(2);
       expect(res.body.items.at(-1).isUnitLevel).toBe(true);
+    });
+  });
+
+  describe('unit types', () => {
+    // Like the levels, the rules run on a separate society so the shared list never changes.
+    let actor: Actor;
+    let typeSociety: string;
+    const service = () => app.get(UnitTypesService);
+    const save = (types: { id: string | null; nameBn: string; nameEn?: string | null }[]) =>
+      service().replace(actor, { types: types.map((t) => ({ nameEn: null, ...t })) });
+
+    beforeAll(async () => {
+      typeSociety = (await prisma.societies.create({ data: { name_bn: `ধরন ${MARK}`, slug: `${MARK}-types` } })).id;
+      extraSocieties.push(typeSociety);
+      // One shop, so the shop type is in use.
+      const unitLevel = await prisma.location_levels.create({ data: { society_id: typeSociety, depth: 1, name_bn: 'ইউনিট', is_unit_level: true } });
+      const id = randomUUID();
+      await prisma.locations.create({ data: { id, society_id: typeSociety, level_id: unitLevel.id, name: 'দোকান ১', path: locationPath(null, id) } });
+      await prisma.units.create({ data: { location_id: id, society_id: typeSociety, unit_type: 'shop' } });
+      actor = { societyId: typeSociety, userId: admin.id, access: new CallerAccess([]), ip: null };
+    });
+
+    it('starts a new society with the five default types', async () => {
+      const types = await service().list(typeSociety);
+      expect(types.map((t) => t.code)).toEqual(['residential', 'shop', 'office', 'warehouse', 'other']);
+      expect(types.find((t) => t.code === 'shop')!.unitCount).toBe(1);
+    });
+
+    it('renames, adds, reorders and removes unused types, keeping codes', async () => {
+      const [residential, shop, office, , other] = await service().list(typeSociety);
+      const saved = await save([
+        { id: shop!.id, nameBn: 'বাণিজ্যিক', nameEn: 'Commercial' },
+        { id: null, nameBn: 'গ্যারেজ' },
+        { id: residential!.id, nameBn: 'আবাসিক' },
+        { id: office!.id, nameBn: 'অফিস' },
+        { id: other!.id, nameBn: 'অন্যান্য' },
+      ]);
+      expect(saved.map((t) => t.nameBn)).toEqual(['বাণিজ্যিক', 'গ্যারেজ', 'আবাসিক', 'অফিস', 'অন্যান্য']);
+      expect(saved[0]!.code).toBe('shop');
+      expect(saved[1]!.code).toMatch(/^t_[0-9a-f]{12}$/);
+      expect(saved.some((t) => t.code === 'warehouse')).toBe(false);
+
+      // Names can swap places in one save.
+      const swapped = await save(saved.map((t, i) => ({ id: t.id, nameBn: i === 2 ? 'অফিস' : i === 3 ? 'আবাসিক' : t.nameBn })));
+      expect(swapped.map((t) => [t.code, t.nameBn]).slice(2, 4)).toEqual([
+        ['residential', 'অফিস'],
+        ['office', 'আবাসিক'],
+      ]);
+    });
+
+    it('keeps a type that a unit or a charge schedule uses', async () => {
+      const current = await service().list(typeSociety);
+      await expect(save(current.filter((t) => t.code !== 'shop'))).rejects.toMatchObject({ response: { code: 'unit_type_in_use' } });
+
+      const fund = await prisma.funds.create({ data: { society_id: typeSociety, name_bn: 'সাধারণ তহবিল' } });
+      const charge = await prisma.charge_types.create({ data: { society_id: typeSociety, name_bn: 'সার্ভিস চার্জ', kind: 'due', fund_id: fund.id } });
+      await prisma.charge_schedules.create({
+        data: { society_id: typeSociety, charge_type_id: charge.id, name_bn: 'মাসিক', amount: '100', unit_types: ['office'], starts_on: new Date('2027-01-01') },
+      });
+      const listed = await service().list(typeSociety);
+      expect(listed.find((t) => t.code === 'office')!.scheduleCount).toBe(1);
+      await expect(save(listed.filter((t) => t.code !== 'office'))).rejects.toMatchObject({ response: { code: 'unit_type_in_use' } });
+    });
+
+    it('refuses a type the society does not have', async () => {
+      const garage = (await service().list(typeSociety)).find((t) => t.code.startsWith('t_'))!;
+      // Another society's code.
+      const res = await send('post', '/units', admin.cookie)
+        .send({ parentId: tree.blockD.id, name: 'x', code: null, unitType: garage.code, sizeSqft: null, billTo: 'owner' })
+        .expect(400);
+      expect(res.body.code).toBe('invalid_unit_type');
+      await expect(service().assertCodes(typeSociety, [garage.code])).resolves.toBeUndefined();
+    });
+
+    it('lets anyone read the list but only settings.edit save it', async () => {
+      const reader = await makeUser([{ roleId: await makeRole(['units:view']) }]);
+      const res = await get('/unit-types', reader.cookie).expect(200);
+      expect(res.body.items.map((t: { code: string }) => t.code)).toContain('residential');
+      await send('put', '/unit-types', reader.cookie).send({ types: [{ id: null, nameBn: 'x', nameEn: null }] }).expect(403);
     });
   });
 });

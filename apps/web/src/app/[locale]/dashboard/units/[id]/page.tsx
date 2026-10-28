@@ -11,11 +11,12 @@ import { PageHeader } from "@/components/kit";
 import { PeoplePanel } from "@/components/members/people-panel";
 import { OccupancyChip, PropertyBreadcrumb } from "@/components/property/labels";
 import { UnitForm } from "@/components/property/unit-form";
+import { unitTypeName } from "@/components/property/unit-types";
 import { VehiclesPanel } from "@/components/vehicles/vehicles-panel";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getLocationPeople } from "@/lib/api/members";
-import { getUnit } from "@/lib/api/property";
+import { getUnit, getUnitTypes } from "@/lib/api/property";
 import { requirePermission } from "@/lib/api/session";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/dashboard/units/[id]">): Promise<Metadata> {
@@ -31,7 +32,7 @@ export default async function UnitPage({ params }: PageProps<"/[locale]/dashboar
   setRequestLocale(locale as Locale);
 
   const me = await requirePermission("units");
-  const [t, unit, people] = await Promise.all([getTranslations("Property"), getUnit(id), getLocationPeople(id)]);
+  const [t, unit, people, unitTypes] = await Promise.all([getTranslations("Property"), getUnit(id), getLocationPeople(id), getUnitTypes()]);
   if (!unit) notFound();
 
   return (
@@ -41,7 +42,7 @@ export default async function UnitPage({ params }: PageProps<"/[locale]/dashboar
         title={unit.name}
         sub={
           <span className="inline-flex flex-wrap items-center gap-2">
-            {t(`unitType.${unit.unitType}`)}
+            {unitTypeName(unitTypes, unit.unitType, locale as Locale)}
             <OccupancyChip occupancy={unit.occupancy} />
           </span>
         }
@@ -54,7 +55,7 @@ export default async function UnitPage({ params }: PageProps<"/[locale]/dashboar
       />
       <div className="grid gap-3.5">
         {!unit.can.edit ? <Note>{t("readOnly")}</Note> : null}
-        <UnitForm key={unit.id} unit={unit} />
+        <UnitForm key={unit.id} unit={unit} unitTypes={unitTypes} />
         {people ? <PeoplePanel key={`people-${unit.id}`} people={people} /> : null}
         <BillsPanel access={me.access} locale={locale as Locale} unitId={unit.id} />
         <VehiclesPanel access={me.access} locale={locale as Locale} unitId={unit.id} />

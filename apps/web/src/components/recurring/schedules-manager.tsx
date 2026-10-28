@@ -8,13 +8,12 @@ import {
   pick,
   SCHEDULE_FREQUENCIES,
   SCHEDULE_GENERATIONS,
-  UNIT_TYPES,
   type ChargeTypeList,
   type Locale,
   type Schedule,
   type ScheduleList,
   type ScheduleStatus,
-  type UnitType,
+  type UnitTypeItem,
 } from "@s57/shared";
 import { CircleStop, Pause, Pencil, Play, Plus, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -23,6 +22,7 @@ import { ConfirmButton } from "@/components/admin/confirm-button";
 import { FormStatus, Note } from "@/components/admin/form-status";
 import { PlacePicker } from "@/components/forms/place-picker";
 import { Card, Chip, Field, inputClass, type Tone } from "@/components/kit";
+import { unitTypeName } from "@/components/property/unit-types";
 import { useSubmit } from "@/components/property/use-submit";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api/client";
@@ -32,7 +32,7 @@ const STATUS_TONES: Record<ScheduleStatus, Tone> = { active: "good", paused: "wa
 const monthLabel = (month: string, locale: Locale) => formatDate(`${month}-01`, locale, "monthYear");
 
 /** Recurring charges: list, add, edit, pause, resume and end. Changes need a society-wide billing role. */
-export function SchedulesManager({ list, chargeTypes, thisMonth }: { list: ScheduleList; chargeTypes: ChargeTypeList; thisMonth: string }) {
+export function SchedulesManager({ list, chargeTypes, unitTypes, thisMonth }: { list: ScheduleList; chargeTypes: ChargeTypeList; unitTypes: UnitTypeItem[]; thisMonth: string }) {
   const t = useTranslations("Recurring");
   const [adding, setAdding] = useState(false);
   const active = list.items.filter((item) => item.status !== "ended");
@@ -45,7 +45,7 @@ export function SchedulesManager({ list, chargeTypes, thisMonth }: { list: Sched
         adding ? (
           <Card className="grid gap-3">
             <h2 className="text-[15px]">{t("add")}</h2>
-            <ScheduleForm chargeTypes={chargeTypes} thisMonth={thisMonth} onDone={() => setAdding(false)} />
+            <ScheduleForm chargeTypes={chargeTypes} unitTypes={unitTypes} thisMonth={thisMonth} onDone={() => setAdding(false)} />
           </Card>
         ) : (
           <Button type="button" className="justify-self-start" onClick={() => setAdding(true)}>
@@ -59,7 +59,7 @@ export function SchedulesManager({ list, chargeTypes, thisMonth }: { list: Sched
       <ul className="grid gap-2.5">
         {active.map((item) => (
           <li key={item.id}>
-            <ScheduleRow item={item} chargeTypes={chargeTypes} thisMonth={thisMonth} canEdit={list.canEdit} />
+            <ScheduleRow item={item} chargeTypes={chargeTypes} unitTypes={unitTypes} thisMonth={thisMonth} canEdit={list.canEdit} />
           </li>
         ))}
       </ul>
@@ -67,7 +67,7 @@ export function SchedulesManager({ list, chargeTypes, thisMonth }: { list: Sched
         <ul className="grid gap-2.5 opacity-75">
           {ended.map((item) => (
             <li key={item.id}>
-              <ScheduleRow item={item} chargeTypes={chargeTypes} thisMonth={thisMonth} canEdit={false} />
+              <ScheduleRow item={item} chargeTypes={chargeTypes} unitTypes={unitTypes} thisMonth={thisMonth} canEdit={false} />
             </li>
           ))}
         </ul>
@@ -76,9 +76,8 @@ export function SchedulesManager({ list, chargeTypes, thisMonth }: { list: Sched
   );
 }
 
-function ScheduleRow({ item, chargeTypes, thisMonth, canEdit }: { item: Schedule; chargeTypes: ChargeTypeList; thisMonth: string; canEdit: boolean }) {
+function ScheduleRow({ item, chargeTypes, unitTypes, thisMonth, canEdit }: { item: Schedule; chargeTypes: ChargeTypeList; unitTypes: UnitTypeItem[]; thisMonth: string; canEdit: boolean }) {
   const t = useTranslations("Recurring");
-  const tProp = useTranslations("Property");
   const locale = useLocale() as Locale;
   const [editing, setEditing] = useState(false);
   const { status, busy, run } = useSubmit();
@@ -87,7 +86,7 @@ function ScheduleRow({ item, chargeTypes, thisMonth, canEdit }: { item: Schedule
   if (editing) {
     return (
       <Card className="grid gap-3">
-        <ScheduleForm item={item} chargeTypes={chargeTypes} thisMonth={thisMonth} onDone={() => setEditing(false)} />
+        <ScheduleForm item={item} chargeTypes={chargeTypes} unitTypes={unitTypes} thisMonth={thisMonth} onDone={() => setEditing(false)} />
       </Card>
     );
   }
@@ -96,7 +95,7 @@ function ScheduleRow({ item, chargeTypes, thisMonth, canEdit }: { item: Schedule
     t(`frequency.${item.frequencyMonths ?? "once"}`),
     t(`generation.${item.generation}`),
     item.scope ? [...item.scope.address, item.scope.name].join(" › ") : t("everywhere"),
-    item.unitTypes.length ? item.unitTypes.map((type) => tProp(`unitType.${type}`)).join(", ") : t("allTypes"),
+    item.unitTypes.length ? item.unitTypes.map((code) => unitTypeName(unitTypes, code, locale)).join(", ") : t("allTypes"),
     item.endMonth ? t("fromTo", { from: monthLabel(item.startMonth, locale), to: monthLabel(item.endMonth, locale) }) : t("from", { month: monthLabel(item.startMonth, locale) }),
   ];
 
@@ -161,10 +160,9 @@ function ScheduleRow({ item, chargeTypes, thisMonth, canEdit }: { item: Schedule
 
 type RateRow = { key: number; locationId: string | null; name: string | null; amount: string };
 
-function ScheduleForm({ item, chargeTypes, thisMonth, onDone }: { item?: Schedule; chargeTypes: ChargeTypeList; thisMonth: string; onDone: () => void }) {
+function ScheduleForm({ item, chargeTypes, unitTypes: unitTypeOptions, thisMonth, onDone }: { item?: Schedule; chargeTypes: ChargeTypeList; unitTypes: UnitTypeItem[]; thisMonth: string; onDone: () => void }) {
   const t = useTranslations("Recurring.form");
   const tR = useTranslations("Recurring");
-  const tProp = useTranslations("Property");
   const tAll = useTranslations();
   const locale = useLocale() as Locale;
   const { status, busy, run } = useSubmit();
@@ -180,7 +178,7 @@ function ScheduleForm({ item, chargeTypes, thisMonth, onDone }: { item?: Schedul
   const [generation, setGeneration] = useState(item?.generation ?? "auto");
   const [scope, setScope] = useState<{ id: string; name: string } | null>(item?.scope ? { id: item.scope.id, name: item.scope.name } : null);
   const [pickingScope, setPickingScope] = useState(false);
-  const [unitTypes, setUnitTypes] = useState<UnitType[]>(item?.unitTypes ?? []);
+  const [unitTypes, setUnitTypes] = useState<string[]>(item?.unitTypes ?? []);
   const [startMonth, setStartMonth] = useState(item?.startMonth ?? thisMonth);
   const [endMonth, setEndMonth] = useState(item?.endMonth ?? "");
   const [dueDays, setDueDays] = useState(String(item?.dueDays ?? 15));
@@ -318,14 +316,14 @@ function ScheduleForm({ item, chargeTypes, thisMonth, onDone }: { item?: Schedul
       <fieldset className="grid gap-2">
         <legend className="mb-1 text-[13px] font-semibold">{t("unitTypes")}</legend>
         <div className="flex flex-wrap gap-x-4 gap-y-2">
-          {UNIT_TYPES.map((type) => (
+          {unitTypeOptions.map(({ code: type, nameBn, nameEn }) => (
             <label key={type} className="inline-flex items-center gap-2 text-[13.5px]">
               <input
                 type="checkbox"
                 checked={unitTypes.includes(type)}
                 onChange={(e) => setUnitTypes((current) => (e.target.checked ? [...current, type] : current.filter((value) => value !== type)))}
               />
-              {tProp(`unitType.${type}`)}
+              {pick(nameBn, nameEn, locale)}
             </label>
           ))}
         </div>

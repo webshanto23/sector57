@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { LocationLevel, LocationView, UnitDetail, UnitList, UnitListQuery } from "@s57/shared";
+import type { LocationLevel, LocationView, UnitDetail, UnitList, UnitListQuery, UnitTypeItem } from "@s57/shared";
 import { api } from "./client";
 import { authHeaders } from "./session";
 
@@ -10,6 +10,13 @@ const missing = (status: number) => status === 404 || status === 400;
 export async function getLevels(): Promise<LocationLevel[]> {
   const { data, response } = await api.GET("/location-levels", { headers: await authHeaders(), cache: "no-store" });
   if (!data) throw failed("the levels", response.status);
+  return data.items;
+}
+
+/** The society's unit types, in display order. */
+export async function getUnitTypes(): Promise<UnitTypeItem[]> {
+  const { data, response } = await api.GET("/unit-types", { headers: await authHeaders(), cache: "no-store" });
+  if (!data) throw failed("the unit types", response.status);
   return data.items;
 }
 

@@ -8,6 +8,7 @@ import { SchedulesManager } from "@/components/recurring/schedules-manager";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getChargeTypes } from "@/lib/api/finance";
+import { getUnitTypes } from "@/lib/api/property";
 import { getBillingRuns, getSchedules } from "@/lib/api/recurring";
 import { requirePermission } from "@/lib/api/session";
 import { dhakaDay } from "@/lib/dhaka-time";
@@ -25,12 +26,13 @@ export default async function RecurringPage({ params }: PageProps<"/[locale]/das
   setRequestLocale(locale);
 
   const me = await requirePermission("billing");
-  const [t, tNav, list, chargeTypes, runs] = await Promise.all([
+  const [t, tNav, list, chargeTypes, runs, unitTypes] = await Promise.all([
     getTranslations("Recurring"),
     getTranslations("Dashboard.nav"),
     getSchedules(),
     getChargeTypes(),
     getBillingRuns(),
+    getUnitTypes(),
   ]);
 
   return (
@@ -48,7 +50,7 @@ export default async function RecurringPage({ params }: PageProps<"/[locale]/das
         }
       />
       <div className="grid max-w-[1100px] gap-5">
-        <SchedulesManager list={list} chargeTypes={chargeTypes} thisMonth={dhakaDay().slice(0, 7)} />
+        <SchedulesManager list={list} chargeTypes={chargeTypes} unitTypes={unitTypes} thisMonth={dhakaDay().slice(0, 7)} />
         {runs ? <RunsTable runs={runs.items} locale={locale} /> : null}
       </div>
     </>

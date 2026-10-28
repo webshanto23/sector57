@@ -864,6 +864,7 @@ model societies {
   society_settings        society_settings[]
   tenancies               tenancies[]
   units                   units[]
+  unit_types              unit_types[]
   user_sessions           user_sessions[]
   users                   users[]
   vendors                 vendors[]
@@ -938,6 +939,27 @@ model units {
   certificates  certificates[]
   locations     locations       @relation(fields: [location_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   societies     societies       @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  unit_types    unit_types      @relation(fields: [society_id, unit_type], references: [society_id, code], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([society_id, unit_type])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// A trigger on `societies` gives every new society the five default types.
+model unit_types {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  society_id String    @db.Uuid
+  code       String
+  name_bn    String
+  name_en    String?
+  sort_order Int       @default(0) @db.SmallInt
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime  @default(now()) @db.Timestamptz(6)
+  societies  societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  units      units[]
+
+  @@unique([society_id, code])
+  @@unique([society_id, name_bn])
 }
 
 model user_roles {

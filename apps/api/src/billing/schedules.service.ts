@@ -8,13 +8,11 @@ import {
   resumeFrom,
   SCHEDULE_GENERATIONS,
   SCHEDULE_STATUSES,
-  UNIT_TYPES,
   type ChargeKind,
   type PermissionAction,
   type Schedule,
   type ScheduleInput,
   type ScheduleList,
-  type UnitType,
 } from '@s57/shared';
 import { AuditService } from '../audit/audit.service.js';
 import { isoDate, todayDate } from '../common/dates.js';
@@ -23,6 +21,7 @@ import { onlySocietyWide } from '../members/parties.service.js';
 import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { addressOf, TreeService } from '../property/tree.service.js';
+import { UnitTypesService } from '../property/unit-types.service.js';
 
 type Tx = Prisma.TransactionClient;
 
@@ -113,6 +112,7 @@ export class SchedulesService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly tree: TreeService,
+    private readonly unitTypes: UnitTypesService,
   ) {}
 
   async list(actor: Actor): Promise<ScheduleList> {
@@ -215,7 +215,7 @@ export class SchedulesService {
     return this.get(actor.societyId, id);
   }
 
-  /** The charge type is this society's and in use; the area and every rate's location are in the society, rates inside the area. */
+  /** The charge type is this society's and in use, the unit types are the society's; the area and every rate's location are in the society, rates inside the area. */
   private async check(tx: Tx, societyId: string, input: ScheduleInput): Promise<void> {
     const type = await tx.charge_types.findFirst({
       where: { id: input.chargeTypeId, society_id: societyId },
@@ -223,6 +223,7 @@ export class SchedulesService {
     });
     if (!type) throw bad('invalid_charge_type', 'Unknown charge type');
     if (type.archived_at) throw bad('charge_type_archived', 'This charge type is no longer used');
+    await this.unitTypes.assertCodes(societyId, input.unitTypes, tx);
 
     const ids = [...new Set([...(input.scopeLocationId ? [input.scopeLocationId] : []), ...input.rates.map((rate) => rate.locationId)])];
     const rows = ids.length ? await tx.locations.findMany({ where: { id: { in: ids }, society_id: societyId }, select: { id: true, path: true } }) : [];
@@ -264,7 +265,7 @@ export class SchedulesService {
       frequencyMonths: toFrequency(row.frequency_months),
       generation: toGeneration(row.generation),
       scope: row.locations ? ref(row.locations) : null,
-      unitTypes: row.unit_types.filter((type): type is UnitType => (UNIT_TYPES as readonly string[]).includes(type)),
+      unitTypes: row.unit_types,
       startMonth: monthOfDay(isoDate(row.starts_on)),
       endMonth: row.ends_on ? monthOfDay(isoDate(row.ends_on)) : null,
       nextRunOn: row.next_run_on ? isoDate(row.next_run_on) : null,

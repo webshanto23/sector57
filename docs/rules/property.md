@@ -5,3 +5,4 @@
 - `locations.name` uses the ICU collation `natural_sort` (migration `03_property`), so ordering by name is natural for Bangla and ASCII digits. Holding codes and top-level names are unique per society.
 - Searches over names should try both digit forms (`digitVariants` in shared).
 - `units.occupancy` is derived, never typed: call `OccupancyService.refresh(societyId, path, tx)` in the same transaction as any change to units, ownerships or tenancies.
+- Unit types are data (`unit_types`, Step 34): `units.unit_type` holds a type's `code`, with a foreign key to the society's list. Never hardcode a type list or label; read `GET /unit-types` and show names with `unitTypeName`. Check codes from input with `UnitTypesService.assertCodes` (units, charge schedules). The five default codes come from the `unit_types_defaults` trigger on new societies; a type in use by a unit or a charge schedule can't be removed.

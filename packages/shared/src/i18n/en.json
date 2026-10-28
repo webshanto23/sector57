@@ -442,6 +442,9 @@
       "invalid_level": "That level cannot be used here. Pick a level below the parent.",
       "level_in_use": "Levels in use can be renamed, but not removed or reordered, and the unit level stays last while it has units.",
       "level_name_taken": "Two levels have the same name.",
+      "invalid_unit_type": "That unit type no longer exists. Reload the page and pick another.",
+      "unit_type_in_use": "A unit type used by a unit or a charge schedule can be renamed, but not removed.",
+      "unit_type_name_taken": "Two unit types have the same name.",
       "invalid_size": "Enter the size in square feet, e.g. 1250 or 1250.50.",
       "duplicate_name": "This name appears twice.",
       "range_reversed": "The last number must not be smaller than the first.",
@@ -857,6 +860,7 @@
   "Property": {
     "sub": "Blocks, roads, plots and buildings, down to each unit",
     "levels": "Levels",
+    "unitTypes": "Unit types",
     "topLevel": "Top level",
     "inside": "Inside {name}",
     "empty": "Nothing has been added here yet.",
@@ -915,12 +919,18 @@
       "save": "Save levels",
       "rule": "A level in use can be renamed but not removed or moved past another level in use. Skipping a level is fine: a plot can hold units directly."
     },
-    "unitType": {
-      "residential": "Residential",
-      "shop": "Shop",
-      "office": "Office",
-      "warehouse": "Warehouse",
-      "other": "Other"
+    "unitTypesPage": {
+      "sub": "The kinds of units, such as residential, shop or office. They are listed everywhere in this order.",
+      "nameBn": "Name (Bangla)",
+      "nameEn": "Name (English)",
+      "units": "{count, plural, =0 {no units} one {# unit} other {# units}}",
+      "schedules": "{count, plural, one {in # charge schedule} other {in # charge schedules}}",
+      "add": "Add a type",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "remove": "Remove",
+      "save": "Save unit types",
+      "rule": "A type in use can be renamed, and every unit and charge schedule shows the new name. A type that a unit or a charge schedule uses cannot be removed."
     },
     "billTo": {
       "owner": "Owner",
