@@ -1,6 +1,7 @@
 import type { Locale } from "@s57/shared";
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
+import { DashboardBreadcrumb } from "@/components/dashboard/dashboard-breadcrumb";
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { visibleNavKeys } from "@/components/dashboard/nav";
 import { UserMenu } from "@/components/dashboard/user-menu";
@@ -26,12 +27,15 @@ export default async function DashboardLayout({ children, params }: LayoutProps<
   // although its token hasn't expired (revoked, or signed with another secret).
   if (!me) return redirect({ href: { pathname: "/login", query: { next: "/dashboard", [SESSION_ENDED_PARAM]: "1" } }, locale });
 
+  const visible = visibleNavKeys(me.access);
+
   return (
     <>
       <SiteHeader brand={brand} wide actions={<UserMenu me={me} locale={locale} />} />
       <div className="mx-auto grid w-full max-w-[1440px] flex-1 content-start min-[861px]:grid-cols-[68px_minmax(0,1fr)] min-[1181px]:grid-cols-[248px_minmax(0,1fr)]">
-        <DashboardSidebar visible={visibleNavKeys(me.access)} />
+        <DashboardSidebar visible={visible} />
         <main id="main" className="min-w-0 px-4 pt-5 pb-10">
+          <DashboardBreadcrumb visible={visible} />
           {children}
         </main>
       </div>

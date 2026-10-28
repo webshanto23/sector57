@@ -14,6 +14,8 @@ import { Building2, Layers, MapPin, Shapes } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Note } from "@/components/admin/form-status";
 import { Pager } from "@/components/cms/pager";
+import { DashboardBreadcrumb } from "@/components/dashboard/dashboard-breadcrumb";
+import { visibleNavKeys } from "@/components/dashboard/nav";
 import { Card, Chip, IconBox, PageHeader } from "@/components/kit";
 import { DocumentsPanel } from "@/components/documents/documents-panel";
 import { PeoplePanel } from "@/components/members/people-panel";
@@ -21,7 +23,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getUnitTypes } from "@/lib/api/property";
 import { AddPanel } from "./add-panel";
-import { levelName, PropertyBreadcrumb } from "./labels";
+import { levelName, propertyTrail } from "./labels";
 import { LevelBar } from "./level-bar";
 import { LocationEditor } from "./location-editor";
 
@@ -93,7 +95,7 @@ export async function LocationPage({
 
   return (
     <>
-      {location ? <PropertyBreadcrumb crumbs={view.breadcrumb} current={location.name} /> : null}
+      {location ? <DashboardBreadcrumb visible={visibleNavKeys(me.access)} tail={propertyTrail(view.breadcrumb, location.name)} /> : null}
       <PageHeader
         title={location ? location.name : tNav("property")}
         sub={location ? [levelName(location, locale), location.code].filter(Boolean).join(" · ") : t("sub")}

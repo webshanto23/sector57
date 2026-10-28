@@ -1,4 +1,4 @@
-import { canAnywhere, type Locale } from "@s57/shared";
+import type { Locale } from "@s57/shared";
 import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -7,9 +7,11 @@ import { Note } from "@/components/admin/form-status";
 import { BillsPanel } from "@/components/billing/bills-panel";
 import { CertificatesPanel } from "@/components/certificates/certificates-panel";
 import { DocumentsPanel } from "@/components/documents/documents-panel";
+import { DashboardBreadcrumb } from "@/components/dashboard/dashboard-breadcrumb";
+import { visibleNavKeys } from "@/components/dashboard/nav";
 import { PageHeader } from "@/components/kit";
 import { PeoplePanel } from "@/components/members/people-panel";
-import { OccupancyChip, PropertyBreadcrumb } from "@/components/property/labels";
+import { OccupancyChip, propertyTrail } from "@/components/property/labels";
 import { UnitForm } from "@/components/property/unit-form";
 import { unitTypeName } from "@/components/property/unit-types";
 import { VehiclesPanel } from "@/components/vehicles/vehicles-panel";
@@ -37,7 +39,7 @@ export default async function UnitPage({ params }: PageProps<"/[locale]/dashboar
 
   return (
     <>
-      <PropertyBreadcrumb crumbs={unit.breadcrumb} current={unit.name} mapOpen={canAnywhere(me.access, "locations")} />
+      <DashboardBreadcrumb visible={visibleNavKeys(me.access)} tail={propertyTrail(unit.breadcrumb, unit.name)} />
       <PageHeader
         title={unit.name}
         sub={

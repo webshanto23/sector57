@@ -12,6 +12,7 @@
 - Typed `openapi-fetch` client (`src/lib/api`). Regenerate its types with `pnpm --filter @s57/web api:types` while the API runs.
 - react-hook-form (with `@hookform/resolvers/zod` and the shared schemas) is used for forms; React Query and TanStack Table are not used yet.
 - The society's name, badge and place line come from `getBrand(locale)` (`src/lib/brand.ts`).
+- The dashboard layout renders one breadcrumb (`components/dashboard/dashboard-breadcrumb.tsx`), worked out from the URL by `breadcrumb-trail.ts`: sections use their `Dashboard.nav` label (linked only when visible in the sidebar), fixed sub-pages use `Dashboard.crumbs`, and record ids read "Details". A new fixed sub-page segment needs an entry in `CRUMB_SEGMENTS` and in both message files. Pages don't add their own breadcrumbs; the property and unit record pages render it themselves with a `tail` of location steps (`propertyTrail`), and the layout's copy skips those routes (`pageOwnsTrail`).
 
 ## Shared package
 
