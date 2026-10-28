@@ -7,14 +7,16 @@ import { LocationsController } from './locations.controller.js';
 import { LocationsService } from './locations.service.js';
 import { OccupancyService } from './occupancy.service.js';
 import { TreeService } from './tree.service.js';
+import { UnitTypesController } from './unit-types.controller.js';
+import { UnitTypesService } from './unit-types.service.js';
 import { UnitsController } from './units.controller.js';
 import { UnitsService } from './units.service.js';
 
-/** Step 9: the location tree, its levels, and the units. */
+/** Step 9: the location tree, its levels, and the units; Step 34: the society's unit types. */
 @Module({
   imports: [PrismaModule, AuditModule],
-  controllers: [LevelsController, LocationsController, UnitsController],
-  providers: [TreeService, OccupancyService, LevelsService, LocationsService, UnitsService],
-  exports: [TreeService, OccupancyService],
+  controllers: [LevelsController, LocationsController, UnitTypesController, UnitsController],
+  providers: [TreeService, OccupancyService, LevelsService, LocationsService, UnitTypesService, UnitsService],
+  exports: [TreeService, OccupancyService, UnitTypesService],
 })
 export class PropertyModule {}

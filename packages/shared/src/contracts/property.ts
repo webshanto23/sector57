@@ -3,9 +3,15 @@ import { bnDigits } from '../format.js';
 import { asciiDigits, optionalText, pagination, text } from '../schemas.js';
 import { cleanText } from '../text.js';
 
-/** `units.unit_type`. Labels live in i18n (`Property.unitType.*`). */
-export const UNIT_TYPES = ['residential', 'shop', 'office', 'warehouse', 'other'] as const;
-export type UnitType = (typeof UNIT_TYPES)[number];
+/**
+ * `units.unit_type`: the code of one of the society's `unit_types`. New societies start with
+ * residential, shop, office, warehouse and other; names come from `GET /unit-types`.
+ */
+export const unitTypeCode = z.string().regex(/^[a-z0-9_]{1,40}$/, 'invalid_unit_type');
+export type UnitType = string;
+
+/** Most unit types one society keeps. */
+export const MAX_UNIT_TYPES = 50;
 
 /** `units.bill_to`: who gets the unit's bills. */
 export const BILL_TO = ['owner', 'renter'] as const;
@@ -23,7 +29,6 @@ const oneOf =
   <T extends readonly string[]>(values: T, fallback: T[number]) =>
   (value: string): T[number] =>
     (values as readonly string[]).includes(value) ? (value as T[number]) : fallback;
-export const toUnitType = oneOf(UNIT_TYPES, 'other');
 export const toBillTo = oneOf(BILL_TO, 'owner');
 export const toOccupancy = oneOf(OCCUPANCIES, 'vacant');
 
@@ -70,6 +75,38 @@ export const levelsInputSchema = z.object({
     }),
 });
 export type LevelsInput = z.infer<typeof levelsInputSchema>;
+
+/** One of the society's unit types (`unit_types`), with how many units and charge schedules use it. */
+export const unitTypeSchema = z.object({
+  id: z.uuid(),
+  code: unitTypeCode,
+  nameBn: z.string(),
+  nameEn: z.string().nullable(),
+  unitCount: z.number().int().min(0),
+  scheduleCount: z.number().int().min(0),
+});
+export type UnitTypeItem = z.infer<typeof unitTypeSchema>;
+
+/**
+ * `PUT /unit-types`: the whole list in display order. A new type has no `id`. A type that a
+ * unit or a charge schedule uses can be renamed but not removed.
+ */
+export const unitTypesInputSchema = z.object({
+  types: z
+    .array(z.object({ id: z.uuid().nullable(), nameBn: text(50), nameEn: optionalText(50) }))
+    .min(1)
+    .max(MAX_UNIT_TYPES)
+    .superRefine((types, ctx) => {
+      const seen = new Set<string>();
+      types.forEach((type, index) => {
+        if (seen.has(type.nameBn)) ctx.addIssue({ code: 'custom', message: 'duplicate_name', path: [index, 'nameBn'] });
+        seen.add(type.nameBn);
+      });
+      const ids = types.flatMap((type) => (type.id ? [type.id] : []));
+      if (new Set(ids).size !== ids.length) ctx.addIssue({ code: 'custom', message: 'duplicate_type' });
+    }),
+});
+export type UnitTypesInput = z.infer<typeof unitTypesInputSchema>;
 
 // ---------------------------------------------------------------------------
 // Locations
@@ -219,7 +256,7 @@ export const sizeSqftSchema = z
   );
 
 const unitFields = {
-  unitType: z.enum(UNIT_TYPES),
+  unitType: unitTypeCode,
   sizeSqft: sizeSqftSchema,
   billTo: z.enum(BILL_TO),
 };
@@ -261,7 +298,7 @@ export const unitSummarySchema = z.object({
   name: z.string(),
   code: z.string().nullable(),
   address: z.array(z.string()),
-  unitType: z.enum(UNIT_TYPES),
+  unitType: unitTypeCode,
   sizeSqft: z.string().nullable(),
   billTo: z.enum(BILL_TO),
   occupancy: z.enum(OCCUPANCIES),
@@ -280,7 +317,7 @@ export type UnitDetail = z.infer<typeof unitDetailSchema>;
 export const unitListQuery = pagination.extend({
   q: z.string().transform(cleanText).pipe(z.string().max(100)).optional(),
   areaId: z.uuid().optional(),
-  unitType: z.enum(UNIT_TYPES).optional(),
+  unitType: unitTypeCode.optional(),
   occupancy: z.enum(OCCUPANCIES).optional(),
 });
 export type UnitListQuery = z.infer<typeof unitListQuery>;

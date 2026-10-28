@@ -3,7 +3,7 @@ import { moneySchema } from '../money.js';
 import { optionalText, pagination, text } from '../schemas.js';
 import { CHARGE_KINDS, fundOptionSchema } from './finance.js';
 import { isoDay } from './members.js';
-import { UNIT_TYPES } from './property.js';
+import { MAX_UNIT_TYPES, unitTypeCode } from './property.js';
 
 // ---------------------------------------------------------------------------
 // Kinds
@@ -146,7 +146,7 @@ export const scheduleSchema = z.object({
   generation: z.enum(SCHEDULE_GENERATIONS),
   scope: placeRef.nullable(),
   /** Empty: every unit type. */
-  unitTypes: z.array(z.enum(UNIT_TYPES)),
+  unitTypes: z.array(unitTypeCode),
   startMonth: month,
   endMonth: month.nullable(),
   nextRunOn: isoDay.nullable(),
@@ -175,7 +175,7 @@ export const scheduleInputSchema = z
     frequencyMonths: z.union([z.literal(1), z.literal(3), z.literal(6), z.literal(12)]).nullable(),
     generation: z.enum(SCHEDULE_GENERATIONS),
     scopeLocationId: z.uuid().nullable(),
-    unitTypes: z.array(z.enum(UNIT_TYPES)).max(UNIT_TYPES.length),
+    unitTypes: z.array(unitTypeCode).max(MAX_UNIT_TYPES),
     startMonth: month,
     endMonth: month.nullable(),
     dueDays: z.number().int().min(0).max(365),

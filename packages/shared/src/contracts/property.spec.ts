@@ -8,6 +8,7 @@ import {
   sizeSqftSchema,
   toOccupancy,
   unitCreateSchema,
+  unitTypesInputSchema,
 } from './property.js';
 
 const uuid = '0b6d2c3e-8f1a-4c5b-9d7e-1a2b3c4d5e6f';
@@ -67,6 +68,20 @@ describe('property schemas', () => {
     expect(levelsInputSchema.safeParse({ levels: [level('ব্লক')] }).success).toBe(false);
     expect(levelsInputSchema.safeParse({ levels: [level('ব্লক'), level('ব্লক')] }).success).toBe(false);
     expect(levelsInputSchema.safeParse({ levels: [level('ব্লক'), level('ইউনিট')] }).success).toBe(true);
+  });
+
+  it('needs at least one unit type, names and ids unique', () => {
+    const type = (nameBn: string, id: string | null = null) => ({ id, nameBn, nameEn: null });
+    expect(unitTypesInputSchema.safeParse({ types: [] }).success).toBe(false);
+    expect(unitTypesInputSchema.safeParse({ types: [type('দোকান'), type(' দোকান')] }).success).toBe(false);
+    expect(unitTypesInputSchema.safeParse({ types: [type('দোকান', uuid), type('অফিস', uuid)] }).success).toBe(false);
+    expect(unitTypesInputSchema.safeParse({ types: [type('দোকান', uuid), type('গ্যারেজ')] }).success).toBe(true);
+  });
+
+  it('takes a unit type code, not a free name', () => {
+    const base = { parentId: uuid, name: 'A', code: '', billTo: 'owner', sizeSqft: null };
+    expect(unitCreateSchema.safeParse({ ...base, unitType: 't_3f9a1c' }).success).toBe(true);
+    expect(unitCreateSchema.safeParse({ ...base, unitType: 'দোকান' }).success).toBe(false);
   });
 
   it('falls back on unknown stored values and searches both digit forms', () => {

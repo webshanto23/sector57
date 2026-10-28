@@ -8,7 +8,7 @@ import {
   type LocationView,
   type MeWithAccess,
 } from "@s57/shared";
-import { Building2, Layers, MapPin } from "lucide-react";
+import { Building2, Layers, MapPin, Shapes } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Note } from "@/components/admin/form-status";
 import { Card, Chip, IconBox, PageHeader } from "@/components/kit";
@@ -16,6 +16,7 @@ import { DocumentsPanel } from "@/components/documents/documents-panel";
 import { PeoplePanel } from "@/components/members/people-panel";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { getUnitTypes } from "@/lib/api/property";
 import { AddPanel } from "./add-panel";
 import { levelName, PropertyBreadcrumb } from "./labels";
 import { LocationEditor } from "./location-editor";
@@ -69,8 +70,12 @@ export async function LocationPage({
   me: MeWithAccess;
   locale: Locale;
 }) {
-  const [t, tNav] = await Promise.all([getTranslations("Property"), getTranslations("Dashboard.nav")]);
   const { location, children, can } = view;
+  const [t, tNav, unitTypes] = await Promise.all([
+    getTranslations("Property"),
+    getTranslations("Dashboard.nav"),
+    can.createUnit ? getUnitTypes() : Promise.resolve([]),
+  ]);
   const unitsOpen = canAnywhere(me.access, "units");
   const canEditLevels = canAnywhere(me.access, "settings", "edit");
 
@@ -86,6 +91,12 @@ export async function LocationPage({
               <Link href={{ pathname: "/dashboard/units", query: { areaId: location.id } }} className={buttonVariants({ variant: "outline" })}>
                 <Building2 aria-hidden />
                 {t("seeUnits")}
+              </Link>
+            ) : null}
+            {!location && canEditLevels ? (
+              <Link href="/dashboard/property/unit-types" className={buttonVariants({ variant: "outline" })}>
+                <Shapes aria-hidden />
+                {t("unitTypes")}
               </Link>
             ) : null}
             {!location && canEditLevels ? (
@@ -121,6 +132,7 @@ export async function LocationPage({
             parentId={location?.id ?? null}
             parentDepth={location?.depth ?? 0}
             levels={levels}
+            unitTypes={unitTypes}
             canCreate={can.create}
             canCreateUnit={can.createUnit}
             existingNames={children.map((child) => child.name)}

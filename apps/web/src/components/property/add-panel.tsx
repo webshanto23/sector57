@@ -7,12 +7,11 @@ import {
   nameRangeSchema,
   OCCUPANCIES,
   pick,
-  UNIT_TYPES,
   type BillTo,
   type Locale,
   type LocationLevel,
   type Occupancy,
-  type UnitType,
+  type UnitTypeItem,
 } from "@s57/shared";
 import { ListPlus, Plus, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -39,6 +38,7 @@ export function AddPanel({
   parentId,
   parentDepth,
   levels,
+  unitTypes,
   canCreate,
   canCreateUnit,
   existingNames,
@@ -48,6 +48,7 @@ export function AddPanel({
   /** The parent's level depth, 0 at the top. */
   parentDepth: number;
   levels: LocationLevel[];
+  unitTypes: UnitTypeItem[];
   canCreate: boolean;
   canCreateUnit: boolean;
   existingNames: string[];
@@ -68,7 +69,7 @@ export function AddPanel({
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [range, setRange] = useState({ prefix: "", from: "1", to: "10", letters: "", bangla: locale === "bn" });
-  const [unitType, setUnitType] = useState<UnitType>("residential");
+  const [unitType, setUnitType] = useState(unitTypes[0]?.code ?? "");
   const [sizeSqft, setSizeSqft] = useState("");
   const [billTo, setBillTo] = useState<BillTo>("owner");
   const [occupancy, setOccupancy] = useState<Occupancy>("vacant");
@@ -115,10 +116,10 @@ export function AddPanel({
   const unitFields = (withOccupancy: boolean) => (
     <div className="grid gap-3.5 min-[600px]:grid-cols-2">
       <Field label={t("unitTypeLabel")} htmlFor="add-unitType">
-        <select id="add-unitType" className={inputClass} value={unitType} onChange={(e) => setUnitType(e.target.value as UnitType)}>
-          {UNIT_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {t(`unitType.${type}`)}
+        <select id="add-unitType" className={inputClass} value={unitType} onChange={(e) => setUnitType(e.target.value)}>
+          {unitTypes.map((type) => (
+            <option key={type.code} value={type.code}>
+              {pick(type.nameBn, type.nameEn, locale)}
             </option>
           ))}
         </select>

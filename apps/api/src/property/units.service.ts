@@ -6,7 +6,6 @@ import {
   OCCUPANCIES,
   toBillTo,
   toOccupancy,
-  toUnitType,
   type BulkResult,
   type UnitBulkInput,
   type UnitCounts,
@@ -25,6 +24,7 @@ import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { definedOnly, inUse, takenError } from './locations.service.js';
 import { OccupancyService } from './occupancy.service.js';
+import { UnitTypesService } from './unit-types.service.js';
 import { addressOf, beyondPermissions, codeTaken, nameTaken, TreeService } from './tree.service.js';
 
 const select = {
@@ -61,6 +61,7 @@ export class UnitsService {
     private readonly audit: AuditService,
     private readonly tree: TreeService,
     private readonly occupancy: OccupancyService,
+    private readonly unitTypes: UnitTypesService,
   ) {}
 
   async list(actor: Actor, query: UnitListQuery): Promise<UnitList> {
@@ -131,6 +132,7 @@ export class UnitsService {
     const parent = (await this.tree.parentFor(actor.access, actor.societyId, input.parentId, 'units'))!;
     const levelId = await this.unitLevel(actor.societyId);
     if (await this.tree.codeInUse(actor.societyId, input.code)) throw codeTaken();
+    await this.unitTypes.assertCodes(actor.societyId, [input.unitType]);
 
     const id = randomUUID();
     try {
@@ -166,6 +168,7 @@ export class UnitsService {
     const levelId = await this.unitLevel(actor.societyId);
     const taken = await this.tree.takenNames(actor.societyId, parent.id, input.names);
     if (taken.length > 0) throw takenError(taken);
+    await this.unitTypes.assertCodes(actor.societyId, [input.unitType]);
 
     const ids = input.names.map(() => randomUUID());
     const facts = unitData(input);
@@ -201,6 +204,7 @@ export class UnitsService {
     const row = await this.visibleRow(actor, id);
     if (!actor.access.can('edit', 'units', { path: row.locations.path })) throw beyondPermissions();
     if (input.code !== undefined && (await this.tree.codeInUse(actor.societyId, input.code, id))) throw codeTaken();
+    if (input.unitType !== undefined) await this.unitTypes.assertCodes(actor.societyId, [input.unitType]);
 
     const before = toSummary(row, new Map());
     const after = { ...before, ...definedOnly(input) };
@@ -253,7 +257,7 @@ function toSummary(row: UnitRow, names: Map<string, string>): UnitSummary {
     name: row.locations.name,
     code: row.locations.code,
     address: addressOf(row.locations.path, names),
-    unitType: toUnitType(row.unit_type),
+    unitType: row.unit_type,
     sizeSqft: row.size_sqft?.toString() ?? null,
     billTo: toBillTo(row.bill_to),
     occupancy: toOccupancy(row.occupancy),

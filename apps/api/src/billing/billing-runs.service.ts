@@ -14,7 +14,6 @@ import {
   PREVIEW_LIMIT,
   rateFor,
   skippedUnitSchema,
-  UNIT_TYPES,
   type BillAheadPreview,
   type BillAheadResult,
   type BillingRun,
@@ -490,7 +489,7 @@ export class BillingRunsService {
               ? ('fund_closed' as const)
               : null,
           scopePath: row.scope_location_id ? (scopes.get(row.scope_location_id) ?? null) : null,
-          unitTypes: row.unit_types.filter((type) => (UNIT_TYPES as readonly string[]).includes(type)),
+          unitTypes: row.unit_types,
           amount: row.amount.toFixed(2),
           rates: new Map(rateRows.filter((rate) => rate.schedule_id === row.id).map((rate) => [rate.location_id, rate.amount.toFixed(2)])),
         };

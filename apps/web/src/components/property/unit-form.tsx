@@ -1,8 +1,8 @@
 "use client";
 
-import { BILL_TO, UNIT_TYPES, type BillTo, type UnitDetail, type UnitType } from "@s57/shared";
+import { BILL_TO, pick, type BillTo, type Locale, type UnitDetail, type UnitTypeItem } from "@s57/shared";
 import { Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { ConfirmButton } from "@/components/admin/confirm-button";
 import { FormStatus } from "@/components/admin/form-status";
@@ -15,14 +15,15 @@ import { api } from "@/lib/api/client";
 import { useSubmit } from "./use-submit";
 
 /** One unit's facts: name, holding number, type, size, who is billed, active. Occupancy is shown, not edited (it is derived). */
-export function UnitForm({ unit }: { unit: UnitDetail }) {
+export function UnitForm({ unit, unitTypes }: { unit: UnitDetail; unitTypes: UnitTypeItem[] }) {
   const t = useTranslations("Property");
+  const locale = useLocale() as Locale;
   const router = useRouter();
   const { status, busy, run } = useSubmit();
   const [values, setValues] = useState({
     name: unit.name,
     code: unit.code ?? "",
-    unitType: unit.unitType as UnitType,
+    unitType: unit.unitType,
     sizeSqft: unit.sizeSqft ?? "",
     billTo: unit.billTo as BillTo,
     isActive: unit.isActive,
@@ -45,10 +46,10 @@ export function UnitForm({ unit }: { unit: UnitDetail }) {
               <TextField id="unit-name" label={t("name")} value={values.name} onChange={(e) => set("name", e.target.value)} required />
               <TextField id="unit-code" label={t("code")} hint={t("codeHint")} value={values.code} onChange={(e) => set("code", e.target.value)} />
               <Field label={t("unitTypeLabel")} htmlFor="unit-type">
-                <select id="unit-type" className={inputClass} value={values.unitType} onChange={(e) => set("unitType", e.target.value as UnitType)}>
-                  {UNIT_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {t(`unitType.${type}`)}
+                <select id="unit-type" className={inputClass} value={values.unitType} onChange={(e) => set("unitType", e.target.value)}>
+                  {unitTypes.map((type) => (
+                    <option key={type.code} value={type.code}>
+                      {pick(type.nameBn, type.nameEn, locale)}
                     </option>
                   ))}
                 </select>
