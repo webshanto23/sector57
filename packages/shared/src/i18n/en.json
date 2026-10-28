@@ -986,7 +986,14 @@
         "here": "Owner lives here",
         "elsewhere": "Owner lives elsewhere"
       }
-    }
+    },
+    "mapView": "Map",
+    "levelsLabel": "View by level",
+    "findLabel": "Find a place",
+    "findPlaceholder": "Name or holding number",
+    "find": "Search",
+    "found": "{count, plural, =0 {No places match} one {# place} other {# places}}",
+    "noMatch": "No places match."
   },
   "Members": {
     "sub": "Owners, renters and residents",

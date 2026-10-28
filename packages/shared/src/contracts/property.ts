@@ -162,6 +162,40 @@ export const locationViewSchema = z.object({
 });
 export type LocationView = z.infer<typeof locationViewSchema>;
 
+export const LOCATION_SEARCH_PAGE_SIZE = 48;
+
+/**
+ * `GET /locations/search`: places (never units) inside `under` (or the caller's whole
+ * tree) at one level and/or matching `q` (name or holding code, either digit form).
+ */
+export const locationSearchQuery = z.object({
+  under: z.uuid().optional(),
+  levelId: z.uuid().optional(),
+  q: z.string().transform(cleanText).pipe(z.string().max(100)).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+});
+export type LocationSearchQuery = z.infer<typeof locationSearchQuery>;
+
+/** A search result: the map's card plus the names above it, top first (a single root left out). */
+export const locationHitSchema = locationNodeSchema.extend({ address: z.array(z.string()) });
+export type LocationHit = z.infer<typeof locationHitSchema>;
+
+export const locationSearchSchema = z.object({
+  items: z.array(locationHitSchema),
+  total: z.number().int().min(0),
+  page: z.number().int().min(1),
+  pageSize: z.number().int().min(1),
+});
+export type LocationSearch = z.infer<typeof locationSearchSchema>;
+
+/** `GET /locations/level-counts?under=`: places per level below `under`, in the caller's area (unit level left out). */
+export const levelCountsQuery = z.object({ under: z.uuid().optional() });
+export type LevelCountsQuery = z.infer<typeof levelCountsQuery>;
+export const levelCountsSchema = z.object({
+  items: z.array(z.object({ levelId: z.uuid(), count: z.number().int().min(0) })),
+});
+export type LevelCounts = z.infer<typeof levelCountsSchema>;
+
 /** `POST /locations`. `parentId` null adds a top-level location. Units are added through `/units`. */
 export const locationCreateSchema = z.object({
   parentId: z.uuid().nullable(),

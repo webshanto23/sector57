@@ -3,6 +3,7 @@ import { AuditModule } from '../audit/audit.module.js';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { LevelsController } from './levels.controller.js';
 import { LevelsService } from './levels.service.js';
+import { LocationSearchService } from './location-search.service.js';
 import { LocationsController } from './locations.controller.js';
 import { LocationsService } from './locations.service.js';
 import { OccupancyService } from './occupancy.service.js';
@@ -17,7 +18,7 @@ import { UnitsService } from './units.service.js';
 @Module({
   imports: [PrismaModule, AuditModule],
   controllers: [LevelsController, LocationsController, UnitTypesController, UnitsController],
-  providers: [TreeService, OccupancyService, LevelsService, LocationsService, UnitTypesService, UnitPeopleService, UnitsService],
+  providers: [TreeService, OccupancyService, LevelsService, LocationSearchService, LocationsService, UnitTypesService, UnitPeopleService, UnitsService],
   exports: [TreeService, OccupancyService, UnitTypesService],
 })
 export class PropertyModule {}

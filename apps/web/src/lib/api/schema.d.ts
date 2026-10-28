@@ -532,6 +532,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/locations/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LocationsController_search"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/locations/level-counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LocationsController_levelCounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/locations/{id}": {
         parameters: {
             query?: never;
@@ -4211,6 +4243,35 @@ export interface components {
                 edit: boolean;
                 delete: boolean;
             };
+        };
+        LocationSearchDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                parentId: string | null;
+                name: string;
+                code: string | null;
+                /** Format: uuid */
+                levelId: string;
+                depth: number;
+                levelBn: string;
+                levelEn: string | null;
+                isUnit: boolean;
+                isActive: boolean;
+                childCount: number;
+                unitCount: number;
+                address: string[];
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+        };
+        LevelCountsDto_Output: {
+            items: {
+                /** Format: uuid */
+                levelId: string;
+                count: number;
+            }[];
         };
         LocationCreateDto: {
             parentId: string | null;
@@ -11420,6 +11481,51 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LocationViewDto_Output"];
+                };
+            };
+        };
+    };
+    LocationsController_search: {
+        parameters: {
+            query?: {
+                under?: string;
+                levelId?: string;
+                q?: string;
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationSearchDto_Output"];
+                };
+            };
+        };
+    };
+    LocationsController_levelCounts: {
+        parameters: {
+            query?: {
+                under?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LevelCountsDto_Output"];
                 };
             };
         };

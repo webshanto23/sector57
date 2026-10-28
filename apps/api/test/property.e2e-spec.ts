@@ -2,7 +2,9 @@ import { INestApplication } from '@nestjs/common';
 import {
   AUTH_COOKIES,
   CSRF_HEADER,
+  levelCountsSchema,
   locationPath,
+  locationSearchSchema,
   locationViewSchema,
   unitAreasSchema,
   unitDetailSchema,
@@ -534,6 +536,57 @@ describe('Property: location tree and units (e2e)', () => {
       const res = await get('/unit-types', reader.cookie).expect(200);
       expect(res.body.items.map((t: { code: string }) => t.code)).toContain('residential');
       await send('put', '/unit-types', reader.cookie).send({ types: [{ id: null, nameBn: 'x', nameEn: null }] }).expect(403);
+    });
+  });
+
+  describe('level picker and search', () => {
+    const search = async (query: string, cookie = admin.cookie) =>
+      locationSearchSchema.parse((await get(`/locations/search?${query}`, cookie).expect(200)).body);
+
+    beforeAll(async () => {
+      await addLocation('blockD', 3, 'রোড ৯');
+    });
+
+    it('lists one level inside a place, with addresses to tell same names apart', async () => {
+      const roads = await search(`under=${tree.sector.id}&levelId=${level(3)}`);
+      const nines = roads.items.filter((item) => item.name === 'রোড ৯');
+      expect(nines.map((item) => item.address.at(-1)).sort((a, b) => (a ?? '').localeCompare(b ?? ''))).toEqual(['ব্লক ডি', 'ব্লক সি']);
+      expect(roads.items.every((item) => item.levelId === level(3) && !item.isUnit)).toBe(true);
+      expect(roads.total).toBe(roads.items.length);
+
+      // Plots straight from the block, past the road level.
+      const plots = await search(`under=${tree.blockC.id}&levelId=${level(4)}`);
+      expect(plots.items.length).toBeGreaterThan(0);
+      expect(plots.items.every((item) => item.levelId === level(4) && item.address.includes('ব্লক সি'))).toBe(true);
+    });
+
+    it('matches names in either digit form and never returns units', async () => {
+      const found = await search(`under=${tree.sector.id}&q=9`);
+      expect(found.items.filter((item) => item.name === 'রোড ৯')).toHaveLength(2);
+      expect(found.items.some((item) => item.id === tree.sector.id)).toBe(false);
+      const flats = await search(`under=${tree.sector.id}&q=${encodeURIComponent('ফ্ল্যাট')}`);
+      expect(flats.items).toEqual([]);
+    });
+
+    it('counts places per level below a place', async () => {
+      const counts = levelCountsSchema.parse((await get(`/locations/level-counts?under=${tree.sector.id}`, admin.cookie).expect(200)).body);
+      const count = (depth: number) => counts.items.find((item) => item.levelId === level(depth))?.count ?? 0;
+      expect(count(2)).toBe((await search(`under=${tree.sector.id}&levelId=${level(2)}`)).total);
+      expect(count(2)).toBeGreaterThanOrEqual(2);
+      expect(count(3)).toBe((await search(`under=${tree.sector.id}&levelId=${level(3)}`)).total);
+      const unitLevel = await prisma.location_levels.findFirstOrThrow({ where: { society_id: societyId, is_unit_level: true } });
+      expect(counts.items.some((item) => item.levelId === unitLevel.id)).toBe(false);
+    });
+
+    it("keeps to the caller's area", async () => {
+      const viewer = await makeUser([{ roleId: await makeRole(['locations:view']), scope: tree.blockC.id }]);
+      const roads = await search(`levelId=${level(3)}`, viewer.cookie);
+      expect(roads.items.length).toBeGreaterThan(0);
+      expect(roads.items.every((item) => item.address.includes('ব্লক সি'))).toBe(true);
+      const blocks = levelCountsSchema.parse((await get('/locations/level-counts', viewer.cookie).expect(200)).body);
+      expect(blocks.items.find((item) => item.levelId === level(2))?.count).toBe(1);
+      await get(`/locations/search?under=${tree.blockD.id}`, viewer.cookie).expect(404);
+      await get(`/locations/level-counts?under=${tree.sector.id}`, viewer.cookie).expect(404);
     });
   });
 });

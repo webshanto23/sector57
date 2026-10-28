@@ -6,14 +6,12 @@ import {
   RENTED_STATUSES,
   type OwnerLives,
   type PartyName,
-  type PermissionModule,
   type UnitMissing,
   type UnitOwnerLevel,
 } from '@s57/shared';
-import type { CallerAccess } from '../permissions/caller-access.js';
 import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { pathIds } from './tree.service.js';
+import { pathIds, scopeSql } from './tree.service.js';
 
 export type UnitPeople = { owners: UnitOwnerLevel[] | null; renters: PartyName[] | null };
 
@@ -28,17 +26,6 @@ const nameOf = (row: PartyRow): PartyName | null =>
   row.persons ? { name: row.persons.full_name, nameEn: row.persons.full_name_en } : row.organisations ? { name: row.organisations.name, nameEn: null } : null;
 
 const escapeLike = (value: string) => value.replace(/[\\%_]/g, (char) => `\\${char}`);
-
-/** Units `l` whose path lies in the caller's area for `module` (as SQL). */
-function inScope(access: CallerAccess, module: PermissionModule): Prisma.Sql | null {
-  const scope = access.paths('view', module);
-  if (scope === 'all') return Prisma.sql`TRUE`;
-  if (scope.length === 0) return null;
-  return Prisma.sql`(${Prisma.join(
-    scope.map((path) => Prisma.sql`starts_with(l.path, ${path})`),
-    ' OR ',
-  )})`;
-}
 
 /**
  * Who owns and rents units, for the units list: owners at every level of a unit's chain
@@ -115,8 +102,8 @@ export class UnitPeopleService {
    * phone, only among the people the caller may view; a search can't find anyone else.
    */
   async matching(actor: Actor, q: string): Promise<string[]> {
-    const owning = inScope(actor.access, 'ownerships');
-    const renting = inScope(actor.access, 'tenancies');
+    const owning = scopeSql(actor.access, 'ownerships');
+    const renting = scopeSql(actor.access, 'tenancies');
     if (!owning && !renting) return [];
 
     const names = digitVariants(q).map((term) => `%${escapeLike(term)}%`);
@@ -172,7 +159,7 @@ export class UnitPeopleService {
     if (filters.ownerLives === 'elsewhere') and.push(Prisma.sql`${hasOwner} and not ${ownerLivesHere}`);
     if (and.length === 0) return null;
     if (filters.missing === 'owner' || filters.ownerLives) {
-      const owning = inScope(actor.access, 'ownerships');
+      const owning = scopeSql(actor.access, 'ownerships');
       if (!owning) return [];
       and.push(owning);
     }

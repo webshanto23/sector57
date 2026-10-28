@@ -1,6 +1,17 @@
 import "server-only";
 
-import type { LocationLevel, LocationView, UnitAreas, UnitDetail, UnitList, UnitListQuery, UnitTypeItem } from "@s57/shared";
+import type {
+  LevelCounts,
+  LocationLevel,
+  LocationSearch,
+  LocationSearchQuery,
+  LocationView,
+  UnitAreas,
+  UnitDetail,
+  UnitList,
+  UnitListQuery,
+  UnitTypeItem,
+} from "@s57/shared";
 import { api } from "./client";
 import { authHeaders } from "./session";
 
@@ -36,6 +47,25 @@ export async function getLocation(id: string): Promise<LocationView | null> {
   });
   if (missing(response.status)) return null;
   if (!data) throw failed("the location", response.status);
+  return data;
+}
+
+/** The map's level picker and search; null when `under` is unknown or outside the caller's area. */
+export async function searchLocations(query: Partial<LocationSearchQuery>): Promise<LocationSearch | null> {
+  const { data, response } = await api.GET("/locations/search", { params: { query }, headers: await authHeaders(), cache: "no-store" });
+  if (missing(response.status)) return null;
+  if (!data) throw failed("the places", response.status);
+  return data;
+}
+
+/** Places per level below `under` (or the caller's whole tree). */
+export async function getLevelCounts(under: string | undefined): Promise<LevelCounts> {
+  const { data, response } = await api.GET("/locations/level-counts", {
+    params: { query: under ? { under } : {} },
+    headers: await authHeaders(),
+    cache: "no-store",
+  });
+  if (!data) throw failed("the level counts", response.status);
   return data;
 }
 

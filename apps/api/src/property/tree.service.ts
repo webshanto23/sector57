@@ -39,6 +39,17 @@ export const nameTaken = () =>
 export const codeTaken = () =>
   new ConflictException({ code: 'location_code_taken', message: 'Another location already has this holding number' });
 
+/** Rows whose location `l` lies in the caller's area for `module` (as SQL), or null when they have none. */
+export function scopeSql(access: CallerAccess, module: PermissionModule): Prisma.Sql | null {
+  const scope = access.paths('view', module);
+  if (scope === 'all') return Prisma.sql`TRUE`;
+  if (scope.length === 0) return null;
+  return Prisma.sql`(${Prisma.join(
+    scope.map((path) => Prisma.sql`starts_with(l.path, ${path})`),
+    ' OR ',
+  )})`;
+}
+
 /** The ids in a `locations.path`, top first. */
 export const pathIds = (path: string) => path.split('/').filter(Boolean);
 

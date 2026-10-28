@@ -1038,7 +1038,7 @@ Asked for by Anis on 2026-10-28: unit types (residential, shop ...) become each 
 - **Checked:** property and billing e2e files, `pnpm check`. Applied to the dev and test databases. Not opened in a browser.
 - **Not in this step:** per-type billing rates, archiving a type instead of removing it.
 
-## Step 35: More filters on the units list — Slices 1–3 built, awaiting review
+## Step 35: More filters on the units list and the property map — Built, awaiting review
 
 Asked for by Anis on 2026-10-28: more filters on `/dashboard/units`. Agreed split: units filters stay on `/units`; level counts go on the property map; full owner and renter lists stay in Directory and the reports. Built on `step/35-units-filters` (from `step/34-unit-types`).
 
@@ -1063,7 +1063,18 @@ Asked for by Anis on 2026-10-28: more filters on `/dashboard/units`. Agreed spli
   - **API:** `UnitPeopleService.conditions` runs the chain checks; `missing=size` is a plain Prisma condition.
   - **Tests:** three more cases in `units-people.e2e-spec.ts`. `pnpm check` passes. Not opened in a browser.
   - **Open decision:** the occupancy value `owner_occupied` ("মালিক বসবাসরত") only means "has an owner and isn't rented". It doesn't mean the owner lives there; "Owner lives: elsewhere" shows the difference. Renaming the label (for example to "Owner-held") is for Anis to decide.
-- **Slice 4 (planned):** counts by level on the property map.
+- **Slice 4 (built): property map, jump to a level and search.** Anis replaced the planned row of counts with a way to list the places of one level.
+  - **Decided:** the tree stays the default, chips show counts, and there are no extra filters.
+  - **Web:** `LevelBar` (`components/property/level-bar.tsx`) sits on `/property` and every place's page.
+    - It shows a "Map" chip (the tree) and one chip per level below the place, with how many places lie inside. Empty levels are greyed out; the unit level is left out (the "See its units" button opens `/units`).
+    - It also has a name or holding search. The choice lives in the URL as `level`, `q` and `page`.
+    - Results replace the children grid: the same cards plus the address, 48 per page. `loadFinder` (`components/property/finder.ts`) reads the URL.
+  - **Shared:** `locationSearchQuery`, `locationSearchSchema` (the map's card plus `address`), `levelCountsSchema`, `LOCATION_SEARCH_PAGE_SIZE`.
+  - **API:** `LocationSearchService`.
+    - `GET /locations/search?under=&levelId=&q=&page=` and `GET /locations/level-counts?under=`, both `locations.view`.
+    - They return places below `under` (not `under` itself), never units, inside the caller's area; an `under` outside that area is 404.
+    - `scopeSql` (in `tree.service.ts`) is now shared with `UnitPeopleService`.
+  - **Tests:** a "level picker and search" block in `property.e2e-spec.ts` covers one level with addresses (same-named roads), plots straight from a block, digit forms, no units, counts matching search totals, and a Block C viewer's area. `pnpm check` passes. Not opened in a browser.
 
 ## Later: beyond milestone 3
 
