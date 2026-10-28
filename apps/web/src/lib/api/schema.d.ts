@@ -4446,6 +4446,12 @@ export interface components {
                     occupancy: "owner_occupied" | "rented" | "vacant";
                     isActive: boolean;
                     alsoOn: string[];
+                    mergedInto: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                    } | null;
+                    includes: string[];
                 }[];
             }[];
             canEdit: boolean;
@@ -4529,6 +4535,12 @@ export interface components {
                     name: string;
                     nameEn: string | null;
                 }[] | null;
+                mergedInto: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                includes: string[];
             }[];
             total: number;
             page: number;

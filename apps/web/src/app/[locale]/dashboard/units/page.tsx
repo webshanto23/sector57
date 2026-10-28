@@ -72,7 +72,12 @@ export default async function UnitsPage({ params, searchParams }: PageProps<"/[l
       cell: (unit) => (
         <Link href={`/dashboard/units/${unit.id}`} className="inline-flex flex-wrap items-center gap-2 font-semibold text-fg">
           {unit.name}
-          {!unit.isActive ? <Chip tone="warn">{t("inactive")}</Chip> : null}
+          {unit.mergedInto ? (
+            <Chip>{tUnits("partOf", { name: unit.mergedInto.name })}</Chip>
+          ) : !unit.isActive ? (
+            <Chip tone="warn">{t("inactive")}</Chip>
+          ) : null}
+          {unit.includes.length > 0 ? <Chip tone="info">{t("grid.includes", { names: unit.includes.join(", ") })}</Chip> : null}
         </Link>
       ),
     },
@@ -96,7 +101,7 @@ export default async function UnitsPage({ params, searchParams }: PageProps<"/[l
       cell: (unit) => (unit.sizeSqft ? formatNumber(unit.sizeSqft, locale) : "—"),
     },
     { key: "billTo", header: t("billToLabel"), cell: (unit) => t(`billTo.${unit.billTo}`) },
-    { key: "occupancy", header: t("occupancyLabel"), cell: (unit) => <OccupancyChip occupancy={unit.occupancy} /> },
+    { key: "occupancy", header: t("occupancyLabel"), cell: (unit) => (unit.mergedInto ? "—" : <OccupancyChip occupancy={unit.occupancy} />) },
   ];
 
   return (

@@ -105,13 +105,14 @@ export class UnitsService {
     if (missing === 'size') and.push({ size_sqft: null });
     const chain = await this.people.conditions(actor, { missing, ownerLives });
     if (chain) and.push({ location_id: { in: chain } });
-    const where = { AND: occupancy ? [...and, { occupancy }] : and };
+    // A unit combined into another is part of that one: it is not counted, nor found as vacant.
+    const where = { AND: occupancy ? [...and, { occupancy, merged_into: null }] : and };
 
     const [total, rows, groups] = await this.prisma.$transaction([
       this.prisma.units.count({ where }),
       this.prisma.units.findMany({
         where,
-        select,
+        select: { ...select, merged_units: { select: { locations: { select: { name: true } } }, orderBy: { locations: { name: 'asc' } } } },
         // Grouped by what is above the unit (roughly building, plot, road), then natural name order.
         orderBy: [
           { locations: { locations: { locations: { name: 'asc' } } } },
@@ -122,7 +123,7 @@ export class UnitsService {
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),
-      this.prisma.units.groupBy({ by: ['occupancy'], where: { AND: and }, _count: { _all: true }, orderBy: { occupancy: 'asc' } }),
+      this.prisma.units.groupBy({ by: ['occupancy'], where: { AND: [...and, { merged_into: null }] }, _count: { _all: true }, orderBy: { occupancy: 'asc' } }),
     ]);
 
     const counts: UnitCounts = { total: 0, owner_occupied: 0, rented: 0, vacant: 0 };
@@ -135,7 +136,12 @@ export class UnitsService {
       this.tree.addressNames(actor.societyId, rows.map((row) => row.locations.path)),
       this.people.forUnits(actor, rows.map((row) => ({ id: row.location_id, path: row.locations.path }))),
     ]);
-    const items = rows.map((row) => ({ ...toSummary(row, names), ...(people.get(row.location_id) ?? { owners: null, renters: null }) }));
+    const items = rows.map((row) => ({
+      ...toSummary(row, names),
+      ...(people.get(row.location_id) ?? { owners: null, renters: null }),
+      mergedInto: row.merged ? { id: row.merged.location_id, name: row.merged.locations.name } : null,
+      includes: row.merged_units.map((part) => part.locations.name),
+    }));
     return { items, total, page, pageSize, counts };
   }
 

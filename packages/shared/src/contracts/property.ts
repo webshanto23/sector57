@@ -19,8 +19,8 @@ export type BillTo = (typeof BILL_TO)[number];
 
 /**
  * `units.occupancy`, derived by the API (never typed in): `rented` while a tenancy is active or
- * moving out, else `owner_occupied` when the unit or a location above it has a current owner,
- * else `vacant`.
+ * moving out, else `owner_occupied` while a resident of the owner's household (no tenancy) lives
+ * there, else `vacant`, owned or not.
  */
 export const OCCUPANCIES = ['owner_occupied', 'rented', 'vacant'] as const;
 export type Occupancy = (typeof OCCUPANCIES)[number];
@@ -467,6 +467,10 @@ export type UnitOwnerLevel = z.infer<typeof unitOwnerLevelSchema>;
 export const unitListItemSchema = unitSummarySchema.extend({
   owners: z.array(unitOwnerLevelSchema).nullable(),
   renters: z.array(partyNameSchema).nullable(),
+  /** Set when it was combined into another unit: shown as part of that one, not as an empty unit. */
+  mergedInto: z.object({ id: z.uuid(), name: z.string() }).nullable(),
+  /** Names of the units combined into this one. */
+  includes: z.array(z.string()),
 });
 export type UnitListItem = z.infer<typeof unitListItemSchema>;
 

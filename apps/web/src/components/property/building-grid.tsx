@@ -65,7 +65,8 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
 
       <ol className="grid gap-2">
         {[...grid.floors].reverse().map((floor) => {
-          const ids = floor.units.map((unit) => unit.id);
+          // Units combined into another are history, so they cannot be picked again.
+          const ids = floor.units.filter((unit) => !unit.mergedInto).map((unit) => unit.id);
           const all = ids.length > 0 && ids.every((id) => chosen.has(id));
           return (
             <li key={floor.id} className="grid gap-2 rounded-[10px] border border-line p-2.5 min-[700px]:grid-cols-[150px_1fr] min-[700px]:items-start">
@@ -85,7 +86,27 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
                 <p className="text-[13px] text-muted-foreground">{t("noUnits")}</p>
               ) : (
                 <ul className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">
-                  {floor.units.map((unit) => (
+                  {floor.units.map((unit) =>
+                    unit.mergedInto ? (
+                      <li key={unit.id}>
+                        <div className="grid gap-1 rounded-[8px] border border-dashed border-line bg-surface-2 p-2 text-[13px] text-muted-foreground">
+                          <span className="font-semibold">{unit.name}</span>
+                          <span>
+                            {t.rich("partOf", {
+                              name: unit.mergedInto.name,
+                              link: (chunks) =>
+                                unitsOpen ? (
+                                  <Link href={`/dashboard/units/${unit.mergedInto!.id}`} className="underline underline-offset-2">
+                                    {chunks}
+                                  </Link>
+                                ) : (
+                                  chunks
+                                ),
+                            })}
+                          </span>
+                        </div>
+                      </li>
+                    ) : (
                     <li key={unit.id}>
                       <label
                         className={`grid gap-1 rounded-[8px] border p-2 text-[13px] ${chosen.has(unit.id) ? "border-primary bg-surface-2" : "border-line bg-surface"}`}
@@ -111,11 +132,13 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
                         <span className="flex flex-wrap gap-1">
                           <Chip tone={OCCUPANCY_TONES[unit.occupancy]}>{tOcc(unit.occupancy)}</Chip>
                           {unit.alsoOn.length > 0 ? <Chip tone="info">{t("alsoOn", { names: unit.alsoOn.join(", ") })}</Chip> : null}
+                          {unit.includes.length > 0 ? <Chip tone="info">{t("includes", { names: unit.includes.join(", ") })}</Chip> : null}
                           {!unit.isActive ? <Chip tone="warn">{t("inactive")}</Chip> : null}
                         </span>
                       </label>
                     </li>
-                  ))}
+                    ),
+                  )}
                 </ul>
               )}
             </li>

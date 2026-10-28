@@ -1,5 +1,5 @@
 import { INestApplication } from '@nestjs/common';
-import { AUTH_COOKIES, buildingGridSchema, CSRF_HEADER, locationViewSchema, unitDetailSchema, type LocationView, type UnitDetail } from '@s57/shared';
+import { AUTH_COOKIES, buildingGridSchema, CSRF_HEADER, locationViewSchema, unitDetailSchema, unitListSchema, type LocationView, type UnitDetail } from '@s57/shared';
 import { randomUUID } from 'node:crypto';
 import request from 'supertest';
 import { App } from 'supertest/types.js';
@@ -242,10 +242,11 @@ describe('Multi-storey buildings: covering storeys and setting up floors (e2e)',
       (await prisma.locations.findFirstOrThrow({ where: { parent_id: floor, name }, select: { id: true } })).id;
     let units: Record<'1A' | '1B' | '2A' | '2B', string>;
     let floors: { one: string; two: string };
+    let building: string;
     let owner: string;
 
     beforeAll(async () => {
-      const building = await addLocation(places.plot, 5, 'ভবন ই');
+      building = await addLocation(places.plot, 5, 'ভবন ই');
       await send('post', `/locations/${building}/layout`, admin.cookie)
         .send({
           floors: { from: 1, to: 2, pattern: 'Floor {n}', groundName: null, groundHasUnits: true },
@@ -296,6 +297,15 @@ describe('Multi-storey buildings: covering storeys and setting up floors (e2e)',
       expect(kept).toMatchObject({ isActive: true, sizeSqft: '2000', covers: [{ id: floors.two, name: 'Floor 2' }], mergedInto: null });
       const retired = unitDetailSchema.parse((await get(`/units/${units['2A']}`, admin.cookie).expect(200)).body);
       expect(retired).toMatchObject({ isActive: false, mergedInto: { id: units['1A'], name: '1A' }, can: { edit: false, delete: false } });
+      const grid = buildingGridSchema.parse((await get(`/locations/${building}/grid`, admin.cookie).expect(200)).body);
+      expect(grid.floors[0]!.units.find((unit) => unit.id === units['1A'])).toMatchObject({ mergedInto: null, includes: ['2A'] });
+      expect(grid.floors[1]!.units.find((unit) => unit.id === units['2A'])).toMatchObject({ mergedInto: { id: units['1A'], name: '1A' }, includes: [] });
+      const list = unitListSchema.parse((await get(`/units?areaId=${building}`, admin.cookie).expect(200)).body);
+      expect(list.items.find((unit) => unit.id === units['1A'])).toMatchObject({ mergedInto: null, includes: ['2A'] });
+      expect(list.items.find((unit) => unit.id === units['2A'])).toMatchObject({ mergedInto: { id: units['1A'], name: '1A' } });
+      expect(list.counts.total).toBe(3);
+      const vacant = unitListSchema.parse((await get(`/units?areaId=${building}&occupancy=vacant`, admin.cookie).expect(200)).body);
+      expect(vacant.items.map((unit) => unit.id)).not.toContain(units['2A']);
       expect(await prisma.ownerships.count({ where: { location_id: units['2A'], end_date: null } })).toBe(0);
       expect(await prisma.ownerships.count({ where: { location_id: units['1A'], end_date: null } })).toBe(1);
 

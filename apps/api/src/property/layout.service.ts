@@ -99,7 +99,13 @@ export class LayoutService {
       : [];
     const facts = await this.prisma.units.findMany({
       where: { society_id: actor.societyId, location_id: { in: units.map((unit) => unit.id) } },
-      select: { location_id: true, unit_type: true, occupancy: true },
+      select: {
+        location_id: true,
+        unit_type: true,
+        occupancy: true,
+        merged: { select: { location_id: true, locations: { select: { name: true } } } },
+        merged_units: { select: { locations: { select: { name: true } } }, orderBy: { locations: { name: 'asc' } } },
+      },
     });
     const byId = new Map(facts.map((row) => [row.location_id, row]));
     return {
@@ -108,14 +114,19 @@ export class LayoutService {
         name: floor.name,
         units: units
           .filter((unit) => unit.parentId === floor.id)
-          .map((unit) => ({
-            id: unit.id,
-            name: unit.name,
-            unitType: byId.get(unit.id)!.unit_type,
-            occupancy: toOccupancy(byId.get(unit.id)!.occupancy),
-            isActive: unit.isActive,
-            alsoOn: unit.alsoOn,
-          })),
+          .map((unit) => {
+            const row = byId.get(unit.id)!;
+            return {
+              id: unit.id,
+              name: unit.name,
+              unitType: row.unit_type,
+              occupancy: toOccupancy(row.occupancy),
+              isActive: unit.isActive,
+              alsoOn: unit.alsoOn,
+              mergedInto: row.merged ? { id: row.merged.location_id, name: row.merged.locations.name } : null,
+              includes: row.merged_units.map((part) => part.locations.name),
+            };
+          }),
       })),
       canEdit: actor.access.can('edit', 'units', { path: building.path }),
     };

@@ -101,6 +101,10 @@ export const buildingGridUnitSchema = z.object({
   isActive: z.boolean(),
   /** Other storeys it covers (a duplex). */
   alsoOn: z.array(z.string()),
+  /** Set when it was combined into another unit: shown as part of that one, not as its own flat. */
+  mergedInto: z.object({ id: z.uuid(), name: z.string() }).nullable(),
+  /** Names of the units combined into this one. */
+  includes: z.array(z.string()),
 });
 export type BuildingGridUnit = z.infer<typeof buildingGridUnitSchema>;
 

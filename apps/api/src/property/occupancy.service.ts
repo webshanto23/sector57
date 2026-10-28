@@ -6,10 +6,11 @@ import { PrismaService } from '../prisma/prisma.service.js';
 type Client = Pick<PrismaService, '$executeRaw'>;
 
 /**
- * Keeps `units.occupancy` in step with the records (Anis, 2026-10-11): `rented` while a
- * tenancy is active or moving out; otherwise `owner_occupied` when the unit, or a location
- * above it, has a current owner; otherwise `vacant`. Called in the same transaction as
- * every change to units, ownerships and tenancies.
+ * Keeps `units.occupancy` in step with the records: `rented` while a tenancy is active or
+ * moving out; otherwise `owner_occupied` while someone of the owner's household (a resident
+ * with no tenancy, such as an owner marked "Lives here") lives there; otherwise `vacant`, even
+ * when owned (Anis, 2026-10-28; owning a plot no longer marks every flat below it). Called in
+ * the same transaction as every change to units, ownerships, tenancies and residents.
  */
 @Injectable()
 export class OccupancyService {
@@ -25,8 +26,8 @@ export class OccupancyService {
           where t.unit_id = u.location_id and t.society_id = u.society_id and t.status in (${rented})
         ) then 'rented'
         when exists (
-          select 1 from ownerships o join locations ol on ol.id = o.location_id
-          where o.society_id = u.society_id and o.end_date is null and starts_with(l.path, ol.path)
+          select 1 from occupants oc
+          where oc.unit_id = u.location_id and oc.society_id = u.society_id and oc.end_date is null and oc.tenancy_id is null
         ) then 'owner_occupied'
         else 'vacant'
       end

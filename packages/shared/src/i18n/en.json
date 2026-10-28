@@ -962,6 +962,8 @@
       "pickFloor": "Pick every unit on {name}",
       "noUnits": "No units on this floor.",
       "alsoOn": "Also on {names}",
+      "includes": "Includes {names}",
+      "partOf": "Part of <link>{name}</link>",
       "inactive": "Inactive",
       "chosen": "{count, plural, =0 {No units picked} one {# unit picked} other {# units picked}}",
       "typeLabel": "New type",
@@ -1050,7 +1052,7 @@
       "vacant": "Vacant"
     },
     "occupancyLabel": "Occupancy",
-    "occupancyHint": "Follows the records: rented while a tenancy runs, otherwise the owner's when an owner is recorded, otherwise vacant.",
+    "occupancyHint": "Follows the records: rented while a tenancy runs; owner lives here while someone of the owner's household is a resident (press “Lives here” on the owner); otherwise vacant, even when owned.",
     "unitTypeLabel": "Type",
     "size": "Size (sq ft)",
     "sizeHint": "Optional.",
@@ -1092,7 +1094,8 @@
       "ownerLives": {
         "here": "Owner lives here",
         "elsewhere": "Owner lives elsewhere"
-      }
+      },
+      "partOf": "Part of {name}"
     },
     "mapView": "Map",
     "levelsLabel": "View by level",
