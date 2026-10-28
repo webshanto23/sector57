@@ -947,6 +947,19 @@
       "cancel": "Cancel",
       "done": "Made {floors} floors and {units} units."
     },
+    "grid": {
+      "title": "Floors and units",
+      "hint": "Tick units, or a whole floor, and give them one type, such as shops on the ground floor.",
+      "pickFloor": "Pick every unit on {name}",
+      "noUnits": "No units on this floor.",
+      "alsoOn": "Also on {names}",
+      "inactive": "Inactive",
+      "chosen": "{count, plural, =0 {No units picked} one {# unit picked} other {# units picked}}",
+      "typeLabel": "New type",
+      "apply": "Set type",
+      "clear": "Clear",
+      "done": "{count, plural, one {# unit} other {# units}} updated."
+    },
     "seeUnits": "See its units",
     "name": "Name",
     "nameHint": "As people say it, e.g. রোড ৯ or Road 9.",

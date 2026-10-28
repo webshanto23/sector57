@@ -1,17 +1,27 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
-import { expandLayout, locationPath, type BuildingLayoutInput, type BuildingLayoutResult } from '@s57/shared';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@s57/db';
+import {
+  expandLayout,
+  locationPath,
+  toOccupancy,
+  type BuildingGrid,
+  type BuildingLayoutInput,
+  type BuildingLayoutResult,
+  type UnitTypeBulkInput,
+} from '@s57/shared';
 import { randomUUID } from 'node:crypto';
 import { AuditService } from '../audit/audit.service.js';
 import { isUniqueViolation } from '../common/prisma-errors.js';
 import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { OccupancyService } from './occupancy.service.js';
-import { beyondPermissions, nameTaken, TreeService } from './tree.service.js';
+import { beyondPermissions, locationNotFound, nameTaken, TreeService } from './tree.service.js';
 import { UnitTypesService } from './unit-types.service.js';
 
 /**
  * "Set up floors and units" (Step 37): a new building's floors (the level right below it)
  * and the units on each (the unit level), all or none. Only on a place with nothing inside.
+ * Then the grid of floors and units, and one type for many units at once.
  */
 @Injectable()
 export class LayoutService {
@@ -77,6 +87,71 @@ export class LayoutService {
       throw isUniqueViolation(error) ? nameTaken() : error;
     }
     return { floors: floors.length, units: units.length };
+  }
+
+  /** A building's floors (its non-unit children) in name order, each with its own units. */
+  async grid(actor: Actor, buildingId: string): Promise<BuildingGrid> {
+    const building = await this.tree.visible(actor.access, actor.societyId, 'locations', buildingId);
+    if (building.isUnit) throw locationNotFound();
+    const floors = (await this.tree.children(actor.societyId, building.id)).filter((child) => !child.isUnit);
+    const units = floors.length
+      ? await this.tree.nodes(actor.societyId, Prisma.sql`l.parent_id in (${Prisma.join(floors.map((floor) => Prisma.sql`${floor.id}::uuid`))}) and lv.is_unit_level`)
+      : [];
+    const facts = await this.prisma.units.findMany({
+      where: { society_id: actor.societyId, location_id: { in: units.map((unit) => unit.id) } },
+      select: { location_id: true, unit_type: true, occupancy: true },
+    });
+    const byId = new Map(facts.map((row) => [row.location_id, row]));
+    return {
+      floors: floors.map((floor) => ({
+        id: floor.id,
+        name: floor.name,
+        units: units
+          .filter((unit) => unit.parentId === floor.id)
+          .map((unit) => ({
+            id: unit.id,
+            name: unit.name,
+            unitType: byId.get(unit.id)!.unit_type,
+            occupancy: toOccupancy(byId.get(unit.id)!.occupancy),
+            isActive: unit.isActive,
+            alsoOn: unit.alsoOn,
+          })),
+      })),
+      canEdit: actor.access.can('edit', 'units', { path: building.path }),
+    };
+  }
+
+  /** One type for many units, all or none; each must be a unit the caller may edit. */
+  async setTypes(actor: Actor, input: UnitTypeBulkInput): Promise<{ updated: number }> {
+    const rows = await this.prisma.units.findMany({
+      where: { society_id: actor.societyId, location_id: { in: input.unitIds } },
+      select: { location_id: true, unit_type: true, locations: { select: { path: true } } },
+    });
+    if (rows.length !== input.unitIds.length || rows.some((row) => !actor.access.can('view', 'units', { path: row.locations.path }))) {
+      throw new NotFoundException({ code: 'unit_not_found', message: 'Unit not found' });
+    }
+    if (rows.some((row) => !actor.access.can('edit', 'units', { path: row.locations.path }))) throw beyondPermissions();
+    await this.unitTypes.assertCodes(actor.societyId, [input.unitType]);
+    const changed = rows.filter((row) => row.unit_type !== input.unitType);
+    await this.prisma.$transaction(async (tx) => {
+      await tx.units.updateMany({ where: { society_id: actor.societyId, location_id: { in: changed.map((row) => row.location_id) } }, data: { unit_type: input.unitType } });
+      for (const row of changed) {
+        await this.audit.record(
+          {
+            societyId: actor.societyId,
+            userId: actor.userId,
+            action: 'update',
+            entityType: 'unit',
+            entityId: row.location_id,
+            before: { unitType: row.unit_type },
+            after: { unitType: input.unitType },
+            ip: actor.ip,
+          },
+          tx,
+        );
+      }
+    });
+    return { updated: changed.length };
   }
 
   /** The floor level (right below the building) and the unit level, which must come straight after it. */

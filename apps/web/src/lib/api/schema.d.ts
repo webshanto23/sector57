@@ -596,6 +596,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/locations/{id}/grid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LocationsController_grid"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/locations/{id}/layout": {
         parameters: {
             query?: never;
@@ -686,6 +702,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["UnitsController_bulk"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units/bulk-type": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UnitsController_bulkType"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4384,6 +4416,24 @@ export interface components {
         BulkResultDto_Output: {
             created: number;
         };
+        BuildingGridDto_Output: {
+            floors: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                units: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    unitType: string;
+                    /** @enum {string} */
+                    occupancy: "owner_occupied" | "rented" | "vacant";
+                    isActive: boolean;
+                    alsoOn: string[];
+                }[];
+            }[];
+            canEdit: boolean;
+        };
         BuildingLayoutDto: {
             floors: {
                 from: number;
@@ -4556,6 +4606,13 @@ export interface components {
             sizeSqft?: string | null;
             /** @enum {string} */
             billTo: "owner" | "renter";
+        };
+        UnitTypeBulkDto: {
+            unitIds: string[];
+            unitType: string;
+        };
+        UnitTypeBulkResultDto_Output: {
+            updated: number;
         };
         UnitUpdateDto: {
             name?: string;
@@ -11832,6 +11889,27 @@ export interface operations {
             };
         };
     };
+    LocationsController_grid: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuildingGridDto_Output"];
+                };
+            };
+        };
+    };
     LocationsController_setUp: {
         parameters: {
             query?: never;
@@ -12057,6 +12135,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BulkResultDto_Output"];
+                };
+            };
+        };
+    };
+    UnitsController_bulkType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnitTypeBulkDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitTypeBulkResultDto_Output"];
                 };
             };
         };

@@ -8,14 +8,17 @@ import {
   unitListQuery,
   unitListSchema,
   unitStoreysInputSchema,
+  unitTypeBulkSchema,
   unitUpdateSchema,
 } from '@s57/shared';
 import { ZodResponse } from 'nestjs-zod';
+import { z } from 'zod';
 import { SkipAudit } from '../audit/audit.decorators.js';
 import { createDto } from '../common/create-dto.js';
 import { IdParamDto } from '../common/id-param.dto.js';
 import { Can, CurrentActor, type Actor } from '../permissions/permissions.decorators.js';
 import { BulkResultDto } from './locations.controller.js';
+import { LayoutService } from './layout.service.js';
 import { UnitsService } from './units.service.js';
 
 export class UnitDetailDto extends createDto(unitDetailSchema) {}
@@ -27,12 +30,17 @@ export class UnitCreateDto extends createDto(unitCreateSchema) {}
 export class UnitUpdateDto extends createDto(unitUpdateSchema) {}
 export class UnitBulkDto extends createDto(unitBulkSchema) {}
 export class UnitStoreysDto extends createDto(unitStoreysInputSchema) {}
+export class UnitTypeBulkDto extends createDto(unitTypeBulkSchema) {}
+export class UnitTypeBulkResultDto extends createDto(z.object({ updated: z.number().int().min(0) })) {}
 
 /** Flats, shops and offices. The service checks every row against the caller's area and writes the audit rows. */
 @Controller('units')
 @SkipAudit()
 export class UnitsController {
-  constructor(private readonly units: UnitsService) {}
+  constructor(
+    private readonly units: UnitsService,
+    private readonly layout: LayoutService,
+  ) {}
 
   @Get()
   @Can('units', 'view')
@@ -69,6 +77,15 @@ export class UnitsController {
   @ZodResponse({ status: 201, type: BulkResultDto })
   bulk(@CurrentActor() actor: Actor, @Body() body: UnitBulkDto) {
     return this.units.bulk(actor, body);
+  }
+
+  /** One type for many units (ground-floor shops in the building grid), all or none. */
+  @Post('bulk-type')
+  @HttpCode(200)
+  @Can('units', 'edit')
+  @ZodResponse({ status: 200, type: UnitTypeBulkResultDto })
+  bulkType(@CurrentActor() actor: Actor, @Body() body: UnitTypeBulkDto) {
+    return this.layout.setTypes(actor, body);
   }
 
   @Patch(':id')

@@ -22,8 +22,9 @@ import { DocumentsPanel } from "@/components/documents/documents-panel";
 import { PeoplePanel } from "@/components/members/people-panel";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { getUnitTypes } from "@/lib/api/property";
+import { getBuildingGrid, getUnitTypes } from "@/lib/api/property";
 import { AddPanel } from "./add-panel";
+import { BuildingGrid } from "./building-grid";
 import { levelName, propertyTrail } from "./labels";
 import { LayoutForm } from "./layout-form";
 import { LevelBar } from "./level-bar";
@@ -37,8 +38,13 @@ export type Finder = { levelId: string | null; q: string | null; page: number; c
  * the units (a building over storeys), for callers who may add both. The API checks again.
  */
 function canSetUp(location: LocationNode, levels: LocationLevel[], childCount: number, can: LocationView["can"]): boolean {
+  return holdsFloors(location, levels) && childCount === 0 && can.create && can.createUnit;
+}
+
+/** A building over floors: the level right below it is the one right above the units. */
+function holdsFloors(location: LocationNode, levels: LocationLevel[]): boolean {
   const below = levels.filter((level) => level.depth > location.depth).sort((a, b) => a.depth - b.depth);
-  return !location.isUnit && childCount === 0 && can.create && can.createUnit && below[0]?.isUnitLevel === false && below[1]?.isUnitLevel === true;
+  return !location.isUnit && below[0]?.isUnitLevel === false && below[1]?.isUnitLevel === true;
 }
 
 /** Show at most this many owner names on a card; the rest become "+N more". */
@@ -136,10 +142,12 @@ export async function LocationPage({
   locale: Locale;
 }) {
   const { location, children, alsoHere, can } = view;
-  const [t, tNav, unitTypes] = await Promise.all([
+  const withGrid = location !== null && holdsFloors(location, levels) && children.some((child) => !child.isUnit);
+  const [t, tNav, unitTypes, grid] = await Promise.all([
     getTranslations("Property"),
     getTranslations("Dashboard.nav"),
-    can.createUnit ? getUnitTypes() : Promise.resolve([]),
+    can.createUnit || withGrid ? getUnitTypes() : Promise.resolve([]),
+    withGrid ? getBuildingGrid(location.id) : Promise.resolve(null),
   ]);
   const unitsOpen = canAnywhere(me.access, "units");
   const canEditLevels = canAnywhere(me.access, "settings", "edit");
@@ -188,6 +196,7 @@ export async function LocationPage({
         {people ? <PeoplePanel key={`people-${people.location.id}`} people={people} /> : null}
         {view.location ? <DocumentsPanel access={me.access} entityType="location" entityId={view.location.id} /> : null}
 
+        {grid ? <BuildingGrid grid={grid} unitTypes={unitTypes} unitsOpen={unitsOpen} /> : null}
         <section className="grid gap-3" aria-labelledby="children-title">
           <LevelBar
             locale={locale}

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { bnDigits } from '../format.js';
 import { optionalText, text } from '../schemas.js';
 import { cleanText } from '../text.js';
-import { BILL_TO, graphemes, MAX_BULK_NAMES, sizeSqftSchema, unitTypeCode } from './property.js';
+import { BILL_TO, graphemes, MAX_BULK_NAMES, OCCUPANCIES, sizeSqftSchema, unitTypeCode } from './property.js';
 
 /*
  * "Set up floors and units" (Step 37): a new building's floors and the units on each, from
@@ -88,3 +88,37 @@ export function expandLayout(input: LayoutShape): { number: number; name: string
   }
   return result;
 }
+
+// ---------------------------------------------------------------------------
+// The building grid: floors as rows, their units as cells
+// ---------------------------------------------------------------------------
+
+export const buildingGridUnitSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  unitType: unitTypeCode,
+  occupancy: z.enum(OCCUPANCIES),
+  isActive: z.boolean(),
+  /** Other storeys it covers (a duplex). */
+  alsoOn: z.array(z.string()),
+});
+export type BuildingGridUnit = z.infer<typeof buildingGridUnitSchema>;
+
+/** `GET /locations/:id/grid`: a building's floors in name order, each with its own units. */
+export const buildingGridSchema = z.object({
+  floors: z.array(z.object({ id: z.uuid(), name: z.string(), units: z.array(buildingGridUnitSchema) })),
+  /** The caller may change the units' type here. */
+  canEdit: z.boolean(),
+});
+export type BuildingGrid = z.infer<typeof buildingGridSchema>;
+
+/** `POST /units/bulk-type`: one type for many units (ground-floor shops), all or none. */
+export const unitTypeBulkSchema = z.object({
+  unitIds: z
+    .array(z.uuid())
+    .min(1)
+    .max(MAX_BULK_NAMES)
+    .refine((ids) => new Set(ids).size === ids.length, 'duplicate_unit'),
+  unitType: unitTypeCode,
+});
+export type UnitTypeBulkInput = z.infer<typeof unitTypeBulkSchema>;

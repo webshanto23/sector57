@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
 import {
+  buildingGridSchema,
   buildingLayoutResultSchema,
   buildingLayoutSchema,
   bulkResultSchema,
@@ -30,6 +31,7 @@ export class LocationSearchDto extends createDto(locationSearchSchema) {}
 export class LocationSearchQueryDto extends createDto(locationSearchQuery) {}
 export class LevelCountsDto extends createDto(levelCountsSchema) {}
 export class LevelCountsQueryDto extends createDto(levelCountsQuery) {}
+export class BuildingGridDto extends createDto(buildingGridSchema) {}
 export class BuildingLayoutDto extends createDto(buildingLayoutSchema) {}
 export class BuildingLayoutResultDto extends createDto(buildingLayoutResultSchema) {}
 
@@ -87,6 +89,14 @@ export class LocationsController {
   @ZodResponse({ status: 201, type: BulkResultDto })
   bulk(@CurrentActor() actor: Actor, @Body() body: LocationBulkDto) {
     return this.locations.bulk(actor, body);
+  }
+
+  /** A building's floors and the units on each, for the grid. */
+  @Get(':id/grid')
+  @Can('locations', 'view')
+  @ZodResponse({ status: 200, type: BuildingGridDto })
+  grid(@CurrentActor() actor: Actor, @Param() { id }: IdParamDto) {
+    return this.layout.grid(actor, id);
   }
 
   /** "Set up floors and units": a new building's floors and the units on each, all or none. */

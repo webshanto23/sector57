@@ -1,5 +1,5 @@
 import { INestApplication } from '@nestjs/common';
-import { AUTH_COOKIES, CSRF_HEADER, locationViewSchema, unitDetailSchema, type LocationView, type UnitDetail } from '@s57/shared';
+import { AUTH_COOKIES, buildingGridSchema, CSRF_HEADER, locationViewSchema, unitDetailSchema, type LocationView, type UnitDetail } from '@s57/shared';
 import { randomUUID } from 'node:crypto';
 import request from 'supertest';
 import { App } from 'supertest/types.js';
@@ -200,6 +200,32 @@ describe('Multi-storey buildings: covering storeys and setting up floors (e2e)',
       expect((await setUp(building, placesOnly.cookie).expect(403)).body.code).toBe('beyond_your_permissions');
       await setUp(building, admin.cookie, { ...layout, units: { letters: 'AB', pattern: 'Flat {n}' } }).expect(400);
       expect((await view(building)).children).toEqual([]);
+    });
+  });
+
+  describe('building grid and bulk type', () => {
+    const setType = (unitIds: string[], unitType: string, cookie = admin.cookie) => send('post', '/units/bulk-type', cookie).send({ unitIds, unitType });
+
+    it('lists each floor with its own units', async () => {
+      const grid = buildingGridSchema.parse((await get(`/locations/${places.buildingA}/grid`, admin.cookie).expect(200)).body);
+      expect(grid.canEdit).toBe(true);
+      expect(grid.floors.map((floor) => floor.name)).toEqual(['৩ তলা', '৪ তলা', '৫ তলা']);
+      expect(grid.floors[0]!.units).toMatchObject([{ id: duplex.id, unitType: 'residential', occupancy: 'vacant', alsoOn: ['৪ তলা'] }]);
+      expect(grid.floors[1]!.units.map((unit) => unit.name)).toEqual(['ফ্ল্যাট ৪বি']);
+    });
+
+    it('sets one type on many units, all or none', async () => {
+      const upper = buildingGridSchema.parse((await get(`/locations/${places.buildingA}/grid`, admin.cookie).expect(200)).body).floors[1]!.units[0]!.id;
+      expect((await setType([duplex.id, upper], 'shop').expect(200)).body).toEqual({ updated: 2 });
+      expect(unitDetailSchema.parse((await get(`/units/${upper}`, admin.cookie).expect(200)).body).unitType).toBe('shop');
+      expect((await setType([duplex.id, upper], 'shop').expect(200)).body).toEqual({ updated: 0 });
+      await setType([duplex.id], 'no_such_type').expect(400);
+      expect((await setType([duplex.id, randomUUID()], 'office').expect(404)).body.code).toBe('unit_not_found');
+
+      const onS3 = await makeUser([{ roleId: await makeRole(['units:view', 'units:edit']), scope: places.s3 }]);
+      await setType([duplex.id, upper], 'office', onS3.cookie).expect(404);
+      await setType([duplex.id], 'residential', onS3.cookie).expect(200);
+      expect(unitDetailSchema.parse((await get(`/units/${upper}`, admin.cookie).expect(200)).body).unitType).toBe('shop');
     });
   });
 });
