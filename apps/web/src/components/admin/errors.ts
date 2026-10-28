@@ -20,6 +20,7 @@ const KNOWN = [
   "location_in_use",
   "location_not_found",
   "unit_not_found",
+  "invalid_storey",
   "parent_inactive",
   "invalid_level",
   "level_in_use",

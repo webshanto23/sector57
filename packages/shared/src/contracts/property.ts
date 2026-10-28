@@ -133,6 +133,8 @@ export const locationNodeSchema = z.object({
   childCount: z.number().int().min(0),
   /** Units anywhere below. */
   unitCount: z.number().int().min(0),
+  /** A unit covering more storeys than its own (a duplex): the names of the others. Empty otherwise. */
+  alsoOn: z.array(z.string()),
 });
 export type LocationNode = z.infer<typeof locationNodeSchema>;
 
@@ -155,6 +157,8 @@ export const locationViewSchema = z.object({
   location: locationNodeSchema.nullable(),
   breadcrumb: z.array(crumbSchema),
   children: z.array(locationNodeSchema),
+  /** Units that live on a neighbouring storey and cover this one too, with the name of their own storey. */
+  alsoHere: z.array(locationNodeSchema.extend({ homeName: z.string() })),
   can: z.object({
     /** Add locations here (under this one, or at the top). */
     create: z.boolean(),
@@ -352,9 +356,32 @@ export const unitSummarySchema = z.object({
 });
 export type UnitSummary = z.infer<typeof unitSummarySchema>;
 
+/** A storey a unit covers, or could cover. */
+export const storeyRefSchema = z.object({ id: z.uuid(), name: z.string() });
+export type StoreyRef = z.infer<typeof storeyRefSchema>;
+
+/** Most storeys one unit can cover besides its own. */
+export const MAX_UNIT_STOREYS = 20;
+
+/**
+ * `PUT /units/:id/storeys`: the whole list of other storeys the unit covers. Each must sit
+ * beside the unit's own storey (same parent) and not be a unit. Empty: just its own storey.
+ */
+export const unitStoreysInputSchema = z.object({
+  storeyIds: z
+    .array(z.uuid())
+    .max(MAX_UNIT_STOREYS)
+    .refine((ids) => new Set(ids).size === ids.length, 'duplicate_storey'),
+});
+export type UnitStoreysInput = z.infer<typeof unitStoreysInputSchema>;
+
 /** `GET /units/:id`. */
 export const unitDetailSchema = unitSummarySchema.extend({
   breadcrumb: z.array(crumbSchema),
+  /** The other storeys it covers, besides its own. */
+  covers: z.array(storeyRefSchema),
+  /** Storeys it could cover (beside its own); empty when the caller may not edit it. */
+  coverOptions: z.array(storeyRefSchema),
   can: z.object({ edit: z.boolean(), delete: z.boolean() }),
 });
 export type UnitDetail = z.infer<typeof unitDetailSchema>;

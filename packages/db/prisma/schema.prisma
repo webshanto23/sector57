@@ -537,6 +537,7 @@ model locations {
   notices               notices[]
   ownerships            ownerships[]
   units                 units?
+  unit_storeys          unit_storeys[]
   user_roles            user_roles[]
   form_submissions      form_submissions[]
   memberships           memberships[]
@@ -865,6 +866,7 @@ model societies {
   society_settings        society_settings[]
   tenancies               tenancies[]
   units                   units[]
+  unit_storeys            unit_storeys[]
   unit_types              unit_types[]
   user_sessions           user_sessions[]
   users                   users[]
@@ -938,11 +940,27 @@ model units {
   vehicles      vehicles[]
   parking_slots parking_slots[]
   certificates  certificates[]
+  unit_storeys  unit_storeys[]
   locations     locations       @relation(fields: [location_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   societies     societies       @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   unit_types    unit_types      @relation(fields: [society_id, unit_type], references: [society_id, code], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([society_id, unit_type])
+}
+
+/// Step 37: the other storeys a unit covers (a duplex, an office over several floors). The unit lives at its lowest storey.
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model unit_storeys {
+  unit_id    String    @db.Uuid
+  storey_id  String    @db.Uuid
+  society_id String    @db.Uuid
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  units      units     @relation(fields: [unit_id], references: [location_id], onDelete: Cascade, onUpdate: NoAction)
+  locations  locations @relation(fields: [storey_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies  societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([unit_id, storey_id])
+  @@index([storey_id], map: "unit_storeys_storey_idx")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.

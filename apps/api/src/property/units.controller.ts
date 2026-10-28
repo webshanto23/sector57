@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import {
   unitAreasQuery,
   unitAreasSchema,
@@ -7,6 +7,7 @@ import {
   unitDetailSchema,
   unitListQuery,
   unitListSchema,
+  unitStoreysInputSchema,
   unitUpdateSchema,
 } from '@s57/shared';
 import { ZodResponse } from 'nestjs-zod';
@@ -25,6 +26,7 @@ export class UnitAreasQueryDto extends createDto(unitAreasQuery) {}
 export class UnitCreateDto extends createDto(unitCreateSchema) {}
 export class UnitUpdateDto extends createDto(unitUpdateSchema) {}
 export class UnitBulkDto extends createDto(unitBulkSchema) {}
+export class UnitStoreysDto extends createDto(unitStoreysInputSchema) {}
 
 /** Flats, shops and offices. The service checks every row against the caller's area and writes the audit rows. */
 @Controller('units')
@@ -74,6 +76,14 @@ export class UnitsController {
   @ZodResponse({ status: 200, type: UnitDetailDto })
   update(@CurrentActor() actor: Actor, @Param() { id }: IdParamDto, @Body() body: UnitUpdateDto) {
     return this.units.update(actor, id, body);
+  }
+
+  /** The other storeys the unit covers (a duplex): replaces the whole list. */
+  @Put(':id/storeys')
+  @Can('units', 'edit')
+  @ZodResponse({ status: 200, type: UnitDetailDto })
+  setStoreys(@CurrentActor() actor: Actor, @Param() { id }: IdParamDto, @Body() body: UnitStoreysDto) {
+    return this.units.setStoreys(actor, id, body);
   }
 
   @Delete(':id')

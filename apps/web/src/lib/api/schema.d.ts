@@ -676,6 +676,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/units/{id}/storeys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["UnitsController_setStoreys"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/persons": {
         parameters: {
             query?: never;
@@ -4247,6 +4263,7 @@ export interface components {
                 isActive: boolean;
                 childCount: number;
                 unitCount: number;
+                alsoOn: string[];
             } | null;
             breadcrumb: {
                 /** Format: uuid */
@@ -4272,6 +4289,26 @@ export interface components {
                 isActive: boolean;
                 childCount: number;
                 unitCount: number;
+                alsoOn: string[];
+            }[];
+            alsoHere: {
+                /** Format: uuid */
+                id: string;
+                parentId: string | null;
+                name: string;
+                code: string | null;
+                /** Format: uuid */
+                levelId: string;
+                depth: number;
+                levelBn: string;
+                levelEn: string | null;
+                isUnit: boolean;
+                canOwn: boolean;
+                isActive: boolean;
+                childCount: number;
+                unitCount: number;
+                alsoOn: string[];
+                homeName: string;
             }[];
             can: {
                 create: boolean;
@@ -4297,6 +4334,7 @@ export interface components {
                 isActive: boolean;
                 childCount: number;
                 unitCount: number;
+                alsoOn: string[];
                 address: string[];
                 owners: {
                     name: string;
@@ -4444,6 +4482,16 @@ export interface components {
                 levelEn: string | null;
                 open: boolean;
             }[];
+            covers: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            }[];
+            coverOptions: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            }[];
             can: {
                 edit: boolean;
                 delete: boolean;
@@ -4476,6 +4524,9 @@ export interface components {
             sizeSqft?: string | null;
             /** @enum {string} */
             billTo?: "owner" | "renter";
+        };
+        UnitStoreysDto: {
+            storeyIds: string[];
         };
         PersonInputDto: {
             fullName: string;
@@ -11940,6 +11991,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BulkResultDto_Output"];
+                };
+            };
+        };
+    };
+    UnitsController_setStoreys: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnitStoreysDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitDetailDto_Output"];
                 };
             };
         };

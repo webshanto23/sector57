@@ -16,6 +16,7 @@ import {
   type UnitDetail,
   type UnitList,
   type UnitListQuery,
+  type UnitStoreysInput,
   type UnitSummary,
   type UnitUpdateInput,
 } from '@s57/shared';
@@ -28,6 +29,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { definedOnly, inUse, takenError } from './locations.service.js';
 import { OccupancyService } from './occupancy.service.js';
 import { UnitPeopleService } from './unit-people.service.js';
+import { UnitStoreysService } from './unit-storeys.service.js';
 import { UnitTypesService } from './unit-types.service.js';
 import { addressOf, beyondPermissions, codeTaken, locationNotFound, nameTaken, TreeService } from './tree.service.js';
 
@@ -67,6 +69,7 @@ export class UnitsService {
     private readonly occupancy: OccupancyService,
     private readonly unitTypes: UnitTypesService,
     private readonly people: UnitPeopleService,
+    private readonly storeys: UnitStoreysService,
   ) {}
 
   async list(actor: Actor, query: UnitListQuery): Promise<UnitList> {
@@ -151,15 +154,27 @@ export class UnitsService {
   async get(actor: Actor, id: string): Promise<UnitDetail> {
     const row = await this.visibleRow(actor, id);
     const located = { path: row.locations.path };
-    const [names, breadcrumb] = await Promise.all([
+    const edit = actor.access.can('edit', 'units', located);
+    const [names, breadcrumb, covers, options] = await Promise.all([
       this.tree.addressNames(actor.societyId, [row.locations.path]),
       this.tree.breadcrumb(actor.access, actor.societyId, row.locations.path, 'locations'),
+      this.storeys.covers(actor.societyId, id),
+      edit ? this.storeys.options(actor.societyId, row.locations.parent_id!) : Promise.resolve([]),
     ]);
     return {
       ...toSummary(row, names),
       breadcrumb,
-      can: { edit: actor.access.can('edit', 'units', located), delete: actor.access.can('delete', 'units', located) },
+      covers,
+      coverOptions: options.filter((option) => actor.access.can('view', 'units', { path: option.path })).map(({ id, name }) => ({ id, name })),
+      can: { edit, delete: actor.access.can('delete', 'units', located) },
     };
+  }
+
+  /** Sets the other storeys a unit covers (`UnitStoreysService`). */
+  async setStoreys(actor: Actor, id: string, input: UnitStoreysInput): Promise<UnitDetail> {
+    const row = await this.visibleRow(actor, id);
+    await this.storeys.replace(actor, { id, parentId: row.locations.parent_id!, path: row.locations.path }, input);
+    return this.get(actor, id);
   }
 
   async create(actor: Actor, input: UnitCreateInput): Promise<UnitDetail> {

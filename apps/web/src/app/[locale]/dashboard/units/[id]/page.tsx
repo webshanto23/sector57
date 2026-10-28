@@ -13,6 +13,7 @@ import { PageHeader } from "@/components/kit";
 import { PeoplePanel } from "@/components/members/people-panel";
 import { OccupancyChip, propertyTrail } from "@/components/property/labels";
 import { UnitForm } from "@/components/property/unit-form";
+import { UnitStoreysCard } from "@/components/property/unit-storeys-card";
 import { unitTypeName } from "@/components/property/unit-types";
 import { VehiclesPanel } from "@/components/vehicles/vehicles-panel";
 import { buttonVariants } from "@/components/ui/button";
@@ -58,6 +59,7 @@ export default async function UnitPage({ params }: PageProps<"/[locale]/dashboar
       <div className="grid gap-3.5">
         {!unit.can.edit ? <Note>{t("readOnly")}</Note> : null}
         <UnitForm key={unit.id} unit={unit} unitTypes={unitTypes} />
+        <UnitStoreysCard key={`storeys-${unit.id}`} unit={unit} />
         {people ? <PeoplePanel key={`people-${unit.id}`} people={people} /> : null}
         <BillsPanel access={me.access} locale={locale as Locale} unitId={unit.id} />
         <VehiclesPanel access={me.access} locale={locale as Locale} unitId={unit.id} />

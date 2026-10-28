@@ -44,12 +44,15 @@ async function ChildCard({
   unitsOpen,
   address,
   owners,
+  home,
 }: {
   node: LocationNode;
   locale: Locale;
   unitsOpen: boolean;
   address?: string[];
   owners?: PartyName[] | null;
+  /** For a unit shown on a storey it only covers: the name of its own storey. */
+  home?: string;
 }) {
   const t = await getTranslations("Property");
   const ownerNames = (owners ?? []).slice(0, CARD_OWNERS).map((owner) => (locale === "en" ? (owner.nameEn ?? owner.name) : owner.name));
@@ -62,6 +65,8 @@ async function ChildCard({
       </div>
       <div className="flex flex-wrap gap-1.5">
         <Chip plain>{levelName(node, locale)}</Chip>
+        {home ? <Chip tone="info">{t("storeys.home", { name: home })}</Chip> : null}
+        {!home && node.alsoOn.length > 0 ? <Chip tone="info">{t("storeys.alsoOn", { names: node.alsoOn.join(", ") })}</Chip> : null}
         {!node.isActive ? <Chip tone="warn">{t("inactive")}</Chip> : null}
       </div>
       {address?.length ? <p className="text-[12.5px] break-words text-muted-foreground">{address.join(" › ")}</p> : null}
@@ -120,7 +125,7 @@ export async function LocationPage({
   me: MeWithAccess;
   locale: Locale;
 }) {
-  const { location, children, can } = view;
+  const { location, children, alsoHere, can } = view;
   const [t, tNav, unitTypes] = await Promise.all([
     getTranslations("Property"),
     getTranslations("Dashboard.nav"),
@@ -240,6 +245,18 @@ export async function LocationPage({
                   ))}
                 </ul>
               )}
+              {alsoHere.length > 0 ? (
+                <>
+                  <h3 className="text-[14px] font-semibold">{t("storeys.alsoHere")}</h3>
+                  <ul className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-2.5">
+                    {alsoHere.map((unit) => (
+                      <li key={unit.id} className="grid">
+                        <ChildCard node={unit} locale={locale} unitsOpen={unitsOpen} home={unit.homeName} />
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : null}
             </>
           )}
         </section>

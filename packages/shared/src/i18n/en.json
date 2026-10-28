@@ -678,7 +678,8 @@
       "certificate_dues_outstanding": "Bills on this unit are still unpaid, so a no-dues certificate can't be issued.",
       "certificate_dues_unpaid": "Bills on this unit are still unpaid. Tick “Issue anyway” to issue it regardless.",
       "certificate_not_issued": "This certificate hasn't been issued yet. Reload the page.",
-      "certificate_already_void": "This certificate is already void. Reload the page."
+      "certificate_already_void": "This certificate is already void. Reload the page.",
+      "invalid_storey": "A unit can only cover floors beside its own, in the same building."
     }
   },
   "Cms": {
@@ -913,6 +914,14 @@
     "levelOwner": "{level} owner",
     "ownerNone": "not recorded",
     "ownerMore": "+{count} more",
+    "storeys": {
+      "title": "Covers floors",
+      "hint": "For a duplex or an office over several floors. The unit stays on its own (lowest) floor; tick the other floors it takes up. Owners, renters and bills stay on this one unit.",
+      "save": "Save floors",
+      "alsoOn": "Also on {names}",
+      "home": "Main part on {name}",
+      "alsoHere": "Units from other floors that cover this one"
+    },
     "seeUnits": "See its units",
     "name": "Name",
     "nameHint": "As people say it, e.g. রোড ৯ or Road 9.",
