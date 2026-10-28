@@ -1038,7 +1038,7 @@ Asked for by Anis on 2026-10-28: unit types (residential, shop ...) become each 
 - **Checked:** property and billing e2e files, `pnpm check`. Applied to the dev and test databases. Not opened in a browser.
 - **Not in this step:** per-type billing rates, archiving a type instead of removing it.
 
-## Step 35: More filters on the units list — Slice 1 built, awaiting review
+## Step 35: More filters on the units list — Slices 1–2 built, awaiting review
 
 Asked for by Anis on 2026-10-28: more filters on `/dashboard/units`. Agreed split: units filters stay on `/units`; level counts go on the property map; full owner and renter lists stay in Directory and the reports. Built on `step/35-units-filters` (from `step/34-unit-types`).
 
@@ -1047,7 +1047,15 @@ Asked for by Anis on 2026-10-28: more filters on `/dashboard/units`. Agreed spli
   - **API:** `GET /units/areas?parentId=` (`units.view`) gives the chosen area, its breadcrumb and the child areas (no units) with unit counts, inside the caller's `units` scope. `TreeService.tops` (shared with `GET /locations`) gives the caller's top areas. Areas outside scope, units and unknown ids are 404.
   - **Web:** the filters move to `units/unit-filters.tsx`. The way down uses `AreaCrumbs`; the next level down is a select in the GET form. This replaces the old "only inside X" chip, which needed `locations.view`.
   - **Tests:** `property.e2e-spec.ts` covers the bill-to and status filters, and a Block C clerk with only `units.view` using `/units/areas` (top, children without units, breadcrumb, 404 outside scope or on a unit, `/locations` refused). `pnpm check` passes. Not opened in a browser.
-- **Slice 2 (planned):** Owner and Current renter columns and search by person name or phone, shown only with the people permission.
+- **Slice 2 (built):** Owner and Current renter columns, and search by owner or renter.
+  - Decided by Anis: a plot, a building, a storey and a flat can each have their own owners, so the Owner cell lists every level of the unit's chain that has a current owner. The nearest comes first, in full; it is also who the bills go to. The levels above are muted and named by level. Co-owners show the largest share first, then "+N".
+  - The renter is an active or moving-out tenancy; a pending one isn't shown.
+  - **Shared:** `unitListItemSchema` (the summary plus `owners: UnitOwnerLevel[] | null` and `renters: PartyName[] | null`, where null means not allowed); `partyNameSchema`.
+  - **API:** `UnitPeopleService` (`forUnits` for a page, `matching` for `q`).
+    - Owner names need `ownerships.view` and renter names `tenancies.view` on the unit's path.
+    - `q` also matches an owner at any level or the renter by name (Bangla or English, organisations too) or phone (either digit form), only among the people the caller may view.
+  - **Web:** the columns show only when the caller holds those permissions somewhere (`units/unit-people.tsx`). The search placeholder now mentions owner and phone.
+  - **Tests:** `units-people.e2e-spec.ts` covers levels nearest first, co-owner order, pending tenancies, search by name, phone (Bangla digits), organisation and renter, and no names or search hits without the permission. `pnpm check` passes. Not opened in a browser.
 - **Slice 3 (planned):** "missing data" (no owner, no holding code, no size) and "owner lives elsewhere" filters.
 - **Slice 4 (planned):** counts by level on the property map.
 

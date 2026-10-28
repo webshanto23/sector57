@@ -27,6 +27,7 @@ import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { definedOnly, inUse, takenError } from './locations.service.js';
 import { OccupancyService } from './occupancy.service.js';
+import { UnitPeopleService } from './unit-people.service.js';
 import { UnitTypesService } from './unit-types.service.js';
 import { addressOf, beyondPermissions, codeTaken, locationNotFound, nameTaken, TreeService } from './tree.service.js';
 
@@ -65,6 +66,7 @@ export class UnitsService {
     private readonly tree: TreeService,
     private readonly occupancy: OccupancyService,
     private readonly unitTypes: UnitTypesService,
+    private readonly people: UnitPeopleService,
   ) {}
 
   async list(actor: Actor, query: UnitListQuery): Promise<UnitList> {
@@ -79,11 +81,15 @@ export class UnitsService {
       and.push(area ? { locations: { path: { startsWith: area.path } } } : { location_id: { in: [] } });
     }
     if (q) {
+      const people = await this.people.matching(actor, q);
       and.push({
-        OR: digitVariants(q).flatMap((term) => [
-          { locations: { name: { contains: term, mode: 'insensitive' as const } } },
-          { locations: { code: { contains: term, mode: 'insensitive' as const } } },
-        ]),
+        OR: [
+          ...digitVariants(q).flatMap((term) => [
+            { locations: { name: { contains: term, mode: 'insensitive' as const } } },
+            { locations: { code: { contains: term, mode: 'insensitive' as const } } },
+          ]),
+          ...(people.length ? [{ location_id: { in: people } }] : []),
+        ],
       });
     }
     if (unitType) and.push({ unit_type: unitType });
@@ -115,8 +121,12 @@ export class UnitsService {
       counts.total += count;
       if ((OCCUPANCIES as readonly string[]).includes(group.occupancy)) counts[toOccupancy(group.occupancy)] += count;
     }
-    const names = await this.tree.addressNames(actor.societyId, rows.map((row) => row.locations.path));
-    return { items: rows.map((row) => toSummary(row, names)), total, page, pageSize, counts };
+    const [names, people] = await Promise.all([
+      this.tree.addressNames(actor.societyId, rows.map((row) => row.locations.path)),
+      this.people.forUnits(actor, rows.map((row) => ({ id: row.location_id, path: row.locations.path }))),
+    ]);
+    const items = rows.map((row) => ({ ...toSummary(row, names), ...(people.get(row.location_id) ?? { owners: null, renters: null }) }));
+    return { items, total, page, pageSize, counts };
   }
 
   /** The area picker: the caller's top areas, or the areas (not units) under one they may see. */

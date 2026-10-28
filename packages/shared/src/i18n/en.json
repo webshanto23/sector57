@@ -952,7 +952,7 @@
       "sub": "Flats, shops and offices",
       "total": "All units",
       "searchLabel": "Search units",
-      "searchPlaceholder": "Name or holding number",
+      "searchPlaceholder": "Name, holding, owner or phone",
       "allTypes": "All types",
       "allOccupancy": "Any occupancy",
       "filter": "Filter",
@@ -969,7 +969,10 @@
       "areaOption": "{name} ({count})",
       "allBillTo": "Bills go to: anyone",
       "allStatus": "Active and inactive",
-      "active": "Active"
+      "active": "Active",
+      "owners": "Owner",
+      "renter": "Current renter",
+      "more": "+{count}"
     }
   },
   "Members": {

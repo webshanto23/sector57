@@ -1,4 +1,4 @@
-import { canAnywhere, formatNumber, unitListQuery, type Locale, type UnitSummary } from "@s57/shared";
+import { canAnywhere, formatNumber, unitListQuery, type Locale, type UnitListItem } from "@s57/shared";
 import { Building2, DoorOpen, House, KeyRound, Map } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -11,6 +11,7 @@ import { Link } from "@/i18n/navigation";
 import { getUnitAreas, getUnits, getUnitTypes } from "@/lib/api/property";
 import { requirePermission } from "@/lib/api/session";
 import { UnitFilters } from "./unit-filters";
+import { OwnerLevels, Renters } from "./unit-people";
 
 const PAGE_SIZE = 25;
 
@@ -60,7 +61,7 @@ export default async function UnitsPage({ params, searchParams }: PageProps<"/[l
   };
   const n = (value: number) => formatNumber(value, locale);
 
-  const columns: Column<UnitSummary>[] = [
+  const columns: Column<UnitListItem>[] = [
     {
       key: "name",
       header: t("name"),
@@ -78,6 +79,12 @@ export default async function UnitsPage({ params, searchParams }: PageProps<"/[l
     },
     { key: "code", header: t("code"), cell: (unit) => (unit.code ? <span className="num">{unit.code}</span> : "—") },
     { key: "type", header: t("unitTypeLabel"), cell: (unit) => unitTypeName(unitTypes, unit.unitType, locale) },
+    ...(canAnywhere(me.access, "ownerships")
+      ? [{ key: "owners", header: tUnits("owners"), cell: (unit: UnitListItem) => <OwnerLevels levels={unit.owners} locale={locale} /> }]
+      : []),
+    ...(canAnywhere(me.access, "tenancies")
+      ? [{ key: "renters", header: tUnits("renter"), cell: (unit: UnitListItem) => <Renters renters={unit.renters} locale={locale} /> }]
+      : []),
     {
       key: "size",
       header: t("size"),

@@ -316,7 +316,10 @@ export type UnitDetail = z.infer<typeof unitDetailSchema>;
 export const UNIT_STATUSES = ['active', 'inactive'] as const;
 export type UnitStatus = (typeof UNIT_STATUSES)[number];
 
-/** `GET /units` query. `q` matches name or holding code (Bangla or ASCII digits); `areaId` keeps units under that location. */
+/**
+ * `GET /units` query. `q` matches name or holding code (Bangla or ASCII digits), and the
+ * name or phone of an owner at any level or the renter the caller may see; `areaId` keeps units under that location.
+ */
 export const unitListQuery = pagination.extend({
   q: z.string().transform(cleanText).pipe(z.string().max(100)).optional(),
   areaId: z.uuid().optional(),
@@ -361,9 +364,35 @@ export const unitCountsSchema = z.object({
 });
 export type UnitCounts = z.infer<typeof unitCountsSchema>;
 
+/** A name as typed, with the optional English form (people only; organisations have one name). */
+export const partyNameSchema = z.object({ name: z.string(), nameEn: z.string().nullable() });
+export type PartyName = z.infer<typeof partyNameSchema>;
+
+/** The current owners at one location in a unit's chain: the unit itself, or a building, plot ... above it. */
+export const unitOwnerLevelSchema = z.object({
+  locationId: z.uuid(),
+  /** The unit's own owners, not a level above. */
+  isUnit: z.boolean(),
+  levelBn: z.string(),
+  levelEn: z.string().nullable(),
+  owners: z.array(partyNameSchema).min(1),
+});
+export type UnitOwnerLevel = z.infer<typeof unitOwnerLevelSchema>;
+
+/**
+ * One row of `GET /units`. `owners` lists every level of the chain that has a current
+ * owner, nearest first (the first is who the bills go to); `renters` is the active or
+ * moving-out tenancy. Each is null when the caller may not view ownerships (tenancies) there.
+ */
+export const unitListItemSchema = unitSummarySchema.extend({
+  owners: z.array(unitOwnerLevelSchema).nullable(),
+  renters: z.array(partyNameSchema).nullable(),
+});
+export type UnitListItem = z.infer<typeof unitListItemSchema>;
+
 /** `GET /units` response. */
 export const unitListSchema = z.object({
-  items: z.array(unitSummarySchema),
+  items: z.array(unitListItemSchema),
   total: z.number().int().min(0),
   page: z.number().int().min(1),
   pageSize: z.number().int().min(1),

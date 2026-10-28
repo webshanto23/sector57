@@ -952,7 +952,7 @@
       "sub": "ফ্ল্যাট, দোকান ও অফিস",
       "total": "মোট ইউনিট",
       "searchLabel": "ইউনিট খুঁজুন",
-      "searchPlaceholder": "নাম বা হোল্ডিং নম্বর",
+      "searchPlaceholder": "নাম, হোল্ডিং, মালিক বা ফোন",
       "allTypes": "সব ধরন",
       "allOccupancy": "সব অবস্থা",
       "filter": "ফিল্টার",
@@ -969,7 +969,10 @@
       "areaOption": "{name} ({count})",
       "allBillTo": "বিল যাবে: সবাই",
       "allStatus": "সক্রিয় ও নিষ্ক্রিয়",
-      "active": "সক্রিয়"
+      "active": "সক্রিয়",
+      "owners": "মালিক",
+      "renter": "বর্তমান ভাড়াটিয়া",
+      "more": "+{count}"
     }
   },
   "Members": {

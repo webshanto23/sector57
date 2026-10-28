@@ -4267,6 +4267,21 @@ export interface components {
                 /** @enum {string} */
                 occupancy: "owner_occupied" | "rented" | "vacant";
                 isActive: boolean;
+                owners: {
+                    /** Format: uuid */
+                    locationId: string;
+                    isUnit: boolean;
+                    levelBn: string;
+                    levelEn: string | null;
+                    owners: {
+                        name: string;
+                        nameEn: string | null;
+                    }[];
+                }[] | null;
+                renters: {
+                    name: string;
+                    nameEn: string | null;
+                }[] | null;
             }[];
             total: number;
             page: number;
