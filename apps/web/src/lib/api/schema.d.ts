@@ -596,6 +596,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/locations/{id}/layout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["LocationsController_setUp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/unit-types": {
         parameters: {
             query?: never;
@@ -4367,6 +4383,31 @@ export interface components {
         };
         BulkResultDto_Output: {
             created: number;
+        };
+        BuildingLayoutDto: {
+            floors: {
+                from: number;
+                to: number;
+                pattern: string;
+                groundName?: string | null;
+                /** @default true */
+                groundHasUnits: boolean;
+            };
+            units: {
+                /** @default  */
+                letters: string;
+                pattern: string;
+            };
+            /** @default true */
+            bangla: boolean;
+            unitType: string;
+            sizeSqft?: string | null;
+            /** @enum {string} */
+            billTo: "owner" | "renter";
+        };
+        BuildingLayoutResultDto_Output: {
+            floors: number;
+            units: number;
         };
         LocationUpdateDto: {
             name?: string;
@@ -11787,6 +11828,31 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BulkResultDto_Output"];
+                };
+            };
+        };
+    };
+    LocationsController_setUp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BuildingLayoutDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuildingLayoutResultDto_Output"];
                 };
             };
         };

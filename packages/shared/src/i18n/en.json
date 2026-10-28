@@ -679,7 +679,10 @@
       "certificate_dues_unpaid": "Bills on this unit are still unpaid. Tick “Issue anyway” to issue it regardless.",
       "certificate_not_issued": "This certificate hasn't been issued yet. Reload the page.",
       "certificate_already_void": "This certificate is already void. Reload the page.",
-      "invalid_storey": "A unit can only cover floors beside its own, in the same building."
+      "invalid_storey": "A unit can only cover floors beside its own, in the same building.",
+      "floor_token_missing": "Put '{n}' where the floor number goes.",
+      "letter_token_missing": "Put '{letter}' where each unit's letter goes.",
+      "layout_not_empty": "Floors can only be set up in an empty building. Add more floors one by one instead."
     }
   },
   "Cms": {
@@ -921,6 +924,28 @@
       "alsoOn": "Also on {names}",
       "home": "Main part on {name}",
       "alsoHere": "Units from other floors that cover this one"
+    },
+    "layout": {
+      "title": "Set up floors and units",
+      "hint": "For a new building: make all its floors and the units on each in one go. Fix shops or duplexes afterwards.",
+      "open": "Set up",
+      "floors": "Floors",
+      "floorPattern": "Floor name",
+      "floorPatternHint": "'{n}' becomes the floor number.",
+      "floorPatternDefault": "Floor '{n}'",
+      "groundName": "Name of floor 0",
+      "groundNameDefault": "Ground floor",
+      "groundHasUnits": "Floor 0 has units too",
+      "unitsOnEach": "Units on each floor",
+      "lettersHint": "One unit per letter, like ABC. Leave empty for one unit per floor.",
+      "unitPattern": "Unit name",
+      "unitPatternHint": "'{n}' becomes the floor number, '{letter}' the letter.",
+      "unitPatternDefault": "Flat '{n}{letter}'",
+      "preview": "{floors, plural, one {# floor} other {# floors}}, {units, plural, one {# unit} other {# units}}",
+      "noUnits": "no units",
+      "save": "Create floors and units",
+      "cancel": "Cancel",
+      "done": "Made {floors} floors and {units} units."
     },
     "seeUnits": "See its units",
     "name": "Name",

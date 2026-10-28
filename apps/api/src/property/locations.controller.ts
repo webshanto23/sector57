@@ -1,5 +1,7 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
 import {
+  buildingLayoutResultSchema,
+  buildingLayoutSchema,
   bulkResultSchema,
   levelCountsQuery,
   levelCountsSchema,
@@ -15,6 +17,7 @@ import { SkipAudit } from '../audit/audit.decorators.js';
 import { createDto } from '../common/create-dto.js';
 import { IdParamDto } from '../common/id-param.dto.js';
 import { Can, CurrentActor, type Actor } from '../permissions/permissions.decorators.js';
+import { LayoutService } from './layout.service.js';
 import { LocationSearchService } from './location-search.service.js';
 import { LocationsService } from './locations.service.js';
 
@@ -27,6 +30,8 @@ export class LocationSearchDto extends createDto(locationSearchSchema) {}
 export class LocationSearchQueryDto extends createDto(locationSearchQuery) {}
 export class LevelCountsDto extends createDto(levelCountsSchema) {}
 export class LevelCountsQueryDto extends createDto(levelCountsQuery) {}
+export class BuildingLayoutDto extends createDto(buildingLayoutSchema) {}
+export class BuildingLayoutResultDto extends createDto(buildingLayoutResultSchema) {}
 
 /** The property tree above the units. The service checks every row against the caller's area and writes the audit rows. */
 @Controller('locations')
@@ -35,6 +40,7 @@ export class LocationsController {
   constructor(
     private readonly locations: LocationsService,
     private readonly finder: LocationSearchService,
+    private readonly layout: LayoutService,
   ) {}
 
   /** The top of the tree the caller may see. */
@@ -81,6 +87,14 @@ export class LocationsController {
   @ZodResponse({ status: 201, type: BulkResultDto })
   bulk(@CurrentActor() actor: Actor, @Body() body: LocationBulkDto) {
     return this.locations.bulk(actor, body);
+  }
+
+  /** "Set up floors and units": a new building's floors and the units on each, all or none. */
+  @Post(':id/layout')
+  @Can('locations', 'create')
+  @ZodResponse({ status: 201, type: BuildingLayoutResultDto })
+  setUp(@CurrentActor() actor: Actor, @Param() { id }: IdParamDto, @Body() body: BuildingLayoutDto) {
+    return this.layout.apply(actor, id, body);
   }
 
   @Patch(':id')

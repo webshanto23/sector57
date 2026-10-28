@@ -25,11 +25,21 @@ import { Link } from "@/i18n/navigation";
 import { getUnitTypes } from "@/lib/api/property";
 import { AddPanel } from "./add-panel";
 import { levelName, propertyTrail } from "./labels";
+import { LayoutForm } from "./layout-form";
 import { LevelBar } from "./level-bar";
 import { LocationEditor } from "./location-editor";
 
 /** The level picker and search: what is chosen, the chip counts, and the results (null on the tree). */
 export type Finder = { levelId: string | null; q: string | null; page: number; counts: LevelCounts; result: LocationSearch | null };
+
+/**
+ * "Set up floors and units" fits an empty place whose next level is the one right above
+ * the units (a building over storeys), for callers who may add both. The API checks again.
+ */
+function canSetUp(location: LocationNode, levels: LocationLevel[], childCount: number, can: LocationView["can"]): boolean {
+  const below = levels.filter((level) => level.depth > location.depth).sort((a, b) => a.depth - b.depth);
+  return !location.isUnit && childCount === 0 && can.create && can.createUnit && below[0]?.isUnitLevel === false && below[1]?.isUnitLevel === true;
+}
 
 /** Show at most this many owner names on a card; the rest become "+N more". */
 const CARD_OWNERS = 2;
@@ -222,6 +232,7 @@ export async function LocationPage({
             )
           ) : (
             <>
+              {location && canSetUp(location, levels, children.length, can) ? <LayoutForm locationId={location.id} unitTypes={unitTypes} /> : null}
               <AddPanel
                 key={location?.id ?? "top"}
                 parentId={location?.id ?? null}

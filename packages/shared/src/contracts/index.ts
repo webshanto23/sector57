@@ -9,6 +9,7 @@ export * from './roles.js';
 export * from './users.js';
 export * from './media.js';
 export * from './property.js';
+export * from './building-layout.js';
 export * from './members.js';
 export * from './forms.js';
 export * from './print.js';

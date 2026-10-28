@@ -21,6 +21,7 @@ const KNOWN = [
   "location_not_found",
   "unit_not_found",
   "invalid_storey",
+  "layout_not_empty",
   "parent_inactive",
   "invalid_level",
   "level_in_use",
@@ -234,6 +235,8 @@ const FIELD_CODES = [
   "warranty_before_purchase",
   "invalid_reg_no",
   "invalid_prefix",
+  "floor_token_missing",
+  "letter_token_missing",
 ] as const;
 type FieldCode = (typeof FIELD_CODES)[number];
 

@@ -268,7 +268,8 @@ export const nameRangeSchema = z
   .refine((range) => expandCount(range) <= MAX_BULK_NAMES, { message: 'too_many', path: ['to'] });
 export type NameRange = z.infer<typeof nameRangeSchema>;
 
-const graphemes = (value: string) =>
+/** The letters typed for an "add many" or a building layout, one per grapheme (spaces and commas skipped). */
+export const graphemes = (value: string) =>
   [...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(value)]
     .map((part) => part.segment)
     .filter((part) => /\S/u.test(part) && part !== ',');

@@ -14,7 +14,7 @@ const CSRF = 'csrf-token-for-tests';
 
 const randomPhone = () => `017${String(Math.floor(Math.random() * 1e8)).padStart(8, '0')}`;
 
-describe('Units covering several storeys (e2e)', () => {
+describe('Multi-storey buildings: covering storeys and setting up floors (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let societyId: string;
@@ -162,5 +162,44 @@ describe('Units covering several storeys (e2e)', () => {
     const viewer = await makeUser([{ roleId: await makeRole(['units:view']) }]);
     expect(unitDetailSchema.parse((await get(`/units/${duplex.id}`, viewer.cookie).expect(200)).body).coverOptions).toEqual([]);
     await cover(duplex.id, [], viewer.cookie).expect(403);
+  });
+
+  describe('set up floors and units', () => {
+    const layout = {
+      floors: { from: 0, to: 2, pattern: '{n} তলা', groundName: 'নিচ তলা', groundHasUnits: false },
+      units: { letters: 'এবি', pattern: 'ফ্ল্যাট {n}{letter}' },
+      bangla: true,
+      unitType: 'residential',
+      sizeSqft: '১২০০',
+      billTo: 'owner',
+    };
+    const setUp = (id: string, cookie = admin.cookie, body: object = layout) => send('post', `/locations/${id}/layout`, cookie).send(body);
+
+    it('creates the floors and the units on each, once', async () => {
+      const building = await addLocation(places.plot, 5, 'ভবন সি');
+      expect((await setUp(building).expect(201)).body).toEqual({ floors: 3, units: 4 });
+
+      const made = await view(building);
+      expect(made.children.map((child) => child.name).sort()).toEqual(['নিচ তলা', '১ তলা', '২ তলা'].sort());
+      expect(made.location!.unitCount).toBe(4);
+      const second = made.children.find((child) => child.name === '২ তলা')!;
+      expect(second.levelId).toBe(level(6));
+      const units = (await view(second.id)).children;
+      expect(units.map((unit) => unit.name)).toEqual(['ফ্ল্যাট ২এ', 'ফ্ল্যাট ২বি']);
+      const unit = unitDetailSchema.parse((await get(`/units/${units[0]!.id}`, admin.cookie).expect(200)).body);
+      expect(unit).toMatchObject({ unitType: 'residential', sizeSqft: '1200', billTo: 'owner' });
+
+      expect((await setUp(building).expect(409)).body.code).toBe('layout_not_empty');
+    });
+
+    it('needs a floor level below the place, and both create permissions', async () => {
+      expect((await setUp(places.s5).expect(400)).body.code).toBe('invalid_level');
+      expect((await setUp(await addLocation(places.block, 3, 'রোড খালি')).expect(400)).body.code).toBe('invalid_level');
+      const building = await addLocation(places.plot, 5, 'ভবন ডি');
+      const placesOnly = await makeUser([{ roleId: await makeRole(['locations:view', 'locations:create']) }]);
+      expect((await setUp(building, placesOnly.cookie).expect(403)).body.code).toBe('beyond_your_permissions');
+      await setUp(building, admin.cookie, { ...layout, units: { letters: 'AB', pattern: 'Flat {n}' } }).expect(400);
+      expect((await view(building)).children).toEqual([]);
+    });
   });
 });
