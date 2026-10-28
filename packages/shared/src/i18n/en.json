@@ -972,7 +972,20 @@
       "active": "Active",
       "owners": "Owner",
       "renter": "Current renter",
-      "more": "+{count}"
+      "more": "+{count}",
+      "allMissing": "Any data",
+      "missing": {
+        "owner": "No owner",
+        "code": "No holding number",
+        "size": "No size"
+      },
+      "missingLabel": "Missing data",
+      "allOwnerLives": "Owner lives anywhere",
+      "ownerLivesLabel": "Where the owner lives",
+      "ownerLives": {
+        "here": "Owner lives here",
+        "elsewhere": "Owner lives elsewhere"
+      }
     }
   },
   "Members": {

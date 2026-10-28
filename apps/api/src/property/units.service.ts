@@ -70,7 +70,7 @@ export class UnitsService {
   ) {}
 
   async list(actor: Actor, query: UnitListQuery): Promise<UnitList> {
-    const { page, pageSize, q, areaId, unitType, occupancy, billTo, status } = query;
+    const { page, pageSize, q, areaId, unitType, occupancy, billTo, status, missing, ownerLives } = query;
     const and: Prisma.unitsWhereInput[] = [
       { society_id: actor.societyId },
       scopeWhere(actor.access, 'view', 'units', (prefix) => ({ locations: { path: { startsWith: prefix } } })),
@@ -95,6 +95,9 @@ export class UnitsService {
     if (unitType) and.push({ unit_type: unitType });
     if (billTo) and.push({ bill_to: billTo });
     if (status) and.push({ locations: { is_active: status === 'active' } });
+    if (missing === 'size') and.push({ size_sqft: null });
+    const chain = await this.people.conditions(actor, { missing, ownerLives });
+    if (chain) and.push({ location_id: { in: chain } });
     const where = { AND: occupancy ? [...and, { occupancy }] : and };
 
     const [total, rows, groups] = await this.prisma.$transaction([

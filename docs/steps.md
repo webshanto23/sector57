@@ -1038,7 +1038,7 @@ Asked for by Anis on 2026-10-28: unit types (residential, shop ...) become each 
 - **Checked:** property and billing e2e files, `pnpm check`. Applied to the dev and test databases. Not opened in a browser.
 - **Not in this step:** per-type billing rates, archiving a type instead of removing it.
 
-## Step 35: More filters on the units list — Slices 1–2 built, awaiting review
+## Step 35: More filters on the units list — Slices 1–3 built, awaiting review
 
 Asked for by Anis on 2026-10-28: more filters on `/dashboard/units`. Agreed split: units filters stay on `/units`; level counts go on the property map; full owner and renter lists stay in Directory and the reports. Built on `step/35-units-filters` (from `step/34-unit-types`).
 
@@ -1056,7 +1056,13 @@ Asked for by Anis on 2026-10-28: more filters on `/dashboard/units`. Agreed spli
     - `q` also matches an owner at any level or the renter by name (Bangla or English, organisations too) or phone (either digit form), only among the people the caller may view.
   - **Web:** the columns show only when the caller holds those permissions somewhere (`units/unit-people.tsx`). The search placeholder now mentions owner and phone.
   - **Tests:** `units-people.e2e-spec.ts` covers levels nearest first, co-owner order, pending tenancies, search by name, phone (Bangla digits), organisation and renter, and no names or search hits without the permission. `pnpm check` passes. Not opened in a browser.
-- **Slice 3 (planned):** "missing data" (no owner, no holding code, no size) and "owner lives elsewhere" filters.
+- **Slice 3 (built):** "Missing data" and "Owner lives" filters on the units list.
+  - **Missing data:** `missing` is `owner` (no current owner at any level of the chain), `code` (no holding number on the unit or any level above, since a plot's number covers its flats) or `size`.
+  - **Owner lives:** `ownerLives` is `here` (a current owner at any level is a current resident of the unit) or `elsewhere` (the unit has an owner, but none lives there, whether it's rented or empty).
+  - **Permission:** `missing=owner` and `ownerLives` keep to the caller's `ownerships.view` area, so a units-only caller gets nothing. The web offers them only with that permission.
+  - **API:** `UnitPeopleService.conditions` runs the chain checks; `missing=size` is a plain Prisma condition.
+  - **Tests:** three more cases in `units-people.e2e-spec.ts`. `pnpm check` passes. Not opened in a browser.
+  - **Open decision:** the occupancy value `owner_occupied` ("মালিক বসবাসরত") only means "has an owner and isn't rented". It doesn't mean the owner lives there; "Owner lives: elsewhere" shows the difference. Renaming the label (for example to "Owner-held") is for Anis to decide.
 - **Slice 4 (planned):** counts by level on the property map.
 
 ## Later: beyond milestone 3

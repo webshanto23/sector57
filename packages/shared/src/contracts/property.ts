@@ -315,6 +315,12 @@ export type UnitDetail = z.infer<typeof unitDetailSchema>;
 
 export const UNIT_STATUSES = ['active', 'inactive'] as const;
 export type UnitStatus = (typeof UNIT_STATUSES)[number];
+/** What a unit lacks: a current owner or a holding number anywhere in its chain, or a size. */
+export const UNIT_MISSING = ['owner', 'code', 'size'] as const;
+export type UnitMissing = (typeof UNIT_MISSING)[number];
+/** Whether a current owner (at any level of the chain) is a current resident of the unit. */
+export const OWNER_LIVES = ['here', 'elsewhere'] as const;
+export type OwnerLives = (typeof OWNER_LIVES)[number];
 
 /**
  * `GET /units` query. `q` matches name or holding code (Bangla or ASCII digits), and the
@@ -327,6 +333,8 @@ export const unitListQuery = pagination.extend({
   occupancy: z.enum(OCCUPANCIES).optional(),
   billTo: z.enum(BILL_TO).optional(),
   status: z.enum(UNIT_STATUSES).optional(),
+  missing: z.enum(UNIT_MISSING).optional(),
+  ownerLives: z.enum(OWNER_LIVES).optional(),
 });
 export type UnitListQuery = z.infer<typeof unitListQuery>;
 

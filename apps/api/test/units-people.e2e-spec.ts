@@ -17,7 +17,7 @@ describe('Units list: owners and renters (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let societyId: string;
-  const ids = {} as Record<'plot' | 'building' | 'flatA' | 'flatB' | 'flatC', string>;
+  const ids = {} as Record<'plot' | 'building' | 'flatA' | 'flatB' | 'flatC' | 'plot2' | 'flatD', string>;
   const users = {} as Record<'admin' | 'unitsOnly' | 'owners', string>;
   const names = {} as Record<'plot' | 'building' | 'flat', { levelBn: string; levelEn: string | null }>;
 
@@ -42,8 +42,9 @@ describe('Units list: owners and renters (e2e)', () => {
     return { id, path };
   }
 
-  const list = async (query: string, cookie: string): Promise<UnitList> =>
-    unitListSchema.parse((await request(app.getHttpServer()).get(`/units?pageSize=100&areaId=${ids.plot}&${query}`).set('Cookie', cookie).expect(200)).body);
+  const list = async (query: string, cookie: string, area = ids.plot): Promise<UnitList> =>
+    unitListSchema.parse((await request(app.getHttpServer()).get(`/units?pageSize=100&areaId=${area}&${query}`).set('Cookie', cookie).expect(200)).body);
+  const named = async (query: string, cookie: string, area = ids.plot) => (await list(query, cookie, area)).items.map((item) => item.name).sort();
   const byName = (result: UnitList) => new Map(result.items.map((item) => [item.name, item]));
   const search = async (q: string, cookie: string) => (await list(`q=${encodeURIComponent(q)}`, cookie)).items.map((item) => item.name).sort();
 
@@ -67,6 +68,12 @@ describe('Units list: owners and renters (e2e)', () => {
       ids[key] = (await addLocation(flatLevel.id, building, name)).id;
       await prisma.units.create({ data: { location_id: ids[key], society_id: societyId, unit_type: 'residential' } });
     }
+    // A second plot with a holding number and no owners; its flat has a size.
+    const plot2 = await addLocation(plotLevel!.id, null, `${MARK} প্লট ২`);
+    ids.plot2 = plot2.id;
+    await prisma.locations.update({ where: { id: plot2.id }, data: { code: `${MARK}-H12` } });
+    ids.flatD = (await addLocation(flatLevel.id, plot2, 'ফ্ল্যাট ডি')).id;
+    await prisma.units.create({ data: { location_id: ids.flatD, society_id: societyId, unit_type: 'residential', size_sqft: new Prisma.Decimal(1200) } });
 
     const person = async (full_name: string, extra: { full_name_en?: string; phone?: string } = {}) =>
       (await prisma.persons.create({ data: { society_id: societyId, full_name: `${full_name} ${MARK}`, ...extra } })).id;
@@ -75,14 +82,24 @@ describe('Units list: owners and renters (e2e)', () => {
     const rent = (unit_id: string, person_id: string, status: string) =>
       prisma.tenancies.create({ data: { society_id: societyId, unit_id, renter_type: 'family', primary_person_id: person_id, start_date: new Date('2025-01-01'), status } });
 
-    await own(ids.plot, { person_id: await person('আব্দুল করিম', { phone: KARIM_PHONE }) });
+    const karim = await person('আব্দুল করিম', { phone: KARIM_PHONE });
+    await own(ids.plot, { person_id: karim });
     const developer = await prisma.organisations.create({ data: { society_id: societyId, name: `রূপায়ণ ডেভেলপার্স ${MARK}` } });
     await own(ids.building, { organisation_id: developer.id });
-    await own(ids.flatA, { person_id: await person('রহিম উদ্দিন', { full_name_en: 'Rahim Uddin' }) }, 60);
+    const rahim = await person('রহিম উদ্দিন', { full_name_en: 'Rahim Uddin' });
+    await own(ids.flatA, { person_id: rahim }, 60);
     // Co-owners show the largest share first.
     await own(ids.flatA, { person_id: await person('সালমা বেগম') }, 40);
-    await rent(ids.flatB, await person('জামাল হোসেন', { phone: JAMAL_PHONE }), 'active');
+    const jamal = await person('জামাল হোসেন', { phone: JAMAL_PHONE });
+    await rent(ids.flatB, jamal, 'active');
     await rent(ids.flatC, await person('নাসির আহমেদ'), 'pending');
+
+    // Rahim lives in his flat, the plot owner Karim in flat C, the renter Jamal in flat B.
+    const live = (unit_id: string, person_id: string) =>
+      prisma.occupants.create({ data: { society_id: societyId, unit_id, person_id, relation: 'head', start_date: new Date('2025-01-01') } });
+    await live(ids.flatA, rahim);
+    await live(ids.flatC, karim);
+    await live(ids.flatB, jamal);
 
     const everything = (await prisma.permissions.findMany()).map((p) => `${p.module}:${p.action}`);
     users.admin = await makeUser(everything);
@@ -92,12 +109,13 @@ describe('Units list: owners and renters (e2e)', () => {
 
   afterAll(async () => {
     if (ids.plot) {
-      const flats = [ids.flatA, ids.flatB, ids.flatC].filter(Boolean);
+      const flats = [ids.flatA, ids.flatB, ids.flatC, ids.flatD].filter(Boolean);
+      await prisma.occupants.deleteMany({ where: { unit_id: { in: flats } } });
       await prisma.tenancies.deleteMany({ where: { unit_id: { in: flats } } });
       await prisma.ownerships.deleteMany({ where: { location_id: { in: [ids.plot, ids.building, ...flats].filter(Boolean) } } });
       await prisma.organisations.deleteMany({ where: { name: { endsWith: MARK } } });
       await prisma.units.deleteMany({ where: { location_id: { in: flats } } });
-      for (const id of [...flats, ids.building, ids.plot].filter(Boolean)) await prisma.locations.delete({ where: { id } });
+      for (const id of [...flats, ids.building, ids.plot, ids.plot2].filter(Boolean)) await prisma.locations.delete({ where: { id } });
     }
     if (prisma) {
       const persons = (await prisma.persons.findMany({ where: { full_name: { endsWith: MARK } }, select: { id: true } })).map((p) => p.id);
@@ -146,5 +164,34 @@ describe('Units list: owners and renters (e2e)', () => {
     expect(owners.get('ফ্ল্যাট বি')!.renters).toBeNull();
     expect(await search(KARIM_PHONE, users.owners)).toHaveLength(3);
     expect(await search(JAMAL_PHONE, users.owners)).toEqual([]);
+  });
+
+  it('filters by what is missing anywhere in the chain', async () => {
+    const all = ['ফ্ল্যাট এ', 'ফ্ল্যাট বি', 'ফ্ল্যাট সি'];
+    expect(await named('missing=owner', users.admin)).toEqual([]);
+    expect(await named('missing=owner', users.admin, ids.plot2)).toEqual(['ফ্ল্যাট ডি']);
+    expect(await named('missing=code', users.admin)).toEqual(all);
+    // The plot's holding number covers the flat on it.
+    expect(await named('missing=code', users.admin, ids.plot2)).toEqual([]);
+    expect(await named('missing=size', users.admin)).toEqual(all);
+    expect(await named('missing=size', users.admin, ids.plot2)).toEqual([]);
+    const counted = await list('missing=code', users.admin);
+    expect(counted.counts.total).toBe(3);
+  });
+
+  it('filters by whether an owner at any level lives in the unit', async () => {
+    // Flat C: the plot owner lives there. Flat B: rented, no owner lives there.
+    expect(await named('ownerLives=here', users.admin)).toEqual(['ফ্ল্যাট এ', 'ফ্ল্যাট সি']);
+    expect(await named('ownerLives=elsewhere', users.admin)).toEqual(['ফ্ল্যাট বি']);
+    // No owner at all is neither.
+    expect(await named('ownerLives=elsewhere', users.admin, ids.plot2)).toEqual([]);
+  });
+
+  it('keeps the ownership filters to callers who may view ownerships', async () => {
+    expect(await named('missing=owner', users.unitsOnly, ids.plot2)).toEqual([]);
+    expect(await named('ownerLives=here', users.unitsOnly)).toEqual([]);
+    expect(await named('missing=code', users.unitsOnly)).toHaveLength(3);
+    expect(await named('ownerLives=here', users.owners)).toEqual(['ফ্ল্যাট এ', 'ফ্ল্যাট সি']);
+    await request(app.getHttpServer()).get('/units?missing=phone').set('Cookie', users.admin).expect(400);
   });
 });

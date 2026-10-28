@@ -1,6 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@s57/db';
-import { asciiDigits, digitVariants, RENTED_STATUSES, type PartyName, type PermissionModule, type UnitOwnerLevel } from '@s57/shared';
+import {
+  asciiDigits,
+  digitVariants,
+  RENTED_STATUSES,
+  type OwnerLives,
+  type PartyName,
+  type PermissionModule,
+  type UnitMissing,
+  type UnitOwnerLevel,
+} from '@s57/shared';
 import type { CallerAccess } from '../permissions/caller-access.js';
 import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -137,6 +146,39 @@ export class UnitPeopleService {
     const rows = await this.prisma.$queryRaw<{ id: string }[]>`
       select u.location_id as id from units u join locations l on l.id = u.location_id
       where u.society_id = ${actor.societyId}::uuid and (${Prisma.join(either, ' or ')})`;
+    return rows.map((row) => row.id);
+  }
+
+  /**
+   * Units that meet the conditions that look up the chain: no owner or no holding number at
+   * any level, or an owner living here or elsewhere. Null when none is asked for. The
+   * ownership ones keep to the caller's `ownerships` area, so they reveal no one else's.
+   */
+  async conditions(actor: Actor, filters: { missing?: UnitMissing | undefined; ownerLives?: OwnerLives | undefined }): Promise<string[] | null> {
+    const and: Prisma.Sql[] = [];
+    const hasOwner = Prisma.sql`exists (
+      select 1 from ownerships o join locations ol on ol.id = o.location_id
+      where o.society_id = u.society_id and o.end_date is null and starts_with(l.path, ol.path))`;
+    const ownerLivesHere = Prisma.sql`exists (
+      select 1 from occupants oc
+        join ownerships o on o.person_id = oc.person_id and o.society_id = oc.society_id and o.end_date is null
+        join locations ol on ol.id = o.location_id
+      where oc.unit_id = u.location_id and oc.end_date is null and starts_with(l.path, ol.path))`;
+    if (filters.missing === 'code') {
+      and.push(Prisma.sql`not exists (select 1 from locations a where a.society_id = u.society_id and starts_with(l.path, a.path) and a.code is not null)`);
+    }
+    if (filters.missing === 'owner') and.push(Prisma.sql`not ${hasOwner}`);
+    if (filters.ownerLives === 'here') and.push(ownerLivesHere);
+    if (filters.ownerLives === 'elsewhere') and.push(Prisma.sql`${hasOwner} and not ${ownerLivesHere}`);
+    if (and.length === 0) return null;
+    if (filters.missing === 'owner' || filters.ownerLives) {
+      const owning = inScope(actor.access, 'ownerships');
+      if (!owning) return [];
+      and.push(owning);
+    }
+    const rows = await this.prisma.$queryRaw<{ id: string }[]>`
+      select u.location_id as id from units u join locations l on l.id = u.location_id
+      where u.society_id = ${actor.societyId}::uuid and ${Prisma.join(and, ' and ')}`;
     return rows.map((row) => row.id);
   }
 }

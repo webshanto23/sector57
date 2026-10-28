@@ -11565,6 +11565,8 @@ export interface operations {
                 occupancy?: "owner_occupied" | "rented" | "vacant";
                 billTo?: "owner" | "renter";
                 status?: "active" | "inactive";
+                missing?: "owner" | "code" | "size";
+                ownerLives?: "here" | "elsewhere";
             };
             header?: never;
             path?: never;

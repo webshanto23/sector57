@@ -1,10 +1,10 @@
-import { BILL_TO, formatNumber, OCCUPANCIES, pick, type Locale, type UnitAreas, type UnitListQuery, type UnitTypeItem } from "@s57/shared";
+import { BILL_TO, formatNumber, OCCUPANCIES, OWNER_LIVES, pick, UNIT_MISSING, type Locale, type UnitAreas, type UnitListQuery, type UnitTypeItem } from "@s57/shared";
 import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
 import { inputClass, SearchInput } from "@/components/kit";
 import { AreaCrumbs } from "@/components/reports/area-crumbs";
 
-type Filters = Partial<Pick<UnitListQuery, "q" | "areaId" | "unitType" | "occupancy" | "billTo" | "status">>;
+type Filters = Partial<Pick<UnitListQuery, "q" | "areaId" | "unitType" | "occupancy" | "billTo" | "status" | "missing" | "ownerLives">>;
 
 const selectClass = `${inputClass} sm:w-auto!`;
 
@@ -17,12 +17,15 @@ export async function UnitFilters({
   query,
   areas,
   unitTypes,
+  ownerships,
 }: {
   locale: Locale;
   query: Filters;
   /** Null when the area in the URL is unknown or out of reach. */
   areas: UnitAreas | null;
   unitTypes: UnitTypeItem[];
+  /** The caller may view ownerships somewhere: the filters that reveal owners are offered. */
+  ownerships: boolean;
 }) {
   const [t, tUnits] = await Promise.all([getTranslations("Property"), getTranslations("Property.units")]);
   const area = areas?.area ?? null;
@@ -85,6 +88,24 @@ export async function UnitFilters({
           <option value="active">{tUnits("active")}</option>
           <option value="inactive">{t("inactive")}</option>
         </select>
+        <select name="missing" defaultValue={query.missing ?? ""} aria-label={tUnits("missingLabel")} className={selectClass}>
+          <option value="">{tUnits("allMissing")}</option>
+          {UNIT_MISSING.filter((value) => ownerships || value !== "owner").map((value) => (
+            <option key={value} value={value}>
+              {tUnits(`missing.${value}`)}
+            </option>
+          ))}
+        </select>
+        {ownerships ? (
+          <select name="ownerLives" defaultValue={query.ownerLives ?? ""} aria-label={tUnits("ownerLivesLabel")} className={selectClass}>
+            <option value="">{tUnits("allOwnerLives")}</option>
+            {OWNER_LIVES.map((value) => (
+              <option key={value} value={value}>
+                {tUnits(`ownerLives.${value}`)}
+              </option>
+            ))}
+          </select>
+        ) : null}
         <Button type="submit" variant="outline">
           {tUnits("filter")}
         </Button>

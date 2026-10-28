@@ -37,6 +37,8 @@ export default async function UnitsPage({ params, searchParams }: PageProps<"/[l
     occupancy: search["occupancy"] || undefined,
     billTo: search["billTo"] || undefined,
     status: search["status"] || undefined,
+    missing: search["missing"] || undefined,
+    ownerLives: search["ownerLives"] || undefined,
     page: search["page"] ?? 1,
     pageSize: PAGE_SIZE,
   });
@@ -58,6 +60,8 @@ export default async function UnitsPage({ params, searchParams }: PageProps<"/[l
     ...(query.occupancy ? { occupancy: query.occupancy } : {}),
     ...(query.billTo ? { billTo: query.billTo } : {}),
     ...(query.status ? { status: query.status } : {}),
+    ...(query.missing ? { missing: query.missing } : {}),
+    ...(query.ownerLives ? { ownerLives: query.ownerLives } : {}),
   };
   const n = (value: number) => formatNumber(value, locale);
 
@@ -117,7 +121,7 @@ export default async function UnitsPage({ params, searchParams }: PageProps<"/[l
         <StatCard icon={DoorOpen} label={t("occupancy.vacant")} value={n(list.counts.vacant)} tone="sun" />
       </div>
 
-      <UnitFilters locale={locale} query={filters} areas={areas} unitTypes={unitTypes} />
+      <UnitFilters locale={locale} query={filters} areas={areas} unitTypes={unitTypes} ownerships={canAnywhere(me.access, "ownerships")} />
 
       <DataTable columns={columns} rows={list.items} rowKey={(unit) => unit.id} caption={tNav("units")} empty={tUnits("empty")} />
 
