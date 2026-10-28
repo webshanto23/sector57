@@ -39,10 +39,13 @@ function newLine(key: number, active: ChargeTypeList["items"]): Line {
 export function InvoiceForm({
   chargeTypes,
   initialUnit,
+  initialMember = null,
   dueDefault,
 }: {
   chargeTypes: ChargeTypeList;
   initialUnit: UnitHit | null;
+  /** A member chosen up front (their membership fee). */
+  initialMember?: MemberHit | null;
   /** `YYYY-MM-DD`, from the server (Dhaka), so the first render matches. */
   dueDefault: string;
 }) {
@@ -53,7 +56,9 @@ export function InvoiceForm({
   const active = chargeTypes.items.filter((type) => !type.archived);
   const typeOf = (id: string) => active.find((type) => type.id === id);
 
-  const [target, setTarget] = useState<Target | null>(initialUnit?.billTo ? { kind: "unit", unit: initialUnit } : null);
+  const [target, setTarget] = useState<Target | null>(
+    initialUnit?.billTo ? { kind: "unit", unit: initialUnit } : initialMember ? { kind: "member", member: initialMember } : null,
+  );
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<BillingLookup | null>(initialUnit && !initialUnit.billTo ? { units: [initialUnit], members: [] } : null);
   const [searching, setSearching] = useState(false);

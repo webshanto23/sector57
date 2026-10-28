@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
 import { api } from "@/lib/api/client";
 import { uploadFile } from "@/lib/api/upload";
-import { emptyPerson, PersonFields, personBody, type PersonValues } from "./person-fields";
+import { PersonFields, personBody, type PersonValues } from "./person-fields";
 
 const toValues = (person: PersonDetail): PersonValues => ({
   fullName: person.fullName,
@@ -26,34 +26,6 @@ const toValues = (person: PersonDetail): PersonValues => ({
   dateOfBirth: person.dateOfBirth ?? "",
   gender: person.gender ?? "",
 });
-
-/** A new person not linked to any unit yet; opens their page once saved. */
-export function NewPersonForm() {
-  const t = useTranslations("Members");
-  const router = useRouter();
-  const { status, busy, run } = useSubmit();
-  const [values, setValues] = useState<PersonValues>(emptyPerson);
-
-  return (
-    <Card>
-      <form
-        noValidate
-        className="grid gap-3.5"
-        onSubmit={async (e) => {
-          e.preventDefault();
-          const created = await run(() => api.POST("/persons", { body: personBody(values) }));
-          if (created) router.push(`/dashboard/members/${created.id}`);
-        }}
-      >
-        <PersonFields id="new-person" values={values} onChange={setValues} />
-        <FormStatus status={status} />
-        <Button type="submit" disabled={busy || !values.fullName.trim()} className="justify-self-start">
-          {t("create")}
-        </Button>
-      </form>
-    </Card>
-  );
-}
 
 /** A person's details with save, verification, photo and delete, as far as the caller may. */
 export function PersonEditor({ person }: { person: PersonDetail }) {

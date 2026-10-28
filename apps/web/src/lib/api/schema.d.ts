@@ -1172,6 +1172,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/memberships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MembershipsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/memberships/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MembershipsController_bulk"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/settings/membership": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MembershipSettingsController_get"];
+        put: operations["MembershipSettingsController_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/public/locations": {
         parameters: {
             query?: never;
@@ -4788,6 +4836,7 @@ export interface components {
             }[];
             membership: {
                 memberNo: number;
+                membershipCode: string;
                 /** @enum {string} */
                 status: "active" | "lapsed" | "cancelled";
                 /** Format: date */
@@ -5562,6 +5611,12 @@ export interface components {
                     nameEn: string | null;
                     count: number;
                 }[];
+                fee: {
+                    /** @enum {string} */
+                    state: "paid" | "unpaid" | "not_billed";
+                    owed: string | null;
+                    openBillId: string | null;
+                } | null;
             }[];
             total: number;
             page: number;
@@ -5570,6 +5625,7 @@ export interface components {
                 active: number;
                 lapsed: number;
                 cancelled: number;
+                feeNotPaid: number | null;
             };
         };
         OwnerRegisterDto_Output: {
@@ -5653,6 +5709,7 @@ export interface components {
                     nameEn: string | null;
                 };
                 residents: number;
+                memberNo: number | null;
             }[];
             total: number;
             page: number;
@@ -5663,6 +5720,52 @@ export interface components {
                 bachelor: number;
                 policeFormMissing: number;
             };
+        };
+        MemberCreateDto: {
+            person?: {
+                fullName: string;
+                fullNameEn?: string | null;
+                phone?: string | null;
+                email?: string | null;
+                nid?: string | null;
+                dateOfBirth?: string | null;
+                gender?: ("male" | "female" | "other") | null;
+            } | null;
+            personId?: string | null;
+            locationId?: string | null;
+            joinedOn?: string | null;
+        };
+        MemberCreatedDto_Output: {
+            /** Format: uuid */
+            personId: string;
+            memberNo: number;
+            membershipCode: string;
+            reusedPerson: boolean;
+        };
+        MemberBulkDto: {
+            personIds: string[];
+            joinedOn?: string | null;
+        };
+        MemberBulkResultDto_Output: {
+            created: {
+                /** Format: uuid */
+                personId: string;
+                memberNo: number;
+                membershipCode: string;
+            }[];
+            skipped: number;
+        };
+        MembershipSettingsDto_Output: {
+            societyCode: string;
+            firstMemberNo: number;
+            issued: number;
+            highestMemberNo: number | null;
+            nextMemberNo: number;
+            nextMembershipCode: string;
+        };
+        MembershipSettingsInputDto: {
+            societyCode: string;
+            firstMemberNo: number;
         };
         PublicPlaceListDto_Output: {
             items: {
@@ -13018,6 +13121,7 @@ export interface operations {
                 q?: string;
                 areaId?: string;
                 status?: "active" | "lapsed" | "cancelled";
+                fee?: "paid" | "not_paid";
             };
             header?: never;
             path?: never;
@@ -13084,6 +13188,94 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RenterRegisterDto_Output"];
+                };
+            };
+        };
+    };
+    MembershipsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberCreatedDto_Output"];
+                };
+            };
+        };
+    };
+    MembershipsController_bulk: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberBulkDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberBulkResultDto_Output"];
+                };
+            };
+        };
+    };
+    MembershipSettingsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MembershipSettingsDto_Output"];
+                };
+            };
+        };
+    };
+    MembershipSettingsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MembershipSettingsInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MembershipSettingsDto_Output"];
                 };
             };
         };
@@ -13741,6 +13933,7 @@ export interface operations {
             query?: {
                 q?: string;
                 unitId?: string;
+                personId?: string;
             };
             header?: never;
             path?: never;

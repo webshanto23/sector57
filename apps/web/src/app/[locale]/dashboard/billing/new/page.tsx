@@ -17,18 +17,20 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/dashboar
   return { title: t("newBill") };
 }
 
-/** A bill made by hand. `?unitId=` (from a unit page) starts with that unit chosen. */
+/** A bill made by hand. `?unitId=` (from a unit page) or `?personId=` (a member's fee, from the members list) starts with them chosen. */
 export default async function NewInvoicePage({ params, searchParams }: PageProps<"/[locale]/dashboard/billing/new">) {
   const { locale } = await params;
   setRequestLocale(locale as Locale);
 
   await requirePermission("billing", "create");
-  const { unitId } = await searchParams;
-  const startUnit = typeof unitId === "string" && /^[0-9a-f-]{36}$/i.test(unitId) ? unitId : null;
+  const { unitId, personId } = await searchParams;
+  const uuid = (value: unknown) => (typeof value === "string" && /^[0-9a-f-]{36}$/i.test(value) ? value : null);
+  const startUnit = uuid(unitId);
+  const startMember = startUnit ? null : uuid(personId);
   const [t, chargeTypes, start] = await Promise.all([
     getTranslations("Billing"),
     getChargeTypes(),
-    startUnit ? lookupBilling({ unitId: startUnit }) : Promise.resolve(null),
+    startUnit ? lookupBilling({ unitId: startUnit }) : startMember ? lookupBilling({ personId: startMember }) : Promise.resolve(null),
   ]);
 
   return (
@@ -43,7 +45,7 @@ export default async function NewInvoicePage({ params, searchParams }: PageProps
           </Link>
         }
       />
-      <InvoiceForm chargeTypes={chargeTypes} initialUnit={start?.units[0] ?? null} dueDefault={dhakaDay(14)} />
+      <InvoiceForm chargeTypes={chargeTypes} initialUnit={start?.units[0] ?? null} initialMember={start?.members[0] ?? null} dueDefault={dhakaDay(14)} />
     </>
   );
 }

@@ -47,9 +47,28 @@ export type HoldingCount = z.infer<typeof holdingCountSchema>;
 // Members
 // ---------------------------------------------------------------------------
 
-/** `GET /registers/members`. Active members unless `status` says otherwise. */
+/**
+ * A member's membership fee: `paid` once they have membership bills and none is still open,
+ * `unpaid` while one is (with what is owed and the oldest open bill), `not_billed` before any
+ * bill. Void bills don't count.
+ */
+export const MEMBER_FEE_STATES = ['paid', 'unpaid', 'not_billed'] as const;
+export type MemberFeeState = (typeof MEMBER_FEE_STATES)[number];
+
+export const memberFeeSchema = z.object({
+  state: z.enum(MEMBER_FEE_STATES),
+  owed: z.string().nullable(),
+  openBillId: z.uuid().nullable(),
+});
+export type MemberFee = z.infer<typeof memberFeeSchema>;
+
+/** The fee filter: `not_paid` is unpaid or not billed. */
+export const MEMBER_FEE_FILTERS = ['paid', 'not_paid'] as const;
+
+/** `GET /registers/members`. Active members unless `status` says otherwise. `fee` needs society-wide `billing.view`. */
 export const memberRegisterQuery = registerQuery.extend({
   status: z.enum(MEMBERSHIP_STATUSES).default('active'),
+  fee: z.enum(MEMBER_FEE_FILTERS).optional(),
 });
 export type MemberRegisterQuery = z.infer<typeof memberRegisterQuery>;
 
@@ -60,12 +79,20 @@ export const memberRegisterRowSchema = z.object({
   person: partySchema,
   /** What they own now, in the caller's area. */
   holdings: z.array(holdingCountSchema),
+  /** Their membership fee; null unless the caller may view billing for the whole society. */
+  fee: memberFeeSchema.nullable(),
 });
 export type MemberRegisterRow = z.infer<typeof memberRegisterRowSchema>;
 
 export const memberRegisterSchema = paged(
   memberRegisterRowSchema,
-  z.object({ active: z.number().int().min(0), lapsed: z.number().int().min(0), cancelled: z.number().int().min(0) }),
+  z.object({
+    active: z.number().int().min(0),
+    lapsed: z.number().int().min(0),
+    cancelled: z.number().int().min(0),
+    /** Members with this status whose fee isn't paid; null when the fee isn't shown. */
+    feeNotPaid: z.number().int().min(0).nullable(),
+  }),
 );
 export type MemberRegister = z.infer<typeof memberRegisterSchema>;
 
@@ -129,6 +156,8 @@ export const renterRegisterRowSchema = z.object({
   unitType: z.object({ code: unitTypeCode, nameBn: z.string(), nameEn: z.string().nullable() }),
   /** Current residents of the renter's household. */
   residents: z.number().int().min(0),
+  /** The renter's active membership number; null when they aren't a member, and for an organisation. */
+  memberNo: z.number().int().nullable(),
 });
 export type RenterRegisterRow = z.infer<typeof renterRegisterRowSchema>;
 

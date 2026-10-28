@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PageHeader } from "@/components/kit";
-import { NewPersonForm } from "@/components/members/person-editor";
+import { NewMemberForm } from "@/components/members/member-form";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { requirePermission } from "@/lib/api/session";
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/dashboar
   return { title: t("newTitle") };
 }
 
-/** Someone not linked to a unit yet. Whole-society roles only; others add people from a unit's page. */
+/** The office adds a society member directly. Whole-society roles only. */
 export default async function NewMemberPage({ params }: PageProps<"/[locale]/dashboard/members/new">) {
   const { locale } = await params;
   setRequestLocale(locale as Locale);
@@ -36,7 +36,7 @@ export default async function NewMemberPage({ params }: PageProps<"/[locale]/das
           </Link>
         }
       />
-      <NewPersonForm />
+      <NewMemberForm />
     </>
   );
 }

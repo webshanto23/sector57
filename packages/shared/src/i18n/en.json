@@ -690,7 +690,8 @@
       "combine_open_bills": "A unit being retired still has unpaid bills. Settle them first.",
       "combine_open_tenancy": "A unit being retired still has a renter. End the tenancy first.",
       "combine_occupants": "People still live in a unit being retired. Move them first.",
-      "combine_vehicles": "A unit being retired still has a vehicle or parking slot. Move it first."
+      "combine_vehicles": "A unit being retired still has a vehicle or parking slot. Move it first.",
+      "society_code_taken": "Another society already uses this code."
     }
   },
   "Cms": {
@@ -1175,9 +1176,9 @@
     "genderLabel": "Gender",
     "genderNone": "Not given",
     "save": "Save changes",
-    "create": "Add person",
-    "newTitle": "New person",
-    "newHint": "Add someone who isn't linked to a unit yet. To add an owner, renter or resident, open the unit instead.",
+    "create": "Add member",
+    "newTitle": "New member",
+    "newHint": "Register a society member directly, without an application. If the phone or NID matches someone on file, that person becomes the member.",
     "readOnly": "You can see this person but not change them.",
     "verifiedOn": "Verified on {date}",
     "notVerified": "Not verified yet",
@@ -1268,10 +1269,35 @@
       "lapsed": "Membership lapsed",
       "cancelled": "Membership cancelled"
     },
-    "memberSince": "since {date}"
+    "memberSince": "since {date}",
+    "membershipCode": "Membership ID {code}",
+    "memberPlace": "Their plot or flat (optional)",
+    "joinedOn": "Member since",
+    "joinedOnHint": "Leave blank for today.",
+    "cancel": "Cancel",
+    "memberPlaceNone": "No place",
+    "makeMember": "Make member",
+    "makeMemberHint": "They get the next member number and a membership ID.",
+    "tickAll": "Tick all on this page",
+    "tickPerson": "Tick {name}",
+    "makeMembers": "{count, plural, =0 {Make members} other {Make members (#)}}",
+    "madeMembers": "{created, plural, =0 {Nobody added} one {# member added} other {# members added}}{skipped, plural, =0 {} one {; # already a member, skipped} other {; # already members, skipped}}.",
+    "idSettings": {
+      "title": "Membership IDs",
+      "hint": "Every member gets an ID made of the society code and their member number, such as S15-000042.",
+      "code": "Society code",
+      "codeHint": "2 to 10 English letters or digits; no other society may use it.",
+      "start": "First member number",
+      "startHint": "The first member gets this number. Numbers already given never change.",
+      "next": "Next ID: {code}.",
+      "nextInvalid": "Enter a valid code and number to see the next ID.",
+      "issued": "{count, plural, =0 {No IDs given yet.} one {# ID given so far.} other {# IDs given so far.}}",
+      "recodeWarning": "Saving a new code re-issues {count, plural, one {the # ID} other {all # IDs}} already given. Receipts, bills and certificates printed before keep the old ID.",
+      "save": "Save"
+    }
   },
   "Registers": {
-    "add": "Add person",
+    "add": "Add member",
     "filter": "Filter",
     "searchPlaceholder": "Name or phone",
     "inArea": "Only under {name}",
@@ -1296,9 +1322,22 @@
         "cancelled": "Cancelled"
       },
       "col": {
-        "joined": "Member since"
+        "joined": "Member since",
+        "fee": "Membership fee"
       },
-      "empty": "No members match."
+      "empty": "No members match.",
+      "fee": {
+        "paid": "Paid",
+        "unpaid": "Not paid · {amount}",
+        "notBilled": "Not billed",
+        "makeBill": "Make bill",
+        "notPaidCount": "Fee not paid",
+        "any": "Any fee",
+        "filter": {
+          "paid": "Fee paid",
+          "not_paid": "Fee not paid"
+        }
+      }
     },
     "owners": {
       "sub": "Owners of plots, buildings and units, members or not",

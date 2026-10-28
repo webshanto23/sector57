@@ -39,6 +39,8 @@ const KNOWN = [
   "person_nid_taken",
   "person_in_use",
   "person_not_found",
+  "already_member",
+  "society_code_taken",
   "organisation_in_use",
   "organisation_not_found",
   "shares_over_100",

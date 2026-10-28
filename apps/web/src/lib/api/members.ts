@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   type LocationPeople,
+  type MembershipSettings,
   type OrganisationDetail,
   type PersonDetail,
 } from "@s57/shared";
@@ -43,5 +44,12 @@ export async function getLocationPeople(id: string): Promise<LocationPeople | nu
   });
   if (missing(response.status)) return null;
   if (!data) throw failed("the people of the location", response.status);
+  return data;
+}
+
+/** The society code and first member number (`settings.view`). */
+export async function getMembershipSettings(): Promise<MembershipSettings> {
+  const { data, response } = await api.GET("/settings/membership", { headers: await authHeaders(), cache: "no-store" });
+  if (!data) throw failed("the membership settings", response.status);
   return data;
 }

@@ -15,6 +15,9 @@ import {
   PersonsController,
   TenanciesController,
 } from './members.controller.js';
+import { MembershipSettingsService } from './membership-settings.service.js';
+import { MembershipSettingsController, MembershipsController } from './memberships.controller.js';
+import { MembershipsService } from './memberships.service.js';
 import { MovesController } from './moves.controller.js';
 import { MovesService } from './moves.service.js';
 import { OccupantsService } from './occupants.service.js';
@@ -39,6 +42,8 @@ import { TenanciesService } from './tenancies.service.js';
     MovesController,
     DirectoryController,
     RegistersController,
+    MembershipsController,
+    MembershipSettingsController,
   ],
   providers: [
     PartiesService,
@@ -52,8 +57,10 @@ import { TenanciesService } from './tenancies.service.js';
     MovesService,
     DirectoryService,
     RegistersService,
+    MembershipsService,
+    MembershipSettingsService,
   ],
   // The office review (forms module) approves applications through these.
-  exports: [PartiesService, MemberRowsService, TenanciesService, OwnershipsService],
+  exports: [PartiesService, MemberRowsService, TenanciesService, OwnershipsService, MembershipsService],
 })
 export class MembersModule {}

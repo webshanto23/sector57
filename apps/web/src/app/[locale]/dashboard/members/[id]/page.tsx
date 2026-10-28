@@ -1,4 +1,4 @@
-import { canAnywhere, formatDate, localDigits, type Locale } from "@s57/shared";
+import { canAnywhere, canSocietyWide, formatDate, localDigits, type Locale, type Place } from "@s57/shared";
 import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -9,6 +9,7 @@ import { CertificatesPanel } from "@/components/certificates/certificates-panel"
 import { DonationsPanel } from "@/components/donations/donations-panel";
 import { DocumentsPanel } from "@/components/documents/documents-panel";
 import { Chip, PageHeader } from "@/components/kit";
+import { MakeMemberButton } from "@/components/members/make-members";
 import { PersonEditor } from "@/components/members/person-editor";
 import { HouseholdTable, OwnershipTable, TenancyTable } from "@/components/members/record-tables";
 import { buttonVariants } from "@/components/ui/button";
@@ -34,6 +35,12 @@ export default async function PersonPage({ params }: PageProps<"/[locale]/dashbo
   const [t, person] = await Promise.all([getTranslations("Members"), getPerson(id)]);
   if (!person) notFound();
   const open = { units: canAnywhere(me.access, "units"), locations: canAnywhere(me.access, "locations") };
+  // Not an active member yet: whole-society roles can make them one, at a place they own or rent now.
+  const mayMakeMember = person.membership?.status !== "active" && canSocietyWide(me.access, "members", "create");
+  const currentPlaces = [
+    ...person.ownerships.filter((row) => row.endDate === null).map((row) => row.place),
+    ...person.tenancies.filter((row) => row.status === "active" || row.status === "moving_out").map((row) => row.place),
+  ].filter((place, i, all) => all.findIndex((other) => other.id === place.id) === i) satisfies Place[];
 
   return (
     <>
@@ -53,11 +60,13 @@ export default async function PersonPage({ params }: PageProps<"/[locale]/dashbo
             <Chip tone={person.membership.status === "active" ? "good" : "neutral"}>
               {localDigits(t("memberNo", { no: person.membership.memberNo }), locale)}
             </Chip>
+            <span className="num">{t("membershipCode", { code: person.membership.membershipCode })}</span>
             {person.membership.status === "active"
               ? t("memberSince", { date: formatDate(person.membership.joinedOn, locale, "short") })
               : t(`membershipStatus.${person.membership.status}`)}
           </p>
         ) : null}
+        {mayMakeMember ? <MakeMemberButton personId={person.id} places={currentPlaces} /> : null}
         {!person.can.edit ? <Note>{t("readOnly")}</Note> : null}
         <PersonEditor key={person.id} person={person} />
         <OwnershipTable rows={person.ownerships} locale={locale} open={open} />

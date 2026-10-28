@@ -20,16 +20,17 @@ import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { addressOf, TreeService } from '../property/tree.service.js';
 import { inScope } from '../reports/area-tree.js';
-import { holdingsOf, placesOf, type OwnedRow } from './registers.policy.js';
+import { feeOf, holdingsOf, placesOf, type FeeRow, type OwnedRow } from './registers.policy.js';
 
 type PersonCols = { id: string; name: string; name_en: string | null; phone: string | null; photo_url: string | null; verified: boolean | null };
-type MemberRow = PersonCols & { member_no: number; status: string; joined_on: Date; total: number };
+type MemberRow = PersonCols & FeeRow & { member_no: number; status: string; joined_on: Date; total: number };
 type OwnerRow = PersonCols & { kind: 'person' | 'organisation'; lives_here: boolean | null; member_no: number | null; total: number };
 type RenterRow = Omit<PersonCols, 'id'> & {
   id: string;
   party_id: string | null;
   kind: 'person' | 'organisation' | null;
   renter_type: string;
+  member_no: number | null;
   status: string;
   start_date: Date;
   monthly_rent: string | null;
@@ -94,8 +95,20 @@ export class RegistersService {
       ? Prisma.sql`true`
       : Prisma.sql`((m.location_id is not null and ${scope}) or m.person_id in (select person_id from linked))`;
 
+    // The membership fee: its bills (void left out), shown only to society-wide billing viewers.
+    const feesShown = actor.access.paths('view', 'billing') === 'all';
+    const fees = Prisma.sql`left join lateral (
+      select count(*)::int as fee_bills,
+        count(*) filter (where i.status in ('unpaid', 'partial'))::int as fee_open,
+        trim_scale(sum(i.total - i.paid) filter (where i.status in ('unpaid', 'partial')))::text as fee_owed,
+        (array_agg(i.id order by i.due_date, i.id) filter (where i.status in ('unpaid', 'partial')))[1] as fee_open_bill
+      from invoices i where i.membership_id = m.id and i.status <> 'void'
+    ) f on true`;
+    const feePaid = Prisma.sql`(f.fee_bills > 0 and f.fee_open = 0)`;
+
     const filters: Prisma.Sql[] = [Prisma.sql`m.status = ${query.status}`];
     if (query.q) filters.push(searchSql(query.q, Prisma.sql`p.full_name`, Prisma.sql`p.full_name_en`, Prisma.sql`p.phone`));
+    if (feesShown && query.fee) filters.push(query.fee === 'paid' ? feePaid : Prisma.sql`not ${feePaid}`);
     const area = await this.areaPath(societyId, query.areaId);
     if (area !== undefined) {
       filters.push(
@@ -109,15 +122,15 @@ export class RegistersService {
       this.prisma.$queryRaw<MemberRow[]>`
         with ${linked}
         select m.member_no, m.status, m.joined_on, p.id, p.full_name as name, p.full_name_en as name_en, p.phone, p.photo_url,
-          p.verified_at is not null as verified, count(*) over ()::int as total
-        from memberships m join persons p on p.id = m.person_id left join locations l on l.id = m.location_id
+          p.verified_at is not null as verified, f.fee_bills, f.fee_open, f.fee_owed, f.fee_open_bill, count(*) over ()::int as total
+        from memberships m join persons p on p.id = m.person_id left join locations l on l.id = m.location_id ${fees}
         where m.society_id = ${societyId}::uuid and ${visible} and ${Prisma.join(filters, ' and ')}
         order by m.member_no
         limit ${query.pageSize} offset ${(query.page - 1) * query.pageSize}`,
-      this.prisma.$queryRaw<{ status: string; count: number }[]>`
+      this.prisma.$queryRaw<{ status: string; count: number; fee_not_paid: number }[]>`
         with ${linked}
-        select m.status, count(*)::int as count
-        from memberships m left join locations l on l.id = m.location_id
+        select m.status, count(*)::int as count, count(*) filter (where not ${feePaid})::int as fee_not_paid
+        from memberships m left join locations l on l.id = m.location_id ${fees}
         where m.society_id = ${societyId}::uuid and ${visible}
         group by m.status`,
     ]);
@@ -130,11 +143,17 @@ export class RegistersService {
         joinedOn: isoDate(row.joined_on),
         person: this.party('person', row),
         holdings: holdingsOf(owned.filter((own) => own.party_id === row.id)),
+        fee: feesShown ? feeOf(row) : null,
       })),
       total: rows[0]?.total ?? 0,
       page: query.page,
       pageSize: query.pageSize,
-      counts: { active: count('active'), lapsed: count('lapsed'), cancelled: count('cancelled') },
+      counts: {
+        active: count('active'),
+        lapsed: count('lapsed'),
+        cancelled: count('cancelled'),
+        feeNotPaid: feesShown ? (counts.find((row) => row.status === query.status)?.fee_not_paid ?? 0) : null,
+      },
     };
   }
 
@@ -229,6 +248,7 @@ export class RegistersService {
           l.id as location_id, l.name as unit_name, l.path, lv.is_unit_level as is_unit,
           ut.code as ut_code, ut.name_bn as ut_bn, ut.name_en as ut_en,
           (select count(*) from occupants oc where oc.tenancy_id = t.id and oc.end_date is null)::int as residents,
+          (select m.member_no from memberships m where m.person_id = p.id and m.status = 'active') as member_no,
           mv.id as move_id, mv.kind as move_kind,
           count(*) over ()::int as total
         from tenancies t
@@ -263,6 +283,7 @@ export class RegistersService {
         unit: { id: row.location_id, name: row.unit_name, address: addressOf(row.path, names), isUnit: row.is_unit },
         unitType: { code: row.ut_code, nameBn: row.ut_bn, nameEn: row.ut_en },
         residents: row.residents,
+        memberNo: row.member_no,
       })),
       total: rows[0]?.total ?? 0,
       page: query.page,

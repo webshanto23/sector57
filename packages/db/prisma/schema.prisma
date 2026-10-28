@@ -301,6 +301,8 @@ model memberships {
   person_id        String            @db.Uuid
   location_id      String?           @db.Uuid
   member_no        Int
+  /// Global ID (`S15-000042`), filled by the `memberships_set_code` trigger.
+  membership_code  String            @unique(map: "memberships_membership_code_uq") @default(dbgenerated())
   status           String            @default("active")
   joined_on        DateTime          @db.Date
   ended_on         DateTime?         @db.Date
@@ -826,6 +828,8 @@ model societies {
   name_bn                 String
   name_en                 String?
   slug                    String                    @unique
+  /// Short code in membership IDs; the `societies_default_code` trigger derives it from the slug when unset.
+  code                    String                    @unique(map: "societies_code_uq") @default(dbgenerated())
   logo_url                String?
   address                 String?
   phone                   String?

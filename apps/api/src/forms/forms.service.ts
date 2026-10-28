@@ -27,6 +27,7 @@ import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { beyondPermissions, TreeService } from '../property/tree.service.js';
 import { MemberRowsService, personPartySelect, placeSelect } from '../members/member-rows.service.js';
+import { MembershipsService } from '../members/memberships.service.js';
 import { OwnershipsService } from '../members/ownerships.service.js';
 import { auditOf, canOnParty, PartiesService } from '../members/parties.service.js';
 import { TenanciesService } from '../members/tenancies.service.js';
@@ -38,7 +39,6 @@ type Tx = Prisma.TransactionClient;
 const notFound = () => new NotFoundException({ code: 'form_not_found', message: 'Application not found' });
 const fileNotFound = () => new NotFoundException({ code: 'file_not_found', message: 'File not found' });
 const formClosed = () => new ConflictException({ code: 'form_closed', message: 'This application has already been decided' });
-const alreadyMember = () => new ConflictException({ code: 'already_member', message: 'This person is already a member' });
 const placeUnavailable = () =>
   new ConflictException({ code: 'location_inactive', message: 'The place of this application is inactive or gone' });
 const ownershipNotAsked = () =>
@@ -97,6 +97,7 @@ export class FormsService {
     private readonly parties: PartiesService,
     private readonly tenancies: TenanciesService,
     private readonly ownerships: OwnershipsService,
+    private readonly memberships: MembershipsService,
     private readonly files: PrivateFilesService,
   ) {}
 
@@ -272,20 +273,14 @@ export class FormsService {
         const form = membershipDataSchema.parse(row.data);
         const person = await this.parties.resolvePerson(tx, actor.societyId, { ...form.applicant, dateOfBirth: null, gender: null });
         personId = person.id;
-        const active = await tx.memberships.findFirst({ where: { person_id: personId, status: 'active' }, select: { id: true } });
-        if (active) throw alreadyMember();
-        const memberNo = await this.nextMemberNo(tx, actor.societyId);
-        await tx.memberships.create({
-          data: {
-            society_id: actor.societyId,
-            person_id: personId,
-            location_id: place.id,
-            member_no: memberNo,
-            joined_on: today,
-            submission_id: id,
-          },
+        const membership = await this.memberships.insert(tx, actor.societyId, {
+          personId,
+          locationId: place.id,
+          joinedOn: today,
+          submissionId: id,
         });
-        extra['memberNo'] = memberNo;
+        extra['memberNo'] = membership.member_no;
+        extra['membershipCode'] = membership.membership_code;
         extra['reusedPerson'] = person.reused;
         if (input.addOwnership) {
           extra['ownershipId'] = await this.ownerships.insert(tx, actor, place, {
@@ -365,13 +360,6 @@ export class FormsService {
   private async claim(tx: Tx, id: string, from: string[], data: Prisma.form_submissionsUncheckedUpdateManyInput): Promise<void> {
     const { count } = await tx.form_submissions.updateMany({ where: { id, status: { in: from } }, data });
     if (count === 0) throw formClosed();
-  }
-
-  /** The next member number of the society; one at a time per society (transaction lock). */
-  private async nextMemberNo(tx: Tx, societyId: string): Promise<number> {
-    await tx.$executeRaw`select pg_advisory_xact_lock(hashtext(${`memberships:${societyId}`}))`;
-    const { _max } = await tx.memberships.aggregate({ where: { society_id: societyId }, _max: { member_no: true } });
-    return (_max.member_no ?? 0) + 1;
   }
 
   /** People already on file with the applicant's phone or NID. */

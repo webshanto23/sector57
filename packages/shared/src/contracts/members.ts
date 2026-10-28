@@ -330,11 +330,106 @@ export const toMembershipStatus = oneOf(MEMBERSHIP_STATUSES, 'cancelled');
 /** A person's society membership, on their page. */
 export const membershipSchema = z.object({
   memberNo: z.number().int(),
+  /** Unique across all societies: the society code and the padded member number (`S15-000042`). */
+  membershipCode: z.string(),
   status: z.enum(MEMBERSHIP_STATUSES),
   joinedOn: isoDay,
   endedOn: isoDay.nullable(),
 });
 export type Membership = z.infer<typeof membershipSchema>;
+
+/**
+ * `POST /memberships`: the office registers a member directly (whole-society callers). Either
+ * `person` (matched by phone, then NID, else added) or `personId` (someone on file, such as an
+ * owner or renter). A blank `locationId` takes their first current unit or plot (owned, then
+ * rented); a blank `joinedOn` is today.
+ */
+export const memberCreateSchema = z
+  .object({
+    person: personInputSchema.nullish().transform((value) => value ?? null),
+    personId: z.uuid().nullish().transform((value) => value ?? null),
+    locationId: z.uuid().nullish().transform((value) => value ?? null),
+    joinedOn: optionalDay,
+  })
+  .refine((value) => (value.person === null) !== (value.personId === null), {
+    message: 'Give either person or personId',
+    path: ['personId'],
+  });
+export type MemberCreateInput = z.infer<typeof memberCreateSchema>;
+
+/**
+ * A membership ID: the society code, a dash and the member number padded to six digits
+ * (`S15-000042`). The database's `memberships_set_code` trigger writes the stored one; this
+ * copy is only for previews and must stay the same.
+ */
+export const formatMembershipCode = (societyCode: string, memberNo: number) => `${societyCode}-${String(memberNo).padStart(6, '0')}`;
+
+/** The next member number: the starter, or one past the highest number used, whichever is higher. */
+export const nextMemberNumber = (firstMemberNo: number, highestUsed: number | null) => Math.max(firstMemberNo, (highestUsed ?? 0) + 1);
+
+/** Largest starter the office may set (eight digits). */
+export const MAX_FIRST_MEMBER_NO = 99_999_999;
+
+/** A society code as typed: trimmed and upper-cased, then 2 to 10 English letters or digits. */
+export const societyCodeSchema = z
+  .string()
+  .transform((value) => asciiDigits(value).trim().toUpperCase())
+  .pipe(z.string().regex(/^[A-Z0-9]{2,10}$/));
+
+/** `GET /settings/membership`: how membership IDs are made, and what the next one will be. */
+export const membershipSettingsSchema = z.object({
+  societyCode: z.string(),
+  firstMemberNo: z.number().int().min(1),
+  /** Memberships the society has issued; changing the code re-issues all of them. */
+  issued: z.number().int().min(0),
+  /** The highest member number used so far; null before the first member. */
+  highestMemberNo: z.number().int().nullable(),
+  nextMemberNo: z.number().int().min(1),
+  nextMembershipCode: z.string(),
+});
+export type MembershipSettings = z.infer<typeof membershipSettingsSchema>;
+
+/**
+ * `PUT /settings/membership`. A new code re-issues every membership ID of the society; the starter
+ * only moves numbers given from now on (never below one already used).
+ */
+export const membershipSettingsInputSchema = z.object({
+  societyCode: societyCodeSchema,
+  firstMemberNo: z.preprocess(
+    (value) => (typeof value === 'string' ? Number(asciiDigits(value).trim()) : value),
+    z.number().int().min(1).max(MAX_FIRST_MEMBER_NO),
+  ),
+});
+export type MembershipSettingsInput = z.infer<typeof membershipSettingsInputSchema>;
+
+/** People made members in one go from the owners or renters list. */
+export const MAX_BULK_MEMBERS = 200;
+
+/** `POST /memberships/bulk`: people on file, numbered in this order, all joining on one day (blank is today). */
+export const memberBulkSchema = z.object({
+  personIds: z
+    .array(z.uuid())
+    .min(1)
+    .max(MAX_BULK_MEMBERS)
+    .refine((ids) => new Set(ids).size === ids.length, { message: 'Each person once' }),
+  joinedOn: optionalDay,
+});
+export type MemberBulkInput = z.infer<typeof memberBulkSchema>;
+
+/** The new memberships, and how many people were skipped because they already are members. */
+export const memberBulkResultSchema = z.object({
+  created: z.array(z.object({ personId: z.uuid(), memberNo: z.number().int(), membershipCode: z.string() })),
+  skipped: z.number().int().min(0),
+});
+export type MemberBulkResult = z.infer<typeof memberBulkResultSchema>;
+
+export const memberCreatedSchema = z.object({
+  personId: z.uuid(),
+  memberNo: z.number().int(),
+  membershipCode: z.string(),
+  reusedPerson: z.boolean(),
+});
+export type MemberCreated = z.infer<typeof memberCreatedSchema>;
 
 /**
  * `GET /persons/:id`. `nid` is null unless the caller may edit the person (`hasNid` says

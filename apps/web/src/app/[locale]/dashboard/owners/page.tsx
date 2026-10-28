@@ -1,10 +1,11 @@
-import { canAnywhere, formatNumber, localDigits, ownerRegisterQuery, type Locale, type OwnerRegisterRow } from "@s57/shared";
+import { canAnywhere, canSocietyWide, formatNumber, localDigits, ownerRegisterQuery, type Locale, type OwnerRegisterRow } from "@s57/shared";
 import { BadgeCheck, House, UserRound, UserX } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Pager } from "@/components/cms/pager";
 import { Avatar, Chip, DataTable, inputClass, PageHeader, SearchInput, StatCard, type Column } from "@/components/kit";
 import { PartyLink, PlaceLink } from "@/components/members/labels";
+import { MemberTicks, TickBox } from "@/components/members/make-members";
 import { AreaNote, HoldingChips, PhoneActions, searchText } from "@/components/members/register-parts";
 import { Button } from "@/components/ui/button";
 import { getLocation } from "@/lib/api/property";
@@ -53,6 +54,9 @@ export default async function OwnersPage({ params, searchParams }: PageProps<"/[
   };
   const n = (value: number) => formatNumber(value, locale);
   const placesOpen = { units: canAnywhere(me.access, "units"), locations: canAnywhere(me.access, "locations") };
+  // Whole-society roles can tick owners who aren't members yet and make them members in one go.
+  const canTick = canSocietyWide(me.access, "members", "create");
+  const tickable = (row: OwnerRegisterRow) => canTick && row.kind === "person" && row.memberNo === null;
 
   const columns: Column<OwnerRegisterRow>[] = [
     {
@@ -60,6 +64,7 @@ export default async function OwnersPage({ params, searchParams }: PageProps<"/[
       header: t("col.name"),
       cell: (row) => (
         <div className="flex items-center gap-2.5">
+          {tickable(row) ? <TickBox personId={row.id} name={row.name} /> : null}
           <Avatar name={row.name} />
           <div className="grid justify-items-start gap-0.5">
             <PartyLink party={row} />
@@ -90,6 +95,10 @@ export default async function OwnersPage({ params, searchParams }: PageProps<"/[
     },
     { key: "phone", header: t("col.phone"), cell: (row) => <PhoneActions phone={row.phone} name={row.name} /> },
   ];
+
+  const table = (
+    <DataTable columns={columns} rows={list.items} rowKey={(row) => `${row.kind}:${row.id}`} caption={tNav("owners")} empty={t("owners.empty")} />
+  );
 
   return (
     <>
@@ -124,7 +133,11 @@ export default async function OwnersPage({ params, searchParams }: PageProps<"/[
         </Button>
       </form>
 
-      <DataTable columns={columns} rows={list.items} rowKey={(row) => `${row.kind}:${row.id}`} caption={tNav("owners")} empty={t("owners.empty")} />
+      {canTick ? (
+        <MemberTicks eligible={list.items.filter(tickable).map((row) => row.id)}>{table}</MemberTicks>
+      ) : (
+        table
+      )}
 
       <Pager
         locale={locale}

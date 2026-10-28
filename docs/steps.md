@@ -1076,6 +1076,57 @@ Asked for by Anis on 2026-10-28: more filters on `/dashboard/units`. Agreed spli
     - `scopeSql` (in `tree.service.ts`) is now shared with `UnitPeopleService`.
   - **Tests:** a "level picker and search" block in `property.e2e-spec.ts` covers one level with addresses (same-named roads), plots straight from a block, digit forms, no units, counts matching search totals, and a Block C viewer's area. `pnpm check` passes. Not opened in a browser.
 
+## Step 38: Add member, membership IDs, making owners and renters members, ID settings — Built, awaiting review
+
+Asked for by Anis on 2026-10-28. Decided: `/dashboard/members/new` registers a member (person and membership together), and every membership gets a global ID made of the society code and the padded member number (`S15-000042`). Built on `step/37-multi-storey-units`, uncommitted.
+
+- **Migration `28_membership_codes`:**
+  - Adds `societies.code` (`^[A-Z0-9]{2,64}$`, unique). When it isn't set on insert, a trigger takes it from the slug without punctuation, so the existing society got `SECTOR57`.
+  - Adds `memberships.membership_code` (unique across all societies). The `memberships_set_code` trigger fills it on insert and whenever `member_no` changes, so form approval, `POST /memberships`, seeds and tests all get one. Existing rows were backfilled.
+- **Shared:** `memberCreateSchema` (`person`, optional `locationId`, `joinedOn`; blank means today), `memberCreatedSchema`, and `membershipSchema.membershipCode`.
+- **API:**
+  - `MembershipsService` (`members` module): `create` for `POST /memberships` (`members.create`, whole-society callers only) and `insert`, which form approval now uses as well. Member numbers are taken under the same advisory lock as before.
+  - The person is matched by phone, then NID, else added.
+  - Errors: 409 `already_member`, 404 `location_not_found`.
+- **Web:**
+  - The button on `/dashboard/members` now reads "Add member" (সদস্য যোগ).
+  - The new page uses `NewMemberForm` (`components/members/member-form.tsx`: person fields, place picker, joined date). `NewPersonForm` has been removed.
+  - A person's page shows "Membership ID …" next to the member number.
+- **Tests:** `memberships.e2e-spec.ts` covers the ID format, reusing a person by phone, `already_member`, four members added at once with no clash, the same number in another society getting a different ID, an unknown place, and a scoped caller (403). `pnpm check` passes. Not opened in a browser.
+- **Part b (built): existing owners and renters made members.** Anis chose to make members on purpose (no automatic membership), with a bulk tick and one joined date.
+  - **Shared:** `memberCreateSchema` takes `person` or `personId` (exactly one); `memberBulkSchema` (`personIds`, up to `MAX_BULK_MEMBERS` = 200, each once; `joinedOn`) and `memberBulkResultSchema`. `renterRegisterRowSchema.memberNo`.
+  - **API:**
+    - `POST /memberships` with `personId` uses the person on file; a blank place takes their earliest current ownership, else their earliest open tenancy.
+    - `POST /memberships/bulk` (`members.create`, whole-society callers only) runs as one transaction and numbers people in the order given. People who already are members are skipped (`skipped`). Any id that isn't a person of the society is a 404 and adds nobody.
+    - The renters register now returns the renter's member number.
+  - **Web:**
+    - `components/members/make-members.tsx` holds three pieces. `MemberTicks` is the bar: tick all on the page, the joined date, and "Make members (N)", then the result. `TickBox` sits in the name cell, so it works on phone cards too. `MakeMemberButton` is on the person page: their current places, or none, plus the joined date.
+    - The owners and renters lists show tick boxes on people who aren't members yet; the renters list also shows a "Member no." chip.
+    - `already_member` is now a known admin error.
+  - **Tests:** `memberships.e2e-spec.ts` (8 cases) covers an owner by `personId` placed at their plot, `person` and `personId` together (400), bulk order, skips and the joined date, a renter placed at their flat and shown as a member in the renters list, all-or-none with a person from another society, and bulk refused for a scoped caller. The contract specs are in `members.spec.ts`. `pnpm check` passes. Not opened in a browser.
+- **Part c (built): membership IDs in Settings.** Anis chose that a new code re-issues every ID already given, and that the "starter" is the first member number.
+  - **Shared:** `formatMembershipCode` (for previews; must match the `memberships_set_code` trigger), `nextMemberNumber` (the starter, or one past the highest number used, whichever is higher), `societyCodeSchema` (trimmed, upper-cased, 2 to 10 letters or digits), `membershipSettingsSchema` and `membershipSettingsInputSchema` (Bangla digits accepted).
+  - **API:** `GET` and `PUT /settings/membership` (`settings.view` / `settings.edit`, `MembershipSettingsService` in the members module).
+    - The starter is stored in `society_settings` under `membership_numbering` (`{ firstMemberNo }`), and `MembershipsService.nextMemberNo` uses it.
+    - A new code updates `societies.code`, then runs `update memberships set member_no = member_no`, so the trigger rebuilds every ID. This happens under the members' numbering lock.
+    - 409 `society_code_taken`; one audit row (`membership_settings`).
+  - **Web:** `MembershipSettingsCard` (`components/members/membership-settings.tsx`) sits under the settings form, with a live next-ID preview and a warning before re-issuing.
+  - **Tests:** `membership-settings.e2e-spec.ts`. Over HTTP on the seeded society it covers GET, 409, 400 and 403; the changes run through the services on a society of the suite's own, so the code of the society other suites use never changes. Contract specs are in `members.spec.ts`. `pnpm check` passes. Not opened in a browser.
+- **Part d (built): is the membership fee paid?** Anis wanted only "paid or not" and a way to bill it. There is no separate joining or yearly fee and no fiscal-year rule: every non-void membership bill counts.
+  - **Shared:** `MEMBER_FEE_STATES` (`paid`, `unpaid`, `not_billed`), `memberFeeSchema` (`owed`, `openBillId`), `memberRegisterQuery.fee` (`paid` or `not_paid`), `memberRegisterRowSchema.fee` and `counts.feeNotPaid`. `billingLookupQuery.personId` finds one member and no units.
+  - **API:**
+    - `RegistersService.members` joins each membership's bills (void left out), and `feeOf` in `registers.policy.ts` turns them into a state.
+    - `paid` means at least one bill and none open. `unpaid` carries the amount owed and the oldest open bill. `not_billed` means no bills.
+    - The fee, its filter and its count show only to callers with society-wide `billing.view`; for others they are null.
+  - **Web:**
+    - The members list gains a "Membership fee" column: Paid; "Not paid · ৳X", linking to the open bill; or "Not billed" with "Make bill".
+    - It also gets a fee filter and a "Fee not paid" count card.
+    - "Make bill" opens `/dashboard/billing/new?personId=` with the member already chosen (`InvoiceForm.initialMember`).
+  - **Tests:** a case in `memberships.e2e-spec.ts` covers not billed, the lookup by `personId`, unpaid with the amount and bill, paid, a void bill ignored, and both filters. `registers.policy.spec.ts` covers `feeOf`. `pnpm check` passes. Not opened in a browser.
+- **Open:**
+  - The society code is still `SECTOR57` (from the slug); set it in Settings.
+  - Adding a person with no unit and no membership is no longer offered on the web; `POST /persons` is still there.
+
 ## Later: beyond milestone 3
 
 These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.
