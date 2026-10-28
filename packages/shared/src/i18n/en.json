@@ -909,6 +909,10 @@
     "unit": "Unit",
     "childCount": "{count, plural, =0 {nothing inside} other {# inside}}",
     "unitCount": "{count, plural, =0 {no units} one {# unit} other {# units}}",
+    "cardCode": "Holding No. {code}",
+    "levelOwner": "{level} owner",
+    "ownerNone": "not recorded",
+    "ownerMore": "+{count} more",
     "seeUnits": "See its units",
     "name": "Name",
     "nameHint": "As people say it, e.g. রোড ৯ or Road 9.",
@@ -950,13 +954,15 @@
       "nameBn": "Name (Bangla)",
       "nameEn": "Name (English)",
       "holdsUnits": "Holds units",
+      "canOwn": "Can have owners",
       "inUse": "{count, plural, =0 {not used} other {# in use}}",
       "add": "Add a level",
       "moveUp": "Move up",
       "moveDown": "Move down",
       "remove": "Remove",
       "save": "Save levels",
-      "rule": "A level in use can be renamed but not removed or moved past another level in use. Skipping a level is fine: a plot can hold units directly."
+      "rule": "A level in use can be renamed but not removed or moved past another level in use. Skipping a level is fine: a plot can hold units directly.",
+      "canOwnHint": "Places at this level can have owners, like plots, buildings and flats. Sectors, blocks and roads usually can't; their cards show no owner."
     },
     "unitTypesPage": {
       "sub": "The kinds of units, such as residential, shop or office. They are listed everywhere in this order.",

@@ -9,8 +9,9 @@ import {
   type LocationPeople,
   type LocationView,
   type MeWithAccess,
+  type PartyName,
 } from "@s57/shared";
-import { Building2, Layers, MapPin, Shapes } from "lucide-react";
+import { Building2, Layers, MapPin, Shapes, UserRound } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Note } from "@/components/admin/form-status";
 import { Pager } from "@/components/cms/pager";
@@ -30,9 +31,28 @@ import { LocationEditor } from "./location-editor";
 /** The level picker and search: what is chosen, the chip counts, and the results (null on the tree). */
 export type Finder = { levelId: string | null; q: string | null; page: number; counts: LevelCounts; result: LocationSearch | null };
 
-/** One child in the grid: a link to its own page (units go to the units pages). Search results add the address. */
-async function ChildCard({ node, locale, unitsOpen, address }: { node: LocationNode; locale: Locale; unitsOpen: boolean; address?: string[] }) {
+/** Show at most this many owner names on a card; the rest become "+N more". */
+const CARD_OWNERS = 2;
+
+/**
+ * One child in the grid: a link to its own page (units go to the units pages). Search results
+ * add the address and the owners (null: the caller may not view them, so the line is left out).
+ */
+async function ChildCard({
+  node,
+  locale,
+  unitsOpen,
+  address,
+  owners,
+}: {
+  node: LocationNode;
+  locale: Locale;
+  unitsOpen: boolean;
+  address?: string[];
+  owners?: PartyName[] | null;
+}) {
   const t = await getTranslations("Property");
+  const ownerNames = (owners ?? []).slice(0, CARD_OWNERS).map((owner) => (locale === "en" ? (owner.nameEn ?? owner.name) : owner.name));
   const href = node.isUnit ? (unitsOpen ? `/dashboard/units/${node.id}` : null) : `/dashboard/property/${node.id}`;
   const body = (
     <>
@@ -45,7 +65,25 @@ async function ChildCard({ node, locale, unitsOpen, address }: { node: LocationN
         {!node.isActive ? <Chip tone="warn">{t("inactive")}</Chip> : null}
       </div>
       {address?.length ? <p className="text-[12.5px] break-words text-muted-foreground">{address.join(" › ")}</p> : null}
-      {node.code ? <p className="num text-[12.5px] text-muted-foreground">{node.code}</p> : null}
+      {owners ? (
+        <p className="flex items-start gap-1.5 text-[13px]">
+          <UserRound className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+          <span className="min-w-0 break-words">
+            <span className="text-muted-foreground">{t("levelOwner", { level: levelName(node, locale) })}: </span>
+            {owners.length === 0 ? (
+              <span className="text-muted-foreground">{t("ownerNone")}</span>
+            ) : (
+              <>
+                <span className="font-medium">{ownerNames.join(", ")}</span>
+                {owners.length > CARD_OWNERS ? (
+                  <span className="text-muted-foreground"> {localDigits(t("ownerMore", { count: owners.length - CARD_OWNERS }), locale)}</span>
+                ) : null}
+              </>
+            )}
+          </span>
+        </p>
+      ) : null}
+      {node.code ? <p className="num text-[12.5px] text-muted-foreground">{t("cardCode", { code: node.code })}</p> : null}
       {!node.isUnit ? (
         <p className="text-[12.5px] text-muted-foreground">
           {localDigits(t("childCount", { count: node.childCount }), locale)} · {localDigits(t("unitCount", { count: node.unitCount }), locale)}
@@ -158,7 +196,7 @@ export async function LocationPage({
                 <ul className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-2.5">
                   {result.items.map((hit) => (
                     <li key={hit.id} className="grid">
-                      <ChildCard node={hit} locale={locale} unitsOpen={unitsOpen} address={hit.address} />
+                      <ChildCard node={hit} locale={locale} unitsOpen={unitsOpen} address={hit.address} owners={hit.owners} />
                     </li>
                   ))}
                 </ul>

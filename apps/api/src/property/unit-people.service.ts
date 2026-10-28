@@ -35,6 +35,25 @@ const escapeLike = (value: string) => value.replace(/[\\%_]/g, (char) => `\\${ch
 export class UnitPeopleService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Current owners of each place, largest share first; null where the caller may not view ownerships. */
+  async ownersOf(actor: Actor, places: { id: string; path: string }[]): Promise<Map<string, PartyName[] | null>> {
+    const owning = places.filter((place) => actor.access.can('view', 'ownerships', { path: place.path }));
+    const rows = owning.length
+      ? await this.prisma.ownerships.findMany({
+          where: { society_id: actor.societyId, location_id: { in: owning.map((place) => place.id) }, end_date: null },
+          select: { location_id: true, ...partySelect },
+          orderBy: [{ share_percent: 'desc' }, { start_date: 'asc' }, { id: 'asc' }],
+        })
+      : [];
+    const owners = new Map<string, PartyName[] | null>(places.map((place) => [place.id, null]));
+    for (const place of owning) owners.set(place.id, []);
+    for (const row of rows) {
+      const name = nameOf(row);
+      if (name) owners.get(row.location_id)!.push(name);
+    }
+    return owners;
+  }
+
   /** Owners and renters of a page of units, by unit id. */
   async forUnits(actor: Actor, units: { id: string; path: string }[]): Promise<Map<string, UnitPeople>> {
     const owning = units.filter((unit) => actor.access.can('view', 'ownerships', { path: unit.path }));

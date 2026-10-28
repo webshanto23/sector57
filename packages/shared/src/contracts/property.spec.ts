@@ -64,7 +64,7 @@ describe('property schemas', () => {
   });
 
   it('needs two levels with different names', () => {
-    const level = (nameBn: string) => ({ id: null, nameBn, nameEn: null });
+    const level = (nameBn: string) => ({ id: null, nameBn, nameEn: null, canOwn: false });
     expect(levelsInputSchema.safeParse({ levels: [level('ব্লক')] }).success).toBe(false);
     expect(levelsInputSchema.safeParse({ levels: [level('ব্লক'), level('ব্লক')] }).success).toBe(false);
     expect(levelsInputSchema.safeParse({ levels: [level('ব্লক'), level('ইউনিট')] }).success).toBe(true);

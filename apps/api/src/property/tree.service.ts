@@ -26,6 +26,7 @@ type NodeRow = {
   name_bn: string;
   name_en: string | null;
   is_unit_level: boolean;
+  can_own: boolean;
   is_active: boolean;
   child_count: number;
   unit_count: number;
@@ -97,7 +98,7 @@ export class TreeService {
   /** Nodes with their counts, in natural name order (the column's collation). */
   async nodes(societyId: string, where: Prisma.Sql): Promise<LocationNode[]> {
     const rows = await this.prisma.$queryRaw<NodeRow[]>`
-      select l.id, l.parent_id, l.name, l.code, l.level_id, lv.depth, lv.name_bn, lv.name_en, lv.is_unit_level, l.is_active,
+      select l.id, l.parent_id, l.name, l.code, l.level_id, lv.depth, lv.name_bn, lv.name_en, lv.is_unit_level, lv.can_own, l.is_active,
         (select count(*) from locations c where c.parent_id = l.id)::int as child_count,
         (select count(*) from units u join locations d on d.id = u.location_id
           where d.society_id = l.society_id and d.id <> l.id and starts_with(d.path, l.path))::int as unit_count
@@ -115,6 +116,7 @@ export class TreeService {
       levelBn: row.name_bn,
       levelEn: row.name_en,
       isUnit: row.is_unit_level,
+      canOwn: row.can_own,
       isActive: row.is_active,
       childCount: row.child_count,
       unitCount: row.unit_count,

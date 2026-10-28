@@ -4218,6 +4218,7 @@ export interface components {
                 nameBn: string;
                 nameEn: string | null;
                 isUnitLevel: boolean;
+                canOwn: boolean;
                 locationCount: number;
             }[];
         };
@@ -4226,6 +4227,7 @@ export interface components {
                 id: string | null;
                 nameBn: string;
                 nameEn?: string | null;
+                canOwn: boolean;
             }[];
         };
         LocationViewDto_Output: {
@@ -4241,6 +4243,7 @@ export interface components {
                 levelBn: string;
                 levelEn: string | null;
                 isUnit: boolean;
+                canOwn: boolean;
                 isActive: boolean;
                 childCount: number;
                 unitCount: number;
@@ -4265,6 +4268,7 @@ export interface components {
                 levelBn: string;
                 levelEn: string | null;
                 isUnit: boolean;
+                canOwn: boolean;
                 isActive: boolean;
                 childCount: number;
                 unitCount: number;
@@ -4289,10 +4293,15 @@ export interface components {
                 levelBn: string;
                 levelEn: string | null;
                 isUnit: boolean;
+                canOwn: boolean;
                 isActive: boolean;
                 childCount: number;
                 unitCount: number;
                 address: string[];
+                owners: {
+                    name: string;
+                    nameEn: string | null;
+                }[] | null;
             }[];
             total: number;
             page: number;

@@ -508,6 +508,7 @@ model location_levels {
   name_bn       String
   name_en       String?
   is_unit_level Boolean     @default(false)
+  can_own       Boolean     @default(false)
   societies     societies   @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   locations     locations[]
 

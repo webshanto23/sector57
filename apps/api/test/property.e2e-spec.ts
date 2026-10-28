@@ -421,19 +421,19 @@ describe('Property: location tree and units (e2e)', () => {
       actor = { societyId: levelSociety, userId: admin.id, access: new CallerAccess([]), ip: null };
     });
 
-    const save = (levels: { id: string | null; nameBn: string; nameEn?: string | null }[]) =>
-      app.get(LevelsService).replace(actor, { levels: levels.map((l) => ({ nameEn: null, ...l })) });
+    const save = (levels: { id: string | null; nameBn: string; nameEn?: string | null; canOwn?: boolean }[]) =>
+      app.get(LevelsService).replace(actor, { levels: levels.map((l) => ({ nameEn: null, canOwn: false, ...l })) });
 
     it('renames, adds and removes unused levels', async () => {
       const saved = await save([
         { id: ids[0]!, nameBn: 'ব্লক', nameEn: 'Block' },
-        { id: null, nameBn: 'প্লট' },
-        { id: ids[2]!, nameBn: 'ফ্ল্যাট' },
+        { id: null, nameBn: 'প্লট', canOwn: true },
+        { id: ids[2]!, nameBn: 'ফ্ল্যাট', canOwn: true },
       ]);
-      expect(saved.map((l) => [l.nameBn, l.depth, l.isUnitLevel])).toEqual([
-        ['ব্লক', 1, false],
-        ['প্লট', 2, false],
-        ['ফ্ল্যাট', 3, true],
+      expect(saved.map((l) => [l.nameBn, l.depth, l.isUnitLevel, l.canOwn])).toEqual([
+        ['ব্লক', 1, false, false],
+        ['প্লট', 2, false, true],
+        ['ফ্ল্যাট', 3, true, true],
       ]);
       expect(await prisma.location_levels.count({ where: { id: ids[1]! } })).toBe(0);
 
@@ -566,6 +566,41 @@ describe('Property: location tree and units (e2e)', () => {
       expect(found.items.some((item) => item.id === tree.sector.id)).toBe(false);
       const flats = await search(`under=${tree.sector.id}&q=${encodeURIComponent('ফ্ল্যাট')}`);
       expect(flats.items).toEqual([]);
+    });
+
+    it("lists each place's current owners, only on levels that have owners and for callers who may view them", async () => {
+      const plot = await addLocation('road9', 4, `প্লট মালিক ${MARK}`);
+      const levelRows = await prisma.location_levels.findMany({ where: { id: { in: [level(3), level(4)] } }, select: { id: true, can_own: true } });
+      await prisma.location_levels.update({ where: { id: level(3) }, data: { can_own: false } });
+      await prisma.location_levels.update({ where: { id: level(4) }, data: { can_own: true } });
+      const big = await prisma.persons.create({ data: { society_id: societyId, full_name: `রহিম ${MARK}`, full_name_en: 'Rahim' } });
+      const small = await prisma.persons.create({ data: { society_id: societyId, full_name: `করিম ${MARK}` } });
+      const gone = await prisma.persons.create({ data: { society_id: societyId, full_name: `আগের মালিক ${MARK}` } });
+      const start = new Date('2026-01-01');
+      await prisma.ownerships.createMany({
+        data: [
+          { society_id: societyId, location_id: plot.id, person_id: small.id, share_percent: 40, start_date: start },
+          { society_id: societyId, location_id: plot.id, person_id: big.id, share_percent: 60, start_date: start },
+          { society_id: societyId, location_id: plot.id, person_id: gone.id, start_date: new Date('2020-01-01'), end_date: start },
+          { society_id: societyId, location_id: tree.road9.id, person_id: big.id, start_date: start },
+        ],
+      });
+      try {
+        const query = `under=${tree.road9.id}&levelId=${level(4)}&q=${encodeURIComponent('মালিক')}`;
+        const hit = (await search(query)).items.find((item) => item.id === plot.id)!;
+        expect(hit.owners).toEqual([
+          { name: `রহিম ${MARK}`, nameEn: 'Rahim' },
+          { name: `করিম ${MARK}`, nameEn: null },
+        ]);
+        const mapOnly = await makeUser([{ roleId: await makeRole(['locations:view']) }]);
+        expect((await search(query, mapOnly.cookie)).items.find((item) => item.id === plot.id)!.owners).toBeNull();
+        // A road never shows owners, even with one recorded.
+        const road = (await search(`under=${tree.blockC.id}&levelId=${level(3)}`)).items.find((item) => item.id === tree.road9.id)!;
+        expect(road).toMatchObject({ canOwn: false, owners: null });
+      } finally {
+        await prisma.ownerships.deleteMany({ where: { location_id: { in: [plot.id, tree.road9.id] } } });
+        for (const row of levelRows) await prisma.location_levels.update({ where: { id: row.id }, data: { can_own: row.can_own } });
+      }
     });
 
     it('counts places per level below a place', async () => {

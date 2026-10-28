@@ -50,6 +50,8 @@ export const locationLevelSchema = z.object({
   nameBn: z.string(),
   nameEn: z.string().nullable(),
   isUnitLevel: z.boolean(),
+  /** Places at this level can have owners (plots, buildings, units; not sectors, blocks or roads). */
+  canOwn: z.boolean(),
   locationCount: z.number().int().min(0),
 });
 export type LocationLevel = z.infer<typeof locationLevelSchema>;
@@ -61,7 +63,7 @@ export type LocationLevel = z.infer<typeof locationLevelSchema>;
  */
 export const levelsInputSchema = z.object({
   levels: z
-    .array(z.object({ id: z.uuid().nullable(), nameBn: text(50), nameEn: optionalText(50) }))
+    .array(z.object({ id: z.uuid().nullable(), nameBn: text(50), nameEn: optionalText(50), canOwn: z.boolean() }))
     .min(2)
     .max(MAX_LEVELS)
     .superRefine((levels, ctx) => {
@@ -124,6 +126,8 @@ export const locationNodeSchema = z.object({
   levelEn: z.string().nullable(),
   /** A unit (flat, shop, office): managed on the units pages. */
   isUnit: z.boolean(),
+  /** Its level can have owners. */
+  canOwn: z.boolean(),
   isActive: z.boolean(),
   /** Direct children. */
   childCount: z.number().int().min(0),
@@ -176,8 +180,16 @@ export const locationSearchQuery = z.object({
 });
 export type LocationSearchQuery = z.infer<typeof locationSearchQuery>;
 
-/** A search result: the map's card plus the names above it, top first (a single root left out). */
-export const locationHitSchema = locationNodeSchema.extend({ address: z.array(z.string()) });
+/** A name as typed, with the optional English form (people only; organisations have one name). */
+export const partyNameSchema = z.object({ name: z.string(), nameEn: z.string().nullable() });
+export type PartyName = z.infer<typeof partyNameSchema>;
+
+/**
+ * A search result: the map's card plus the names above it, top first (a single root left out),
+ * and its current owners, largest share first (null where its level has no owners or the
+ * caller may not view ownerships).
+ */
+export const locationHitSchema = locationNodeSchema.extend({ address: z.array(z.string()), owners: z.array(partyNameSchema).nullable() });
 export type LocationHit = z.infer<typeof locationHitSchema>;
 
 export const locationSearchSchema = z.object({
@@ -405,10 +417,6 @@ export const unitCountsSchema = z.object({
   vacant: z.number().int().min(0),
 });
 export type UnitCounts = z.infer<typeof unitCountsSchema>;
-
-/** A name as typed, with the optional English form (people only; organisations have one name). */
-export const partyNameSchema = z.object({ name: z.string(), nameEn: z.string().nullable() });
-export type PartyName = z.infer<typeof partyNameSchema>;
 
 /** The current owners at one location in a unit's chain: the unit itself, or a building, plot ... above it. */
 export const unitOwnerLevelSchema = z.object({
