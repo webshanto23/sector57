@@ -209,8 +209,8 @@ export class InvoicesService {
 
   /** Units and members to bill, for the new-bill form. */
   async lookup(actor: Actor, query: BillingLookupQuery): Promise<BillingLookup> {
-    const { q, unitId } = query;
-    if (!q && !unitId) return { units: [], members: [] };
+    const { q, unitId, personId } = query;
+    if (!q && !unitId && !personId) return { units: [], members: [] };
     const scope = actor.access.paths('create', 'billing');
     const and: Prisma.unitsWhereInput[] = [{ society_id: actor.societyId }];
     if (scope !== 'all') and.push({ OR: scope.map((prefix) => ({ locations: { path: { startsWith: prefix } } })) });
@@ -223,7 +223,8 @@ export class InvoicesService {
         ]),
       });
     }
-    const units = await this.prisma.units.findMany({
+    // `personId` alone looks up one member and no units.
+    const units = !q && !unitId ? [] : await this.prisma.units.findMany({
       where: { AND: and },
       select: { location_id: true, locations: { select: { name: true, code: true, path: true, is_active: true } } },
       orderBy: [{ locations: { name: 'asc' } }, { location_id: 'asc' }],
@@ -242,19 +243,24 @@ export class InvoicesService {
     const withOpening = new Set(openings.map((row) => row.unit_id));
 
     const members =
-      q && scope === 'all'
+      (q || personId) && scope === 'all'
         ? await this.prisma.memberships.findMany({
             where: {
               society_id: actor.societyId,
               status: 'active',
-              OR: [
-                ...digitVariants(q).flatMap((term) => [
-                  { persons: { full_name: { contains: term, mode: 'insensitive' as const } } },
-                  { persons: { full_name_en: { contains: term, mode: 'insensitive' as const } } },
-                ]),
-                { persons: { phone: { contains: asciiDigits(q) } } },
-                ...(/^\d{1,9}$/.test(asciiDigits(q)) ? [{ member_no: Number(asciiDigits(q)) }] : []),
-              ],
+              ...(personId ? { person_id: personId } : {}),
+              ...(q
+                ? {
+                    OR: [
+                      ...digitVariants(q).flatMap((term) => [
+                        { persons: { full_name: { contains: term, mode: 'insensitive' as const } } },
+                        { persons: { full_name_en: { contains: term, mode: 'insensitive' as const } } },
+                      ]),
+                      { persons: { phone: { contains: asciiDigits(q) } } },
+                      ...(/^\d{1,9}$/.test(asciiDigits(q)) ? [{ member_no: Number(asciiDigits(q)) }] : []),
+                    ],
+                  }
+                : {}),
             },
             select: { member_no: true, person_id: true },
             orderBy: { member_no: 'asc' },

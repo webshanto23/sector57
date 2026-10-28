@@ -19,8 +19,8 @@ export type BillTo = (typeof BILL_TO)[number];
 
 /**
  * `units.occupancy`, derived by the API (never typed in): `rented` while a tenancy is active or
- * moving out, else `owner_occupied` when the unit or a location above it has a current owner,
- * else `vacant`.
+ * moving out, else `owner_occupied` while a resident of the owner's household (no tenancy) lives
+ * there, else `vacant`, owned or not.
  */
 export const OCCUPANCIES = ['owner_occupied', 'rented', 'vacant'] as const;
 export type Occupancy = (typeof OCCUPANCIES)[number];
@@ -50,6 +50,8 @@ export const locationLevelSchema = z.object({
   nameBn: z.string(),
   nameEn: z.string().nullable(),
   isUnitLevel: z.boolean(),
+  /** Places at this level can have owners (plots, buildings, units; not sectors, blocks or roads). */
+  canOwn: z.boolean(),
   locationCount: z.number().int().min(0),
 });
 export type LocationLevel = z.infer<typeof locationLevelSchema>;
@@ -61,7 +63,7 @@ export type LocationLevel = z.infer<typeof locationLevelSchema>;
  */
 export const levelsInputSchema = z.object({
   levels: z
-    .array(z.object({ id: z.uuid().nullable(), nameBn: text(50), nameEn: optionalText(50) }))
+    .array(z.object({ id: z.uuid().nullable(), nameBn: text(50), nameEn: optionalText(50), canOwn: z.boolean() }))
     .min(2)
     .max(MAX_LEVELS)
     .superRefine((levels, ctx) => {
@@ -124,11 +126,15 @@ export const locationNodeSchema = z.object({
   levelEn: z.string().nullable(),
   /** A unit (flat, shop, office): managed on the units pages. */
   isUnit: z.boolean(),
+  /** Its level can have owners. */
+  canOwn: z.boolean(),
   isActive: z.boolean(),
   /** Direct children. */
   childCount: z.number().int().min(0),
   /** Units anywhere below. */
   unitCount: z.number().int().min(0),
+  /** A unit covering more storeys than its own (a duplex): the names of the others. Empty otherwise. */
+  alsoOn: z.array(z.string()),
 });
 export type LocationNode = z.infer<typeof locationNodeSchema>;
 
@@ -151,6 +157,8 @@ export const locationViewSchema = z.object({
   location: locationNodeSchema.nullable(),
   breadcrumb: z.array(crumbSchema),
   children: z.array(locationNodeSchema),
+  /** Units that live on a neighbouring storey and cover this one too, with the name of their own storey. */
+  alsoHere: z.array(locationNodeSchema.extend({ homeName: z.string() })),
   can: z.object({
     /** Add locations here (under this one, or at the top). */
     create: z.boolean(),
@@ -176,8 +184,16 @@ export const locationSearchQuery = z.object({
 });
 export type LocationSearchQuery = z.infer<typeof locationSearchQuery>;
 
-/** A search result: the map's card plus the names above it, top first (a single root left out). */
-export const locationHitSchema = locationNodeSchema.extend({ address: z.array(z.string()) });
+/** A name as typed, with the optional English form (people only; organisations have one name). */
+export const partyNameSchema = z.object({ name: z.string(), nameEn: z.string().nullable() });
+export type PartyName = z.infer<typeof partyNameSchema>;
+
+/**
+ * A search result: the map's card plus the names above it, top first (a single root left out),
+ * and its current owners, largest share first (null where its level has no owners or the
+ * caller may not view ownerships).
+ */
+export const locationHitSchema = locationNodeSchema.extend({ address: z.array(z.string()), owners: z.array(partyNameSchema).nullable() });
 export type LocationHit = z.infer<typeof locationHitSchema>;
 
 export const locationSearchSchema = z.object({
@@ -252,7 +268,8 @@ export const nameRangeSchema = z
   .refine((range) => expandCount(range) <= MAX_BULK_NAMES, { message: 'too_many', path: ['to'] });
 export type NameRange = z.infer<typeof nameRangeSchema>;
 
-const graphemes = (value: string) =>
+/** The letters typed for an "add many" or a building layout, one per grapheme (spaces and commas skipped). */
+export const graphemes = (value: string) =>
   [...new Intl.Segmenter(undefined, { granularity: 'grapheme' }).segment(value)]
     .map((part) => part.segment)
     .filter((part) => /\S/u.test(part) && part !== ',');
@@ -340,9 +357,34 @@ export const unitSummarySchema = z.object({
 });
 export type UnitSummary = z.infer<typeof unitSummarySchema>;
 
+/** A storey a unit covers, or could cover. */
+export const storeyRefSchema = z.object({ id: z.uuid(), name: z.string() });
+export type StoreyRef = z.infer<typeof storeyRefSchema>;
+
+/** Most storeys one unit can cover besides its own. */
+export const MAX_UNIT_STOREYS = 20;
+
+/**
+ * `PUT /units/:id/storeys`: the whole list of other storeys the unit covers. Each must sit
+ * beside the unit's own storey (same parent) and not be a unit. Empty: just its own storey.
+ */
+export const unitStoreysInputSchema = z.object({
+  storeyIds: z
+    .array(z.uuid())
+    .max(MAX_UNIT_STOREYS)
+    .refine((ids) => new Set(ids).size === ids.length, 'duplicate_storey'),
+});
+export type UnitStoreysInput = z.infer<typeof unitStoreysInputSchema>;
+
 /** `GET /units/:id`. */
 export const unitDetailSchema = unitSummarySchema.extend({
   breadcrumb: z.array(crumbSchema),
+  /** The other storeys it covers, besides its own. */
+  covers: z.array(storeyRefSchema),
+  /** Storeys it could cover (beside its own); empty when the caller may not edit it. */
+  coverOptions: z.array(storeyRefSchema),
+  /** Combined into another unit (Step 37): that unit and the date. Such a unit is history only. */
+  mergedInto: z.object({ id: z.uuid(), name: z.string(), on: z.iso.date() }).nullable(),
   can: z.object({ edit: z.boolean(), delete: z.boolean() }),
 });
 export type UnitDetail = z.infer<typeof unitDetailSchema>;
@@ -406,10 +448,6 @@ export const unitCountsSchema = z.object({
 });
 export type UnitCounts = z.infer<typeof unitCountsSchema>;
 
-/** A name as typed, with the optional English form (people only; organisations have one name). */
-export const partyNameSchema = z.object({ name: z.string(), nameEn: z.string().nullable() });
-export type PartyName = z.infer<typeof partyNameSchema>;
-
 /** The current owners at one location in a unit's chain: the unit itself, or a building, plot ... above it. */
 export const unitOwnerLevelSchema = z.object({
   locationId: z.uuid(),
@@ -429,6 +467,10 @@ export type UnitOwnerLevel = z.infer<typeof unitOwnerLevelSchema>;
 export const unitListItemSchema = unitSummarySchema.extend({
   owners: z.array(unitOwnerLevelSchema).nullable(),
   renters: z.array(partyNameSchema).nullable(),
+  /** Set when it was combined into another unit: shown as part of that one, not as an empty unit. */
+  mergedInto: z.object({ id: z.uuid(), name: z.string() }).nullable(),
+  /** Names of the units combined into this one. */
+  includes: z.array(z.string()),
 });
 export type UnitListItem = z.infer<typeof unitListItemSchema>;
 

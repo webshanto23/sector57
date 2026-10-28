@@ -1,4 +1,4 @@
-import { canAnywhere, type Locale } from "@s57/shared";
+import { formatDate, type Locale } from "@s57/shared";
 import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -7,10 +7,13 @@ import { Note } from "@/components/admin/form-status";
 import { BillsPanel } from "@/components/billing/bills-panel";
 import { CertificatesPanel } from "@/components/certificates/certificates-panel";
 import { DocumentsPanel } from "@/components/documents/documents-panel";
+import { DashboardBreadcrumb } from "@/components/dashboard/dashboard-breadcrumb";
+import { visibleNavKeys } from "@/components/dashboard/nav";
 import { PageHeader } from "@/components/kit";
 import { PeoplePanel } from "@/components/members/people-panel";
-import { OccupancyChip, PropertyBreadcrumb } from "@/components/property/labels";
+import { OccupancyChip, propertyTrail } from "@/components/property/labels";
 import { UnitForm } from "@/components/property/unit-form";
+import { UnitStoreysCard } from "@/components/property/unit-storeys-card";
 import { unitTypeName } from "@/components/property/unit-types";
 import { VehiclesPanel } from "@/components/vehicles/vehicles-panel";
 import { buttonVariants } from "@/components/ui/button";
@@ -37,7 +40,7 @@ export default async function UnitPage({ params }: PageProps<"/[locale]/dashboar
 
   return (
     <>
-      <PropertyBreadcrumb crumbs={unit.breadcrumb} current={unit.name} mapOpen={canAnywhere(me.access, "locations")} />
+      <DashboardBreadcrumb visible={visibleNavKeys(me.access)} tail={propertyTrail(unit.breadcrumb, unit.name)} />
       <PageHeader
         title={unit.name}
         sub={
@@ -54,8 +57,17 @@ export default async function UnitPage({ params }: PageProps<"/[locale]/dashboar
         }
       />
       <div className="grid gap-3.5">
-        {!unit.can.edit ? <Note>{t("readOnly")}</Note> : null}
+        {unit.mergedInto ? (
+          <Note>
+            <Link href={`/dashboard/units/${unit.mergedInto.id}`} className="font-semibold underline-offset-2 hover:underline">
+              {t("storeys.mergedInto", { name: unit.mergedInto.name, date: formatDate(unit.mergedInto.on, locale as Locale, "short") })}
+            </Link>
+          </Note>
+        ) : !unit.can.edit ? (
+          <Note>{t("readOnly")}</Note>
+        ) : null}
         <UnitForm key={unit.id} unit={unit} unitTypes={unitTypes} />
+        <UnitStoreysCard key={`storeys-${unit.id}`} unit={unit} />
         {people ? <PeoplePanel key={`people-${unit.id}`} people={people} /> : null}
         <BillsPanel access={me.access} locale={locale as Locale} unitId={unit.id} />
         <VehiclesPanel access={me.access} locale={locale as Locale} unitId={unit.id} />

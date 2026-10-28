@@ -3,8 +3,10 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { SettingsForm } from "@/components/finance/settings-form";
 import { PageHeader } from "@/components/kit";
+import { MembershipSettingsCard } from "@/components/members/membership-settings";
 import { redirect } from "@/i18n/navigation";
 import { getSettings } from "@/lib/api/finance";
+import { getMembershipSettings } from "@/lib/api/members";
 import { getMe } from "@/lib/api/session";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/dashboard/settings">): Promise<Metadata> {
@@ -13,7 +15,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/dashboar
   return { title: t("nav.settings") };
 }
 
-/** The president's switches, fiscal year and receipt header. Without `settings.view` the section opens on the next tab. */
+/** The president's switches, fiscal year, receipt header and membership IDs. Without `settings.view` the section opens on the next tab. */
 export default async function SettingsPage({ params }: PageProps<"/[locale]/dashboard/settings">) {
   const { locale: raw } = await params;
   const locale = raw as Locale;
@@ -25,12 +27,21 @@ export default async function SettingsPage({ params }: PageProps<"/[locale]/dash
     redirect({ href: canAnywhere(me.access, "ledger") ? "/dashboard/settings/funds" : "/dashboard/settings/charge-types", locale });
   }
 
-  const [t, tDash, settings] = await Promise.all([getTranslations("Finance.settings"), getTranslations("Dashboard"), getSettings()]);
+  const [t, tDash, settings, membership] = await Promise.all([
+    getTranslations("Finance.settings"),
+    getTranslations("Dashboard"),
+    getSettings(),
+    getMembershipSettings(),
+  ]);
+  const canEdit = canAnywhere(me.access, "settings", "edit");
 
   return (
     <>
       <PageHeader title={tDash("nav.settings")} sub={t("sub")} />
-      <SettingsForm settings={settings} canEdit={canAnywhere(me.access, "settings", "edit")} />
+      <div className="grid gap-3.5">
+        <SettingsForm settings={settings} canEdit={canEdit} />
+        <MembershipSettingsCard settings={membership} canEdit={canEdit} />
+      </div>
     </>
   );
 }

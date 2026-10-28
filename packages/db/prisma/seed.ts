@@ -32,14 +32,15 @@ const SOCIETY = {
   name_en: "Uttara Sector 15 Welfare Society",
 };
 
-const LEVELS: { depth: number; name_bn: string; name_en: string; is_unit_level?: boolean }[] = [
+// `can_own`: places at this level can have owners (plots, buildings and units; never sectors, blocks, roads or storeys).
+const LEVELS: { depth: number; name_bn: string; name_en: string; is_unit_level?: boolean; can_own?: boolean }[] = [
   { depth: 1, name_bn: "সেক্টর", name_en: "Sector" },
   { depth: 2, name_bn: "ব্লক", name_en: "Block" },
   { depth: 3, name_bn: "রোড", name_en: "Road" },
-  { depth: 4, name_bn: "প্লট", name_en: "Plot" },
-  { depth: 5, name_bn: "ভবন", name_en: "Building" },
+  { depth: 4, name_bn: "প্লট", name_en: "Plot", can_own: true },
+  { depth: 5, name_bn: "ভবন", name_en: "Building", can_own: true },
   { depth: 6, name_bn: "তলা", name_en: "Storey" },
-  { depth: 7, name_bn: "ইউনিট", name_en: "Unit", is_unit_level: true },
+  { depth: 7, name_bn: "ইউনিট", name_en: "Unit", is_unit_level: true, can_own: true },
 ];
 
 // Same for every society. Actions must match the check constraint on permissions.action.

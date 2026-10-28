@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '@s57/db';
 import {
   digitVariants,
@@ -16,6 +16,7 @@ import {
   type UnitDetail,
   type UnitList,
   type UnitListQuery,
+  type UnitStoreysInput,
   type UnitSummary,
   type UnitUpdateInput,
 } from '@s57/shared';
@@ -28,6 +29,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { definedOnly, inUse, takenError } from './locations.service.js';
 import { OccupancyService } from './occupancy.service.js';
 import { UnitPeopleService } from './unit-people.service.js';
+import { UnitStoreysService } from './unit-storeys.service.js';
 import { UnitTypesService } from './unit-types.service.js';
 import { addressOf, beyondPermissions, codeTaken, locationNotFound, nameTaken, TreeService } from './tree.service.js';
 
@@ -37,12 +39,16 @@ const select = {
   size_sqft: true,
   bill_to: true,
   occupancy: true,
+  merged_on: true,
+  merged: { select: { location_id: true, locations: { select: { name: true } } } },
   locations: { select: { name: true, code: true, path: true, parent_id: true, is_active: true } },
 } satisfies Prisma.unitsSelect;
 
 type UnitRow = Prisma.unitsGetPayload<{ select: typeof select }>;
 
 const unitNotFound = () => new NotFoundException({ code: 'unit_not_found', message: 'Unit not found' });
+/** A unit combined into another is history only. */
+const unitMerged = () => new ConflictException({ code: 'unit_merged', message: 'This unit was combined into another one' });
 
 /** What an audit row keeps of a unit. */
 const snapshot = (unit: Omit<UnitSummary, 'id' | 'parentId' | 'address' | 'occupancy'>) => ({
@@ -67,6 +73,7 @@ export class UnitsService {
     private readonly occupancy: OccupancyService,
     private readonly unitTypes: UnitTypesService,
     private readonly people: UnitPeopleService,
+    private readonly storeys: UnitStoreysService,
   ) {}
 
   async list(actor: Actor, query: UnitListQuery): Promise<UnitList> {
@@ -98,13 +105,14 @@ export class UnitsService {
     if (missing === 'size') and.push({ size_sqft: null });
     const chain = await this.people.conditions(actor, { missing, ownerLives });
     if (chain) and.push({ location_id: { in: chain } });
-    const where = { AND: occupancy ? [...and, { occupancy }] : and };
+    // A unit combined into another is part of that one: it is not counted, nor found as vacant.
+    const where = { AND: occupancy ? [...and, { occupancy, merged_into: null }] : and };
 
     const [total, rows, groups] = await this.prisma.$transaction([
       this.prisma.units.count({ where }),
       this.prisma.units.findMany({
         where,
-        select,
+        select: { ...select, merged_units: { select: { locations: { select: { name: true } } }, orderBy: { locations: { name: 'asc' } } } },
         // Grouped by what is above the unit (roughly building, plot, road), then natural name order.
         orderBy: [
           { locations: { locations: { locations: { name: 'asc' } } } },
@@ -115,7 +123,7 @@ export class UnitsService {
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),
-      this.prisma.units.groupBy({ by: ['occupancy'], where: { AND: and }, _count: { _all: true }, orderBy: { occupancy: 'asc' } }),
+      this.prisma.units.groupBy({ by: ['occupancy'], where: { AND: [...and, { merged_into: null }] }, _count: { _all: true }, orderBy: { occupancy: 'asc' } }),
     ]);
 
     const counts: UnitCounts = { total: 0, owner_occupied: 0, rented: 0, vacant: 0 };
@@ -128,7 +136,12 @@ export class UnitsService {
       this.tree.addressNames(actor.societyId, rows.map((row) => row.locations.path)),
       this.people.forUnits(actor, rows.map((row) => ({ id: row.location_id, path: row.locations.path }))),
     ]);
-    const items = rows.map((row) => ({ ...toSummary(row, names), ...(people.get(row.location_id) ?? { owners: null, renters: null }) }));
+    const items = rows.map((row) => ({
+      ...toSummary(row, names),
+      ...(people.get(row.location_id) ?? { owners: null, renters: null }),
+      mergedInto: row.merged ? { id: row.merged.location_id, name: row.merged.locations.name } : null,
+      includes: row.merged_units.map((part) => part.locations.name),
+    }));
     return { items, total, page, pageSize, counts };
   }
 
@@ -151,15 +164,29 @@ export class UnitsService {
   async get(actor: Actor, id: string): Promise<UnitDetail> {
     const row = await this.visibleRow(actor, id);
     const located = { path: row.locations.path };
-    const [names, breadcrumb] = await Promise.all([
+    const edit = actor.access.can('edit', 'units', located) && row.merged === null;
+    const [names, breadcrumb, covers, options] = await Promise.all([
       this.tree.addressNames(actor.societyId, [row.locations.path]),
       this.tree.breadcrumb(actor.access, actor.societyId, row.locations.path, 'locations'),
+      this.storeys.covers(actor.societyId, id),
+      edit ? this.storeys.options(actor.societyId, row.locations.parent_id!) : Promise.resolve([]),
     ]);
     return {
       ...toSummary(row, names),
       breadcrumb,
-      can: { edit: actor.access.can('edit', 'units', located), delete: actor.access.can('delete', 'units', located) },
+      covers,
+      coverOptions: options.filter((option) => actor.access.can('view', 'units', { path: option.path })).map(({ id, name }) => ({ id, name })),
+      mergedInto: row.merged ? { id: row.merged.location_id, name: row.merged.locations.name, on: row.merged_on!.toISOString().slice(0, 10) } : null,
+      can: { edit, delete: actor.access.can('delete', 'units', located) && row.merged === null },
     };
+  }
+
+  /** Sets the other storeys a unit covers (`UnitStoreysService`). */
+  async setStoreys(actor: Actor, id: string, input: UnitStoreysInput): Promise<UnitDetail> {
+    const row = await this.visibleRow(actor, id);
+    if (row.merged) throw unitMerged();
+    await this.storeys.replace(actor, { id, parentId: row.locations.parent_id!, path: row.locations.path }, input);
+    return this.get(actor, id);
   }
 
   async create(actor: Actor, input: UnitCreateInput): Promise<UnitDetail> {
@@ -237,6 +264,7 @@ export class UnitsService {
   async update(actor: Actor, id: string, input: UnitUpdateInput): Promise<UnitDetail> {
     const row = await this.visibleRow(actor, id);
     if (!actor.access.can('edit', 'units', { path: row.locations.path })) throw beyondPermissions();
+    if (row.merged) throw unitMerged();
     if (input.code !== undefined && (await this.tree.codeInUse(actor.societyId, input.code, id))) throw codeTaken();
     if (input.unitType !== undefined) await this.unitTypes.assertCodes(actor.societyId, [input.unitType]);
 
@@ -258,6 +286,7 @@ export class UnitsService {
   async remove(actor: Actor, id: string): Promise<void> {
     const row = await this.visibleRow(actor, id);
     if (!actor.access.can('delete', 'units', { path: row.locations.path })) throw beyondPermissions();
+    if (row.merged) throw unitMerged();
     const before = toSummary(row, new Map());
     try {
       await this.prisma.$transaction(async (tx) => {

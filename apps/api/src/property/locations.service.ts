@@ -13,6 +13,7 @@ import { isForeignKeyViolation, isUniqueViolation } from '../common/prisma-error
 import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { beyondPermissions, codeTaken, locationNotFound, nameTaken, TreeService, type LocationRow } from './tree.service.js';
+import { UnitStoreysService } from './unit-storeys.service.js';
 
 const invalidLevel = () =>
   new BadRequestException({ code: 'invalid_level', message: 'This level cannot be used here' });
@@ -30,6 +31,7 @@ export class LocationsService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly tree: TreeService,
+    private readonly storeys: UnitStoreysService,
   ) {}
 
   /** The top: every top-level location for a whole-society caller, else the caller's own areas. */
@@ -38,6 +40,7 @@ export class LocationsService {
     return {
       location: null,
       breadcrumb: [],
+      alsoHere: [],
       children,
       can: { create: actor.access.paths('create', 'locations') === 'all', createUnit: false, edit: false, delete: false },
     };
@@ -46,15 +49,17 @@ export class LocationsService {
   async view(actor: Actor, id: string): Promise<LocationView> {
     const row = await this.visible(actor, id);
     const located = { path: row.path };
-    const [location, breadcrumb, children] = await Promise.all([
+    const [location, breadcrumb, children, alsoHere] = await Promise.all([
       this.tree.node(actor.societyId, id),
       this.tree.breadcrumb(actor.access, actor.societyId, row.path, 'locations'),
       this.tree.children(actor.societyId, id),
+      this.storeys.alsoHere(actor.societyId, id, (path) => actor.access.can('view', 'locations', { path })),
     ]);
     return {
       location,
       breadcrumb,
       children,
+      alsoHere,
       can: {
         create: actor.access.can('create', 'locations', located),
         createUnit: actor.access.can('create', 'units', located),

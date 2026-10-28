@@ -38,6 +38,7 @@ export default async function LevelsPage({ params }: PageProps<"/[locale]/dashbo
       />
       <div className="grid max-w-[900px] gap-3.5">
         <Note>{t("levelsPage.rule")}</Note>
+        <Note>{t("levelsPage.canOwnHint")}</Note>
         <LevelsEditor levels={levels} />
       </div>
     </>

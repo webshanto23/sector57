@@ -4,6 +4,7 @@ import { digitVariants, LOCATION_SEARCH_PAGE_SIZE, type LevelCounts, type Locati
 import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { addressOf, scopeSql, TreeService } from './tree.service.js';
+import { UnitPeopleService } from './unit-people.service.js';
 
 const escapeLike = (value: string) => value.replace(/[\\%_]/g, (char) => `\\${char}`);
 
@@ -16,6 +17,7 @@ export class LocationSearchService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tree: TreeService,
+    private readonly people: UnitPeopleService,
   ) {}
 
   async search(actor: Actor, query: LocationSearchQuery): Promise<LocationSearch> {
@@ -50,7 +52,12 @@ export class LocationSearchService {
       ),
     ]);
     const paths = new Map(rows.map((row) => [row.id, row.path]));
-    const items = nodes.map((node) => ({ ...node, address: addressOf(paths.get(node.id)!, names) }));
+    // Owners only where the level can have them: never "Road owner".
+    const owners = await this.people.ownersOf(
+      actor,
+      nodes.filter((node) => node.canOwn).map((node) => ({ id: node.id, path: paths.get(node.id)! })),
+    );
+    const items = nodes.map((node) => ({ ...node, address: addressOf(paths.get(node.id)!, names), owners: owners.get(node.id) ?? null }));
     return { items, total: counted[0]?.total ?? 0, page: query.page, pageSize };
   }
 

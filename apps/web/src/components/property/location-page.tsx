@@ -9,28 +9,69 @@ import {
   type LocationPeople,
   type LocationView,
   type MeWithAccess,
+  type PartyName,
 } from "@s57/shared";
-import { Building2, Layers, MapPin, Shapes } from "lucide-react";
+import { Building2, Layers, MapPin, Shapes, UserRound } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Note } from "@/components/admin/form-status";
 import { Pager } from "@/components/cms/pager";
+import { DashboardBreadcrumb } from "@/components/dashboard/dashboard-breadcrumb";
+import { visibleNavKeys } from "@/components/dashboard/nav";
 import { Card, Chip, IconBox, PageHeader } from "@/components/kit";
 import { DocumentsPanel } from "@/components/documents/documents-panel";
 import { PeoplePanel } from "@/components/members/people-panel";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { getUnitTypes } from "@/lib/api/property";
+import { getBuildingGrid, getUnitTypes } from "@/lib/api/property";
 import { AddPanel } from "./add-panel";
-import { levelName, PropertyBreadcrumb } from "./labels";
+import { BuildingGrid } from "./building-grid";
+import { levelName, propertyTrail } from "./labels";
+import { LayoutForm } from "./layout-form";
 import { LevelBar } from "./level-bar";
 import { LocationEditor } from "./location-editor";
 
 /** The level picker and search: what is chosen, the chip counts, and the results (null on the tree). */
 export type Finder = { levelId: string | null; q: string | null; page: number; counts: LevelCounts; result: LocationSearch | null };
 
-/** One child in the grid: a link to its own page (units go to the units pages). Search results add the address. */
-async function ChildCard({ node, locale, unitsOpen, address }: { node: LocationNode; locale: Locale; unitsOpen: boolean; address?: string[] }) {
+/**
+ * "Set up floors and units" fits an empty place whose next level is the one right above
+ * the units (a building over storeys), for callers who may add both. The API checks again.
+ */
+function canSetUp(location: LocationNode, levels: LocationLevel[], childCount: number, can: LocationView["can"]): boolean {
+  return holdsFloors(location, levels) && childCount === 0 && can.create && can.createUnit;
+}
+
+/** A building over floors: the level right below it is the one right above the units. */
+function holdsFloors(location: LocationNode, levels: LocationLevel[]): boolean {
+  const below = levels.filter((level) => level.depth > location.depth).sort((a, b) => a.depth - b.depth);
+  return !location.isUnit && below[0]?.isUnitLevel === false && below[1]?.isUnitLevel === true;
+}
+
+/** Show at most this many owner names on a card; the rest become "+N more". */
+const CARD_OWNERS = 2;
+
+/**
+ * One child in the grid: a link to its own page (units go to the units pages). Search results
+ * add the address and the owners (null: the caller may not view them, so the line is left out).
+ */
+async function ChildCard({
+  node,
+  locale,
+  unitsOpen,
+  address,
+  owners,
+  home,
+}: {
+  node: LocationNode;
+  locale: Locale;
+  unitsOpen: boolean;
+  address?: string[];
+  owners?: PartyName[] | null;
+  /** For a unit shown on a storey it only covers: the name of its own storey. */
+  home?: string;
+}) {
   const t = await getTranslations("Property");
+  const ownerNames = (owners ?? []).slice(0, CARD_OWNERS).map((owner) => (locale === "en" ? (owner.nameEn ?? owner.name) : owner.name));
   const href = node.isUnit ? (unitsOpen ? `/dashboard/units/${node.id}` : null) : `/dashboard/property/${node.id}`;
   const body = (
     <>
@@ -40,10 +81,30 @@ async function ChildCard({ node, locale, unitsOpen, address }: { node: LocationN
       </div>
       <div className="flex flex-wrap gap-1.5">
         <Chip plain>{levelName(node, locale)}</Chip>
+        {home ? <Chip tone="info">{t("storeys.home", { name: home })}</Chip> : null}
+        {!home && node.alsoOn.length > 0 ? <Chip tone="info">{t("storeys.alsoOn", { names: node.alsoOn.join(", ") })}</Chip> : null}
         {!node.isActive ? <Chip tone="warn">{t("inactive")}</Chip> : null}
       </div>
       {address?.length ? <p className="text-[12.5px] break-words text-muted-foreground">{address.join(" › ")}</p> : null}
-      {node.code ? <p className="num text-[12.5px] text-muted-foreground">{node.code}</p> : null}
+      {owners ? (
+        <p className="flex items-start gap-1.5 text-[13px]">
+          <UserRound className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+          <span className="min-w-0 break-words">
+            <span className="text-muted-foreground">{t("levelOwner", { level: levelName(node, locale) })}: </span>
+            {owners.length === 0 ? (
+              <span className="text-muted-foreground">{t("ownerNone")}</span>
+            ) : (
+              <>
+                <span className="font-medium">{ownerNames.join(", ")}</span>
+                {owners.length > CARD_OWNERS ? (
+                  <span className="text-muted-foreground"> {localDigits(t("ownerMore", { count: owners.length - CARD_OWNERS }), locale)}</span>
+                ) : null}
+              </>
+            )}
+          </span>
+        </p>
+      ) : null}
+      {node.code ? <p className="num text-[12.5px] text-muted-foreground">{t("cardCode", { code: node.code })}</p> : null}
       {!node.isUnit ? (
         <p className="text-[12.5px] text-muted-foreground">
           {localDigits(t("childCount", { count: node.childCount }), locale)} · {localDigits(t("unitCount", { count: node.unitCount }), locale)}
@@ -80,11 +141,13 @@ export async function LocationPage({
   me: MeWithAccess;
   locale: Locale;
 }) {
-  const { location, children, can } = view;
-  const [t, tNav, unitTypes] = await Promise.all([
+  const { location, children, alsoHere, can } = view;
+  const withGrid = location !== null && holdsFloors(location, levels) && children.some((child) => !child.isUnit);
+  const [t, tNav, unitTypes, grid] = await Promise.all([
     getTranslations("Property"),
     getTranslations("Dashboard.nav"),
-    can.createUnit ? getUnitTypes() : Promise.resolve([]),
+    can.createUnit || withGrid ? getUnitTypes() : Promise.resolve([]),
+    withGrid ? getBuildingGrid(location.id) : Promise.resolve(null),
   ]);
   const unitsOpen = canAnywhere(me.access, "units");
   const canEditLevels = canAnywhere(me.access, "settings", "edit");
@@ -93,7 +156,7 @@ export async function LocationPage({
 
   return (
     <>
-      {location ? <PropertyBreadcrumb crumbs={view.breadcrumb} current={location.name} /> : null}
+      {location ? <DashboardBreadcrumb visible={visibleNavKeys(me.access)} tail={propertyTrail(view.breadcrumb, location.name)} /> : null}
       <PageHeader
         title={location ? location.name : tNav("property")}
         sub={location ? [levelName(location, locale), location.code].filter(Boolean).join(" · ") : t("sub")}
@@ -133,6 +196,7 @@ export async function LocationPage({
         {people ? <PeoplePanel key={`people-${people.location.id}`} people={people} /> : null}
         {view.location ? <DocumentsPanel access={me.access} entityType="location" entityId={view.location.id} /> : null}
 
+        {grid ? <BuildingGrid grid={grid} unitTypes={unitTypes} unitsOpen={unitsOpen} /> : null}
         <section className="grid gap-3" aria-labelledby="children-title">
           <LevelBar
             locale={locale}
@@ -156,7 +220,7 @@ export async function LocationPage({
                 <ul className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-2.5">
                   {result.items.map((hit) => (
                     <li key={hit.id} className="grid">
-                      <ChildCard node={hit} locale={locale} unitsOpen={unitsOpen} address={hit.address} />
+                      <ChildCard node={hit} locale={locale} unitsOpen={unitsOpen} address={hit.address} owners={hit.owners} />
                     </li>
                   ))}
                 </ul>
@@ -177,6 +241,7 @@ export async function LocationPage({
             )
           ) : (
             <>
+              {location && canSetUp(location, levels, children.length, can) ? <LayoutForm locationId={location.id} unitTypes={unitTypes} /> : null}
               <AddPanel
                 key={location?.id ?? "top"}
                 parentId={location?.id ?? null}
@@ -200,6 +265,18 @@ export async function LocationPage({
                   ))}
                 </ul>
               )}
+              {alsoHere.length > 0 ? (
+                <>
+                  <h3 className="text-[14px] font-semibold">{t("storeys.alsoHere")}</h3>
+                  <ul className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-2.5">
+                    {alsoHere.map((unit) => (
+                      <li key={unit.id} className="grid">
+                        <ChildCard node={unit} locale={locale} unitsOpen={unitsOpen} home={unit.homeName} />
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : null}
             </>
           )}
         </section>

@@ -10,10 +10,10 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api/client";
 import { useSubmit } from "./use-submit";
 
-type Row = { key: string; id: string | null; nameBn: string; nameEn: string; locationCount: number };
+type Row = { key: string; id: string | null; nameBn: string; nameEn: string; canOwn: boolean; locationCount: number };
 
 const toRows = (levels: LocationLevel[]): Row[] =>
-  levels.map((level) => ({ key: level.id, id: level.id, nameBn: level.nameBn, nameEn: level.nameEn ?? "", locationCount: level.locationCount }));
+  levels.map((level) => ({ key: level.id, id: level.id, nameBn: level.nameBn, nameEn: level.nameEn ?? "", canOwn: level.canOwn, locationCount: level.locationCount }));
 
 /**
  * The levels of the map, top first. The last row always holds the units. The API
@@ -34,7 +34,7 @@ export function LevelsEditor({ levels }: { levels: LocationLevel[] }) {
 
   async function save() {
     const saved = await run(() =>
-      api.PUT("/location-levels", { body: { levels: rows.map((row) => ({ id: row.id, nameBn: row.nameBn, nameEn: row.nameEn })) } }),
+      api.PUT("/location-levels", { body: { levels: rows.map((row) => ({ id: row.id, nameBn: row.nameBn, nameEn: row.nameEn, canOwn: row.canOwn })) } }),
     );
     if (saved) setRows(toRows(saved.items));
   }
@@ -73,6 +73,10 @@ export function LevelsEditor({ levels }: { levels: LocationLevel[] }) {
                 onChange={(e) => update(index, { nameEn: e.target.value })}
               />
               <div className="flex flex-wrap items-center gap-1.5">
+                <label className="inline-flex items-center gap-1.5 pe-1 text-[13px]">
+                  <input type="checkbox" className="size-4 accent-primary" checked={row.canOwn} onChange={(e) => update(index, { canOwn: e.target.checked })} />
+                  {t("canOwn")}
+                </label>
                 {last ? <Chip tone="acc" plain>{t("holdsUnits")}</Chip> : null}
                 <Chip plain>{t("inUse", { count: row.locationCount })}</Chip>
                 <Button type="button" variant="ghost" size="icon-sm" aria-label={t("moveUp")} title={t("moveUp")} disabled={index === 0} onClick={() => move(index, -1)}>
@@ -111,7 +115,7 @@ export function LevelsEditor({ levels }: { levels: LocationLevel[] }) {
           type="button"
           variant="outline"
           disabled={rows.length >= 10}
-          onClick={() => setRows([...rows.slice(0, -1), { key: crypto.randomUUID(), id: null, nameBn: "", nameEn: "", locationCount: 0 }, rows.at(-1)!])}
+          onClick={() => setRows([...rows.slice(0, -1), { key: crypto.randomUUID(), id: null, nameBn: "", nameEn: "", canOwn: false, locationCount: 0 }, rows.at(-1)!])}
         >
           <Plus aria-hidden />
           {t("add")}

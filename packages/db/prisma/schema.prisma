@@ -301,6 +301,8 @@ model memberships {
   person_id        String            @db.Uuid
   location_id      String?           @db.Uuid
   member_no        Int
+  /// Global ID (`S15-000042`), filled by the `memberships_set_code` trigger.
+  membership_code  String            @unique(map: "memberships_membership_code_uq") @default(dbgenerated())
   status           String            @default("active")
   joined_on        DateTime          @db.Date
   ended_on         DateTime?         @db.Date
@@ -508,6 +510,7 @@ model location_levels {
   name_bn       String
   name_en       String?
   is_unit_level Boolean     @default(false)
+  can_own       Boolean     @default(false)
   societies     societies   @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   locations     locations[]
 
@@ -536,6 +539,7 @@ model locations {
   notices               notices[]
   ownerships            ownerships[]
   units                 units?
+  unit_storeys          unit_storeys[]
   user_roles            user_roles[]
   form_submissions      form_submissions[]
   memberships           memberships[]
@@ -824,6 +828,8 @@ model societies {
   name_bn                 String
   name_en                 String?
   slug                    String                    @unique
+  /// Short code in membership IDs; the `societies_default_code` trigger derives it from the slug when unset.
+  code                    String                    @unique(map: "societies_code_uq") @default(dbgenerated())
   logo_url                String?
   address                 String?
   phone                   String?
@@ -864,6 +870,7 @@ model societies {
   society_settings        society_settings[]
   tenancies               tenancies[]
   units                   units[]
+  unit_storeys            unit_storeys[]
   unit_types              unit_types[]
   user_sessions           user_sessions[]
   users                   users[]
@@ -929,6 +936,8 @@ model units {
   size_sqft     Decimal?        @db.Decimal(10, 2)
   bill_to       String          @default("owner")
   occupancy     String          @default("vacant")
+  merged_into   String?         @db.Uuid
+  merged_on     DateTime?       @db.Date
   invoice_lines invoice_lines[]
   invoices      invoices[]
   payments      payments[]
@@ -937,11 +946,30 @@ model units {
   vehicles      vehicles[]
   parking_slots parking_slots[]
   certificates  certificates[]
+  unit_storeys  unit_storeys[]
+  merged        units?          @relation("unit_merges", fields: [merged_into], references: [location_id], onDelete: NoAction, onUpdate: NoAction)
+  merged_units  units[]         @relation("unit_merges")
   locations     locations       @relation(fields: [location_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   societies     societies       @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   unit_types    unit_types      @relation(fields: [society_id, unit_type], references: [society_id, code], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([society_id, unit_type])
+  @@index([merged_into], map: "units_merged_into_idx", where: raw("(merged_into IS NOT NULL)"))
+}
+
+/// Step 37: the other storeys a unit covers (a duplex, an office over several floors). The unit lives at its lowest storey.
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model unit_storeys {
+  unit_id    String    @db.Uuid
+  storey_id  String    @db.Uuid
+  society_id String    @db.Uuid
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  units      units     @relation(fields: [unit_id], references: [location_id], onDelete: Cascade, onUpdate: NoAction)
+  locations  locations @relation(fields: [storey_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  societies  societies @relation(fields: [society_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([unit_id, storey_id])
+  @@index([storey_id], map: "unit_storeys_storey_idx")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.

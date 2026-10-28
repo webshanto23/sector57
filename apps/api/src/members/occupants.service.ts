@@ -13,6 +13,7 @@ import { AuditService } from '../audit/audit.service.js';
 import { isoDate } from '../common/dates.js';
 import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { OccupancyService } from '../property/occupancy.service.js';
 import { beyondPermissions, pathIds, TreeService } from '../property/tree.service.js';
 import { MemberRowsService } from './member-rows.service.js';
 import { alreadyEnded, auditOf, dayOf, endBeforeStart, lockLocation, PartiesService } from './parties.service.js';
@@ -49,7 +50,8 @@ const snapshot = (row: Omit<Row, 'id' | 'units'>) => ({
 
 /**
  * Residents: who lives in a unit, in the owner's household (`tenancyId` null) or the open
- * tenancy's. Uses the `members` permission at the unit. Residents don't change occupancy.
+ * tenancy's. Uses the `members` permission at the unit. A resident of the owner's household
+ * makes the unit owner-occupied, so every change refreshes its occupancy.
  */
 @Injectable()
 export class OccupantsService {
@@ -59,6 +61,7 @@ export class OccupantsService {
     private readonly tree: TreeService,
     private readonly parties: PartiesService,
     private readonly rows: MemberRowsService,
+    private readonly occupancy: OccupancyService,
   ) {}
 
   async get(actor: Actor, id: string): Promise<Occupant> {
@@ -96,6 +99,7 @@ export class OccupantsService {
         select: rowSelect,
       });
       await this.audit.record({ ...auditOf(actor, 'occupant', 'create', row.id), after: { ...snapshot(row), reusedPerson: person.reused } }, tx);
+      await this.occupancy.refresh(actor.societyId, unit.path, tx);
       return row.id;
     });
     return this.get(actor, id);
@@ -124,6 +128,7 @@ export class OccupantsService {
     await this.prisma.$transaction(async (tx) => {
       const after = await tx.occupants.update({ where: { id }, data: { end_date: dayOf(input.endDate) }, select: rowSelect });
       await this.audit.record({ ...auditOf(actor, 'occupant', 'end', id), before: snapshot(before), after: snapshot(after) }, tx);
+      await this.occupancy.refresh(actor.societyId, before.units.locations.path, tx);
     });
     return this.get(actor, id);
   }
@@ -134,6 +139,7 @@ export class OccupantsService {
     await this.prisma.$transaction(async (tx) => {
       await tx.occupants.delete({ where: { id } });
       await this.audit.record({ ...auditOf(actor, 'occupant', 'delete', id), before: snapshot(before) }, tx);
+      await this.occupancy.refresh(actor.societyId, before.units.locations.path, tx);
     });
   }
 

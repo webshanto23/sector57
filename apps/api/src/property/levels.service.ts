@@ -21,7 +21,7 @@ export class LevelsService {
   async list(societyId: string): Promise<LocationLevel[]> {
     const rows = await this.prisma.location_levels.findMany({
       where: { society_id: societyId },
-      select: { id: true, depth: true, name_bn: true, name_en: true, is_unit_level: true, _count: { select: { locations: true } } },
+      select: { id: true, depth: true, name_bn: true, name_en: true, is_unit_level: true, can_own: true, _count: { select: { locations: true } } },
       orderBy: { depth: 'asc' },
     });
     return rows.map((row) => ({
@@ -30,6 +30,7 @@ export class LevelsService {
       nameBn: row.name_bn,
       nameEn: row.name_en,
       isUnitLevel: row.is_unit_level,
+      canOwn: row.can_own,
       locationCount: row._count.locations,
     }));
   }
@@ -71,7 +72,7 @@ export class LevelsService {
           await tx.location_levels.update({ where: { id: level.id! }, data: { depth: PARKED_DEPTH + index, name_bn: `~${level.id}` } });
         }
         for (const [index, level] of input.levels.entries()) {
-          const data = { depth: index + 1, name_bn: level.nameBn, name_en: level.nameEn, is_unit_level: index === input.levels.length - 1 };
+          const data = { depth: index + 1, name_bn: level.nameBn, name_en: level.nameEn, is_unit_level: index === input.levels.length - 1, can_own: level.canOwn };
           if (level.id) await tx.location_levels.update({ where: { id: level.id }, data });
           else await tx.location_levels.create({ data: { ...data, society_id: actor.societyId } });
         }
@@ -82,7 +83,7 @@ export class LevelsService {
             action: 'update',
             entityType: 'location_levels',
             entityId: null,
-            before: current.map(({ id, nameBn, nameEn, isUnitLevel }) => ({ id, nameBn, nameEn, isUnitLevel })),
+            before: current.map(({ id, nameBn, nameEn, isUnitLevel, canOwn }) => ({ id, nameBn, nameEn, isUnitLevel, canOwn })),
             after: input.levels,
             ip: actor.ip,
           },

@@ -1,5 +1,11 @@
 import {
   endsBeforeStart,
+  formatMembershipCode,
+  membershipSettingsInputSchema,
+  nextMemberNumber,
+  MAX_BULK_MEMBERS,
+  memberBulkSchema,
+  memberCreateSchema,
   nidSchema,
   occupantCreateSchema,
   optionalMoney,
@@ -96,5 +102,44 @@ describe('members contracts', () => {
     expect(endsBeforeStart('2026-01-01', '2026-01-01')).toBe(false);
     expect(endsBeforeStart('2026-01-01', null)).toBe(false);
     expect(toRelation('cousin')).toBe('other');
+  });
+});
+
+describe('membership contracts', () => {
+  const id = '3f0e7a52-9a0c-4a5e-9a52-7b2f8d1c0a11';
+
+  it('takes either new details or someone on file, never both or neither', () => {
+    expect(memberCreateSchema.parse({ personId: id, joinedOn: '' })).toMatchObject({ person: null, personId: id, locationId: null, joinedOn: null });
+    expect(memberCreateSchema.parse({ person: { fullName: 'রহিম' } }).person?.fullName).toBe('রহিম');
+    expect(memberCreateSchema.safeParse({ person: { fullName: 'রহিম' }, personId: id }).success).toBe(false);
+    expect(memberCreateSchema.safeParse({}).success).toBe(false);
+  });
+
+  it('lists each person once, up to the bulk limit', () => {
+    expect(memberBulkSchema.parse({ personIds: [id] }).joinedOn).toBeNull();
+    expect(memberBulkSchema.safeParse({ personIds: [] }).success).toBe(false);
+    expect(memberBulkSchema.safeParse({ personIds: [id, id] }).success).toBe(false);
+    const many = Array.from({ length: MAX_BULK_MEMBERS + 1 }, (_, i) => `3f0e7a52-9a0c-4a5e-9a52-${String(i).padStart(12, '0')}`);
+    expect(memberBulkSchema.safeParse({ personIds: many }).success).toBe(false);
+  });
+});
+
+describe('membership numbering', () => {
+  it('pads the member number to six digits and never cuts a longer one', () => {
+    expect(formatMembershipCode('S15', 42)).toBe('S15-000042');
+    expect(formatMembershipCode('S15', 1234567)).toBe('S15-1234567');
+  });
+
+  it('starts at the starter and never goes back below a number in use', () => {
+    expect(nextMemberNumber(1, null)).toBe(1);
+    expect(nextMemberNumber(1001, null)).toBe(1001);
+    expect(nextMemberNumber(1001, 7)).toBe(1001);
+    expect(nextMemberNumber(1001, 1500)).toBe(1501);
+  });
+
+  it('takes the code in capitals and the starter from text', () => {
+    expect(membershipSettingsInputSchema.parse({ societyCode: ' s15 ', firstMemberNo: '১০০১' })).toEqual({ societyCode: 'S15', firstMemberNo: 1001 });
+    expect(membershipSettingsInputSchema.safeParse({ societyCode: 'S-15', firstMemberNo: 1 }).success).toBe(false);
+    expect(membershipSettingsInputSchema.safeParse({ societyCode: 'S15', firstMemberNo: 0 }).success).toBe(false);
   });
 });

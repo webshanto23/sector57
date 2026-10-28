@@ -1,15 +1,7 @@
-import { formatDate, type Locale, type MemberLink, type Party, type Place, type TenancyStatus } from "@s57/shared";
+import { formatDate, type Locale, type Party, type Place, type TenancyStatus } from "@s57/shared";
 import { useLocale, useTranslations } from "next-intl";
 import { Chip, type Tone } from "@/components/kit";
 import { Link } from "@/i18n/navigation";
-
-/** "Family renter", "Spouse, owner's household". Works in server and client components. */
-export function MemberLinkText({ link }: { link: MemberLink }) {
-  const t = useTranslations("Members");
-  if (link.role === "owner") return <>{t("owner")}</>;
-  if (link.role === "renter") return <>{t(`renterRole.${link.renterType}`)}</>;
-  return <>{t(link.renter ? "household.renter" : "household.owner", { relation: t(`relation.${link.relation}`) })}</>;
-}
 
 /** "Flat 4B, Road 9 › Plot 14": the place, then the names above it. */
 export function placeText(place: Place): string {

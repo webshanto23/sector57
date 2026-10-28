@@ -431,7 +431,8 @@ describe('Public forms and the office review (e2e)', () => {
       const person = personDetailSchema.parse((await get(`/persons/${res.person!.id}`, admin.cookie).expect(200)).body);
       expect(person.membership).toMatchObject({ memberNo: res.memberNo, status: 'active' });
       expect(person.ownerships).toEqual([expect.objectContaining({ place: expect.objectContaining({ id: units.flat2A }), sharePercent: '100' })]);
-      expect(unitDetailSchema.parse((await get(`/units/${units.flat2A}`, admin.cookie).expect(200)).body).occupancy).toBe('owner_occupied');
+      // An owner on record is not a resident: the flat stays vacant until someone lives there.
+      expect(unitDetailSchema.parse((await get(`/units/${units.flat2A}`, admin.cookie).expect(200)).body).occupancy).toBe('vacant');
 
       await send('post', `/forms/${cMembership.id}/approve`, blockCOffice.cookie).send({}).expect(409).expect((r) => expect(r.body.code).toBe('form_closed'));
       await send('post', `/forms/${cMembership.id}/reject`, blockCOffice.cookie).send({ note: 'না' }).expect(409);

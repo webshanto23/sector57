@@ -81,7 +81,7 @@ export class PersonsService {
       this.prisma.memberships.findFirst({
         where: { person_id: id, society_id: actor.societyId },
         orderBy: [{ status: 'asc' }, { joined_on: 'desc' }],
-        select: { member_no: true, status: true, joined_on: true, ended_on: true },
+        select: { member_no: true, membership_code: true, status: true, joined_on: true, ended_on: true },
       }),
     ]);
     const mayEdit = can('edit');
@@ -104,6 +104,7 @@ export class PersonsService {
       membership: membership
         ? {
             memberNo: membership.member_no,
+            membershipCode: membership.membership_code,
             status: toMembershipStatus(membership.status),
             joinedOn: isoDate(membership.joined_on),
             endedOn: membership.ended_on ? isoDate(membership.ended_on) : null,

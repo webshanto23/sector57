@@ -596,6 +596,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/locations/{id}/grid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LocationsController_grid"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/locations/{id}/layout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["LocationsController_setUp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/unit-types": {
         parameters: {
             query?: never;
@@ -676,15 +708,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/members": {
+    "/units/combine": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["MembersController_list"];
+        get?: never;
         put?: never;
+        post: operations["UnitsController_combine"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units/bulk-type": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UnitsController_bulkType"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units/{id}/storeys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["UnitsController_setStoreys"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1053,6 +1117,102 @@ export interface paths {
         };
         get: operations["DirectoryController_csv"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/registers/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RegistersController_members"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/registers/owners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RegistersController_owners"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/registers/renters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RegistersController_renters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/memberships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MembershipsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/memberships/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MembershipsController_bulk"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/settings/membership": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MembershipSettingsController_get"];
+        put: operations["MembershipSettingsController_update"];
         post?: never;
         delete?: never;
         options?: never;
@@ -4186,6 +4346,7 @@ export interface components {
                 nameBn: string;
                 nameEn: string | null;
                 isUnitLevel: boolean;
+                canOwn: boolean;
                 locationCount: number;
             }[];
         };
@@ -4194,6 +4355,7 @@ export interface components {
                 id: string | null;
                 nameBn: string;
                 nameEn?: string | null;
+                canOwn: boolean;
             }[];
         };
         LocationViewDto_Output: {
@@ -4209,9 +4371,11 @@ export interface components {
                 levelBn: string;
                 levelEn: string | null;
                 isUnit: boolean;
+                canOwn: boolean;
                 isActive: boolean;
                 childCount: number;
                 unitCount: number;
+                alsoOn: string[];
             } | null;
             breadcrumb: {
                 /** Format: uuid */
@@ -4233,9 +4397,30 @@ export interface components {
                 levelBn: string;
                 levelEn: string | null;
                 isUnit: boolean;
+                canOwn: boolean;
                 isActive: boolean;
                 childCount: number;
                 unitCount: number;
+                alsoOn: string[];
+            }[];
+            alsoHere: {
+                /** Format: uuid */
+                id: string;
+                parentId: string | null;
+                name: string;
+                code: string | null;
+                /** Format: uuid */
+                levelId: string;
+                depth: number;
+                levelBn: string;
+                levelEn: string | null;
+                isUnit: boolean;
+                canOwn: boolean;
+                isActive: boolean;
+                childCount: number;
+                unitCount: number;
+                alsoOn: string[];
+                homeName: string;
             }[];
             can: {
                 create: boolean;
@@ -4257,10 +4442,16 @@ export interface components {
                 levelBn: string;
                 levelEn: string | null;
                 isUnit: boolean;
+                canOwn: boolean;
                 isActive: boolean;
                 childCount: number;
                 unitCount: number;
+                alsoOn: string[];
                 address: string[];
+                owners: {
+                    name: string;
+                    nameEn: string | null;
+                }[] | null;
             }[];
             total: number;
             page: number;
@@ -4288,6 +4479,55 @@ export interface components {
         };
         BulkResultDto_Output: {
             created: number;
+        };
+        BuildingGridDto_Output: {
+            floors: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                units: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    unitType: string;
+                    /** @enum {string} */
+                    occupancy: "owner_occupied" | "rented" | "vacant";
+                    isActive: boolean;
+                    alsoOn: string[];
+                    mergedInto: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                    } | null;
+                    includes: string[];
+                }[];
+            }[];
+            canEdit: boolean;
+        };
+        BuildingLayoutDto: {
+            floors: {
+                from: number;
+                to: number;
+                pattern: string;
+                groundName?: string | null;
+                /** @default true */
+                groundHasUnits: boolean;
+            };
+            units: {
+                /** @default  */
+                letters: string;
+                pattern: string;
+            };
+            /** @default true */
+            bangla: boolean;
+            unitType: string;
+            sizeSqft?: string | null;
+            /** @enum {string} */
+            billTo: "owner" | "renter";
+        };
+        BuildingLayoutResultDto_Output: {
+            floors: number;
+            units: number;
         };
         LocationUpdateDto: {
             name?: string;
@@ -4343,6 +4583,12 @@ export interface components {
                     name: string;
                     nameEn: string | null;
                 }[] | null;
+                mergedInto: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
+                includes: string[];
             }[];
             total: number;
             page: number;
@@ -4403,6 +4649,23 @@ export interface components {
                 levelEn: string | null;
                 open: boolean;
             }[];
+            covers: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            }[];
+            coverOptions: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            }[];
+            mergedInto: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** Format: date */
+                on: string;
+            } | null;
             can: {
                 edit: boolean;
                 delete: boolean;
@@ -4427,6 +4690,23 @@ export interface components {
             /** @enum {string} */
             billTo: "owner" | "renter";
         };
+        UnitCombineDto: {
+            /** Format: uuid */
+            keepId: string;
+            mergeIds: string[];
+        };
+        UnitCombineResultDto_Output: {
+            /** Format: uuid */
+            keptId: string;
+            merged: number;
+        };
+        UnitTypeBulkDto: {
+            unitIds: string[];
+            unitType: string;
+        };
+        UnitTypeBulkResultDto_Output: {
+            updated: number;
+        };
         UnitUpdateDto: {
             name?: string;
             code?: string | null;
@@ -4436,51 +4716,8 @@ export interface components {
             /** @enum {string} */
             billTo?: "owner" | "renter";
         };
-        MemberListDto_Output: {
-            items: {
-                /** @enum {string} */
-                kind: "person" | "organisation";
-                /** Format: uuid */
-                id: string;
-                name: string;
-                nameEn: string | null;
-                phone: string | null;
-                photoUrl: string | null;
-                verified: boolean | null;
-                hasId: boolean;
-                links: ({
-                    /** @constant */
-                    role: "owner";
-                } | {
-                    /** @constant */
-                    role: "renter";
-                    /** @enum {string} */
-                    renterType: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
-                } | {
-                    /** @constant */
-                    role: "occupant";
-                    /** @enum {string} */
-                    relation: "head" | "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
-                    renter: boolean;
-                })[];
-                place: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    address: string[];
-                    isUnit: boolean;
-                } | null;
-                otherPlaces: number;
-            }[];
-            total: number;
-            page: number;
-            pageSize: number;
-            counts: {
-                owners: number;
-                renterHouseholds: number;
-                bachelorRenters: number;
-                pendingVerification: number;
-            };
+        UnitStoreysDto: {
+            storeyIds: string[];
         };
         PersonInputDto: {
             fullName: string;
@@ -4599,6 +4836,7 @@ export interface components {
             }[];
             membership: {
                 memberNo: number;
+                membershipCode: string;
                 /** @enum {string} */
                 status: "active" | "lapsed" | "cancelled";
                 /** Format: date */
@@ -5347,6 +5585,187 @@ export interface components {
                 since: string;
             }[];
             truncated: boolean;
+        };
+        MemberRegisterDto_Output: {
+            items: {
+                memberNo: number;
+                /** @enum {string} */
+                status: "active" | "lapsed" | "cancelled";
+                /** Format: date */
+                joinedOn: string;
+                person: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                };
+                holdings: {
+                    /** Format: uuid */
+                    levelId: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                    count: number;
+                }[];
+                fee: {
+                    /** @enum {string} */
+                    state: "paid" | "unpaid" | "not_billed";
+                    owed: string | null;
+                    openBillId: string | null;
+                } | null;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                active: number;
+                lapsed: number;
+                cancelled: number;
+                feeNotPaid: number | null;
+            };
+        };
+        OwnerRegisterDto_Output: {
+            items: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                photoUrl: string | null;
+                verified: boolean | null;
+                holdings: {
+                    /** Format: uuid */
+                    levelId: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                    count: number;
+                }[];
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                otherPlaces: number;
+                livesHere: boolean | null;
+                memberNo: number | null;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                owners: number;
+                members: number;
+                notMembers: number;
+                livesHere: number;
+            };
+        };
+        RenterRegisterDto_Output: {
+            items: {
+                /** Format: uuid */
+                tenancyId: string;
+                renter: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                } | null;
+                /** @enum {string} */
+                renterType: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+                /** @enum {string} */
+                status: "pending" | "active" | "moving_out";
+                /** Format: date */
+                startDate: string;
+                monthlyRent: string | null;
+                policeFormSubmitted: boolean;
+                openMove: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @enum {string} */
+                    kind: "move_in" | "move_out";
+                } | null;
+                unit: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                unitType: {
+                    code: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                };
+                residents: number;
+                memberNo: number | null;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                renters: number;
+                family: number;
+                bachelor: number;
+                policeFormMissing: number;
+            };
+        };
+        MemberCreateDto: {
+            person?: {
+                fullName: string;
+                fullNameEn?: string | null;
+                phone?: string | null;
+                email?: string | null;
+                nid?: string | null;
+                dateOfBirth?: string | null;
+                gender?: ("male" | "female" | "other") | null;
+            } | null;
+            personId?: string | null;
+            locationId?: string | null;
+            joinedOn?: string | null;
+        };
+        MemberCreatedDto_Output: {
+            /** Format: uuid */
+            personId: string;
+            memberNo: number;
+            membershipCode: string;
+            reusedPerson: boolean;
+        };
+        MemberBulkDto: {
+            personIds: string[];
+            joinedOn?: string | null;
+        };
+        MemberBulkResultDto_Output: {
+            created: {
+                /** Format: uuid */
+                personId: string;
+                memberNo: number;
+                membershipCode: string;
+            }[];
+            skipped: number;
+        };
+        MembershipSettingsDto_Output: {
+            societyCode: string;
+            firstMemberNo: number;
+            issued: number;
+            highestMemberNo: number | null;
+            nextMemberNo: number;
+            nextMembershipCode: string;
+        };
+        MembershipSettingsInputDto: {
+            societyCode: string;
+            firstMemberNo: number;
         };
         PublicPlaceListDto_Output: {
             items: {
@@ -11618,6 +12037,52 @@ export interface operations {
             };
         };
     };
+    LocationsController_grid: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuildingGridDto_Output"];
+                };
+            };
+        };
+    };
+    LocationsController_setUp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BuildingLayoutDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuildingLayoutResultDto_Output"];
+                };
+            };
+        };
+    };
     UnitTypesController_list: {
         parameters: {
             query?: never;
@@ -11822,28 +12287,73 @@ export interface operations {
             };
         };
     };
-    MembersController_list: {
+    UnitsController_combine: {
         parameters: {
-            query?: {
-                page?: number;
-                pageSize?: number;
-                q?: string;
-                role?: "owner" | "renter" | "occupant";
-                verification?: "pending" | "verified";
-                areaId?: string;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnitCombineDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["MemberListDto_Output"];
+                    "application/json": components["schemas"]["UnitCombineResultDto_Output"];
+                };
+            };
+        };
+    };
+    UnitsController_bulkType: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnitTypeBulkDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitTypeBulkResultDto_Output"];
+                };
+            };
+        };
+    };
+    UnitsController_setStoreys: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnitStoreysDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitDetailDto_Output"];
                 };
             };
         };
@@ -12603,6 +13113,173 @@ export interface operations {
             };
         };
     };
+    RegistersController_members: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                areaId?: string;
+                status?: "active" | "lapsed" | "cancelled";
+                fee?: "paid" | "not_paid";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberRegisterDto_Output"];
+                };
+            };
+        };
+    };
+    RegistersController_owners: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                areaId?: string;
+                membership?: "member" | "not_member";
+                residence?: "here" | "elsewhere";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnerRegisterDto_Output"];
+                };
+            };
+        };
+    };
+    RegistersController_renters: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                areaId?: string;
+                renterType?: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+                unitType?: string;
+                status?: "pending" | "active" | "moving_out";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RenterRegisterDto_Output"];
+                };
+            };
+        };
+    };
+    MembershipsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberCreateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberCreatedDto_Output"];
+                };
+            };
+        };
+    };
+    MembershipsController_bulk: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberBulkDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberBulkResultDto_Output"];
+                };
+            };
+        };
+    };
+    MembershipSettingsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MembershipSettingsDto_Output"];
+                };
+            };
+        };
+    };
+    MembershipSettingsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MembershipSettingsInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MembershipSettingsDto_Output"];
+                };
+            };
+        };
+    };
     PublicFormsController_places: {
         parameters: {
             query?: {
@@ -13256,6 +13933,7 @@ export interface operations {
             query?: {
                 q?: string;
                 unitId?: string;
+                personId?: string;
             };
             header?: never;
             path?: never;

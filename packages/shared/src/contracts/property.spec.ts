@@ -4,10 +4,12 @@ import {
   levelsInputSchema,
   locationBulkSchema,
   MAX_BULK_NAMES,
+  MAX_UNIT_STOREYS,
   nameRangeSchema,
   sizeSqftSchema,
   toOccupancy,
   unitCreateSchema,
+  unitStoreysInputSchema,
   unitTypesInputSchema,
 } from './property.js';
 
@@ -63,8 +65,17 @@ describe('property schemas', () => {
     expect(locationBulkSchema.safeParse({ parentId: null, levelId: uuid, names: ['Road 1', ' Road 1'] }).success).toBe(false);
   });
 
+  it('takes each covered storey once, up to the limit', () => {
+    const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
+    expect(unitStoreysInputSchema.safeParse({ storeyIds: [] }).success).toBe(true);
+    expect(unitStoreysInputSchema.safeParse({ storeyIds: [id(1), id(2)] }).success).toBe(true);
+    expect(unitStoreysInputSchema.safeParse({ storeyIds: [id(1), id(1)] }).success).toBe(false);
+    const many = Array.from({ length: MAX_UNIT_STOREYS + 1 }, (_, n) => id(n + 1));
+    expect(unitStoreysInputSchema.safeParse({ storeyIds: many }).success).toBe(false);
+  });
+
   it('needs two levels with different names', () => {
-    const level = (nameBn: string) => ({ id: null, nameBn, nameEn: null });
+    const level = (nameBn: string) => ({ id: null, nameBn, nameEn: null, canOwn: false });
     expect(levelsInputSchema.safeParse({ levels: [level('ব্লক')] }).success).toBe(false);
     expect(levelsInputSchema.safeParse({ levels: [level('ব্লক'), level('ব্লক')] }).success).toBe(false);
     expect(levelsInputSchema.safeParse({ levels: [level('ব্লক'), level('ইউনিট')] }).success).toBe(true);

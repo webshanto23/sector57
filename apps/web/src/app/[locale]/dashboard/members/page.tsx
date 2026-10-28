@@ -1,17 +1,32 @@
-import { canAnywhere, canSocietyWide, formatNumber, localDigits, MEMBER_ROLES, memberListQuery, type Locale, type MemberRow } from "@s57/shared";
-import { House, Plus, ShieldCheck, UserRound, Users, X } from "lucide-react";
+import {
+  canAnywhere,
+  canSocietyWide,
+  formatDate,
+  formatNumber,
+  formatTaka,
+  MEMBER_FEE_FILTERS,
+  MEMBERSHIP_STATUSES,
+  memberRegisterQuery,
+  type Locale,
+  type MemberFee,
+  type MemberRegisterRow,
+  type MembershipStatus,
+} from "@s57/shared";
+import { BadgeCheck, CircleSlash, Clock, Plus, ReceiptText } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Pager } from "@/components/cms/pager";
-import { Avatar, Chip, DataTable, inputClass, PageHeader, SearchInput, StatCard, type Column } from "@/components/kit";
-import { MemberLinkText, PartyLink, PlaceLink, VerifiedChip } from "@/components/members/labels";
+import { Avatar, Chip, DataTable, inputClass, PageHeader, SearchInput, StatCard, type Column, type Tone } from "@/components/kit";
+import { PartyLink } from "@/components/members/labels";
+import { AreaNote, HoldingChips, PhoneActions, searchText } from "@/components/members/register-parts";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { getMembers } from "@/lib/api/members";
 import { getLocation } from "@/lib/api/property";
+import { getMemberRegister } from "@/lib/api/registers";
 import { requirePermission } from "@/lib/api/session";
 
 const PAGE_SIZE = 25;
+const STATUS_TONES: Record<MembershipStatus, Tone> = { active: "good", lapsed: "warn", cancelled: "neutral" };
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/dashboard/members">): Promise<Metadata> {
   const { locale } = await params;
@@ -19,7 +34,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/dashboar
   return { title: t("nav.members") };
 }
 
-/** Owners, renters and households the caller may see: figures, search, filters, and a table that becomes cards on phones. */
+/** The society's registered members (memberships) in the caller's area, active ones first. */
 export default async function MembersPage({ params, searchParams }: PageProps<"/[locale]/dashboard/members">) {
   const { locale: raw } = await params;
   const locale = raw as Locale;
@@ -28,97 +43,82 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
   const me = await requirePermission("members");
   // A bad filter in the URL is dropped rather than failing the page.
   const search = await searchParams;
-  const parsed = memberListQuery.safeParse({
-    q: typeof search["q"] === "string" && search["q"].trim() ? search["q"] : undefined,
-    role: search["role"] || undefined,
-    verification: search["verification"] || undefined,
-    areaId: search["areaId"] || undefined,
+  const parsed = memberRegisterQuery.safeParse({
+    q: searchText(search, "q"),
+    status: searchText(search, "status"),
+    fee: searchText(search, "fee"),
+    areaId: searchText(search, "areaId"),
     page: search["page"] ?? 1,
     pageSize: PAGE_SIZE,
   });
-  const query = parsed.success ? parsed.data : { page: 1, pageSize: PAGE_SIZE };
+  const query = parsed.success ? parsed.data : memberRegisterQuery.parse({ pageSize: PAGE_SIZE });
 
   const [t, tNav, list, area] = await Promise.all([
-    getTranslations("Members"),
+    getTranslations("Registers"),
     getTranslations("Dashboard.nav"),
-    getMembers(query),
+    getMemberRegister(query),
     query.areaId && canAnywhere(me.access, "locations") ? getLocation(query.areaId) : Promise.resolve(null),
   ]);
   const pages = Math.max(1, Math.ceil(list.total / PAGE_SIZE));
   const filters = {
     ...(query.q ? { q: query.q } : {}),
-    ...(query.role ? { role: query.role } : {}),
-    ...(query.verification ? { verification: query.verification } : {}),
+    ...(query.status !== "active" ? { status: query.status } : {}),
+    ...(query.fee ? { fee: query.fee } : {}),
     ...(query.areaId ? { areaId: query.areaId } : {}),
   };
   const n = (value: number) => formatNumber(value, locale);
-  const placesOpen = { units: canAnywhere(me.access, "units"), locations: canAnywhere(me.access, "locations") };
+  // The fee shows only to society-wide billing viewers (the API sends null otherwise).
+  const feeShown = list.counts.feeNotPaid !== null;
+  const canBill = canSocietyWide(me.access, "billing", "create");
+  const feeCell = (fee: MemberFee, personId: string) => {
+    if (fee.state === "paid") return <Chip tone="good">{t("members.fee.paid")}</Chip>;
+    if (fee.state === "unpaid") {
+      return (
+        <Link href={`/dashboard/billing/${fee.openBillId}`} className="whitespace-nowrap">
+          <Chip tone="warn">{t("members.fee.unpaid", { amount: formatTaka(fee.owed ?? "0", locale) })}</Chip>
+        </Link>
+      );
+    }
+    return (
+      <span className="flex flex-wrap items-center gap-2">
+        <Chip tone="bad">{t("members.fee.notBilled")}</Chip>
+        {canBill ? (
+          <Link href={{ pathname: "/dashboard/billing/new", query: { personId } }} className="text-[13px] font-semibold whitespace-nowrap text-primary">
+            {t("members.fee.makeBill")}
+          </Link>
+        ) : null}
+      </span>
+    );
+  };
 
-  const columns: Column<MemberRow>[] = [
+  const columns: Column<MemberRegisterRow>[] = [
     {
       key: "name",
       header: t("col.name"),
       cell: (row) => (
         <div className="flex items-center gap-2.5">
-          <Avatar name={row.name} />
+          <Avatar name={row.person.name} />
           <div className="grid">
-            <PartyLink party={row} />
-            {row.nameEn && locale === "en" ? <span className="text-[12.5px] text-muted-foreground">{row.nameEn}</span> : null}
+            <PartyLink party={row.person} />
+            <span className="num text-[12.5px] text-muted-foreground">{t("memberNo", { no: n(row.memberNo) })}</span>
           </div>
         </div>
       ),
     },
-    {
-      key: "role",
-      header: t("col.role"),
-      cell: (row) =>
-        row.links.length === 0 ? (
-          <span className="text-muted-foreground">{t("noLink")}</span>
-        ) : (
-          <span className="whitespace-normal">
-            {row.links.map((link, index) => (
-              <span key={index}>
-                {index > 0 ? "; " : null}
-                <MemberLinkText link={link} />
-              </span>
-            ))}
-          </span>
-        ),
-    },
-    {
-      key: "place",
-      header: t("col.place"),
-      cell: (row) =>
-        row.place ? (
-          <span className="whitespace-normal">
-            <PlaceLink place={row.place} open={row.place.isUnit ? placesOpen.units : placesOpen.locations} />
-            {row.otherPlaces > 0 ? (
-              <span className="text-muted-foreground"> {localDigits(t("morePlaces", { count: row.otherPlaces }), locale)}</span>
-            ) : null}
-          </span>
-        ) : (
-          "—"
-        ),
-    },
-    { key: "phone", header: t("col.phone"), cell: (row) => (row.phone ? <span className="num">{localDigits(row.phone, locale)}</span> : "—") },
-    {
-      key: "id",
-      header: t("col.id"),
-      cell: (row) =>
-        row.hasId ? (
-          t(row.kind === "person" ? "idNid" : "idLicence")
-        ) : (
-          <span className="text-muted-foreground">{t("idMissing")}</span>
-        ),
-    },
-    { key: "status", header: t("col.status"), cell: (row) => <VerifiedChip verified={row.verified} /> },
+    { key: "holdings", header: t("col.holdings"), cell: (row) => <HoldingChips holdings={row.holdings} /> },
+    { key: "phone", header: t("col.phone"), cell: (row) => <PhoneActions phone={row.person.phone} name={row.person.name} /> },
+    { key: "joined", header: t("members.col.joined"), cell: (row) => <span className="whitespace-nowrap">{formatDate(row.joinedOn, locale, "short")}</span> },
+    { key: "status", header: t("col.status"), cell: (row) => <Chip tone={STATUS_TONES[row.status]}>{t(`members.status.${row.status}`)}</Chip> },
+    ...(feeShown
+      ? [{ key: "fee", header: t("members.col.fee"), cell: (row: MemberRegisterRow) => (row.fee ? feeCell(row.fee, row.person.id) : "—") }]
+      : []),
   ];
 
   return (
     <>
       <PageHeader
         title={tNav("members")}
-        sub={t("sub")}
+        sub={t("members.sub")}
         actions={
           // Adding someone not linked to a unit is for whole-society roles; others add people from a unit.
           canSocietyWide(me.access, "members", "create") ? (
@@ -130,50 +130,45 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
         }
       />
 
-      <div className="mb-3.5 grid grid-cols-2 gap-2.5 min-[900px]:grid-cols-4">
-        <StatCard icon={UserRound} label={t("stats.owners")} value={n(list.counts.owners)} tone="acc" />
-        <StatCard icon={House} label={t("stats.renterHouseholds")} value={n(list.counts.renterHouseholds)} tone="info" />
-        <StatCard icon={Users} label={t("stats.bachelorRenters")} value={n(list.counts.bachelorRenters)} tone="info" />
-        <StatCard icon={ShieldCheck} label={t("stats.pendingVerification")} value={n(list.counts.pendingVerification)} tone="sun" />
+      <div className={`mb-3.5 grid grid-cols-2 gap-2.5 ${feeShown ? "min-[900px]:grid-cols-4" : "min-[900px]:grid-cols-3"}`}>
+        <StatCard icon={BadgeCheck} label={t("members.status.active")} value={n(list.counts.active)} tone="acc" />
+        <StatCard icon={Clock} label={t("members.status.lapsed")} value={n(list.counts.lapsed)} tone="sun" />
+        <StatCard icon={CircleSlash} label={t("members.status.cancelled")} value={n(list.counts.cancelled)} tone="info" />
+        {list.counts.feeNotPaid !== null ? (
+          <StatCard icon={ReceiptText} label={t("members.fee.notPaidCount")} value={n(list.counts.feeNotPaid)} tone="sun" />
+        ) : null}
       </div>
 
       {query.areaId ? (
-        <p className="mb-3 flex flex-wrap items-center gap-2 text-[13.5px]">
-          <Chip tone="info" plain>
-            {area?.location ? t("inArea", { name: area.location.name }) : t("inSomeArea")}
-          </Chip>
-          <Link
-            href={{ pathname: "/dashboard/members", query: { ...filters, areaId: undefined } }}
-            className="inline-flex items-center gap-1 font-semibold text-primary"
-          >
-            <X className="size-3.5" aria-hidden />
-            {t("clearArea")}
-          </Link>
-        </p>
+        <AreaNote name={area?.location?.name ?? null} clear={{ pathname: "/dashboard/members", query: { ...filters, areaId: undefined } }} />
       ) : null}
 
       <form method="get" role="search" className="mb-3.5 flex flex-wrap items-center gap-2.5">
         {query.areaId ? <input type="hidden" name="areaId" value={query.areaId} /> : null}
-        <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} />
-        <select name="role" defaultValue={query.role ?? ""} aria-label={t("col.role")} className={`${inputClass} sm:w-auto!`}>
-          <option value="">{t("allRoles")}</option>
-          {MEMBER_ROLES.map((role) => (
-            <option key={role} value={role}>
-              {t(`roleFilter.${role}`)}
+        <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("members.searchLabel")} />
+        <select name="status" defaultValue={query.status} aria-label={t("col.status")} className={`${inputClass} sm:w-auto!`}>
+          {MEMBERSHIP_STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {t(`members.status.${status}`)}
             </option>
           ))}
         </select>
-        <select name="verification" defaultValue={query.verification ?? ""} aria-label={t("col.status")} className={`${inputClass} sm:w-auto!`}>
-          <option value="">{t("allVerification")}</option>
-          <option value="pending">{t("verificationFilter.pending")}</option>
-          <option value="verified">{t("verificationFilter.verified")}</option>
-        </select>
+        {feeShown ? (
+          <select name="fee" defaultValue={query.fee ?? ""} aria-label={t("members.col.fee")} className={`${inputClass} sm:w-auto!`}>
+            <option value="">{t("members.fee.any")}</option>
+            {MEMBER_FEE_FILTERS.map((fee) => (
+              <option key={fee} value={fee}>
+                {t(`members.fee.filter.${fee}`)}
+              </option>
+            ))}
+          </select>
+        ) : null}
         <Button type="submit" variant="outline">
           {t("filter")}
         </Button>
       </form>
 
-      <DataTable columns={columns} rows={list.items} rowKey={(row) => row.id} caption={tNav("members")} empty={t("empty")} />
+      <DataTable columns={columns} rows={list.items} rowKey={(row) => String(row.memberNo)} caption={tNav("members")} empty={t("members.empty")} />
 
       <Pager
         locale={locale}

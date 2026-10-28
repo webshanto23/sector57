@@ -5,10 +5,10 @@ import {
   CSRF_HEADER,
   locationPeopleSchema,
   locationViewSchema,
-  memberListSchema,
   occupantSchema,
   ownershipSchema,
   personDetailSchema,
+  renterRegisterSchema,
   tenancySchema,
   unitDetailSchema,
 } from '@s57/shared';
@@ -71,8 +71,9 @@ describe('Members: people, owners, renters and households (e2e)', () => {
     person: { fullName: `${name} ${MARK}`, phone: randomPhone(), ...extra },
   });
   const occupancy = async (unitId: string) => unitDetailSchema.parse((await get(`/units/${unitId}`, admin.cookie).expect(200)).body).occupancy;
-  const members = async (query: string, cookie = admin.cookie) =>
-    memberListSchema.parse((await get(`/members?${query}`, cookie).expect(200)).body);
+  const renters = async (query: string) => renterRegisterSchema.parse((await get(`/registers/renters?${query}`, admin.cookie).expect(200)).body);
+  const personNamed = async (name: string) =>
+    (await prisma.persons.findFirstOrThrow({ where: { AND: [{ full_name: { contains: name } }, { full_name: { contains: MARK } }] } })).id;
 
   async function addLocation(parent: keyof typeof tree | null, depth: number, name: string) {
     const res = await send('post', '/locations', admin.cookie)
@@ -142,7 +143,7 @@ describe('Members: people, owners, renters and households (e2e)', () => {
     let ownerId: string;
     let ownershipId: string;
 
-    it('a plot owner makes the flats below owner-occupied; a new flat under it too', async () => {
+    it('owning a plot does not make the flats below owner-occupied', async () => {
       expect(await occupancy(units.flat1A)).toBe('vacant');
       const owner = person('জাহাঙ্গীর আলম');
       ownerPhone = owner.person.phone;
@@ -153,11 +154,12 @@ describe('Members: people, owners, renters and households (e2e)', () => {
       ownershipId = ownership.id;
       ownerId = ownership.owner.id;
       expect(ownership).toMatchObject({ sharePercent: '60', endDate: null, place: { id: tree.plot14.id, isUnit: false } });
-      expect(await occupancy(units.flat1A)).toBe('owner_occupied');
+      // Owned, but nobody lives there yet.
+      expect(await occupancy(units.flat1A)).toBe('vacant');
       expect(await occupancy(units.shopD1)).toBe('vacant');
 
       const flat2 = await addUnit('plot14', 'ফ্ল্যাট ২এ');
-      expect(await occupancy(flat2)).toBe('owner_occupied');
+      expect(await occupancy(flat2)).toBe('vacant');
       await send('delete', `/units/${flat2}`, admin.cookie).expect(204);
     });
 
@@ -189,11 +191,13 @@ describe('Members: people, owners, renters and households (e2e)', () => {
       expect(JSON.stringify(bad.body)).toContain('invalid_share');
     });
 
-    it('an owner of the plot can be marked as living in a flat; nobody else by id', async () => {
+    it('an owner of the plot marked as living in a flat makes only that flat owner-occupied; nobody else by id', async () => {
       const res = await send('post', '/occupants', admin.cookie)
         .send({ unitId: units.flat1A, tenancyId: null, personId: ownerId, relation: 'head', startDate: '2020-01-01' })
         .expect(201);
       expect(occupantSchema.parse(res.body)).toMatchObject({ tenancyId: null, relation: 'head', person: { id: ownerId } });
+      expect(await occupancy(units.flat1A)).toBe('owner_occupied');
+      expect(await occupancy(units.flat1B)).toBe('vacant');
       // Someone with no record at this unit can't be attached by id.
       const stranger = await prisma.persons.create({ data: { society_id: societyId, full_name: `অচেনা ${MARK}` } });
       const refused = await send('post', '/occupants', admin.cookie)
@@ -224,7 +228,7 @@ describe('Members: people, owners, renters and households (e2e)', () => {
 
       await send('patch', `/tenancies/${tenancy.id}`, admin.cookie).send({ status: 'active' }).expect(200);
       expect(await occupancy(units.flat1A)).toBe('rented');
-      expect(await occupancy(units.flat1B)).toBe('owner_occupied');
+      expect(await occupancy(units.flat1B)).toBe('vacant');
 
       const spouse = occupantSchema.parse(
         (
@@ -279,6 +283,12 @@ describe('Members: people, owners, renters and households (e2e)', () => {
       expect(await occupancy(units.flat1B)).toBe('vacant');
       await send('post', `/ownerships/${current.id}/end`, admin.cookie).send({ endDate: '2026-10-06' }).expect(409);
 
+      // The owner moves out of the flat: nobody of the owner's household is left.
+      const ownerHome = flat.occupants!.find((row) => row.endDate === null && row.person.id === ownerId)!;
+      expect(await occupancy(units.flat1A)).toBe('owner_occupied');
+      await send('post', `/occupants/${ownerHome.id}/end`, admin.cookie).send({ endDate: '2026-10-07' }).expect(200);
+      expect(await occupancy(units.flat1A)).toBe('vacant');
+
       const audit = await prisma.audit_logs.findMany({ where: { user_id: admin.id, entity_type: { in: ['ownership', 'tenancy', 'occupant', 'location'] } } });
       expect(audit.map((row) => row.action)).toEqual(expect.arrayContaining(['create', 'update', 'end', 'ownership_transfer']));
     });
@@ -314,33 +324,23 @@ describe('Members: people, owners, renters and households (e2e)', () => {
       expect(conflict.body.code).toBe('person_conflict');
     });
 
-    it('lists members with search in either digit form, filters and counts', async () => {
+    it('finds a renter by name, English name or phone in either digit form', async () => {
       const phone = randomPhone();
       await send('post', '/tenancies', admin.cookie)
         .send({ unitId: units.shopD1, renter: { kind: 'person', person: { fullName: `সাব্বির ইসলাম ${MARK}`, fullNameEn: 'Sabbir Islam', phone } }, renterType: 'bachelor', startDate: '2026-02-01' })
         .expect(201);
 
-      const byName = await members(`q=${encodeURIComponent('সাব্বির')}`);
-      const sabbir = byName.items.find((row) => row.name.includes(MARK))!;
-      expect(sabbir).toMatchObject({ kind: 'person', verified: false, hasId: false, links: [{ role: 'renter', renterType: 'bachelor' }] });
-      expect(sabbir.place).toMatchObject({ id: units.shopD1, isUnit: true, address: expect.arrayContaining(['ব্লক ডি']) });
+      const byName = await renters(`q=${encodeURIComponent('সাব্বির')}`);
+      const sabbir = byName.items.find((row) => row.renter?.name.includes(MARK))!;
+      expect(sabbir).toMatchObject({ renterType: 'bachelor', renter: { kind: 'person', verified: false } });
+      expect(sabbir.unit).toMatchObject({ id: units.shopD1, isUnit: true, address: expect.arrayContaining(['ব্লক ডি']) });
 
-      const byEnglish = await members('q=sabbir');
-      expect(byEnglish.items.map((row) => row.id)).toContain(sabbir.id);
-      const byBanglaPhone = await members(`q=${encodeURIComponent(bnDigits(`${phone.slice(0, 5)}-${phone.slice(5)}`))}`);
-      expect(byBanglaPhone.items.map((row) => row.id)).toEqual([sabbir.id]);
-
-      const renters = await members(`role=renter&areaId=${tree.blockD.id}`);
-      expect(renters.items.map((row) => row.id)).toEqual([sabbir.id]);
-      const owners = await members(`role=owner&areaId=${tree.blockD.id}`);
-      expect(owners.items).toHaveLength(0);
-      expect(renters.counts.bachelorRenters).toBeGreaterThanOrEqual(1);
-      expect(renters.counts.pendingVerification).toBeGreaterThanOrEqual(1);
-
-      // Verify, then the pending filter no longer finds them.
-      await send('put', `/persons/${sabbir.id}/verified`, admin.cookie).send({ verified: true }).expect(200);
-      const pending = await members(`verification=pending&areaId=${tree.blockD.id}`);
-      expect(pending.items.map((row) => row.id)).not.toContain(sabbir.id);
+      const byEnglish = await renters('q=sabbir');
+      expect(byEnglish.items.map((row) => row.tenancyId)).toContain(sabbir.tenancyId);
+      const byBanglaPhone = await renters(`q=${encodeURIComponent(bnDigits(`${phone.slice(0, 5)}-${phone.slice(5)}`))}`);
+      expect(byBanglaPhone.items.map((row) => row.tenancyId)).toEqual([sabbir.tenancyId]);
+      const inBlockD = await renters(`areaId=${tree.blockD.id}`);
+      expect(inBlockD.items.map((row) => row.tenancyId)).toEqual([sabbir.tenancyId]);
     });
 
     it('edits a person, keeps phones unique, and deletes only an unlinked one', async () => {
@@ -362,8 +362,7 @@ describe('Members: people, owners, renters and households (e2e)', () => {
       expect(JSON.stringify(log.after_data)).not.toContain(created.nid!);
 
       await send('delete', `/persons/${created.id}`, admin.cookie).expect(204);
-      const linked = (await members(`q=${encodeURIComponent('করিম')}`)).items.find((row) => row.name.includes(MARK))!;
-      const inUse = await send('delete', `/persons/${linked.id}`, admin.cookie).expect(409);
+      const inUse = await send('delete', `/persons/${await personNamed('করিম')}`, admin.cookie).expect(409);
       expect(inUse.body.code).toBe('person_in_use');
     });
   });
@@ -387,16 +386,11 @@ describe('Members: people, owners, renters and households (e2e)', () => {
       ]);
       manager = await makeUser([{ roleId: managerRole, scope: tree.blockC.id }]);
       viewer = await makeUser([{ roleId: await makeRole(['members:view']) }]);
-      personInD = (await members(`role=renter&areaId=${tree.blockD.id}`)).items[0]!.id;
-      personInC = (await members(`q=${encodeURIComponent('করিম')}`)).items.find((row) => row.name.includes(MARK))!.id;
+      personInD = await personNamed('সাব্বির');
+      personInC = await personNamed('করিম');
     });
 
     it('a Block C manager sees and changes only people and rows in Block C', async () => {
-      const list = await members('pageSize=100', manager.cookie);
-      expect(list.items.map((row) => row.id)).toContain(personInC);
-      expect(list.items.map((row) => row.id)).not.toContain(personInD);
-      expect(list.items.every((row) => row.place === null || !row.place.address.includes('ব্লক ডি'))).toBe(true);
-
       await get(`/persons/${personInD}`, manager.cookie).expect(404);
       await send('patch', `/persons/${personInD}`, manager.cookie).send({ fullName: 'x' }).expect(404);
       await get(`/locations/${units.shopD1}/people`, manager.cookie).expect(404);
@@ -431,7 +425,6 @@ describe('Members: people, owners, renters and households (e2e)', () => {
       const foreign = await prisma.persons.create({ data: { society_id: otherSocietyId, full_name: `বিদেশি ${MARK}` } });
       await get(`/persons/${foreign.id}`, admin.cookie).expect(404);
       await send('patch', `/persons/${foreign.id}`, admin.cookie).send({ fullName: 'x' }).expect(404);
-      expect((await members(`q=${encodeURIComponent('বিদেশি')}`)).items).toHaveLength(0);
 
       const level = await prisma.location_levels.create({ data: { society_id: otherSocietyId, depth: 1, name_bn: 'স্তর', is_unit_level: true } });
       const id = randomUUID();
@@ -446,7 +439,7 @@ describe('Members: people, owners, renters and households (e2e)', () => {
 
     it('routes need their permission', async () => {
       const nobody = await makeUser([{ roleId: await makeRole(['notices:view']) }]);
-      await get('/members', nobody.cookie).expect(403);
+      await get('/registers/owners', nobody.cookie).expect(403);
       await get(`/locations/${tree.plot14.id}/people`, nobody.cookie).expect(404);
       await send('post', '/ownerships', viewer.cookie)
         .send({ locationId: tree.plot14.id, owner: person('x'), sharePercent: '100', startDate: '2026-01-01' })

@@ -1,6 +1,7 @@
 import "server-only";
 
 import type {
+  BuildingGrid,
   LevelCounts,
   LocationLevel,
   LocationSearch,
@@ -47,6 +48,14 @@ export async function getLocation(id: string): Promise<LocationView | null> {
   });
   if (missing(response.status)) return null;
   if (!data) throw failed("the location", response.status);
+  return data;
+}
+
+/** A building's floors and their units for the grid; null when unknown or outside the caller's area. */
+export async function getBuildingGrid(id: string): Promise<BuildingGrid | null> {
+  const { data, response } = await api.GET("/locations/{id}/grid", { params: { path: { id } }, headers: await authHeaders(), cache: "no-store" });
+  if (missing(response.status)) return null;
+  if (!data) throw failed("the building grid", response.status);
   return data;
 }
 

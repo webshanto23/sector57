@@ -293,10 +293,11 @@ export function periodDays(from: string | null | undefined, to: string | null | 
 // Finding what to bill
 // ---------------------------------------------------------------------------
 
-/** `GET /billing/lookup?q=`: units and members to bill, within the caller's billing area. */
+/** `GET /billing/lookup?q=`: units and members to bill, within the caller's billing area. `personId` finds one member. */
 export const billingLookupQuery = z.object({
   q: z.string().transform(cleanText).pipe(z.string().max(100)).optional(),
   unitId: z.uuid().optional(),
+  personId: z.uuid().optional(),
 });
 export type BillingLookupQuery = z.infer<typeof billingLookupQuery>;
 
