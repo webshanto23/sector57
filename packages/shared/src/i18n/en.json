@@ -682,7 +682,15 @@
       "invalid_storey": "A unit can only cover floors beside its own, in the same building.",
       "floor_token_missing": "Put '{n}' where the floor number goes.",
       "letter_token_missing": "Put '{letter}' where each unit's letter goes.",
-      "layout_not_empty": "Floors can only be set up in an empty building. Add more floors one by one instead."
+      "layout_not_empty": "Floors can only be set up in an empty building. Add more floors one by one instead.",
+      "unit_merged": "This unit was combined into another one and is kept as history only.",
+      "combine_unit_inactive": "An inactive or already combined unit can't be combined.",
+      "combine_not_side_by_side": "Only units on the same floor, or on floors of the same building, can be combined.",
+      "combine_owners_differ": "These units have different owners. Fix the owners first so they match.",
+      "combine_open_bills": "A unit being retired still has unpaid bills. Settle them first.",
+      "combine_open_tenancy": "A unit being retired still has a renter. End the tenancy first.",
+      "combine_occupants": "People still live in a unit being retired. Move them first.",
+      "combine_vehicles": "A unit being retired still has a vehicle or parking slot. Move it first."
     }
   },
   "Cms": {
@@ -923,7 +931,8 @@
       "save": "Save floors",
       "alsoOn": "Also on {names}",
       "home": "Main part on {name}",
-      "alsoHere": "Units from other floors that cover this one"
+      "alsoHere": "Units from other floors that cover this one",
+      "mergedInto": "Combined into {name} on {date}. This unit is kept as history only."
     },
     "layout": {
       "title": "Set up floors and units",
@@ -958,7 +967,13 @@
       "typeLabel": "New type",
       "apply": "Set type",
       "clear": "Clear",
-      "done": "{count, plural, one {# unit} other {# units}} updated."
+      "done": "{count, plural, one {# unit} other {# units}} updated.",
+      "combine": "Combine",
+      "combineTitle": "Combine into one unit",
+      "combineHint": "Pick the unit to keep. The others become history: inactive, their owners ended, their bills and documents kept. The kept unit covers their floors and its size becomes the total.",
+      "keep": "Keep",
+      "confirmCombine": "Combine {count, plural, one {# unit} other {# units}}",
+      "combined": "Units combined."
     },
     "seeUnits": "See its units",
     "name": "Name",

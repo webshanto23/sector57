@@ -45,7 +45,7 @@ describe('Multi-storey buildings: covering storeys and setting up floors (e2e)',
     return { id: user.id, cookie: `${AUTH_COOKIES.access}=${token}; ${AUTH_COOKIES.csrf}=${CSRF}` };
   }
 
-  const send = (method: 'post' | 'put' | 'delete', url: string, cookie: string) =>
+  const send = (method: 'post' | 'put' | 'patch' | 'delete', url: string, cookie: string) =>
     request(server())[method](url).set('Cookie', cookie).set('Origin', ORIGIN).set(CSRF_HEADER, CSRF);
   const get = (url: string, cookie: string) => request(server()).get(url).set('Cookie', cookie);
   const level = (depth: number) => levels.find((l) => l.depth === depth)!.id;
@@ -86,6 +86,13 @@ describe('Multi-storey buildings: covering storeys and setting up floors (e2e)',
 
   afterAll(async () => {
     if (prisma) {
+      if (places.sector) {
+        const root = await prisma.locations.findUniqueOrThrow({ where: { id: places.sector }, select: { path: true } });
+        const ids = (await prisma.locations.findMany({ where: { path: { startsWith: root.path } }, select: { id: true } })).map((row) => row.id);
+        await prisma.occupants.deleteMany({ where: { unit_id: { in: ids } } });
+        await prisma.ownerships.deleteMany({ where: { location_id: { in: ids } } });
+        await prisma.units.updateMany({ where: { location_id: { in: ids } }, data: { merged_into: null, merged_on: null } });
+      }
       const persons = await prisma.persons.findMany({ where: { full_name: { contains: MARK } }, select: { id: true } });
       const users = await prisma.users.findMany({ where: { person_id: { in: persons.map((p) => p.id) } }, select: { id: true } });
       const userIds = users.map((u) => u.id);
@@ -226,6 +233,75 @@ describe('Multi-storey buildings: covering storeys and setting up floors (e2e)',
       await setType([duplex.id, upper], 'office', onS3.cookie).expect(404);
       await setType([duplex.id], 'residential', onS3.cookie).expect(200);
       expect(unitDetailSchema.parse((await get(`/units/${upper}`, admin.cookie).expect(200)).body).unitType).toBe('shop');
+    });
+  });
+
+  describe('combining units', () => {
+    const combine = (keepId: string, mergeIds: string[], cookie = admin.cookie) => send('post', '/units/combine', cookie).send({ keepId, mergeIds });
+    const unitAt = async (floor: string, name: string) =>
+      (await prisma.locations.findFirstOrThrow({ where: { parent_id: floor, name }, select: { id: true } })).id;
+    let units: Record<'1A' | '1B' | '2A' | '2B', string>;
+    let floors: { one: string; two: string };
+    let owner: string;
+
+    beforeAll(async () => {
+      const building = await addLocation(places.plot, 5, 'ভবন ই');
+      await send('post', `/locations/${building}/layout`, admin.cookie)
+        .send({
+          floors: { from: 1, to: 2, pattern: 'Floor {n}', groundName: null, groundHasUnits: true },
+          units: { letters: 'AB', pattern: '{n}{letter}' },
+          bangla: false,
+          unitType: 'residential',
+          sizeSqft: '1000',
+          billTo: 'owner',
+        })
+        .expect(201);
+      const made = await view(building);
+      floors = { one: made.children.find((c) => c.name === 'Floor 1')!.id, two: made.children.find((c) => c.name === 'Floor 2')!.id };
+      units = {
+        '1A': await unitAt(floors.one, '1A'),
+        '1B': await unitAt(floors.one, '1B'),
+        '2A': await unitAt(floors.two, '2A'),
+        '2B': await unitAt(floors.two, '2B'),
+      };
+      owner = (await prisma.persons.create({ data: { society_id: societyId, full_name: `মালিক ${MARK}` } })).id;
+      const other = (await prisma.persons.create({ data: { society_id: societyId, full_name: `অন্য মালিক ${MARK}` } })).id;
+      const start = new Date('2026-01-01');
+      await prisma.ownerships.createMany({
+        data: [
+          { society_id: societyId, location_id: units['1A'], person_id: owner, start_date: start },
+          { society_id: societyId, location_id: units['2A'], person_id: owner, start_date: start },
+          { society_id: societyId, location_id: units['2B'], person_id: other, start_date: start },
+        ],
+      });
+    });
+
+    it('refuses different owners, other buildings and a retired unit someone lives in', async () => {
+      expect((await combine(units['1A'], [units['2B']]).expect(409)).body.code).toBe('combine_owners_differ');
+      expect((await combine(units['1B'], [duplex.id]).expect(409)).body.code).toBe('combine_not_side_by_side');
+      await send('post', '/occupants', admin.cookie)
+        .send({ unitId: units['2A'], tenancyId: null, person: { fullName: `বাসিন্দা ${MARK}`, phone: randomPhone() }, relation: 'head', startDate: '2026-01-01' })
+        .expect(201);
+      expect((await combine(units['1A'], [units['2A']]).expect(409)).body.code).toBe('combine_occupants');
+      await prisma.occupants.deleteMany({ where: { unit_id: units['2A'] } });
+
+      const onFloorOne = await makeUser([{ roleId: await makeRole(['units:view', 'units:edit']), scope: floors.one }]);
+      await combine(units['1A'], [units['2A']], onFloorOne.cookie).expect(404);
+    });
+
+    it('keeps one unit over both floors and retires the other as history', async () => {
+      expect((await combine(units['1A'], [units['2A']]).expect(200)).body).toEqual({ keptId: units['1A'], merged: 1 });
+
+      const kept = unitDetailSchema.parse((await get(`/units/${units['1A']}`, admin.cookie).expect(200)).body);
+      expect(kept).toMatchObject({ isActive: true, sizeSqft: '2000', covers: [{ id: floors.two, name: 'Floor 2' }], mergedInto: null });
+      const retired = unitDetailSchema.parse((await get(`/units/${units['2A']}`, admin.cookie).expect(200)).body);
+      expect(retired).toMatchObject({ isActive: false, mergedInto: { id: units['1A'], name: '1A' }, can: { edit: false, delete: false } });
+      expect(await prisma.ownerships.count({ where: { location_id: units['2A'], end_date: null } })).toBe(0);
+      expect(await prisma.ownerships.count({ where: { location_id: units['1A'], end_date: null } })).toBe(1);
+
+      expect((await send('patch', `/units/${units['2A']}`, admin.cookie).send({ name: 'x' }).expect(409)).body.code).toBe('unit_merged');
+      expect((await combine(units['1A'], [units['2A']]).expect(409)).body.code).toBe('combine_unit_inactive');
+      expect((await view(floors.two)).alsoHere.map((unit) => unit.id)).toEqual([units['1A']]);
     });
   });
 });

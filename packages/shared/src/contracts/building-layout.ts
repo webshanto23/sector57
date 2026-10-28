@@ -122,3 +122,38 @@ export const unitTypeBulkSchema = z.object({
   unitType: unitTypeCode,
 });
 export type UnitTypeBulkInput = z.infer<typeof unitTypeBulkSchema>;
+
+// ---------------------------------------------------------------------------
+// Combining units (3A + 4A into one duplex)
+// ---------------------------------------------------------------------------
+
+/** Most units one combine retires. */
+export const MAX_COMBINE = 20;
+
+/**
+ * `POST /units/combine`: `keepId` carries on (and covers the others' floors); each of
+ * `mergeIds` becomes inactive, "merged into" the kept unit, its history kept.
+ */
+export const unitCombineSchema = z
+  .object({
+    keepId: z.uuid(),
+    mergeIds: z
+      .array(z.uuid())
+      .min(1)
+      .max(MAX_COMBINE)
+      .refine((ids) => new Set(ids).size === ids.length, 'duplicate_unit'),
+  })
+  .refine((input) => !input.mergeIds.includes(input.keepId), { message: 'duplicate_unit', path: ['mergeIds'] });
+export type UnitCombineInput = z.infer<typeof unitCombineSchema>;
+
+/** Why a combine is refused, in the order they are checked. */
+export const COMBINE_PROBLEMS = [
+  'unit_inactive',
+  'not_side_by_side',
+  'owners_differ',
+  'open_bills',
+  'open_tenancy',
+  'occupants',
+  'vehicles',
+] as const;
+export type CombineProblem = (typeof COMBINE_PROBLEMS)[number];

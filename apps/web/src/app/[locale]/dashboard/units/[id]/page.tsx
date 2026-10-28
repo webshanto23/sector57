@@ -1,4 +1,4 @@
-import type { Locale } from "@s57/shared";
+import { formatDate, type Locale } from "@s57/shared";
 import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -57,7 +57,15 @@ export default async function UnitPage({ params }: PageProps<"/[locale]/dashboar
         }
       />
       <div className="grid gap-3.5">
-        {!unit.can.edit ? <Note>{t("readOnly")}</Note> : null}
+        {unit.mergedInto ? (
+          <Note>
+            <Link href={`/dashboard/units/${unit.mergedInto.id}`} className="font-semibold underline-offset-2 hover:underline">
+              {t("storeys.mergedInto", { name: unit.mergedInto.name, date: formatDate(unit.mergedInto.on, locale as Locale, "short") })}
+            </Link>
+          </Note>
+        ) : !unit.can.edit ? (
+          <Note>{t("readOnly")}</Note>
+        ) : null}
         <UnitForm key={unit.id} unit={unit} unitTypes={unitTypes} />
         <UnitStoreysCard key={`storeys-${unit.id}`} unit={unit} />
         {people ? <PeoplePanel key={`people-${unit.id}`} people={people} /> : null}

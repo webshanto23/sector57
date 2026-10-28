@@ -383,6 +383,8 @@ export const unitDetailSchema = unitSummarySchema.extend({
   covers: z.array(storeyRefSchema),
   /** Storeys it could cover (beside its own); empty when the caller may not edit it. */
   coverOptions: z.array(storeyRefSchema),
+  /** Combined into another unit (Step 37): that unit and the date. Such a unit is history only. */
+  mergedInto: z.object({ id: z.uuid(), name: z.string(), on: z.iso.date() }).nullable(),
   can: z.object({ edit: z.boolean(), delete: z.boolean() }),
 });
 export type UnitDetail = z.infer<typeof unitDetailSchema>;

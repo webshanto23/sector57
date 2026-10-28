@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '@s57/db';
 import {
   digitVariants,
@@ -39,12 +39,16 @@ const select = {
   size_sqft: true,
   bill_to: true,
   occupancy: true,
+  merged_on: true,
+  merged: { select: { location_id: true, locations: { select: { name: true } } } },
   locations: { select: { name: true, code: true, path: true, parent_id: true, is_active: true } },
 } satisfies Prisma.unitsSelect;
 
 type UnitRow = Prisma.unitsGetPayload<{ select: typeof select }>;
 
 const unitNotFound = () => new NotFoundException({ code: 'unit_not_found', message: 'Unit not found' });
+/** A unit combined into another is history only. */
+const unitMerged = () => new ConflictException({ code: 'unit_merged', message: 'This unit was combined into another one' });
 
 /** What an audit row keeps of a unit. */
 const snapshot = (unit: Omit<UnitSummary, 'id' | 'parentId' | 'address' | 'occupancy'>) => ({
@@ -154,7 +158,7 @@ export class UnitsService {
   async get(actor: Actor, id: string): Promise<UnitDetail> {
     const row = await this.visibleRow(actor, id);
     const located = { path: row.locations.path };
-    const edit = actor.access.can('edit', 'units', located);
+    const edit = actor.access.can('edit', 'units', located) && row.merged === null;
     const [names, breadcrumb, covers, options] = await Promise.all([
       this.tree.addressNames(actor.societyId, [row.locations.path]),
       this.tree.breadcrumb(actor.access, actor.societyId, row.locations.path, 'locations'),
@@ -166,13 +170,15 @@ export class UnitsService {
       breadcrumb,
       covers,
       coverOptions: options.filter((option) => actor.access.can('view', 'units', { path: option.path })).map(({ id, name }) => ({ id, name })),
-      can: { edit, delete: actor.access.can('delete', 'units', located) },
+      mergedInto: row.merged ? { id: row.merged.location_id, name: row.merged.locations.name, on: row.merged_on!.toISOString().slice(0, 10) } : null,
+      can: { edit, delete: actor.access.can('delete', 'units', located) && row.merged === null },
     };
   }
 
   /** Sets the other storeys a unit covers (`UnitStoreysService`). */
   async setStoreys(actor: Actor, id: string, input: UnitStoreysInput): Promise<UnitDetail> {
     const row = await this.visibleRow(actor, id);
+    if (row.merged) throw unitMerged();
     await this.storeys.replace(actor, { id, parentId: row.locations.parent_id!, path: row.locations.path }, input);
     return this.get(actor, id);
   }
@@ -252,6 +258,7 @@ export class UnitsService {
   async update(actor: Actor, id: string, input: UnitUpdateInput): Promise<UnitDetail> {
     const row = await this.visibleRow(actor, id);
     if (!actor.access.can('edit', 'units', { path: row.locations.path })) throw beyondPermissions();
+    if (row.merged) throw unitMerged();
     if (input.code !== undefined && (await this.tree.codeInUse(actor.societyId, input.code, id))) throw codeTaken();
     if (input.unitType !== undefined) await this.unitTypes.assertCodes(actor.societyId, [input.unitType]);
 
@@ -273,6 +280,7 @@ export class UnitsService {
   async remove(actor: Actor, id: string): Promise<void> {
     const row = await this.visibleRow(actor, id);
     if (!actor.access.can('delete', 'units', { path: row.locations.path })) throw beyondPermissions();
+    if (row.merged) throw unitMerged();
     const before = toSummary(row, new Map());
     try {
       await this.prisma.$transaction(async (tx) => {

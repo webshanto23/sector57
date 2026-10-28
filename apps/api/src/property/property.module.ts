@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AuditModule } from '../audit/audit.module.js';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { LevelsController } from './levels.controller.js';
+import { CombineService } from './combine.service.js';
 import { LayoutService } from './layout.service.js';
 import { LevelsService } from './levels.service.js';
 import { LocationSearchService } from './location-search.service.js';
@@ -20,7 +21,7 @@ import { UnitsService } from './units.service.js';
 @Module({
   imports: [PrismaModule, AuditModule],
   controllers: [LevelsController, LocationsController, UnitTypesController, UnitsController],
-  providers: [TreeService, OccupancyService, LevelsService, LayoutService, LocationSearchService, LocationsService, UnitTypesService, UnitPeopleService, UnitStoreysService, UnitsService],
+  providers: [TreeService, OccupancyService, LevelsService, LayoutService, CombineService, LocationSearchService, LocationsService, UnitTypesService, UnitPeopleService, UnitStoreysService, UnitsService],
   exports: [TreeService, OccupancyService, UnitTypesService],
 })
 export class PropertyModule {}

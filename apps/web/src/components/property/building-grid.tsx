@@ -14,7 +14,8 @@ import { useSubmit } from "./use-submit";
 
 /**
  * A building at a glance: one row per floor with its units. Editors tick units (or a whole
- * floor) and give them one type, such as shops on the ground floor.
+ * floor) and give them one type, such as shops on the ground floor, or combine them into one
+ * unit (a duplex): the kept unit carries on and the others become history.
  */
 export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitTypes: UnitTypeItem[]; unitsOpen: boolean }) {
   const t = useTranslations("Property.grid");
@@ -23,6 +24,10 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
   const { status, busy, run } = useSubmit();
   const [chosen, setChosen] = useState<Set<string>>(new Set());
   const [unitType, setUnitType] = useState(unitTypes[0]?.code ?? "");
+  const [keepId, setKeepId] = useState<string | null>(null);
+  // Picked units, lowest floor first: the first one is kept unless the editor picks another.
+  const picked = grid.floors.flatMap((floor) => floor.units.filter((unit) => chosen.has(unit.id)).map((unit) => ({ ...unit, floor: floor.name })));
+  const keep = picked.find((unit) => unit.id === keepId) ?? picked[0];
 
   const toggle = (ids: string[], on: boolean) => {
     const next = new Set(chosen);
@@ -39,6 +44,16 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
       localDigits(t("done", { count: chosen.size }), locale),
     );
     if (done !== undefined) setChosen(new Set());
+  }
+
+  async function combine() {
+    if (!keep) return;
+    const mergeIds = picked.filter((unit) => unit.id !== keep.id).map((unit) => unit.id);
+    const done = await run(() => api.POST("/units/combine", { body: { keepId: keep.id, mergeIds } }), t("combined"));
+    if (done !== undefined) {
+      setChosen(new Set());
+      setKeepId(null);
+    }
   }
 
   return (
@@ -107,6 +122,28 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
           );
         })}
       </ol>
+
+      {grid.canEdit && picked.length >= 2 && keep ? (
+        <div className="grid gap-2 rounded-[10px] border border-line bg-surface-2 p-3">
+          <h4 className="text-[14px] font-semibold">{t("combineTitle")}</h4>
+          <p className="text-[13px] text-muted-foreground">{t("combineHint")}</p>
+          <fieldset className="flex flex-wrap gap-2">
+            <legend className="sr-only">{t("keep")}</legend>
+            {picked.map((unit) => (
+              <label key={unit.id} className="inline-flex items-center gap-2 rounded-[8px] border border-line bg-surface px-3 py-2 text-[13.5px]">
+                <input type="radio" name="keep" className="size-4 accent-primary" checked={unit.id === keep.id} onChange={() => setKeepId(unit.id)} />
+                {unit.name} · {unit.floor}
+                {unit.id === keep.id ? <Chip tone="good">{t("keep")}</Chip> : null}
+              </label>
+            ))}
+          </fieldset>
+          <div>
+            <Button type="button" variant="outline" disabled={busy} onClick={() => void combine()}>
+              {localDigits(t("confirmCombine", { count: picked.length }), locale)}
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       {grid.canEdit ? (
         <div className="sticky bottom-2 flex flex-wrap items-center gap-2 rounded-[10px] border border-line bg-surface p-2.5">

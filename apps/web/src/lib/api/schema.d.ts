@@ -708,6 +708,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/units/combine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UnitsController_combine"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/units/bulk-type": {
         parameters: {
             query?: never;
@@ -4583,6 +4599,13 @@ export interface components {
                 id: string;
                 name: string;
             }[];
+            mergedInto: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** Format: date */
+                on: string;
+            } | null;
             can: {
                 edit: boolean;
                 delete: boolean;
@@ -4606,6 +4629,16 @@ export interface components {
             sizeSqft?: string | null;
             /** @enum {string} */
             billTo: "owner" | "renter";
+        };
+        UnitCombineDto: {
+            /** Format: uuid */
+            keepId: string;
+            mergeIds: string[];
+        };
+        UnitCombineResultDto_Output: {
+            /** Format: uuid */
+            keptId: string;
+            merged: number;
         };
         UnitTypeBulkDto: {
             unitIds: string[];
@@ -12135,6 +12168,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BulkResultDto_Output"];
+                };
+            };
+        };
+    };
+    UnitsController_combine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnitCombineDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitCombineResultDto_Output"];
                 };
             };
         };

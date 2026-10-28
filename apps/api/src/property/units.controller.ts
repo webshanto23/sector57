@@ -9,6 +9,7 @@ import {
   unitListSchema,
   unitStoreysInputSchema,
   unitTypeBulkSchema,
+  unitCombineSchema,
   unitUpdateSchema,
 } from '@s57/shared';
 import { ZodResponse } from 'nestjs-zod';
@@ -18,6 +19,7 @@ import { createDto } from '../common/create-dto.js';
 import { IdParamDto } from '../common/id-param.dto.js';
 import { Can, CurrentActor, type Actor } from '../permissions/permissions.decorators.js';
 import { BulkResultDto } from './locations.controller.js';
+import { CombineService } from './combine.service.js';
 import { LayoutService } from './layout.service.js';
 import { UnitsService } from './units.service.js';
 
@@ -30,6 +32,8 @@ export class UnitCreateDto extends createDto(unitCreateSchema) {}
 export class UnitUpdateDto extends createDto(unitUpdateSchema) {}
 export class UnitBulkDto extends createDto(unitBulkSchema) {}
 export class UnitStoreysDto extends createDto(unitStoreysInputSchema) {}
+export class UnitCombineDto extends createDto(unitCombineSchema) {}
+export class UnitCombineResultDto extends createDto(z.object({ keptId: z.uuid(), merged: z.number().int().min(1) })) {}
 export class UnitTypeBulkDto extends createDto(unitTypeBulkSchema) {}
 export class UnitTypeBulkResultDto extends createDto(z.object({ updated: z.number().int().min(0) })) {}
 
@@ -40,6 +44,7 @@ export class UnitsController {
   constructor(
     private readonly units: UnitsService,
     private readonly layout: LayoutService,
+    private readonly combiner: CombineService,
   ) {}
 
   @Get()
@@ -77,6 +82,15 @@ export class UnitsController {
   @ZodResponse({ status: 201, type: BulkResultDto })
   bulk(@CurrentActor() actor: Actor, @Body() body: UnitBulkDto) {
     return this.units.bulk(actor, body);
+  }
+
+  /** Combines units into one (3A + 4A into a duplex): the kept one carries on, the others become history. */
+  @Post('combine')
+  @HttpCode(200)
+  @Can('units', 'edit')
+  @ZodResponse({ status: 200, type: UnitCombineResultDto })
+  combine(@CurrentActor() actor: Actor, @Body() body: UnitCombineDto) {
+    return this.combiner.combine(actor, body);
   }
 
   /** One type for many units (ground-floor shops in the building grid), all or none. */
