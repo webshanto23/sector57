@@ -313,14 +313,44 @@ export const unitDetailSchema = unitSummarySchema.extend({
 });
 export type UnitDetail = z.infer<typeof unitDetailSchema>;
 
+export const UNIT_STATUSES = ['active', 'inactive'] as const;
+export type UnitStatus = (typeof UNIT_STATUSES)[number];
+
 /** `GET /units` query. `q` matches name or holding code (Bangla or ASCII digits); `areaId` keeps units under that location. */
 export const unitListQuery = pagination.extend({
   q: z.string().transform(cleanText).pipe(z.string().max(100)).optional(),
   areaId: z.uuid().optional(),
   unitType: unitTypeCode.optional(),
   occupancy: z.enum(OCCUPANCIES).optional(),
+  billTo: z.enum(BILL_TO).optional(),
+  status: z.enum(UNIT_STATUSES).optional(),
 });
 export type UnitListQuery = z.infer<typeof unitListQuery>;
+
+/** `GET /units/areas` query: the areas under `parentId`, or the caller's top areas. */
+export const unitAreasQuery = z.object({ parentId: z.uuid().optional() });
+export type UnitAreasQuery = z.infer<typeof unitAreasQuery>;
+
+/** An area (not a unit) to narrow the units list to. */
+export const unitAreaSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  levelBn: z.string(),
+  levelEn: z.string().nullable(),
+  unitCount: z.number().int().min(0),
+});
+export type UnitArea = z.infer<typeof unitAreaSchema>;
+
+/**
+ * `GET /units/areas`, for the units list's area picker with only the `units` permission:
+ * the chosen area, its ancestors (`open` false above the caller's area) and the areas one level down.
+ */
+export const unitAreasSchema = z.object({
+  area: unitAreaSchema.nullable(),
+  breadcrumb: z.array(crumbSchema),
+  children: z.array(unitAreaSchema),
+});
+export type UnitAreas = z.infer<typeof unitAreasSchema>;
 
 /** Units by occupancy for the list's filters (all occupancies, whatever `occupancy` is). */
 export const unitCountsSchema = z.object({

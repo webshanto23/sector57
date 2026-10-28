@@ -962,7 +962,14 @@
       "address": "Address",
       "empty": "No units match.",
       "addHint": "Add units",
-      "back": "All units"
+      "back": "All units",
+      "area": "Area",
+      "allAreas": "All areas",
+      "allIn": "All of {name}",
+      "areaOption": "{name} ({count})",
+      "allBillTo": "Bills go to: anyone",
+      "allStatus": "Active and inactive",
+      "active": "Active"
     }
   },
   "Members": {

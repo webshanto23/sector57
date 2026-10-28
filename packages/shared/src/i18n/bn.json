@@ -962,7 +962,14 @@
       "address": "ঠিকানা",
       "empty": "মেলে এমন কোনো ইউনিট নেই।",
       "addHint": "ইউনিট যোগ",
-      "back": "সব ইউনিট"
+      "back": "সব ইউনিট",
+      "area": "এলাকা",
+      "allAreas": "সব এলাকা",
+      "allIn": "পুরো {name}",
+      "areaOption": "{name} ({count})",
+      "allBillTo": "বিল যাবে: সবাই",
+      "allStatus": "সক্রিয় ও নিষ্ক্রিয়",
+      "active": "সক্রিয়"
     }
   },
   "Members": {

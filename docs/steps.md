@@ -1038,6 +1038,19 @@ Asked for by Anis on 2026-10-28: unit types (residential, shop ...) become each 
 - **Checked:** property and billing e2e files, `pnpm check`. Applied to the dev and test databases. Not opened in a browser.
 - **Not in this step:** per-type billing rates, archiving a type instead of removing it.
 
+## Step 35: More filters on the units list — Slice 1 built, awaiting review
+
+Asked for by Anis on 2026-10-28: more filters on `/dashboard/units`. Agreed split: units filters stay on `/units`; level counts go on the property map; full owner and renter lists stay in Directory and the reports. Built on `step/35-units-filters` (from `step/34-unit-types`).
+
+- **Slice 1 (built):** an area picker that narrows one level at a time, plus bill-to and status filters.
+  - **Shared:** `unitListQuery` gains `billTo` and `status` (`UNIT_STATUSES`); `unitAreasQuery` and `unitAreasSchema`.
+  - **API:** `GET /units/areas?parentId=` (`units.view`) gives the chosen area, its breadcrumb and the child areas (no units) with unit counts, inside the caller's `units` scope. `TreeService.tops` (shared with `GET /locations`) gives the caller's top areas. Areas outside scope, units and unknown ids are 404.
+  - **Web:** the filters move to `units/unit-filters.tsx`. The way down uses `AreaCrumbs`; the next level down is a select in the GET form. This replaces the old "only inside X" chip, which needed `locations.view`.
+  - **Tests:** `property.e2e-spec.ts` covers the bill-to and status filters, and a Block C clerk with only `units.view` using `/units/areas` (top, children without units, breadcrumb, 404 outside scope or on a unit, `/locations` refused). `pnpm check` passes. Not opened in a browser.
+- **Slice 2 (planned):** Owner and Current renter columns and search by person name or phone, shown only with the people permission.
+- **Slice 3 (planned):** "missing data" (no owner, no holding code, no size) and "owner lives elsewhere" filters.
+- **Slice 4 (planned):** counts by level on the property map.
+
 ## Later: beyond milestone 3
 
 These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.

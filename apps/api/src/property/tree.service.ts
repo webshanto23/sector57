@@ -116,6 +116,17 @@ export class TreeService {
     return node;
   }
 
+  /** The top the caller may `view` on `module`: every root for a whole-society caller, else the caller's own areas. */
+  tops(access: CallerAccess, societyId: string, module: PermissionModule): Promise<LocationNode[]> {
+    const paths = access.paths('view', module);
+    if (paths === 'all') return this.nodes(societyId, Prisma.sql`l.parent_id is null`);
+    // Areas inside another of the caller's areas are reached through that one.
+    const tops = paths.filter((path) => !paths.some((other) => other !== path && path.startsWith(other)));
+    const ids = tops.map((path) => pathIds(path).at(-1)!);
+    if (ids.length === 0) return Promise.resolve([]);
+    return this.nodes(societyId, Prisma.sql`l.id in (${Prisma.join(ids.map((id) => Prisma.sql`${id}::uuid`))})`);
+  }
+
   children(societyId: string, parentId: string): Promise<LocationNode[]> {
     return this.nodes(societyId, Prisma.sql`l.parent_id = ${parentId}::uuid`);
   }

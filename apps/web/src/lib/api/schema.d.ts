@@ -596,6 +596,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/units/areas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UnitsController_areas"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/units/{id}": {
         parameters: {
             query?: never;
@@ -4261,6 +4277,32 @@ export interface components {
                 rented: number;
                 vacant: number;
             };
+        };
+        UnitAreasDto_Output: {
+            area: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                levelBn: string;
+                levelEn: string | null;
+                unitCount: number;
+            } | null;
+            breadcrumb: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                levelBn: string;
+                levelEn: string | null;
+                open: boolean;
+            }[];
+            children: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                levelBn: string;
+                levelEn: string | null;
+                unitCount: number;
+            }[];
         };
         UnitDetailDto_Output: {
             /** Format: uuid */
@@ -11506,6 +11548,8 @@ export interface operations {
                 areaId?: string;
                 unitType?: string;
                 occupancy?: "owner_occupied" | "rented" | "vacant";
+                billTo?: "owner" | "renter";
+                status?: "active" | "inactive";
             };
             header?: never;
             path?: never;
@@ -11542,6 +11586,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UnitDetailDto_Output"];
+                };
+            };
+        };
+    };
+    UnitsController_areas: {
+        parameters: {
+            query?: {
+                parentId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitAreasDto_Output"];
                 };
             };
         };

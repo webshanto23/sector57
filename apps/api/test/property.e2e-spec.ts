@@ -4,6 +4,7 @@ import {
   CSRF_HEADER,
   locationPath,
   locationViewSchema,
+  unitAreasSchema,
   unitDetailSchema,
   unitListSchema,
   type LocationView,
@@ -243,6 +244,17 @@ describe('Property: location tree and units (e2e)', () => {
       const found = unitListSchema.parse((await get(`/units?q=${encodeURIComponent('ফ্ল্যাট 4')}`, admin.cookie).expect(200)).body);
       expect(found.items.map((item) => item.id)).toContain(unit.id);
 
+      const renters = unitListSchema.parse((await get(`/units?areaId=${tree.blockC.id}&billTo=renter`, admin.cookie).expect(200)).body);
+      expect(renters.items.map((item) => item.name)).toEqual(['ফ্ল্যাট ১এ', 'ফ্ল্যাট ১বি']);
+      expect(renters.counts.total).toBe(2);
+      await prisma.locations.update({ where: { id: unit.id }, data: { is_active: false } });
+      const inactive = unitListSchema.parse((await get(`/units?areaId=${tree.blockC.id}&status=inactive`, admin.cookie).expect(200)).body);
+      expect(inactive.items.map((item) => item.id)).toEqual([unit.id]);
+      const active = unitListSchema.parse((await get(`/units?areaId=${tree.blockC.id}&status=active`, admin.cookie).expect(200)).body);
+      expect(active.total).toBe(2);
+      await prisma.locations.update({ where: { id: unit.id }, data: { is_active: true } });
+      await get('/units?status=gone', admin.cookie).expect(400);
+
       const blockC = await view(`/locations/${tree.blockC.id}`, admin.cookie);
       expect(blockC.children.find((child) => child.id === tree.road9.id)!.unitCount).toBe(3);
     });
@@ -299,6 +311,30 @@ describe('Property: location tree and units (e2e)', () => {
       expect(units.items.length).toBeGreaterThan(0);
       expect(units.items.every((unit) => unit.address.includes('ব্লক সি'))).toBe(true);
       await get(`/units/${unitInD}`, manager.cookie).expect(404);
+    });
+
+    it('a Block C clerk with only units:view picks areas inside Block C', async () => {
+      const clerk = await makeUser([{ roleId: await makeRole(['units:view']), scope: tree.blockC.id }]);
+      const top = unitAreasSchema.parse((await get('/units/areas', clerk.cookie).expect(200)).body);
+      expect(top.children.map((child) => child.id)).toEqual([tree.blockC.id]);
+
+      const blockC = unitAreasSchema.parse((await get(`/units/areas?parentId=${tree.blockC.id}`, clerk.cookie).expect(200)).body);
+      expect(blockC.area?.id).toBe(tree.blockC.id);
+      expect(blockC.children.map((child) => child.id)).toContain(tree.road9.id);
+      const road = unitAreasSchema.parse((await get(`/units/areas?parentId=${tree.road9.id}`, clerk.cookie).expect(200)).body);
+      expect(road.breadcrumb.map((crumb) => [crumb.id, crumb.open])).toEqual([
+        [tree.sector.id, false],
+        [tree.blockC.id, true],
+      ]);
+      // Units are not areas: Road 9 holds plots and units, only the plots come back.
+      expect(road.children.length).toBeGreaterThan(0);
+      expect(road.children.every((child) => child.levelEn === 'Plot')).toBe(true);
+
+      await get(`/units/areas?parentId=${tree.blockD.id}`, clerk.cookie).expect(404);
+      await get(`/units/areas?parentId=${tree.sector.id}`, clerk.cookie).expect(404);
+      const unitInC = unitListSchema.parse((await get('/units?pageSize=1', clerk.cookie).expect(200)).body).items[0]!;
+      await get(`/units/areas?parentId=${unitInC.id}`, clerk.cookie).expect(404);
+      await get('/locations', clerk.cookie).expect(403);
     });
 
     it('a Block C manager adds and changes only inside Block C', async () => {
