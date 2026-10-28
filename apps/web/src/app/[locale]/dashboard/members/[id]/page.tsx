@@ -41,7 +41,7 @@ export default async function PersonPage({ params }: PageProps<"/[locale]/dashbo
         title={person.fullName}
         sub={[person.fullNameEn, person.phone ? localDigits(person.phone, locale) : null].filter(Boolean).join(" · ") || undefined}
         actions={
-          <Link href="/dashboard/members" className={buttonVariants({ variant: "outline" })}>
+          <Link href="/dashboard/owners" className={buttonVariants({ variant: "outline" })}>
             <ChevronLeft aria-hidden />
             {t("back")}
           </Link>

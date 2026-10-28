@@ -2,8 +2,6 @@ import "server-only";
 
 import {
   type LocationPeople,
-  type MemberList,
-  type MemberListQuery,
   type OrganisationDetail,
   type PersonDetail,
 } from "@s57/shared";
@@ -12,12 +10,6 @@ import { authHeaders } from "./session";
 
 const failed = (what: string, status: number) => new Error(`Could not load ${what} (${status})`);
 const missing = (status: number) => status === 404 || status === 400;
-
-export async function getMembers(query: Partial<MemberListQuery>): Promise<MemberList> {
-  const { data, response } = await api.GET("/members", { params: { query }, headers: await authHeaders(), cache: "no-store" });
-  if (!data) throw failed("members", response.status);
-  return data;
-}
 
 /** Null when the person doesn't exist, belongs to another society or lives outside the caller's area. */
 export async function getPerson(id: string): Promise<PersonDetail | null> {

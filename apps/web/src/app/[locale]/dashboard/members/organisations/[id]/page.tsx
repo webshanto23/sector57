@@ -39,7 +39,7 @@ export default async function OrganisationPage({ params }: PageProps<"/[locale]/
         title={organisation.name}
         sub={t("organisation")}
         actions={
-          <Link href="/dashboard/members" className={buttonVariants({ variant: "outline" })}>
+          <Link href="/dashboard/owners" className={buttonVariants({ variant: "outline" })}>
             <ChevronLeft aria-hidden />
             {t("back")}
           </Link>

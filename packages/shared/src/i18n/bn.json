@@ -252,9 +252,11 @@
       "overview": "সারসংক্ষেপ",
       "property": "সম্পত্তির মানচিত্র",
       "units": "ইউনিট",
-      "members": "মালিক ও ভাড়াটিয়া",
+      "members": "সদস্য",
+      "owners": "মালিক",
+      "renters": "ভাড়াটিয়া",
       "moves": "ওঠা ও ছাড়া",
-      "directory": "বাসিন্দা তালিকা",
+      "directory": "ডিরেক্টরি",
       "forms": "আবেদন",
       "billing": "বিল ও ইনভয়েস",
       "collect": "নগদ আদায়",
@@ -1033,38 +1035,10 @@
     "noMatch": "মেলে এমন কোনো জায়গা নেই।"
   },
   "Members": {
-    "sub": "মালিক, ভাড়াটিয়া ও বাসিন্দা",
     "add": "ব্যক্তি যোগ",
-    "stats": {
-      "owners": "মালিক",
-      "renterHouseholds": "ভাড়াটিয়া পরিবার",
-      "bachelorRenters": "ব্যাচেলর ভাড়াটিয়া",
-      "pendingVerification": "যাচাই বাকি"
-    },
-    "searchLabel": "মালিক ও ভাড়াটিয়া খুঁজুন",
-    "searchPlaceholder": "নাম, ফোন বা এনআইডি",
-    "allRoles": "সবাই",
-    "roleFilter": {
-      "owner": "মালিক",
-      "renter": "ভাড়াটিয়া",
-      "occupant": "বাসিন্দা"
-    },
-    "allVerification": "যাচাই: সব",
-    "verificationFilter": {
-      "pending": "যাচাই বাকি",
-      "verified": "যাচাইকৃত"
-    },
-    "filter": "ফিল্টার",
-    "inArea": "শুধু {name}-এর ভেতরে",
-    "inSomeArea": "শুধু একটি এলাকা",
-    "clearArea": "সব দেখুন",
     "col": {
-      "name": "নাম",
       "role": "ধরন",
-      "place": "ইউনিট",
-      "phone": "ফোন",
-      "id": "পরিচয়পত্র",
-      "status": "অবস্থা"
+      "place": "ইউনিট"
     },
     "owner": "মালিক",
     "renterRole": {
@@ -1110,16 +1084,11 @@
       "female": "নারী",
       "other": "অন্যান্য"
     },
-    "noLink": "কোনো ইউনিটের সাথে যুক্ত নন",
-    "morePlaces": "+আরও {count}টি",
-    "idNid": "এনআইডি আছে",
-    "idLicence": "ট্রেড লাইসেন্স",
-    "idMissing": "নেই",
     "verified": "যাচাইকৃত",
     "verifyNeeded": "যাচাই করুন",
     "organisation": "প্রতিষ্ঠান",
     "empty": "মেলে এমন কেউ নেই।",
-    "back": "সব মালিক ও ভাড়াটিয়া",
+    "back": "সব মালিক",
     "details": "বিবরণ",
     "fullName": "নাম",
     "fullNameHint": "এনআইডিতে যেমন লেখা, সাধারণত বাংলায়।",
@@ -1228,6 +1197,95 @@
       "cancelled": "সদস্যপদ বাতিল"
     },
     "memberSince": "{date} থেকে"
+  },
+  "Registers": {
+    "add": "ব্যক্তি যোগ",
+    "filter": "ফিল্টার",
+    "searchPlaceholder": "নাম বা ফোন",
+    "inArea": "শুধু {name}-এর ভেতরে",
+    "inSomeArea": "শুধু একটি এলাকা",
+    "clearArea": "সব দেখুন",
+    "morePlaces": "আরও {count}টি",
+    "memberNo": "সদস্য নং {no}",
+    "call": "{name}-কে কল করুন",
+    "whatsapp": "{name}-কে হোয়াটসঅ্যাপ",
+    "col": {
+      "name": "নাম",
+      "holdings": "মালিকানা",
+      "phone": "ফোন",
+      "status": "অবস্থা"
+    },
+    "members": {
+      "sub": "সমিতির নিবন্ধিত সদস্য",
+      "searchLabel": "সদস্য খুঁজুন",
+      "status": {
+        "active": "চালু",
+        "lapsed": "মেয়াদ শেষ",
+        "cancelled": "বাতিল"
+      },
+      "col": {
+        "joined": "সদস্য হয়েছেন"
+      },
+      "empty": "কোনো সদস্য মেলেনি।"
+    },
+    "owners": {
+      "sub": "প্লট, ভবন ও ইউনিটের মালিক, সদস্য হোন বা না হোন",
+      "searchLabel": "মালিক খুঁজুন",
+      "stats": {
+        "owners": "মালিক",
+        "members": "সদস্য",
+        "notMembers": "এখনো সদস্য নন",
+        "livesHere": "এখানে থাকেন"
+      },
+      "notMember": "এখনো সদস্য নন",
+      "membershipLabel": "সদস্যপদ",
+      "anyMembership": "সদস্য ও অসদস্য",
+      "membership": {
+        "member": "সদস্য",
+        "not_member": "এখনো সদস্য নন"
+      },
+      "anyResidence": "যেখানেই থাকুন",
+      "residence": {
+        "here": "এখানে থাকেন",
+        "elsewhere": "অন্য কোথাও থাকেন"
+      },
+      "col": {
+        "place": "মালিকানার স্থান",
+        "livesHere": "এখানে থাকেন"
+      },
+      "yes": "হ্যাঁ",
+      "no": "না",
+      "empty": "কোনো মালিক মেলেনি।"
+    },
+    "renters": {
+      "sub": "এখন ইউনিটে থাকা ভাড়াটিয়া, আর যাঁদের ওঠা বা ছাড়া বাকি",
+      "searchLabel": "ভাড়াটিয়া খুঁজুন",
+      "stats": {
+        "renters": "ভাড়াটিয়া",
+        "family": "পরিবার",
+        "bachelor": "ব্যাচেলর / মেস",
+        "policeFormMissing": "পুলিশ ফরম বাকি"
+      },
+      "renterTypeLabel": "ভাড়াটিয়ার ধরন",
+      "anyRenterType": "সব ধরনের ভাড়াটিয়া",
+      "unitTypeLabel": "ইউনিটের ধরন",
+      "anyUnitType": "সব ধরনের ইউনিট",
+      "anyStatus": "যেকোনো অবস্থা",
+      "col": {
+        "renter": "ভাড়াটিয়া",
+        "unit": "ইউনিট",
+        "since": "ওঠার তারিখ",
+        "residents": "বাসিন্দা",
+        "policeForm": "পুলিশ ফরম"
+      },
+      "policeForm": {
+        "done": "জমা হয়েছে",
+        "missing": "বাকি"
+      },
+      "openMove": "চেকলিস্ট খুলুন",
+      "noRenter": "লেখা হয়নি",
+      "empty": "কোনো ভাড়াটিয়া মেলেনি।"
+    }
   },
   "FormsAdmin": {
     "sub": "ওয়েবসাইট থেকে আসা আবেদন যাচাই ও অনুমোদন",

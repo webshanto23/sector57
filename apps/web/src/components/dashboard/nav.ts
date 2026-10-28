@@ -2,6 +2,7 @@ import { canAnywhere, type Access, type PermissionModule } from "@s57/shared";
 import {
   Archive,
   ArrowRightLeft,
+  BadgeCheck,
   Banknote,
   Bell,
   BookUser,
@@ -10,6 +11,7 @@ import {
   Car,
   ChartColumn,
   Coins,
+  DoorOpen,
   FilePen,
   FileBadge,
   FolderOpen,
@@ -17,6 +19,7 @@ import {
   HandHeart,
   IdCard,
   House,
+  KeyRound,
   Landmark,
   LifeBuoy,
   LayoutDashboard,
@@ -28,7 +31,6 @@ import {
   Settings,
   ShieldCheck,
   UserCog,
-  UserRound,
   Users,
   Wallet,
   Warehouse,
@@ -42,6 +44,8 @@ export type NavKey =
   | "property"
   | "units"
   | "members"
+  | "owners"
+  | "renters"
   | "moves"
   | "directory"
   | "forms"
@@ -102,7 +106,9 @@ export const DASHBOARD_NAV: NavGroup[] = [
     key: "people",
     icon: Users,
     items: [
-      { key: "members", icon: UserRound, module: "members" },
+      { key: "members", icon: BadgeCheck, module: "members" },
+      { key: "owners", icon: KeyRound, module: "members" },
+      { key: "renters", icon: DoorOpen, module: "members" },
       { key: "moves", icon: ArrowRightLeft, module: "tenancies" },
       { key: "directory", icon: BookUser, module: "members" },
       { key: "forms", icon: FilePen, module: "forms" },

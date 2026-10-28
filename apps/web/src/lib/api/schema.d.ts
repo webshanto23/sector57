@@ -676,22 +676,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/members": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["MembersController_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/persons": {
         parameters: {
             query?: never;
@@ -1052,6 +1036,54 @@ export interface paths {
             cookie?: never;
         };
         get: operations["DirectoryController_csv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/registers/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RegistersController_members"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/registers/owners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RegistersController_owners"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/registers/renters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RegistersController_renters"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4436,52 +4468,6 @@ export interface components {
             /** @enum {string} */
             billTo?: "owner" | "renter";
         };
-        MemberListDto_Output: {
-            items: {
-                /** @enum {string} */
-                kind: "person" | "organisation";
-                /** Format: uuid */
-                id: string;
-                name: string;
-                nameEn: string | null;
-                phone: string | null;
-                photoUrl: string | null;
-                verified: boolean | null;
-                hasId: boolean;
-                links: ({
-                    /** @constant */
-                    role: "owner";
-                } | {
-                    /** @constant */
-                    role: "renter";
-                    /** @enum {string} */
-                    renterType: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
-                } | {
-                    /** @constant */
-                    role: "occupant";
-                    /** @enum {string} */
-                    relation: "head" | "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
-                    renter: boolean;
-                })[];
-                place: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    address: string[];
-                    isUnit: boolean;
-                } | null;
-                otherPlaces: number;
-            }[];
-            total: number;
-            page: number;
-            pageSize: number;
-            counts: {
-                owners: number;
-                renterHouseholds: number;
-                bachelorRenters: number;
-                pendingVerification: number;
-            };
-        };
         PersonInputDto: {
             fullName: string;
             fullNameEn?: string | null;
@@ -5347,6 +5333,133 @@ export interface components {
                 since: string;
             }[];
             truncated: boolean;
+        };
+        MemberRegisterDto_Output: {
+            items: {
+                memberNo: number;
+                /** @enum {string} */
+                status: "active" | "lapsed" | "cancelled";
+                /** Format: date */
+                joinedOn: string;
+                person: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                };
+                holdings: {
+                    /** Format: uuid */
+                    levelId: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                    count: number;
+                }[];
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                active: number;
+                lapsed: number;
+                cancelled: number;
+            };
+        };
+        OwnerRegisterDto_Output: {
+            items: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                photoUrl: string | null;
+                verified: boolean | null;
+                holdings: {
+                    /** Format: uuid */
+                    levelId: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                    count: number;
+                }[];
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                otherPlaces: number;
+                livesHere: boolean | null;
+                memberNo: number | null;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                owners: number;
+                members: number;
+                notMembers: number;
+                livesHere: number;
+            };
+        };
+        RenterRegisterDto_Output: {
+            items: {
+                /** Format: uuid */
+                tenancyId: string;
+                renter: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    nameEn: string | null;
+                    phone: string | null;
+                    photoUrl: string | null;
+                    verified: boolean | null;
+                } | null;
+                /** @enum {string} */
+                renterType: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+                /** @enum {string} */
+                status: "pending" | "active" | "moving_out";
+                /** Format: date */
+                startDate: string;
+                monthlyRent: string | null;
+                policeFormSubmitted: boolean;
+                openMove: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @enum {string} */
+                    kind: "move_in" | "move_out";
+                } | null;
+                unit: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                };
+                unitType: {
+                    code: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                };
+                residents: number;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                renters: number;
+                family: number;
+                bachelor: number;
+                policeFormMissing: number;
+            };
         };
         PublicPlaceListDto_Output: {
             items: {
@@ -11822,32 +11935,6 @@ export interface operations {
             };
         };
     };
-    MembersController_list: {
-        parameters: {
-            query?: {
-                page?: number;
-                pageSize?: number;
-                q?: string;
-                role?: "owner" | "renter" | "occupant";
-                verification?: "pending" | "verified";
-                areaId?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MemberListDto_Output"];
-                };
-            };
-        };
-    };
     PersonsController_create: {
         parameters: {
             query?: never;
@@ -12600,6 +12687,84 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    RegistersController_members: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                areaId?: string;
+                status?: "active" | "lapsed" | "cancelled";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberRegisterDto_Output"];
+                };
+            };
+        };
+    };
+    RegistersController_owners: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                areaId?: string;
+                membership?: "member" | "not_member";
+                residence?: "here" | "elsewhere";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnerRegisterDto_Output"];
+                };
+            };
+        };
+    };
+    RegistersController_renters: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                q?: string;
+                areaId?: string;
+                renterType?: "family" | "bachelor" | "office" | "warehouse" | "shop" | "other";
+                unitType?: string;
+                status?: "pending" | "active" | "moving_out";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RenterRegisterDto_Output"];
+                };
             };
         };
     };

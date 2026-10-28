@@ -9,14 +9,12 @@ import { DirectoryService } from './directory.service.js';
 import { MemberRowsService } from './member-rows.service.js';
 import {
   LocationPeopleController,
-  MembersController,
   OccupantsController,
   OrganisationsController,
   OwnershipsController,
   PersonsController,
   TenanciesController,
 } from './members.controller.js';
-import { MembersService } from './members.service.js';
 import { MovesController } from './moves.controller.js';
 import { MovesService } from './moves.service.js';
 import { OccupantsService } from './occupants.service.js';
@@ -32,8 +30,7 @@ import { TenanciesService } from './tenancies.service.js';
 @Module({
   imports: [PrismaModule, AuditModule, PropertyModule, StorageModule],
   controllers: [
-    MembersController,
-    PersonsController,
+      PersonsController,
     OrganisationsController,
     OwnershipsController,
     TenanciesController,
@@ -46,7 +43,6 @@ import { TenanciesService } from './tenancies.service.js';
   providers: [
     PartiesService,
     MemberRowsService,
-    MembersService,
     PersonsService,
     OrganisationsService,
     OwnershipsService,

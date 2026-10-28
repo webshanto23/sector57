@@ -63,7 +63,7 @@ export function OrganisationEditor({ organisation }: { organisation: Organisatio
               destructive
               onConfirm={async () => {
                 const done = await run(() => api.DELETE("/organisations/{id}", { params: { path: { id } } }));
-                if (done !== undefined) router.push("/dashboard/members");
+                if (done !== undefined) router.push("/dashboard/owners");
               }}
             />
           </div>

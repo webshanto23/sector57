@@ -161,7 +161,7 @@ export function PersonEditor({ person }: { person: PersonDetail }) {
                 destructive
                 onConfirm={async () => {
                   const done = await run(() => api.DELETE("/persons/{id}", { params: { path: { id } } }));
-                  if (done !== undefined) router.push("/dashboard/members");
+                  if (done !== undefined) router.push("/dashboard/owners");
                 }}
               />
             </div>

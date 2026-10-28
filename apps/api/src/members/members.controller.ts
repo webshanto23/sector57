@@ -1,9 +1,7 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query, UploadedFile } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, UploadedFile } from '@nestjs/common';
 import {
   endSchema,
   locationPeopleSchema,
-  memberListQuery,
-  memberListSchema,
   occupantCreateSchema,
   occupantSchema,
   occupantUpdateSchema,
@@ -29,15 +27,12 @@ import { IdParamDto } from '../common/id-param.dto.js';
 import { Authenticated, Can, CurrentActor, type Actor } from '../permissions/permissions.decorators.js';
 import { ImageUpload, requireUpload, type UploadedImage } from '../storage/image-upload.js';
 import { LocationPeopleService } from './location-people.service.js';
-import { MembersService } from './members.service.js';
 import { OccupantsService } from './occupants.service.js';
 import { OrganisationsService } from './organisations.service.js';
 import { OwnershipsService } from './ownerships.service.js';
 import { PersonsService } from './persons.service.js';
 import { TenanciesService } from './tenancies.service.js';
 
-export class MemberListDto extends createDto(memberListSchema) {}
-export class MemberListQueryDto extends createDto(memberListQuery) {}
 export class PersonDetailDto extends createDto(personDetailSchema) {}
 export class PersonInputDto extends createDto(personInputSchema) {}
 export class PersonUpdateDto extends createDto(personUpdateSchema) {}
@@ -57,19 +52,6 @@ export class OccupantCreateDto extends createDto(occupantCreateSchema) {}
 export class OccupantUpdateDto extends createDto(occupantUpdateSchema) {}
 export class EndDto extends createDto(endSchema) {}
 export class LocationPeopleDto extends createDto(locationPeopleSchema) {}
-
-/** The members list. The service keeps a scoped caller to people linked inside their area. */
-@Controller('members')
-export class MembersController {
-  constructor(private readonly members: MembersService) {}
-
-  @Get()
-  @Can('members', 'view')
-  @ZodResponse({ status: 200, type: MemberListDto })
-  list(@CurrentActor() actor: Actor, @Query() query: MemberListQueryDto) {
-    return this.members.list(actor, query);
-  }
-}
 
 /** People. The services check every row against the caller's area and write the audit rows. */
 @Controller('persons')

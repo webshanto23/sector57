@@ -252,9 +252,11 @@
       "overview": "Overview",
       "property": "Property map",
       "units": "Units",
-      "members": "Owners & renters",
+      "members": "Members",
+      "owners": "Owners",
+      "renters": "Renters",
       "moves": "Move in-out",
-      "directory": "Residents",
+      "directory": "Directory",
       "forms": "Applications",
       "billing": "Bills",
       "collect": "Collections",
@@ -1033,38 +1035,10 @@
     "noMatch": "No places match."
   },
   "Members": {
-    "sub": "Owners, renters and residents",
     "add": "Add person",
-    "stats": {
-      "owners": "Owners",
-      "renterHouseholds": "Renter households",
-      "bachelorRenters": "Bachelor renters",
-      "pendingVerification": "Pending verification"
-    },
-    "searchLabel": "Search owners and renters",
-    "searchPlaceholder": "Name, phone or NID",
-    "allRoles": "Everyone",
-    "roleFilter": {
-      "owner": "Owners",
-      "renter": "Renters",
-      "occupant": "Residents"
-    },
-    "allVerification": "Any verification",
-    "verificationFilter": {
-      "pending": "Verification pending",
-      "verified": "Verified"
-    },
-    "filter": "Filter",
-    "inArea": "Only under {name}",
-    "inSomeArea": "Only one area",
-    "clearArea": "Show all",
     "col": {
-      "name": "Name",
       "role": "Role",
-      "place": "Unit",
-      "phone": "Phone",
-      "id": "ID",
-      "status": "Status"
+      "place": "Unit"
     },
     "owner": "Owner",
     "renterRole": {
@@ -1110,16 +1084,11 @@
       "female": "Female",
       "other": "Other"
     },
-    "noLink": "Not linked to a unit",
-    "morePlaces": "+{count} more",
-    "idNid": "NID on file",
-    "idLicence": "Trade licence",
-    "idMissing": "Missing",
     "verified": "Verified",
     "verifyNeeded": "Verify",
     "organisation": "Organisation",
     "empty": "No one matches.",
-    "back": "All owners & renters",
+    "back": "All owners",
     "details": "Details",
     "fullName": "Name",
     "fullNameHint": "As written on the NID, usually in Bangla.",
@@ -1228,6 +1197,95 @@
       "cancelled": "Membership cancelled"
     },
     "memberSince": "since {date}"
+  },
+  "Registers": {
+    "add": "Add person",
+    "filter": "Filter",
+    "searchPlaceholder": "Name or phone",
+    "inArea": "Only under {name}",
+    "inSomeArea": "Only one area",
+    "clearArea": "Show all",
+    "morePlaces": "+{count} more",
+    "memberNo": "Member no. {no}",
+    "call": "Call {name}",
+    "whatsapp": "WhatsApp {name}",
+    "col": {
+      "name": "Name",
+      "holdings": "Owns",
+      "phone": "Phone",
+      "status": "Status"
+    },
+    "members": {
+      "sub": "Registered members of the society",
+      "searchLabel": "Search members",
+      "status": {
+        "active": "Active",
+        "lapsed": "Lapsed",
+        "cancelled": "Cancelled"
+      },
+      "col": {
+        "joined": "Member since"
+      },
+      "empty": "No members match."
+    },
+    "owners": {
+      "sub": "Owners of plots, buildings and units, members or not",
+      "searchLabel": "Search owners",
+      "stats": {
+        "owners": "Owners",
+        "members": "Members",
+        "notMembers": "Not a member yet",
+        "livesHere": "Live here"
+      },
+      "notMember": "Not a member yet",
+      "membershipLabel": "Membership",
+      "anyMembership": "Members and not",
+      "membership": {
+        "member": "Members",
+        "not_member": "Not a member yet"
+      },
+      "anyResidence": "Lives anywhere",
+      "residence": {
+        "here": "Lives here",
+        "elsewhere": "Lives elsewhere"
+      },
+      "col": {
+        "place": "Owns at",
+        "livesHere": "Lives here"
+      },
+      "yes": "Yes",
+      "no": "No",
+      "empty": "No owners match."
+    },
+    "renters": {
+      "sub": "Renters in the units now, and who has yet to move in or out",
+      "searchLabel": "Search renters",
+      "stats": {
+        "renters": "Renters",
+        "family": "Family",
+        "bachelor": "Bachelor / mess",
+        "policeFormMissing": "Police form missing"
+      },
+      "renterTypeLabel": "Renter type",
+      "anyRenterType": "All renter types",
+      "unitTypeLabel": "Unit type",
+      "anyUnitType": "All unit types",
+      "anyStatus": "Any status",
+      "col": {
+        "renter": "Renter",
+        "unit": "Unit",
+        "since": "Moved in",
+        "residents": "Residents",
+        "policeForm": "Police form"
+      },
+      "policeForm": {
+        "done": "Submitted",
+        "missing": "Missing"
+      },
+      "openMove": "Open checklist",
+      "noRenter": "Not recorded",
+      "empty": "No renters match."
+    }
   },
   "FormsAdmin": {
     "sub": "Check and approve applications sent from the website",
