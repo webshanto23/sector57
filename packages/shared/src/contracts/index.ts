@@ -35,3 +35,4 @@ export * from './payroll.js';
 export * from './certificates.js';
 export * from './records-reports.js';
 export * from './collection-register.js';
+export * from './registers.js';

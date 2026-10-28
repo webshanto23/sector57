@@ -24,9 +24,11 @@ import { OrganisationsService } from './organisations.service.js';
 import { OwnershipsService } from './ownerships.service.js';
 import { PartiesService } from './parties.service.js';
 import { PersonsService } from './persons.service.js';
+import { RegistersController } from './registers.controller.js';
+import { RegistersService } from './registers.service.js';
 import { TenanciesService } from './tenancies.service.js';
 
-/** Step 10: people, organisations, ownerships, tenancies and households. Step 20: move-in and move-out checklists, the resident directory. */
+/** Step 10: people, organisations, ownerships, tenancies and households. Step 20: move-in and move-out checklists, the resident directory. Step 36: the members, owners and renters registers. */
 @Module({
   imports: [PrismaModule, AuditModule, PropertyModule, StorageModule],
   controllers: [
@@ -39,6 +41,7 @@ import { TenanciesService } from './tenancies.service.js';
     LocationPeopleController,
     MovesController,
     DirectoryController,
+    RegistersController,
   ],
   providers: [
     PartiesService,
@@ -52,6 +55,7 @@ import { TenanciesService } from './tenancies.service.js';
     LocationPeopleService,
     MovesService,
     DirectoryService,
+    RegistersService,
   ],
   // The office review (forms module) approves applications through these.
   exports: [PartiesService, MemberRowsService, TenanciesService, OwnershipsService],
