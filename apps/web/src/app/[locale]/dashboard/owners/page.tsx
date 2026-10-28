@@ -1,13 +1,12 @@
-import { canAnywhere, canSocietyWide, formatNumber, localDigits, ownerRegisterQuery, type Locale, type OwnerRegisterRow } from "@s57/shared";
-import { BadgeCheck, House, Plus, UserRound, UserX } from "lucide-react";
+import { canAnywhere, formatNumber, localDigits, ownerRegisterQuery, type Locale, type OwnerRegisterRow } from "@s57/shared";
+import { BadgeCheck, House, UserRound, UserX } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Pager } from "@/components/cms/pager";
 import { Avatar, Chip, DataTable, inputClass, PageHeader, SearchInput, StatCard, type Column } from "@/components/kit";
 import { PartyLink, PlaceLink } from "@/components/members/labels";
 import { AreaNote, HoldingChips, PhoneActions, searchText } from "@/components/members/register-parts";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Link } from "@/i18n/navigation";
+import { Button } from "@/components/ui/button";
 import { getLocation } from "@/lib/api/property";
 import { getOwnerRegister } from "@/lib/api/registers";
 import { requirePermission } from "@/lib/api/session";
@@ -94,19 +93,7 @@ export default async function OwnersPage({ params, searchParams }: PageProps<"/[
 
   return (
     <>
-      <PageHeader
-        title={tNav("owners")}
-        sub={t("owners.sub")}
-        actions={
-          // Adding someone not linked to a unit is for whole-society roles; others add people from a unit.
-          canSocietyWide(me.access, "members", "create") ? (
-            <Link href="/dashboard/members/new" className={buttonVariants()}>
-              <Plus aria-hidden />
-              {t("add")}
-            </Link>
-          ) : null
-        }
-      />
+      <PageHeader title={tNav("owners")} sub={t("owners.sub")} />
 
       <div className="mb-3.5 grid grid-cols-2 gap-2.5 min-[900px]:grid-cols-4">
         <StatCard icon={UserRound} label={t("owners.stats.owners")} value={n(list.counts.owners)} tone="acc" />

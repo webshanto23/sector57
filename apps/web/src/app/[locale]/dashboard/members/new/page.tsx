@@ -30,9 +30,9 @@ export default async function NewMemberPage({ params }: PageProps<"/[locale]/das
         title={t("newTitle")}
         sub={t("newHint")}
         actions={
-          <Link href="/dashboard/owners" className={buttonVariants({ variant: "outline" })}>
+          <Link href="/dashboard/members" className={buttonVariants({ variant: "outline" })}>
             <ChevronLeft aria-hidden />
-            {t("back")}
+            {t("backToMembers")}
           </Link>
         }
       />

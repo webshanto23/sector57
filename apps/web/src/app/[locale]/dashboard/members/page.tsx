@@ -1,12 +1,13 @@
-import { canAnywhere, formatDate, formatNumber, MEMBERSHIP_STATUSES, memberRegisterQuery, type Locale, type MemberRegisterRow, type MembershipStatus } from "@s57/shared";
-import { BadgeCheck, CircleSlash, Clock } from "lucide-react";
+import { canAnywhere, canSocietyWide, formatDate, formatNumber, MEMBERSHIP_STATUSES, memberRegisterQuery, type Locale, type MemberRegisterRow, type MembershipStatus } from "@s57/shared";
+import { BadgeCheck, CircleSlash, Clock, Plus } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Pager } from "@/components/cms/pager";
 import { Avatar, Chip, DataTable, inputClass, PageHeader, SearchInput, StatCard, type Column, type Tone } from "@/components/kit";
 import { PartyLink } from "@/components/members/labels";
 import { AreaNote, HoldingChips, PhoneActions, searchText } from "@/components/members/register-parts";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
 import { getLocation } from "@/lib/api/property";
 import { getMemberRegister } from "@/lib/api/registers";
 import { requirePermission } from "@/lib/api/session";
@@ -74,7 +75,19 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
 
   return (
     <>
-      <PageHeader title={tNav("members")} sub={t("members.sub")} />
+      <PageHeader
+        title={tNav("members")}
+        sub={t("members.sub")}
+        actions={
+          // Adding someone not linked to a unit is for whole-society roles; others add people from a unit.
+          canSocietyWide(me.access, "members", "create") ? (
+            <Link href="/dashboard/members/new" className={buttonVariants()}>
+              <Plus aria-hidden />
+              {t("add")}
+            </Link>
+          ) : null
+        }
+      />
 
       <div className="mb-3.5 grid grid-cols-2 gap-2.5 min-[900px]:grid-cols-3">
         <StatCard icon={BadgeCheck} label={t("members.status.active")} value={n(list.counts.active)} tone="acc" />

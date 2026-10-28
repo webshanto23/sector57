@@ -1,6 +1,5 @@
 import {
   canAnywhere,
-  canSocietyWide,
   formatDate,
   formatNumber,
   OPEN_TENANCY_STATUSES,
@@ -9,14 +8,14 @@ import {
   type Locale,
   type RenterRegisterRow,
 } from "@s57/shared";
-import { FileWarning, House, Plus, Users } from "lucide-react";
+import { FileWarning, House, Users } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Pager } from "@/components/cms/pager";
 import { Avatar, Chip, DataTable, inputClass, PageHeader, SearchInput, StatCard, type Column } from "@/components/kit";
 import { PartyLink, PlaceLink, TenancyStatusChip } from "@/components/members/labels";
 import { AreaNote, PhoneActions, searchText } from "@/components/members/register-parts";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getLocation, getUnitTypes } from "@/lib/api/property";
 import { getRenterRegister } from "@/lib/api/registers";
@@ -125,19 +124,7 @@ export default async function RentersPage({ params, searchParams }: PageProps<"/
 
   return (
     <>
-      <PageHeader
-        title={tNav("renters")}
-        sub={t("renters.sub")}
-        actions={
-          // Adding someone not linked to a unit is for whole-society roles; others add people from a unit.
-          canSocietyWide(me.access, "members", "create") ? (
-            <Link href="/dashboard/members/new" className={buttonVariants()}>
-              <Plus aria-hidden />
-              {t("add")}
-            </Link>
-          ) : null
-        }
-      />
+      <PageHeader title={tNav("renters")} sub={t("renters.sub")} />
 
       <div className="mb-3.5 grid grid-cols-2 gap-2.5 min-[900px]:grid-cols-4">
         <StatCard icon={House} label={t("renters.stats.renters")} value={n(list.counts.renters)} tone="acc" />

@@ -1089,6 +1089,7 @@
     "organisation": "Organisation",
     "empty": "No one matches.",
     "back": "All owners",
+    "backToMembers": "All members",
     "details": "Details",
     "fullName": "Name",
     "fullNameHint": "As written on the NID, usually in Bangla.",

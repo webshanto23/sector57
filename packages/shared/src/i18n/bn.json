@@ -1089,6 +1089,7 @@
     "organisation": "প্রতিষ্ঠান",
     "empty": "মেলে এমন কেউ নেই।",
     "back": "সব মালিক",
+    "backToMembers": "সব সদস্য",
     "details": "বিবরণ",
     "fullName": "নাম",
     "fullNameHint": "এনআইডিতে যেমন লেখা, সাধারণত বাংলায়।",
