@@ -2664,10 +2664,16 @@
         "opening": "দিনের শুরু",
         "in": "জমা",
         "out": "খরচ",
-        "closing": "দিনের শেষ"
+        "closing": "দিনের শেষ",
+        "receipts": "রসিদ"
       },
       "total": "মোট (বাতিলগুলো বাদে): {amount}",
-      "empty": "এই দিনে কিছু নেই।"
+      "empty": "এই দিনে কিছু নেই।",
+      "sign": {
+        "cashier": "ক্যাশিয়ার (প্রস্তুতকারী)",
+        "treasurer": "কোষাধ্যক্ষ",
+        "secretary": "সাধারণ সম্পাদক"
+      }
     },
     "collection": {
       "title": "এলাকাভিত্তিক আদায়",
@@ -2719,10 +2725,7 @@
       "voidMark": "বাতিল",
       "empty": "এ মাসে কোনো রসিদ নেই।",
       "invalid": "এই ফিল্টার দেখানো যায়নি, তাই এ মাসের রেজিস্টার দেখানো হচ্ছে।",
-      "printButton": "A4-এ প্রিন্ট",
       "printTitle": "দৈনিক আদায় রেজিস্টার",
-      "printed": "প্রিন্ট {date}",
-      "printPage": "পৃষ্ঠা {page} / {pages}",
       "sign": {
         "collector": "আদায়কারী",
         "treasurer": "কোষাধ্যক্ষ",
@@ -2772,13 +2775,22 @@
         "head": "খরচের খাত",
         "budget": "বাজেট",
         "spent": "খরচ",
-        "remaining": "বাকি"
+        "remaining": "বাকি",
+        "amount": "টাকা"
       },
       "noBudget": "বাজেট নেই",
       "budgetHidden": "বাজেট পুরো সমিতির জন্য, তাই শুধু সব তহবিল বেছে নিলে দেখা যায়।",
       "partNote": "আংশিক শোধ হওয়া বিলের টাকা তার লাইনগুলোর ক্রম অনুযায়ী গোনা হয়।",
       "emptyIncome": "এই বছরে কোনো আয় নেই।",
-      "emptyExpenditure": "এই বছরে কোনো খরচ পরিশোধ হয়নি।"
+      "emptyExpenditure": "এই বছরে কোনো খরচ পরিশোধ হয়নি।",
+      "printSub": "অর্থবছর {year} · {fund}",
+      "printSummary": "সারসংক্ষেপ",
+      "over": "বাজেট ছাড়িয়েছে",
+      "sign": {
+        "treasurer": "কোষাধ্যক্ষ",
+        "secretary": "সাধারণ সম্পাদক",
+        "president": "সভাপতি"
+      }
     },
     "occupancy": {
       "title": "এলাকাভিত্তিক বসবাস",
@@ -2811,14 +2823,23 @@
         "name": "নাম",
         "address": "ঠিকানা",
         "joinedOn": "যোগদান",
-        "status": "অবস্থা"
+        "status": "অবস্থা",
+        "serial": "ক্রম",
+        "phone": "মোবাইল",
+        "count": "সংখ্যা"
       },
       "status": {
         "active": "সক্রিয়",
         "lapsed": "মেয়াদোত্তীর্ণ",
         "cancelled": "বাতিল"
       },
-      "idPending": "অপেক্ষমাণ"
+      "idPending": "অপেক্ষমাণ",
+      "printRange": "{from} থেকে {to}",
+      "printSummary": "অবস্থা অনুযায়ী সদস্য",
+      "sign": {
+        "secretary": "সাধারণ সম্পাদক",
+        "president": "সভাপতি"
+      }
     },
     "renters": {
       "title": "থানার জন্য ভাড়াটিয়ার তালিকা",
@@ -2858,6 +2879,12 @@
       "printPlace": "এলাকা: {place}",
       "printDate": "{date} পর্যন্ত",
       "totalTenancies": "ভাড়া দেওয়া ইউনিট: {count}"
+    },
+    "print": {
+      "button": "A4-এ প্রিন্ট",
+      "printed": "প্রিন্ট {date}",
+      "page": "পৃষ্ঠা {page} / {pages}",
+      "none": "নেই"
     }
   },
   "Audit": {

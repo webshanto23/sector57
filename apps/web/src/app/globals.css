@@ -269,10 +269,15 @@
   .print-portal .print-page + .print-page {
     break-before: page;
   }
-  /* Long lists (the door-to-door arrears list) print on A4; receipts and vouchers stay A5. */
+  /* Long lists (the door-to-door arrears list, the day book) print on A4; receipts and vouchers
+     stay A5. A report printed through ReportPrint adds its footer words to the bottom margin. */
   @page a4 {
     size: A4 portrait;
-    margin: 12mm;
+    margin: 12mm 12mm 14mm;
+    @bottom-left {
+      font-size: 8.5pt;
+      color: #4a544d;
+    }
   }
   .print-portal .print-a4 {
     page: a4;

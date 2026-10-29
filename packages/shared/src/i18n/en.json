@@ -2664,10 +2664,16 @@
         "opening": "Start of day",
         "in": "In",
         "out": "Out",
-        "closing": "End of day"
+        "closing": "End of day",
+        "receipts": "Receipts"
       },
       "total": "Total (void ones not counted): {amount}",
-      "empty": "Nothing this day."
+      "empty": "Nothing this day.",
+      "sign": {
+        "cashier": "Cashier (prepared by)",
+        "treasurer": "Treasurer",
+        "secretary": "General Secretary"
+      }
     },
     "collection": {
       "title": "Collection by area",
@@ -2719,10 +2725,7 @@
       "voidMark": "Voided",
       "empty": "No receipts in this month.",
       "invalid": "This filter could not be shown, so this month is shown instead.",
-      "printButton": "Print A4",
       "printTitle": "Daily collection register",
-      "printed": "Printed {date}",
-      "printPage": "Page {page} of {pages}",
       "sign": {
         "collector": "Collector",
         "treasurer": "Treasurer",
@@ -2772,13 +2775,22 @@
         "head": "Expense head",
         "budget": "Budget",
         "spent": "Spent",
-        "remaining": "Left"
+        "remaining": "Left",
+        "amount": "Amount"
       },
       "noBudget": "No budget",
       "budgetHidden": "Budgets are set for the whole society, so they show only with all funds.",
       "partNote": "A part-paid bill's money counts against its lines in their order.",
       "emptyIncome": "No income this year.",
-      "emptyExpenditure": "No expenses paid this year."
+      "emptyExpenditure": "No expenses paid this year.",
+      "printSub": "Fiscal year {year} · {fund}",
+      "printSummary": "Summary",
+      "over": "over budget",
+      "sign": {
+        "treasurer": "Treasurer",
+        "secretary": "General Secretary",
+        "president": "President"
+      }
     },
     "occupancy": {
       "title": "Occupancy by area",
@@ -2811,14 +2823,23 @@
         "name": "Name",
         "address": "Address",
         "joinedOn": "Joined",
-        "status": "Status"
+        "status": "Status",
+        "serial": "No.",
+        "phone": "Mobile",
+        "count": "Count"
       },
       "status": {
         "active": "Active",
         "lapsed": "Lapsed",
         "cancelled": "Cancelled"
       },
-      "idPending": "Pending"
+      "idPending": "Pending",
+      "printRange": "{from} to {to}",
+      "printSummary": "Members by status",
+      "sign": {
+        "secretary": "General Secretary",
+        "president": "President"
+      }
     },
     "renters": {
       "title": "Renter list for the police station",
@@ -2858,6 +2879,12 @@
       "printPlace": "Area: {place}",
       "printDate": "As of {date}",
       "totalTenancies": "Rented units: {count}"
+    },
+    "print": {
+      "button": "Print A4",
+      "printed": "Printed {date}",
+      "page": "Page {page} of {pages}",
+      "none": "None"
     }
   },
   "Audit": {

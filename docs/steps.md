@@ -1183,6 +1183,15 @@ Same branch, 2026-10-29. Anis set up "Alo chaya" with Add many twice: 11 floors,
 - **Tests:** `removal.policy.spec.ts`, `multi-storey.e2e-spec.ts` (14). Full e2e: only `finance.e2e-spec.ts` "corrects the opening with reversing rows" failed; it orders ledger rows by random UUID, unrelated (for Codex). Not clicked through in a browser.
 - **Fix for Alo chaya:** select all on the building, Remove selected, then "Set up floors and units" with letters AB.
 
+## A4 print for more reports — Built, awaiting review
+
+Same branch, 2026-10-29. Anis asked which reports lack an A4 print. Five do (Day book, Collection, Income, Members, Occupancy); he agreed to add Day book, then Income, then Members, and leave Collection and Occupancy on screen and CSV.
+
+- **Day book:** "Print A4" on `/dashboard/reports/day-book`: A4 portrait, the society band from `getBrand`, the same sections as the screen (only those the user may see), voided rows struck and marked, "None" for an empty section, signature lines for cashier (prepared by), treasurer and general secretary, page footer. The band, footer and signatures moved into the shared `ReportPrint`; the collection register uses it unchanged. Web only.
+- **Income:** "Print A4" on `/dashboard/reports/income`: the year and fund under the title, a summary (income, expenditure, surplus or deficit), income by charge type with donations and the total, spending by head with budget and what is left ("over budget" marked) when all funds are shown; signatures treasurer, general secretary, president.
+- **Members:** "Print A4" on `/dashboard/reports/members`: the place and date range under the title, members by status with the total, then the joiners numbered with membership ID, name, mobile, address, joined date and status; signatures general secretary, president.
+- The tables share `PrintSection` (`report-print.tsx`). Not printed from a browser yet (no admin login).
+
 ## Later: beyond milestone 3
 
 These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.
