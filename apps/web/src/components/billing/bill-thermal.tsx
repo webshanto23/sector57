@@ -33,7 +33,7 @@ export function BillThermalSheet({ invoice }: { invoice: InvoiceDetail }) {
       <ThermalRule />
       <p>
         <b>{pick(billTo.name, billTo.nameEn, locale)}</b>
-        {billTo.memberNo !== null ? ` · ${t("memberNo")} ${localDigits(String(billTo.memberNo), locale)}` : null}
+        {billTo.membershipCode ? ` · ${t("memberNo")} ${billTo.membershipCode}` : null}
       </p>
       {unit ? <p>{unit}</p> : null}
       <ThermalRule />

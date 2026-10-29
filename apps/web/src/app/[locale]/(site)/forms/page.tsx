@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { FormsHub } from "@/components/forms/forms-hub";
 import { Card, PageHeader } from "@/components/kit";
-import { getSiteInfo } from "@/lib/api/public";
+import { getSiteInfo, getSociety } from "@/lib/api/public";
 import { alternates } from "@/lib/metadata";
 
 export const revalidate = 60;
@@ -24,7 +24,7 @@ export default async function FormsPage({ params }: PageProps<"/[locale]/forms">
   const locale = raw as Locale;
   setRequestLocale(locale);
 
-  const [t, info] = await Promise.all([getTranslations("Forms"), getSiteInfo()]);
+  const [t, info, society] = await Promise.all([getTranslations("Forms"), getSiteInfo(), getSociety()]);
   const site = info ? pickContent(info, locale) : null;
 
   const office = site ? (
@@ -53,7 +53,7 @@ export default async function FormsPage({ params }: PageProps<"/[locale]/forms">
   return (
     <>
       <PageHeader title={t("title")} sub={t("sub")} />
-      <FormsHub office={office} />
+      <FormsHub office={office} renterNidRequired={society?.requireIdNumbers ?? false} />
     </>
   );
 }

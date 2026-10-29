@@ -157,7 +157,7 @@ export class CertificatesService {
     const [society, setting, membership] = await Promise.all([
       client.societies.findUniqueOrThrow({ where: { id: societyId }, select: { name_bn: true, name_en: true } }),
       client.society_settings.findUnique({ where: { society_id_key: { society_id: societyId, key: CERTIFICATE_TEMPLATES_KEY } }, select: { value: true } }),
-      client.memberships.findFirst({ where: { society_id: societyId, person_id: row.persons.id, status: 'active' }, select: { member_no: true }, orderBy: { joined_on: 'desc' } }),
+      client.memberships.findFirst({ where: { society_id: societyId, person_id: row.persons.id, status: 'active' }, select: { membership_code: true }, orderBy: { joined_on: 'desc' } }),
     ]);
     const unit = certificatePlace(row);
     const place = (await this.rows.places(societyId, [unit]))(unit);
@@ -165,7 +165,7 @@ export class CertificatesService {
     const template = certificateTemplatesOf(setting?.value)[row.type as CertificateType][lang];
     return renderCertificate(
       template,
-      letterValues({ lang, person: row.persons, place, society, day, certNo, memberNo: membership?.member_no ?? null, addressee: row.addressee, purpose: row.purpose }),
+      letterValues({ lang, person: row.persons, place, society, day, certNo, memberNo: membership?.membership_code ?? null, addressee: row.addressee, purpose: row.purpose }),
     );
   }
 

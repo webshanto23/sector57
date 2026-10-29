@@ -15,7 +15,7 @@ const WORDS = {
     isOwner: 'মালিক',
     yes: 'হ্যাঁ',
     phone: 'ফোন',
-    memberNo: 'সদস্য নম্বর',
+    memberNo: 'সদস্যপদ আইডি',
     since: 'কবে থেকে',
     more: 'তালিকা কাটা হয়েছে: আরও বাসিন্দা আছেন',
   },
@@ -31,7 +31,7 @@ const WORDS = {
     isOwner: 'Owner',
     yes: 'Yes',
     phone: 'Phone',
-    memberNo: 'Member no.',
+    memberNo: 'Membership ID',
     since: 'Since',
     more: 'List cut short: there are more residents',
   },
@@ -78,7 +78,7 @@ export function directoryCsv(list: DirectoryPrint, locale: Locale): CsvCell[][] 
       w[row.household],
       row.isOwner ? w.yes : '',
       row.person.phone,
-      row.memberNo,
+      row.membershipCode,
       row.since,
     ]);
   }

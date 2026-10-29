@@ -26,7 +26,7 @@ import { scopeWhere } from '../permissions/caller-access.js';
 import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { beyondPermissions, TreeService } from '../property/tree.service.js';
-import { MemberRowsService, personPartySelect, placeSelect } from '../members/member-rows.service.js';
+import { MemberRowsService, organisationPartySelect, personPartySelect, placeSelect } from '../members/member-rows.service.js';
 import { MembershipsService } from '../members/memberships.service.js';
 import { OwnershipsService } from '../members/ownerships.service.js';
 import { auditOf, canOnParty, PartiesService } from '../members/parties.service.js';
@@ -60,8 +60,12 @@ const rowSelect = {
   person_id: true,
   locations: { select: { ...placeSelect, is_active: true } },
   users: { select: { phone: true, persons: { select: { full_name: true } } } },
+  entered: { select: { phone: true, persons: { select: { full_name: true } } } },
 } satisfies Prisma.form_submissionsSelect;
 type Row = Prisma.form_submissionsGetPayload<{ select: typeof rowSelect }>;
+
+/** A user's name for the screens: their person's name, else the phone they log in with. */
+const userName = (user: { phone: string; persons: { full_name: string } | null } | null) => (user ? (user.persons?.full_name ?? user.phone) : null);
 
 const toFormKey = (value: string): FormKey => ((FORM_KEYS as readonly string[]).includes(value) ? (value as FormKey) : 'membership');
 const toFormStatus = (value: string): FormStatus =>
@@ -161,6 +165,7 @@ export class FormsService {
         place: row.locations ? place(row.locations) : null,
         submittedAt: row.submitted_at.toISOString(),
         files: filesOf.get(row.id) ?? 0,
+        enteredBy: userName(row.entered),
       };
     });
     return { items, total, page: query.page, pageSize: query.pageSize, counts };
@@ -186,7 +191,10 @@ export class FormsService {
       }),
       this.matches(actor, row.phone, nid),
       row.person_id ? this.prisma.persons.findFirst({ where: { id: row.person_id, society_id: actor.societyId }, select: personPartySelect }) : null,
-      this.prisma.memberships.findFirst({ where: { submission_id: id, society_id: actor.societyId }, select: { member_no: true } }),
+      this.prisma.memberships.findFirst({
+        where: { submission_id: id, society_id: actor.societyId },
+        select: { member_no: true, membership_code: true, organisations: { select: organisationPartySelect } },
+      }),
     ]);
 
     // Stored answers are re-read through the office schemas; the NID is blanked for callers who can't edit.
@@ -202,7 +210,8 @@ export class FormsService {
       submittedAt: row.submitted_at.toISOString(),
       reviewedAt: row.reviewed_at?.toISOString() ?? null,
       reviewNote: row.review_note,
-      reviewerName: row.users ? (row.users.persons?.full_name ?? row.users.phone) : null,
+      reviewerName: userName(row.users),
+      enteredBy: userName(row.entered),
       place,
       membership: formKey === 'membership' ? membershipDataSchema.parse(hideNid(row.data, 'applicant')) : null,
       renter: formKey === 'renter_registration' ? renterDataSchema.parse(hideNid(row.data, 'renter')) : null,
@@ -214,8 +223,10 @@ export class FormsService {
         isImage: documentContentType(doc.file_url) !== 'application/pdf',
       })),
       matches: mayEdit ? matches : matches.map((match) => ({ ...match, by: match.by.filter((by) => by === 'phone') })).filter((match) => match.by.length > 0),
-      person: person ? this.rows.personParty(person) : null,
+      // An organisation's application shows the organisation made a member, not its contact.
+      person: membership?.organisations ? this.rows.organisationParty(membership.organisations) : person ? this.rows.personParty(person) : null,
       memberNo: membership?.member_no ?? null,
+      membershipCode: membership?.membership_code ?? null,
       can: {
         review: status === 'new' && can('edit'),
         approve: open && can('approve') && can('create', approveNeeds(formKey)) && (row.locations?.is_active ?? false),
@@ -271,21 +282,26 @@ export class FormsService {
 
       if (formKey === 'membership') {
         const form = membershipDataSchema.parse(row.data);
-        const person = await this.parties.resolvePerson(tx, actor.societyId, { ...form.applicant, dateOfBirth: null, gender: null });
+        const applicant = { ...form.applicant, dateOfBirth: null, gender: null };
+        // A person applies for themselves; an organisation through its contact, the applicant.
+        const person = await this.parties.resolvePerson(tx, actor.societyId, applicant);
         personId = person.id;
-        const membership = await this.memberships.insert(tx, actor.societyId, {
-          personId,
-          locationId: place.id,
-          joinedOn: today,
-          submissionId: id,
-        });
+        const organisation =
+          form.applicantKind === 'organisation' && form.organisation
+            ? await this.parties.resolveOrganisation(tx, actor.societyId, { ...form.organisation, contact: applicant })
+            : null;
+        const holder = organisation ? { personId: null, organisationId: organisation.id } : { personId, organisationId: null };
+        const membership = await this.memberships.insert(tx, actor.societyId, { ...holder, locationId: place.id, joinedOn: today, submissionId: id });
         extra['memberNo'] = membership.member_no;
         extra['membershipCode'] = membership.membership_code;
         extra['reusedPerson'] = person.reused;
+        if (organisation) extra['organisationId'] = organisation.id;
         if (input.addOwnership) {
           extra['ownershipId'] = await this.ownerships.insert(tx, actor, place, {
             locationId: place.id,
-            owner: { kind: 'person', person: { ...form.applicant, dateOfBirth: null, gender: null } },
+            owner: organisation
+              ? { kind: 'existing', party: { kind: 'organisation', id: organisation.id } }
+              : { kind: 'person', person: applicant },
             sharePercent: input.sharePercent,
             startDate: input.startDate ?? isoDate(today),
           });

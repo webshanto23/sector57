@@ -135,6 +135,8 @@ export const locationNodeSchema = z.object({
   unitCount: z.number().int().min(0),
   /** A unit covering more storeys than its own (a duplex): the names of the others. Empty otherwise. */
   alsoOn: z.array(z.string()),
+  /** A unit's type (code and name); null for other locations. */
+  unitType: z.object({ code: z.string(), nameBn: z.string(), nameEn: z.string().nullable() }).nullable(),
 });
 export type LocationNode = z.infer<typeof locationNodeSchema>;
 
@@ -166,6 +168,8 @@ export const locationViewSchema = z.object({
     createUnit: z.boolean(),
     edit: z.boolean(),
     delete: z.boolean(),
+    /** Remove units here (the place page's "Remove selected" also needs this for units). */
+    deleteUnit: z.boolean(),
   }),
 });
 export type LocationView = z.infer<typeof locationViewSchema>;
@@ -242,6 +246,24 @@ export const locationBulkSchema = z.object({
   names: bulkNames,
 });
 export type LocationBulkInput = z.infer<typeof locationBulkSchema>;
+
+/**
+ * `POST /locations/remove-many`: places and units picked on a place page, removed together,
+ * all or none. A picked place goes with the units straight inside it (a floor with its flats).
+ */
+export const locationRemoveManySchema = z.object({
+  ids: z
+    .array(z.uuid())
+    .min(1)
+    .max(MAX_BULK_NAMES)
+    .refine((ids) => new Set(ids).size === ids.length, 'duplicate_location'),
+});
+export type LocationRemoveManyInput = z.infer<typeof locationRemoveManySchema>;
+export const locationRemoveManyResultSchema = z.object({ removed: z.number().int().min(1) });
+
+/** Why a removal is refused (409 `remove_<problem>`, with the names in `details.names`); `in_use` comes from the records check. */
+export const REMOVAL_PROBLEMS = ['has_places', 'joined'] as const;
+export type RemovalProblem = (typeof REMOVAL_PROBLEMS)[number];
 
 /** `POST /locations/bulk` and `POST /units/bulk` response. */
 export const bulkResultSchema = z.object({ created: z.number().int().min(0) });
@@ -357,35 +379,19 @@ export const unitSummarySchema = z.object({
 });
 export type UnitSummary = z.infer<typeof unitSummarySchema>;
 
-/** A storey a unit covers, or could cover. */
+/** A storey a unit covers. */
 export const storeyRefSchema = z.object({ id: z.uuid(), name: z.string() });
 export type StoreyRef = z.infer<typeof storeyRefSchema>;
-
-/** Most storeys one unit can cover besides its own. */
-export const MAX_UNIT_STOREYS = 20;
-
-/**
- * `PUT /units/:id/storeys`: the whole list of other storeys the unit covers. Each must sit
- * beside the unit's own storey (same parent) and not be a unit. Empty: just its own storey.
- */
-export const unitStoreysInputSchema = z.object({
-  storeyIds: z
-    .array(z.uuid())
-    .max(MAX_UNIT_STOREYS)
-    .refine((ids) => new Set(ids).size === ids.length, 'duplicate_storey'),
-});
-export type UnitStoreysInput = z.infer<typeof unitStoreysInputSchema>;
 
 /** `GET /units/:id`. */
 export const unitDetailSchema = unitSummarySchema.extend({
   breadcrumb: z.array(crumbSchema),
-  /** The other storeys it covers, besides its own. */
+  /** The other storeys it covers, besides its own: a duplex, made by combining units. */
   covers: z.array(storeyRefSchema),
-  /** Storeys it could cover (beside its own); empty when the caller may not edit it. */
-  coverOptions: z.array(storeyRefSchema),
   /** Combined into another unit (Step 37): that unit and the date. Such a unit is history only. */
   mergedInto: z.object({ id: z.uuid(), name: z.string(), on: z.iso.date() }).nullable(),
-  can: z.object({ edit: z.boolean(), delete: z.boolean() }),
+  /** `separate`: take this part back out of the unit it was joined into. */
+  can: z.object({ edit: z.boolean(), delete: z.boolean(), separate: z.boolean() }),
 });
 export type UnitDetail = z.infer<typeof unitDetailSchema>;
 

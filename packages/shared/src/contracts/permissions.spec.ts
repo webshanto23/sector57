@@ -52,7 +52,7 @@ describe('canAnywhere', () => {
 
 describe('meWithAccessSchema', () => {
   it('rejects an unknown module', () => {
-    const me = { id: SECTOR, phone: '01711000000', name: null, nameEn: null, language: 'bn' };
+    const me = { id: SECTOR, phone: '01711000000', name: null, nameEn: null, photoUrl: null, nameLocked: false, language: 'bn' };
     const ok = { ...me, access: { fullAccess: false, grants: [grant('members')] } };
     expect(meWithAccessSchema.safeParse(ok).success).toBe(true);
     expect(meWithAccessSchema.safeParse({ ...me, access: { fullAccess: false, grants: [grant('hrm')] } }).success).toBe(false);

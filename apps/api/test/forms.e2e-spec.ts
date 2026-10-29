@@ -5,6 +5,7 @@ import {
   CSRF_HEADER,
   FORM_HONEYPOT,
   formDetailSchema,
+  formEntrySchema,
   formListSchema,
   formReceiptSchema,
   locationViewSchema,
@@ -182,6 +183,7 @@ describe('Public forms and the office review (e2e)', () => {
       await prisma.user_roles.deleteMany({ where: { user_id: { in: userIds } } });
       await prisma.roles.deleteMany({ where: { name: { startsWith: MARK } } });
       await prisma.users.deleteMany({ where: { id: { in: userIds } } });
+      await prisma.organisations.deleteMany({ where: { name: { contains: MARK } } });
       await prisma.persons.deleteMany({ where: { id: { in: persons.map((p) => p.id) } } });
       const rows = await prisma.locations.findMany({ where: { OR: [paths, { society_id: otherSocietyId }] }, select: { id: true, path: true } });
       rows.sort((a, b) => b.path.length - a.path.length);
@@ -419,12 +421,13 @@ describe('Public forms and the office review (e2e)', () => {
       await send('post', `/forms/${cMembership.id}/review`, blockCViewer.cookie).send({}).expect(403);
     });
 
-    it('approves a membership: the person, the next member number and the owner record', async () => {
+    it('approves a membership: the person, a membership waiting for its ID and the owner record', async () => {
       const res = formDetailSchema.parse(
         (await send('post', `/forms/${cMembership.id}/approve`, blockCOffice.cookie).send({ addOwnership: true, sharePercent: '১০০' }).expect(200)).body,
       );
       expect(res.status).toBe('approved');
-      expect(res.memberNo).toBeGreaterThan(0);
+      // A member at once, but the membership ID waits until the person is verified.
+      expect(res).toMatchObject({ memberNo: null, membershipCode: null });
       expect(res.reviewerName).toContain('ব্যবহারকারী');
       expect(res.person).toMatchObject({ kind: 'person', phone: cMembership.phone });
 
@@ -438,7 +441,7 @@ describe('Public forms and the office review (e2e)', () => {
       await send('post', `/forms/${cMembership.id}/reject`, blockCOffice.cookie).send({ note: 'না' }).expect(409);
     });
 
-    it('numbers members one after another and refuses a second membership, keeping the application open', async () => {
+    it('makes approved applicants members without an ID until verified, and refuses a second membership, keeping the application open', async () => {
       const first = await prisma.memberships.findFirstOrThrow({ where: { submission_id: cMembership.id } });
       // The same phone applies again for another flat: they are already a member.
       const again = receipt(await submit('membership', membership(units.flat2B, { phone: cMembership.phone, nid: cMembership.nid }), deed()).expect(201));
@@ -450,7 +453,28 @@ describe('Public forms and the office review (e2e)', () => {
       const next = receipt(await submit('membership', membership(units.flat2C), deed()).expect(201));
       const nextId = (await submissionOf(next.reference)).id;
       const approved = formDetailSchema.parse((await send('post', `/forms/${nextId}/approve`, admin.cookie).send({}).expect(200)).body);
-      expect(approved.memberNo).toBe(first.member_no + 1);
+      // Applicants aren't verified yet: the ID waits for "Mark as verified".
+      expect(first.member_no).toBeNull();
+      expect(approved).toMatchObject({ memberNo: null, membershipCode: null });
+    });
+
+    it("approves an organisation's application: the organisation is the member and owner, the applicant its contact", async () => {
+      const phone = randomPhone();
+      const organisation = { name: `সোনালী ট্রেডার্স ${MARK}`, tradeLicence: `TL-F-${MARK}` };
+      const data = { applicantKind: 'organisation', applicant: { fullName: `যোগাযোগ ${MARK}`, phone, nid: null }, organisation, locationId: units.shopD1, livesHere: false };
+      // An organisation's details are needed; the contact's NID is not.
+      await submit('membership', { ...data, organisation: null }, deed()).expect(400);
+      await submit('membership', data, deed()).expect(201);
+      const submission = await prisma.form_submissions.findFirstOrThrow({ where: { phone, form_key: 'membership' } });
+
+      const res = formDetailSchema.parse(
+        (await send('post', `/forms/${submission.id}/approve`, admin.cookie).send({ addOwnership: true, sharePercent: '100' }).expect(200)).body,
+      );
+      expect(res.person).toMatchObject({ kind: 'organisation', name: organisation.name });
+      const row = await prisma.organisations.findFirstOrThrow({ where: { name: organisation.name }, include: { persons: true } });
+      expect(row.persons?.phone).toBe(phone);
+      expect(await prisma.memberships.count({ where: { organisation_id: row.id, status: 'active', member_no: res.memberNo! } })).toBe(1);
+      expect(await prisma.ownerships.count({ where: { organisation_id: row.id, location_id: units.shopD1, end_date: null } })).toBe(1);
     });
 
     it('approves a renter registration as a pending tenancy with the household', async () => {
@@ -490,6 +514,62 @@ describe('Public forms and the office review (e2e)', () => {
       expect(rejected).toMatchObject({ status: 'rejected', reviewNote: 'ভুল ফ্ল্যাট' });
       const audit = await prisma.audit_logs.findFirstOrThrow({ where: { entity_type: 'form_submission', entity_id: id, action: 'reject' } });
       expect(audit.user_id).toBe(approverOnly.id);
+    });
+  });
+
+  describe('office entry', () => {
+    let office: { id: string; cookie: string };
+
+    /** The office types in an application from the dashboard: logged in, CSRF, multipart. */
+    function enter(formKey: string, data: unknown, cookie: string, file?: { buffer: Buffer; name: string }) {
+      const req = send('post', `/forms/${formKey}`, cookie).field('data', JSON.stringify(data));
+      return file ? req.attach('file', file.buffer, file.name) : req;
+    }
+
+    beforeAll(async () => {
+      office = await makeUser([{ roleId: await makeRole(['forms:view', 'forms:create']), scope: tree.blockC.id }]);
+    });
+
+    it('saves it with who entered it, and has no daily limit per phone', async () => {
+      const phone = randomPhone();
+      const places = [tree.plot14.id, units.flat2A, units.flat2B, units.flat2C];
+      const ids: string[] = [];
+      // The website stops a phone after three a day; the office may type in more.
+      for (const place of places) {
+        const res = await enter('membership', membership(place, { phone }), office.cookie, deed()).expect(201);
+        ids.push(formEntrySchema.parse(res.body).id);
+      }
+      const saved = await detail(ids[0]!);
+      expect(saved.status).toBe('new');
+      expect(saved.enteredBy).toBe(`ব্যবহারকারী ${MARK}`);
+      expect(saved.files).toHaveLength(1);
+      const list = formListSchema.parse((await get('/forms?pageSize=100', admin.cookie).expect(200)).body);
+      expect(list.items.find((item) => item.id === ids[0])?.enteredBy).toBe(`ব্যবহারকারী ${MARK}`);
+      const audit = await prisma.audit_logs.findFirstOrThrow({ where: { entity_type: 'form_submission', entity_id: ids[0]! } });
+      expect(audit).toMatchObject({ action: 'enter', user_id: office.id });
+    });
+
+    it('a renter registration from the website has no one entered by', async () => {
+      const res = await submit('renter_registration', renter(units.flat2A)).expect(201);
+      const row = await submissionOf(receipt(res).reference);
+      expect((await detail(row.id)).enteredBy).toBeNull();
+    });
+
+    it('needs the deed, refuses the same open application and places outside the area', async () => {
+      const data = renter(units.flat2B);
+      const nodeed = await enter('membership', membership(tree.plot14.id), office.cookie).expect(400);
+      expect(nodeed.body.code).toBe('file_required');
+      await enter('renter_registration', data, office.cookie).expect(201);
+      const again = await enter('renter_registration', data, office.cookie).expect(409);
+      expect(again.body.code).toBe('already_submitted');
+      await enter('renter_registration', renter(units.shopD1), office.cookie).expect(403);
+    });
+
+    it('needs forms view and create', async () => {
+      const applicantOnly = await makeUser([{ roleId: await makeRole(['forms:create']) }]);
+      await enter('renter_registration', renter(units.flat2C), applicantOnly.cookie).expect(403);
+      const viewer = await makeUser([{ roleId: await makeRole(['forms:view']) }]);
+      await enter('renter_registration', renter(units.flat2C), viewer.cookie).expect(403);
     });
   });
 });

@@ -1,10 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { Prisma } from '@s57/db';
 import {
+  toMembershipStatus,
   toMoveKind,
   toRelation,
   toRenterType,
   toTenancyStatus,
+  type Membership,
   type Occupant,
   type Ownership,
   type Party,
@@ -179,5 +181,24 @@ export class MemberRowsService {
       startDate: isoDate(row.start_date),
       endDate: row.end_date ? isoDate(row.end_date) : null,
     }));
+  }
+
+  /** A person's or organisation's active membership, else their latest one. */
+  async membership(societyId: string, where: Prisma.membershipsWhereInput): Promise<Membership | null> {
+    const row = await this.prisma.memberships.findFirst({
+      where: { ...where, society_id: societyId },
+      orderBy: [{ status: 'asc' }, { joined_on: 'desc' }],
+      select: { id: true, member_no: true, membership_code: true, status: true, joined_on: true, ended_on: true },
+    });
+    return row
+      ? {
+          id: row.id,
+          memberNo: row.member_no,
+          membershipCode: row.membership_code,
+          status: toMembershipStatus(row.status),
+          joinedOn: isoDate(row.joined_on),
+          endedOn: row.ended_on ? isoDate(row.ended_on) : null,
+        }
+      : null;
   }
 }

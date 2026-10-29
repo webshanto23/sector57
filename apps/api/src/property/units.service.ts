@@ -16,7 +16,6 @@ import {
   type UnitDetail,
   type UnitList,
   type UnitListQuery,
-  type UnitStoreysInput,
   type UnitSummary,
   type UnitUpdateInput,
 } from '@s57/shared';
@@ -165,32 +164,27 @@ export class UnitsService {
     const row = await this.visibleRow(actor, id);
     const located = { path: row.locations.path };
     const edit = actor.access.can('edit', 'units', located) && row.merged === null;
-    const [names, breadcrumb, covers, options] = await Promise.all([
+    const [names, breadcrumb, covers] = await Promise.all([
       this.tree.addressNames(actor.societyId, [row.locations.path]),
       this.tree.breadcrumb(actor.access, actor.societyId, row.locations.path, 'locations'),
       this.storeys.covers(actor.societyId, id),
-      edit ? this.storeys.options(actor.societyId, row.locations.parent_id!) : Promise.resolve([]),
     ]);
     return {
       ...toSummary(row, names),
       breadcrumb,
       covers,
-      coverOptions: options.filter((option) => actor.access.can('view', 'units', { path: option.path })).map(({ id, name }) => ({ id, name })),
       mergedInto: row.merged ? { id: row.merged.location_id, name: row.merged.locations.name, on: row.merged_on!.toISOString().slice(0, 10) } : null,
-      can: { edit, delete: actor.access.can('delete', 'units', located) && row.merged === null },
+      can: {
+        edit,
+        delete: actor.access.can('delete', 'units', located) && row.merged === null,
+        separate: row.merged !== null && actor.access.can('edit', 'units', located),
+      },
     };
-  }
-
-  /** Sets the other storeys a unit covers (`UnitStoreysService`). */
-  async setStoreys(actor: Actor, id: string, input: UnitStoreysInput): Promise<UnitDetail> {
-    const row = await this.visibleRow(actor, id);
-    if (row.merged) throw unitMerged();
-    await this.storeys.replace(actor, { id, parentId: row.locations.parent_id!, path: row.locations.path }, input);
-    return this.get(actor, id);
   }
 
   async create(actor: Actor, input: UnitCreateInput): Promise<UnitDetail> {
     const parent = (await this.tree.parentFor(actor.access, actor.societyId, input.parentId, 'units'))!;
+    await this.assertNoFloorsInside(actor.societyId, parent.id);
     const levelId = await this.unitLevel(actor.societyId);
     if (await this.tree.codeInUse(actor.societyId, input.code)) throw codeTaken();
     await this.unitTypes.assertCodes(actor.societyId, [input.unitType]);
@@ -226,6 +220,7 @@ export class UnitsService {
   /** Many units with the same facts under one parent, all or none. */
   async bulk(actor: Actor, input: UnitBulkInput): Promise<BulkResult> {
     const parent = (await this.tree.parentFor(actor.access, actor.societyId, input.parentId, 'units'))!;
+    await this.assertNoFloorsInside(actor.societyId, parent.id);
     const levelId = await this.unitLevel(actor.societyId);
     const taken = await this.tree.takenNames(actor.societyId, parent.id, input.names);
     if (taken.length > 0) throw takenError(taken);
@@ -298,6 +293,17 @@ export class UnitsService {
       if (isForeignKeyViolation(error)) throw inUse();
       throw error;
     }
+  }
+
+  /**
+   * Units go on a floor, not beside it: a place that already holds floors (places at the
+   * deepest level above the units) takes no units of its own. Other mixes stay allowed.
+   */
+  private async assertNoFloorsInside(societyId: string, parentId: string): Promise<void> {
+    const floor = await this.prisma.location_levels.findFirst({ where: { society_id: societyId, is_unit_level: false }, orderBy: { depth: 'desc' }, select: { id: true } });
+    if (!floor) return;
+    const floors = await this.prisma.locations.count({ where: { society_id: societyId, parent_id: parentId, level_id: floor.id } });
+    if (floors > 0) throw new ConflictException({ code: 'units_beside_floors', message: 'Add units on one of the floors here' });
   }
 
   private async visibleRow(actor: Actor, id: string): Promise<UnitRow> {

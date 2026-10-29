@@ -29,6 +29,7 @@ export const directoryRowSchema = z.object({
   isOwner: z.boolean(),
   /** Society member number, when they hold an active membership. */
   memberNo: z.number().int().nullable(),
+  membershipCode: z.string().nullable(),
   place: placeSchema,
   since: isoDay,
 });

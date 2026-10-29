@@ -11,7 +11,7 @@ const WORDS = {
     vacant: 'খালি',
     occupied: 'বসবাস %',
     total: 'মোট',
-    memberNo: 'সদস্য নম্বর',
+    memberNo: 'সদস্যপদ আইডি',
     name: 'নাম',
     phone: 'ফোন',
     address: 'ঠিকানা',
@@ -36,7 +36,7 @@ const WORDS = {
     vacant: 'Vacant',
     occupied: 'Occupied %',
     total: 'Total',
-    memberNo: 'Member no.',
+    memberNo: 'Membership ID',
     name: 'Name',
     phone: 'Phone',
     address: 'Address',
@@ -65,7 +65,7 @@ export function membersCsv(report: MembersReport, locale: Locale): CsvCell[][] {
   const w = WORDS[locale];
   return [
     [w.memberNo, w.name, w.phone, w.address, w.joinedOn, w.status],
-    ...report.joined.map((row) => [row.memberNo, pick(row.name, row.nameEn, locale), row.phone, row.address.join(', '), row.joinedOn, w.membership[row.status]]),
+    ...report.joined.map((row) => [row.membershipCode, pick(row.name, row.nameEn, locale), row.phone, row.address.join(', '), row.joinedOn, w.membership[row.status]]),
   ];
 }
 

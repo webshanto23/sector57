@@ -5,10 +5,12 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Card, DataTable, Field, inputClass, ProgressBar, StatCard, type Column } from "@/components/kit";
 import { canExportReport } from "@/components/reports/access";
+import { IncomePrint } from "@/components/reports/income-print";
 import { ReportHeader } from "@/components/reports/report-header";
 import { Button } from "@/components/ui/button";
 import { csvHref, getIncome } from "@/lib/api/reports";
 import { requirePermission } from "@/lib/api/session";
+import { getBrand } from "@/lib/brand";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/dashboard/reports/income">): Promise<Metadata> {
   const { locale } = await params;
@@ -30,7 +32,12 @@ export default async function IncomePage({ params, searchParams }: PageProps<"/[
   const text = (key: string) => (typeof search[key] === "string" && search[key].trim() ? search[key] : undefined);
   const parsed = incomeQuery.safeParse({ year: text("year"), fundId: text("fundId") });
   const query = parsed.success ? parsed.data : {};
-  const [t, tReports, found] = await Promise.all([getTranslations("Reports.income"), getTranslations("Reports"), getIncome(query)]);
+  const [t, tReports, brand, found] = await Promise.all([
+    getTranslations("Reports.income"),
+    getTranslations("Reports"),
+    getBrand(locale),
+    getIncome(query),
+  ]);
   const report = found ?? (await getIncome({}));
   if (!report) notFound();
 
@@ -82,6 +89,7 @@ export default async function IncomePage({ params, searchParams }: PageProps<"/[
         title={t("title")}
         sub={t("sub", { year: localDigits(report.year, locale) })}
         csv={canExportReport(me.access, "income") ? csvHref("income", { year: report.year, fundId: report.fundId ?? undefined, lang: locale }) : null}
+        actions={<IncomePrint report={report} band={brand} />}
       />
 
       <form method="get" className="mb-3.5 flex flex-wrap items-end gap-2.5">

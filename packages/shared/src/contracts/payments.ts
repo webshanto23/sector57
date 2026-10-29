@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { compareMoney, fromPaisa, moneyOrZeroSchema, moneySchema, toPaisa } from '../money.js';
 import { optionalText, pagination, text } from '../schemas.js';
 import { cleanText } from '../text.js';
-import { billToSnapshotSchema, invoiceRowSchema, type InvoiceStatus } from './billing.js';
+import { billToSnapshotSchema, invoiceRowSchema, oneAccount, type InvoiceStatus } from './billing.js';
 import { documentHeaderSchema, paymentMethodSchema, paymentRefSchema, refineMethodRef } from './finance.js';
 import { isoDay } from './members.js';
 import { printChoiceSchema } from './print.js';
@@ -62,11 +62,16 @@ export const collectorMayVoid = (facts: { receivedBy: string; userId: string; re
 // Finding what to collect
 // ---------------------------------------------------------------------------
 
-/** `GET /collect/lookup`: by search (unit name or code, member name, phone or number), or one unit or member. */
+/**
+ * `GET /collect/lookup`: by search (unit name or code, member name, phone or number), or one
+ * unit or member, or with `open` alone the accounts in the caller's area whose open bills are newest.
+ */
 export const collectLookupQuery = z.object({
   q: z.string().transform(cleanText).pipe(z.string().max(100)).optional(),
+  open: z.stringbool().optional(),
   unitId: z.uuid().optional(),
   personId: z.uuid().optional(),
+  organisationId: z.uuid().optional(),
 });
 export type CollectLookupQuery = z.infer<typeof collectLookupQuery>;
 
@@ -86,12 +91,14 @@ export type PayerOption = z.infer<typeof payerOptionSchema>;
  */
 export const collectAccountSchema = z.object({
   kind: z.enum(['unit', 'member']),
-  /** The unit's id, or the member's person id. */
+  /** The unit's id, or the member's person or organisation id (`memberKind`). */
   id: z.uuid(),
+  memberKind: z.enum(['person', 'organisation']).nullable(),
   name: z.string(),
   code: z.string().nullable(),
   address: z.array(z.string()),
   memberNo: z.number().int().nullable(),
+  membershipCode: z.string().nullable(),
   bills: z.array(invoiceRowSchema),
   due: z.string(),
   payers: z.array(payerOptionSchema),
@@ -119,13 +126,14 @@ export type CollectSummary = z.infer<typeof collectSummarySchema>;
 
 /**
  * `POST /payments`: money for open bills of one unit (`unitId`) or one member's membership
- * bills (`personId`). The amount may be lowered below what the bills owe, never raised above.
+ * bills (`personId` or `organisationId`). The amount may be lowered below what the bills owe, never raised above.
  * Cash unless `method` says otherwise; a cheque or wallet payment needs `methodRef`.
  */
 export const paymentCreateSchema = z
   .object({
     unitId: z.uuid().nullish(),
     personId: z.uuid().nullish(),
+    organisationId: z.uuid().nullish(),
     invoiceIds: z.array(z.uuid()).min(1).max(MAX_PAYMENT_INVOICES),
     amount: moneySchema,
     payer: z.object({ kind: z.enum(['person', 'organisation']), id: z.uuid() }),
@@ -135,7 +143,7 @@ export const paymentCreateSchema = z
   })
   .superRefine((input, ctx) => {
     refineMethodRef(input, ctx);
-    if (!input.unitId === !input.personId) ctx.addIssue({ code: 'custom', path: ['unitId'], message: 'unit_or_person' });
+    if (!oneAccount(input)) ctx.addIssue({ code: 'custom', path: ['unitId'], message: 'unit_or_person' });
     if (new Set(input.invoiceIds).size !== input.invoiceIds.length) ctx.addIssue({ code: 'custom', path: ['invoiceIds'], message: 'duplicate_invoice' });
   });
 export type PaymentCreateInput = z.input<typeof paymentCreateSchema>;

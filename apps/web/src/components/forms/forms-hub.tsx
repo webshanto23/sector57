@@ -22,7 +22,8 @@ const ICONS: Record<FormKey | (typeof UPCOMING_FORMS)[number], LucideIcon> = {
  * The mockup's `forms` view: the list of services on the left (the two online forms open on the
  * right, the others are "coming soon"), the chosen form on the right, then the receipt.
  */
-export function FormsHub({ office }: { office: ReactNode }) {
+/** `renterNidRequired`: the society requires an NID of renters (the membership form always asks). */
+export function FormsHub({ office, renterNidRequired }: { office: ReactNode; renterNidRequired: boolean }) {
   const t = useTranslations("Forms");
   const [active, setActive] = useState<FormKey>("membership");
   const [receipt, setReceipt] = useState<FormReceipt | null>(null);
@@ -111,7 +112,7 @@ export function FormsHub({ office }: { office: ReactNode }) {
           ) : active === "membership" ? (
             <MembershipApplication key={`m-${round}`} onDone={setReceipt} />
           ) : (
-            <RenterRegistration key={`r-${round}`} onDone={setReceipt} />
+            <RenterRegistration key={`r-${round}`} onDone={setReceipt} nidRequired={renterNidRequired} />
           )}
         </Card>
       </div>

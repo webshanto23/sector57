@@ -123,7 +123,10 @@ export type PersonInput = z.infer<typeof personInputSchema>;
 export const personUpdateSchema = personInputSchema;
 export type PersonUpdateInput = z.infer<typeof personUpdateSchema>;
 
-/** `PUT /persons/:id/verified`: mark the person's details as checked against their papers, or undo it. */
+/**
+ * `PUT /persons/:id/verified` and `PUT /organisations/:id/verified`: mark the details as checked
+ * against their papers, or undo it. Verifying a member issues their membership ID; undoing keeps it.
+ */
 export const personVerifySchema = z.object({ verified: z.boolean() });
 export type PersonVerifyInput = z.infer<typeof personVerifySchema>;
 
@@ -138,10 +141,14 @@ export const organisationInputSchema = z.object({
 });
 export type OrganisationInput = z.infer<typeof organisationInputSchema>;
 
-/** Who owns or rents: a person or an organisation, as typed (found or added by the API). */
+/**
+ * Who owns or rents: a person or an organisation, as typed (found or added by the API), or
+ * `existing`: one already on file, by id (such as a past renter picked on the form).
+ */
 export const partyInputSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('person'), person: personInputSchema }),
   z.object({ kind: z.literal('organisation'), organisation: organisationInputSchema }),
+  z.object({ kind: z.literal('existing'), party: z.object({ kind: z.enum(['person', 'organisation']), id: z.uuid() }) }),
 ]);
 export type PartyInput = z.infer<typeof partyInputSchema>;
 
@@ -305,9 +312,11 @@ export const endsBeforeStart = (startDate: string, endDate: string | null) => en
  * locations above (a plot's owner owns its flats unless the flat has its own).
  */
 export const locationPeopleSchema = z.object({
-  location: z.object({ id: z.uuid(), name: z.string(), isUnit: z.boolean() }),
+  /** With its level ("Plot", "Unit"), to title its owners. */
+  location: z.object({ id: z.uuid(), name: z.string(), isUnit: z.boolean(), levelBn: z.string(), levelEn: z.string().nullable() }),
   owners: z.array(ownershipSchema).nullable(),
-  ownersAbove: z.array(ownershipSchema).nullable(),
+  /** With the level of the place owned ("Plot", "Building"), to label each line. */
+  ownersAbove: z.array(ownershipSchema.extend({ levelBn: z.string(), levelEn: z.string().nullable() })).nullable(),
   tenancies: z.array(tenancySchema).nullable(),
   occupants: z.array(occupantSchema).nullable(),
   can: z.object({
@@ -327,11 +336,13 @@ export const MEMBERSHIP_STATUSES = ['active', 'lapsed', 'cancelled'] as const;
 export type MembershipStatus = (typeof MEMBERSHIP_STATUSES)[number];
 export const toMembershipStatus = oneOf(MEMBERSHIP_STATUSES, 'cancelled');
 
-/** A person's society membership, on their page. */
+/** A person's or organisation's society membership, on their page. */
 export const membershipSchema = z.object({
-  memberNo: z.number().int(),
-  /** Unique across all societies: the society code and the padded member number (`S15-000042`). */
-  membershipCode: z.string(),
+  id: z.uuid(),
+  /** Null until the person or organisation is verified; the ID is issued then and kept. */
+  memberNo: z.number().int().nullable(),
+  /** Unique across all societies: the society code and the padded member number (`S15-000042`); null while `memberNo` is. */
+  membershipCode: z.string().nullable(),
   status: z.enum(MEMBERSHIP_STATUSES),
   joinedOn: isoDay,
   endedOn: isoDay.nullable(),
@@ -339,20 +350,23 @@ export const membershipSchema = z.object({
 export type Membership = z.infer<typeof membershipSchema>;
 
 /**
- * `POST /memberships`: the office registers a member directly (whole-society callers). Either
- * `person` (matched by phone, then NID, else added) or `personId` (someone on file, such as an
- * owner or renter). A blank `locationId` takes their first current unit or plot (owned, then
- * rented); a blank `joinedOn` is today.
+ * `POST /memberships`: the office registers a member directly (whole-society callers). One of
+ * `person` (matched by phone, then NID, else added), `personId` (someone on file, such as an
+ * owner or renter), `organisation` (matched by trade licence, then name, else added) or
+ * `organisationId` (one on file). A blank `locationId` takes their first current unit or plot
+ * (owned, then rented); a blank `joinedOn` is today.
  */
 export const memberCreateSchema = z
   .object({
     person: personInputSchema.nullish().transform((value) => value ?? null),
     personId: z.uuid().nullish().transform((value) => value ?? null),
+    organisation: organisationInputSchema.nullish().transform((value) => value ?? null),
+    organisationId: z.uuid().nullish().transform((value) => value ?? null),
     locationId: z.uuid().nullish().transform((value) => value ?? null),
     joinedOn: optionalDay,
   })
-  .refine((value) => (value.person === null) !== (value.personId === null), {
-    message: 'Give either person or personId',
+  .refine((value) => [value.person, value.personId, value.organisation, value.organisationId].filter((v) => v !== null).length === 1, {
+    message: 'Give one of person, personId, organisation or organisationId',
     path: ['personId'],
   });
 export type MemberCreateInput = z.infer<typeof memberCreateSchema>;
@@ -380,7 +394,7 @@ export const societyCodeSchema = z
 export const membershipSettingsSchema = z.object({
   societyCode: z.string(),
   firstMemberNo: z.number().int().min(1),
-  /** Memberships the society has issued; changing the code re-issues all of them. */
+  /** Membership IDs the society has issued (members waiting for verification have none); changing the code re-issues all of them. */
   issued: z.number().int().min(0),
   /** The highest member number used so far; null before the first member. */
   highestMemberNo: z.number().int().nullable(),
@@ -402,31 +416,44 @@ export const membershipSettingsInputSchema = z.object({
 });
 export type MembershipSettingsInput = z.infer<typeof membershipSettingsInputSchema>;
 
-/** People made members in one go from the owners or renters list. */
+/** People and organisations made members in one go from the owners or renters list. */
 export const MAX_BULK_MEMBERS = 200;
 
-/** `POST /memberships/bulk`: people on file, numbered in this order, all joining on one day (blank is today). */
-export const memberBulkSchema = z.object({
-  personIds: z
-    .array(z.uuid())
-    .min(1)
-    .max(MAX_BULK_MEMBERS)
-    .refine((ids) => new Set(ids).size === ids.length, { message: 'Each person once' }),
-  joinedOn: optionalDay,
-});
+const uniqueIds = z
+  .array(z.uuid())
+  .max(MAX_BULK_MEMBERS)
+  .refine((ids) => new Set(ids).size === ids.length, { message: 'Each one once' })
+  .default([]);
+
+/**
+ * `POST /memberships/bulk`: people and organisations on file, numbered in this order (people
+ * first), all joining on one day (blank is today). At least one, at most `MAX_BULK_MEMBERS` in all.
+ */
+export const memberBulkSchema = z
+  .object({ personIds: uniqueIds, organisationIds: uniqueIds, joinedOn: optionalDay })
+  .refine((value) => value.personIds.length + value.organisationIds.length >= 1, { message: 'Pick at least one', path: ['personIds'] })
+  .refine((value) => value.personIds.length + value.organisationIds.length <= MAX_BULK_MEMBERS, {
+    message: 'Too many at once',
+    path: ['personIds'],
+  });
 export type MemberBulkInput = z.infer<typeof memberBulkSchema>;
 
-/** The new memberships, and how many people were skipped because they already are members. */
+/** The new memberships, and how many were skipped because they already are members. */
 export const memberBulkResultSchema = z.object({
-  created: z.array(z.object({ personId: z.uuid(), memberNo: z.number().int(), membershipCode: z.string() })),
+  created: z.array(
+    z.object({ personId: z.uuid().nullable(), organisationId: z.uuid().nullable(), memberNo: z.number().int().nullable(), membershipCode: z.string().nullable() }),
+  ),
   skipped: z.number().int().min(0),
 });
 export type MemberBulkResult = z.infer<typeof memberBulkResultSchema>;
 
+/** The new member: a person or an organisation. `reusedPerson`: they were on file already. */
 export const memberCreatedSchema = z.object({
-  personId: z.uuid(),
-  memberNo: z.number().int(),
-  membershipCode: z.string(),
+  personId: z.uuid().nullable(),
+  organisationId: z.uuid().nullable(),
+  /** Null until they are verified (already verified: issued at once). */
+  memberNo: z.number().int().nullable(),
+  membershipCode: z.string().nullable(),
   reusedPerson: z.boolean(),
 });
 export type MemberCreated = z.infer<typeof memberCreatedSchema>;
@@ -463,10 +490,14 @@ export const organisationDetailSchema = z.object({
   name: z.string(),
   tradeLicence: z.string().nullable(),
   contact: partySchema.nullable(),
+  /** Checked against its papers (`members.approve`); a membership gets its ID then. */
+  verifiedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   ownerships: z.array(ownershipSchema),
   tenancies: z.array(tenancySchema),
-  can: z.object({ edit: z.boolean(), delete: z.boolean() }),
+  /** Its current or latest society membership, if any. */
+  membership: membershipSchema.nullable(),
+  can: z.object({ edit: z.boolean(), verify: z.boolean(), delete: z.boolean() }),
 });
 export type OrganisationDetail = z.infer<typeof organisationDetailSchema>;
 

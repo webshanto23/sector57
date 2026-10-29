@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { LocationPeople, PermissionAction, PermissionModule } from '@s57/shared';
 import { scopeWhere } from '../permissions/caller-access.js';
 import type { Actor } from '../permissions/permissions.decorators.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 import { locationNotFound, pathIds, TreeService } from '../property/tree.service.js';
 import { MemberRowsService } from './member-rows.service.js';
 
@@ -9,6 +10,7 @@ import { MemberRowsService } from './member-rows.service.js';
 @Injectable()
 export class LocationPeopleService {
   constructor(
+    private readonly prisma: PrismaService,
     private readonly tree: TreeService,
     private readonly rows: MemberRowsService,
   ) {}
@@ -23,7 +25,7 @@ export class LocationPeopleService {
 
     const unit = location.isUnit;
     const above = pathIds(location.path).slice(0, -1);
-    const [owners, ownersAbove, tenancies, occupants] = await Promise.all([
+    const [owners, aboveRows, levelRows, tenancies, occupants] = await Promise.all([
       sees.ownerships ? this.rows.ownerships(actor.societyId, { location_id: id }) : null,
       // Only owners of places inside the caller's area: a block manager doesn't see the sector's owner.
       sees.ownerships
@@ -33,9 +35,17 @@ export class LocationPeopleService {
             locations: scopeWhere(actor.access, 'view', 'ownerships', (prefix) => ({ path: { startsWith: prefix } })),
           })
         : null,
+      // The levels of the places above (to label their owners) and of this one (to title its own).
+      this.prisma.locations.findMany({
+        where: { society_id: actor.societyId, id: { in: sees.ownerships ? [...above, id] : [id] } },
+        select: { id: true, location_levels: { select: { name_bn: true, name_en: true } } },
+      }),
       unit && sees.tenancies ? this.rows.tenancies(actor.societyId, { unit_id: id }) : null,
       unit && sees.members ? this.rows.occupants(actor.societyId, { unit_id: id }) : null,
     ]);
+    const levels = new Map(levelRows.map((row) => [row.id, row.location_levels]));
+    const ownersAbove =
+      aboveRows?.map((row) => ({ ...row, levelBn: levels.get(row.place.id)?.name_bn ?? '', levelEn: levels.get(row.place.id)?.name_en ?? null })) ?? null;
     const actions = (module: PermissionModule) => ({
       create: may('create', module),
       edit: may('edit', module),
@@ -43,7 +53,7 @@ export class LocationPeopleService {
     });
     const none = { create: false, edit: false, delete: false };
     return {
-      location: { id: location.id, name: location.name, isUnit: unit },
+      location: { id: location.id, name: location.name, isUnit: unit, levelBn: levels.get(id)?.name_bn ?? '', levelEn: levels.get(id)?.name_en ?? null },
       owners,
       ownersAbove,
       tenancies,

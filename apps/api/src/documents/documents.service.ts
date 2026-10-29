@@ -4,6 +4,7 @@ import {
   digitVariants,
   DOCUMENT_ENTITIES,
   DOCUMENT_TYPE_KEYS,
+  ID_COPY_TYPES,
   isDocumentType,
   MAX_RECORD_DOCUMENTS,
   type Document,
@@ -48,6 +49,9 @@ const documentSelect = {
 } satisfies Prisma.documentsSelect;
 type Row = Prisma.documentsGetPayload<{ select: typeof documentSelect }>;
 
+/** NID and trade licence copies have their own routes on the person and organisation (`IdCopiesService`). */
+const notIdCopy = { doc_type: { notIn: [...ID_COPY_TYPES] } } satisfies Prisma.documentsWhereInput;
+
 /** What the caller may do with the documents of one record. */
 type Rights = { view: boolean; create: boolean; edit: boolean; /** NID copies: only for those who may edit the person. */ nid: boolean };
 
@@ -84,6 +88,7 @@ export class DocumentsService {
     const filters: Prisma.documentsWhereInput[] = [
       { society_id: actor.societyId, entity_type: query.entityType, entity_id: entityId },
       { archived_at: query.archived ? { not: null } : null },
+      notIdCopy,
     ];
     if (query.docType) filters.push({ doc_type: query.docType });
     if (!rights.nid) filters.push({ doc_type: { not: 'nid' } });
@@ -122,7 +127,7 @@ export class DocumentsService {
         if (input.entityType !== 'society') {
           // One upload at a time per record, so the limit holds.
           await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${`documents:${entityId}`}, 0))`;
-          const count = await tx.documents.count({ where: { society_id: actor.societyId, entity_type: input.entityType, entity_id: entityId, archived_at: null } });
+          const count = await tx.documents.count({ where: { society_id: actor.societyId, entity_type: input.entityType, entity_id: entityId, archived_at: null, ...notIdCopy } });
           if (count >= MAX_RECORD_DOCUMENTS) throw new ConflictException({ code: 'too_many_documents', message: `At most ${MAX_RECORD_DOCUMENTS} documents here` });
         }
         const made = await tx.documents.create({
@@ -186,10 +191,10 @@ export class DocumentsService {
     return this.get(actor, id);
   }
 
-  /** A library document the caller may see (404 otherwise, also for form files, vouchers and hidden NID copies). */
+  /** A library document the caller may see (404 otherwise, also for form files, vouchers, ID copies and hidden NID copies). */
   private async visible(actor: Actor, id: string): Promise<{ row: Row; rights: Rights }> {
     const row = await this.prisma.documents.findFirst({
-      where: { id, society_id: actor.societyId, entity_type: { in: [...DOCUMENT_ENTITIES] } },
+      where: { id, society_id: actor.societyId, entity_type: { in: [...DOCUMENT_ENTITIES] }, ...notIdCopy },
       select: documentSelect,
     });
     if (!row) throw notFound();

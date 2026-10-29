@@ -1,6 +1,6 @@
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
 import type { Prisma } from '@s57/db';
-import { toGender, toMembershipStatus, type PermissionAction, type PersonDetail, type PersonInput, type PersonUpdateInput } from '@s57/shared';
+import { toGender, type PermissionAction, type PersonDetail, type PersonInput, type PersonUpdateInput } from '@s57/shared';
 import { AuditService } from '../audit/audit.service.js';
 import { isoDate } from '../common/dates.js';
 import { mediaUrl } from '../common/media.js';
@@ -12,9 +12,11 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { beyondPermissions } from '../property/tree.service.js';
 import { MediaService } from '../storage/media.service.js';
 import { MemberRowsService } from './member-rows.service.js';
+import { MembershipsService } from './memberships.service.js';
 import {
   auditOf,
   canOnParty,
+  nidRequired,
   nidTaken,
   onlySocietyWide,
   PartiesService,
@@ -64,6 +66,7 @@ export class PersonsService {
     private readonly audit: AuditService,
     private readonly parties: PartiesService,
     private readonly rows: MemberRowsService,
+    private readonly memberships: MembershipsService,
     private readonly media: MediaService,
     @Inject(ENV) private readonly env: Env,
   ) {}
@@ -77,12 +80,7 @@ export class PersonsService {
       this.rows.ownerships(actor.societyId, { person_id: id, locations: at('ownerships') }),
       this.rows.tenancies(actor.societyId, { primary_person_id: id, units: { locations: at('tenancies') } }),
       this.rows.occupants(actor.societyId, { person_id: id, units: { locations: at('members') } }),
-      // The active membership, else the latest one.
-      this.prisma.memberships.findFirst({
-        where: { person_id: id, society_id: actor.societyId },
-        orderBy: [{ status: 'asc' }, { joined_on: 'desc' }],
-        select: { member_no: true, membership_code: true, status: true, joined_on: true, ended_on: true },
-      }),
+      this.rows.membership(actor.societyId, { person_id: id }),
     ]);
     const mayEdit = can('edit');
     return {
@@ -101,15 +99,7 @@ export class PersonsService {
       ownerships,
       tenancies,
       households,
-      membership: membership
-        ? {
-            memberNo: membership.member_no,
-            membershipCode: membership.membership_code,
-            status: toMembershipStatus(membership.status),
-            joinedOn: isoDate(membership.joined_on),
-            endedOn: membership.ended_on ? isoDate(membership.ended_on) : null,
-          }
-        : null,
+      membership,
       can: { edit: mayEdit, verify: can('approve'), delete: can('delete') },
     };
   }
@@ -137,6 +127,15 @@ export class PersonsService {
   async update(actor: Actor, id: string, input: PersonUpdateInput): Promise<PersonDetail> {
     const { row: before } = await this.allowed(actor, id, 'edit');
     await this.checkUnique(actor.societyId, input, id);
+    // An owner, renter or member keeps their NID while the society requires it.
+    if (
+      before.nid &&
+      !input.nid &&
+      (await this.parties.idsRequired(this.prisma, actor.societyId)) &&
+      (await this.parties.holdsRole(actor.societyId, { personId: id }))
+    ) {
+      throw nidRequired();
+    }
     try {
       await this.prisma.$transaction(async (tx) => {
         const after = await tx.persons.update({ where: { id }, data: personData(input), select });
@@ -151,7 +150,10 @@ export class PersonsService {
     return this.get(actor, id);
   }
 
-  /** Marks the details as checked against the person's papers (`members.approve`), or clears the mark. */
+  /**
+   * Marks the details as checked against the person's papers (`members.approve`), or clears the
+   * mark. Marking issues the membership ID of a member still waiting for one; clearing keeps it.
+   */
   async setVerified(actor: Actor, id: string, verified: boolean): Promise<PersonDetail> {
     const { row } = await this.allowed(actor, id, 'approve');
     const verifiedAt = verified ? (row.verified_at ?? new Date()) : null;
@@ -161,6 +163,7 @@ export class PersonsService {
         { ...auditOf(actor, 'person', verified ? 'verify' : 'unverify', id), before: { verified: row.verified_at !== null }, after: { verified } },
         tx,
       );
+      if (verified) await this.memberships.issueId(tx, actor, { personId: id, organisationId: null });
     });
     return this.get(actor, id);
   }

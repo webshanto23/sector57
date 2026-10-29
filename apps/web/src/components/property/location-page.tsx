@@ -1,6 +1,7 @@
 import {
   canAnywhere,
   localDigits,
+  pick,
   type LevelCounts,
   type Locale,
   type LocationLevel,
@@ -23,12 +24,15 @@ import { PeoplePanel } from "@/components/members/people-panel";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getBuildingGrid, getUnitTypes } from "@/lib/api/property";
+import { getSociety } from "@/lib/api/public";
 import { AddPanel } from "./add-panel";
 import { BuildingGrid } from "./building-grid";
 import { levelName, propertyTrail } from "./labels";
 import { LayoutForm } from "./layout-form";
 import { LevelBar } from "./level-bar";
 import { LocationEditor } from "./location-editor";
+import { RemoveSelected } from "./remove-selected";
+import { unitTypeIcon } from "./unit-types";
 
 /** The level picker and search: what is chosen, the chip counts, and the results (null on the tree). */
 export type Finder = { levelId: string | null; q: string | null; page: number; counts: LevelCounts; result: LocationSearch | null };
@@ -61,14 +65,17 @@ async function ChildCard({
   address,
   owners,
   home,
+  pickGroup,
 }: {
   node: LocationNode;
   locale: Locale;
   unitsOpen: boolean;
   address?: string[];
   owners?: PartyName[] | null;
-  /** For a unit shown on a storey it only covers: the name of its own storey. */
+  /** For a unit over several storeys: the name of its own storey, listed first. */
   home?: string;
+  /** Adds a tick box for "Remove selected" (`RemoveSelected` with this group). */
+  pickGroup?: string;
 }) {
   const t = await getTranslations("Property");
   const ownerNames = (owners ?? []).slice(0, CARD_OWNERS).map((owner) => (locale === "en" ? (owner.nameEn ?? owner.name) : owner.name));
@@ -77,12 +84,11 @@ async function ChildCard({
     <>
       <div className="flex items-start justify-between gap-2">
         <span className="min-w-0 font-semibold break-words">{node.name}</span>
-        <IconBox icon={node.isUnit ? Building2 : MapPin} size="sm" tone={node.isActive ? undefined : "warn"} />
+        <IconBox icon={node.isUnit ? unitTypeIcon(node.unitType?.code) : MapPin} size="sm" tone={node.isActive ? undefined : "warn"} />
       </div>
       <div className="flex flex-wrap gap-1.5">
-        <Chip plain>{levelName(node, locale)}</Chip>
-        {home ? <Chip tone="info">{t("storeys.home", { name: home })}</Chip> : null}
-        {!home && node.alsoOn.length > 0 ? <Chip tone="info">{t("storeys.alsoOn", { names: node.alsoOn.join(", ") })}</Chip> : null}
+        <Chip plain>{node.unitType ? pick(node.unitType.nameBn, node.unitType.nameEn, locale) : levelName(node, locale)}</Chip>
+        {node.alsoOn.length > 0 ? <Chip tone="info">{t("storeys.floors", { floors: [home, ...node.alsoOn].filter(Boolean).join(" + ") })}</Chip> : null}
         {!node.isActive ? <Chip tone="warn">{t("inactive")}</Chip> : null}
       </div>
       {address?.length ? <p className="text-[12.5px] break-words text-muted-foreground">{address.join(" › ")}</p> : null}
@@ -113,12 +119,26 @@ async function ChildCard({
     </>
   );
   const className = "grid content-start gap-2 rounded-[12px] border border-line bg-surface p-3.5";
-  return href ? (
+  const card = href ? (
     <Link href={href} className={`${className} transition-colors hover:border-muted-foreground`}>
       {body}
     </Link>
   ) : (
     <div className={className}>{body}</div>
+  );
+  if (!pickGroup) return card;
+  // The tick box sits on the card, outside the link, so ticking never opens the place.
+  return (
+    <div className="relative grid">
+      {card}
+      <input
+        type="checkbox"
+        data-pick={pickGroup}
+        value={node.id}
+        aria-label={t("remove.pick", { name: node.name })}
+        className="absolute right-3 bottom-3 size-4 accent-primary"
+      />
+    </div>
   );
 }
 
@@ -143,11 +163,12 @@ export async function LocationPage({
 }) {
   const { location, children, alsoHere, can } = view;
   const withGrid = location !== null && holdsFloors(location, levels) && children.some((child) => !child.isUnit);
-  const [t, tNav, unitTypes, grid] = await Promise.all([
+  const [t, tNav, unitTypes, grid, society] = await Promise.all([
     getTranslations("Property"),
     getTranslations("Dashboard.nav"),
     can.createUnit || withGrid ? getUnitTypes() : Promise.resolve([]),
     withGrid ? getBuildingGrid(location.id) : Promise.resolve(null),
+    people ? getSociety() : Promise.resolve(null),
   ]);
   const unitsOpen = canAnywhere(me.access, "units");
   const canEditLevels = canAnywhere(me.access, "settings", "edit");
@@ -193,7 +214,7 @@ export async function LocationPage({
           </Card>
         ) : null}
 
-        {people ? <PeoplePanel key={`people-${people.location.id}`} people={people} /> : null}
+        {people ? <PeoplePanel key={`people-${people.location.id}`} people={people} idsRequired={society?.requireIdNumbers ?? false} /> : null}
         {view.location ? <DocumentsPanel access={me.access} entityType="location" entityId={view.location.id} /> : null}
 
         {grid ? <BuildingGrid grid={grid} unitTypes={unitTypes} unitsOpen={unitsOpen} /> : null}
@@ -257,13 +278,22 @@ export async function LocationPage({
                   {location ? t("empty") : can.create ? t("emptyTop") : t("noAccess")}
                 </div>
               ) : (
-                <ul className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-2.5">
-                  {children.map((child) => (
-                    <li key={child.id} className="grid">
-                      <ChildCard node={child} locale={locale} unitsOpen={unitsOpen} />
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  {location && (can.delete || can.deleteUnit) ? <RemoveSelected group={`remove-${location.id}`} /> : null}
+                  <ul className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-2.5">
+                    {children.map((child) => (
+                      <li key={child.id} className="grid">
+                        <ChildCard
+                          node={child}
+                          locale={locale}
+                          unitsOpen={unitsOpen}
+                          home={child.isUnit ? location?.name : undefined}
+                          pickGroup={location && (child.isUnit ? can.deleteUnit : can.delete) ? `remove-${location.id}` : undefined}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </>
               )}
               {alsoHere.length > 0 ? (
                 <>

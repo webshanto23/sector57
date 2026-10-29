@@ -6,11 +6,13 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { ReactNode } from "react";
 import { Card, Chip, DataTable, Field, inputClass, type Column } from "@/components/kit";
 import { canExportReport, canSeeReport } from "@/components/reports/access";
+import { DayBookPrint } from "@/components/reports/day-book-print";
 import { ReportHeader } from "@/components/reports/report-header";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { csvHref, getDayBook } from "@/lib/api/reports";
 import { getMe } from "@/lib/api/session";
+import { getBrand } from "@/lib/brand";
 import { todayInDhaka } from "@/lib/dhaka-time";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/dashboard/reports/day-book">): Promise<Metadata> {
@@ -36,10 +38,11 @@ export default async function DayBookPage({ params, searchParams }: PageProps<"/
   const search = await searchParams;
   const parsed = dayBookQuery.safeParse({ date: typeof search["date"] === "string" && search["date"] ? search["date"] : undefined });
   const date = parsed.success ? parsed.data.date : undefined;
-  const [t, tReports, tFunds, found] = await Promise.all([
+  const [t, tReports, tFunds, brand, found] = await Promise.all([
     getTranslations("Reports.dayBook"),
     getTranslations("Reports"),
     getTranslations("Finance.funds"),
+    getBrand(locale),
     getDayBook(date),
   ]);
   const book = found ?? (await getDayBook());
@@ -134,6 +137,7 @@ export default async function DayBookPage({ params, searchParams }: PageProps<"/
         title={t("title")}
         sub={formatDate(book.date, locale)}
         csv={canExportReport(me.access, "day-book") ? csvHref("day-book", { date: book.date, lang: locale }) : null}
+        actions={<DayBookPrint book={book} band={brand} />}
       />
 
       <div className="mb-4 flex flex-wrap items-end gap-2.5">

@@ -103,6 +103,8 @@ export const billToSnapshotSchema = z.object({
   phone: z.string().nullable(),
   role: z.enum(BILL_TO_ROLES),
   memberNo: z.number().int().nullable(),
+  /** Older bills were saved before membership IDs and read as null. */
+  membershipCode: z.string().nullable().default(null),
   unit: z
     .object({
       id: z.uuid(),
@@ -235,22 +237,27 @@ export const lineInputSchema = z.object({
 
 /**
  * `POST /invoices`: a bill for a unit (billed to whoever `pickBillTo` finds) or, with
- * `personId`, a membership fee for a person with an active membership. Exactly one of the
- * two. All lines of a bill must pay into the same fund.
+ * `personId` or `organisationId`, a membership fee for a member (a person or an organisation
+ * with an active membership). Exactly one of the three. All lines of a bill must pay into the same fund.
  */
 export const invoiceCreateSchema = z
   .object({
     unitId: z.uuid().nullish(),
     personId: z.uuid().nullish(),
+    organisationId: z.uuid().nullish(),
     dueDate: isoDay,
     periodFrom: month.nullish(),
     periodTo: month.nullish(),
     lines: z.array(lineInputSchema).min(1).max(MAX_INVOICE_LINES),
   })
   .superRefine((input, ctx) => {
-    if (!input.unitId === !input.personId) ctx.addIssue({ code: 'custom', path: ['unitId'], message: 'unit_or_person' });
+    if (!oneAccount(input)) ctx.addIssue({ code: 'custom', path: ['unitId'], message: 'unit_or_person' });
     refinePeriod(input, ctx);
   });
+
+/** Exactly one of a unit, a person member or an organisation member. */
+export const oneAccount = (input: { unitId?: string | null; personId?: string | null; organisationId?: string | null }) =>
+  [input.unitId, input.personId, input.organisationId].filter(Boolean).length === 1;
 
 /** A period needs its first month, and the last can't come before it. */
 export function refinePeriod(input: { periodFrom?: string | null; periodTo?: string | null }, ctx: z.RefinementCtx): void {
@@ -293,11 +300,12 @@ export function periodDays(from: string | null | undefined, to: string | null | 
 // Finding what to bill
 // ---------------------------------------------------------------------------
 
-/** `GET /billing/lookup?q=`: units and members to bill, within the caller's billing area. `personId` finds one member. */
+/** `GET /billing/lookup?q=`: units and members to bill, within the caller's billing area. `personId` or `organisationId` finds one member. */
 export const billingLookupQuery = z.object({
   q: z.string().transform(cleanText).pipe(z.string().max(100)).optional(),
   unitId: z.uuid().optional(),
   personId: z.uuid().optional(),
+  organisationId: z.uuid().optional(),
 });
 export type BillingLookupQuery = z.infer<typeof billingLookupQuery>;
 
@@ -315,7 +323,7 @@ export const billingLookupSchema = z.object({
       hasOpening: z.boolean(),
     }),
   ),
-  /** People with an active membership; only for a society-wide billing role. */
-  members: z.array(partySchema.extend({ memberNo: z.number().int() })),
+  /** People and organisations with an active membership; only for a society-wide billing role. */
+  members: z.array(partySchema.extend({ memberNo: z.number().int().nullable(), membershipCode: z.string().nullable() })),
 });
 export type BillingLookup = z.infer<typeof billingLookupSchema>;

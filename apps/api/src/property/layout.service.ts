@@ -14,8 +14,10 @@ import { AuditService } from '../audit/audit.service.js';
 import { isUniqueViolation } from '../common/prisma-errors.js';
 import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { gridHolders } from './grid-holders.policy.js';
 import { OccupancyService } from './occupancy.service.js';
 import { beyondPermissions, locationNotFound, nameTaken, TreeService } from './tree.service.js';
+import { UnitPeopleService } from './unit-people.service.js';
 import { UnitTypesService } from './unit-types.service.js';
 
 /**
@@ -31,6 +33,7 @@ export class LayoutService {
     private readonly tree: TreeService,
     private readonly occupancy: OccupancyService,
     private readonly unitTypes: UnitTypesService,
+    private readonly people: UnitPeopleService,
   ) {}
 
   async apply(actor: Actor, buildingId: string, input: BuildingLayoutInput): Promise<BuildingLayoutResult> {
@@ -105,13 +108,26 @@ export class LayoutService {
         occupancy: true,
         merged: { select: { location_id: true, locations: { select: { name: true } } } },
         merged_units: { select: { locations: { select: { name: true } } }, orderBy: { locations: { name: 'asc' } } },
+        unit_storeys: { select: { storey_id: true } },
+        locations: { select: { path: true } },
       },
     });
     const byId = new Map(facts.map((row) => [row.location_id, row]));
+    // Units retired into a duplex are history: they hold nobody and count for nobody.
+    const live = facts.filter((row) => !row.merged).map((row) => ({ id: row.location_id, path: row.locations.path }));
+    const holders = gridHolders(await this.people.partiesOf(actor, live));
+    // A duplex shows on each floor it covers, unless a unit retired into it already stands there.
+    const coveredBy = (floorId: string) =>
+      units.filter((unit) => {
+        const row = byId.get(unit.id)!;
+        if (!row.unit_storeys.some((link) => link.storey_id === floorId)) return false;
+        return !units.some((other) => other.parentId === floorId && byId.get(other.id)!.merged?.location_id === unit.id);
+      });
     return {
       floors: floors.map((floor) => ({
         id: floor.id,
         name: floor.name,
+        coveredBy: coveredBy(floor.id).map(({ id, name }) => ({ id, name })),
         units: units
           .filter((unit) => unit.parentId === floor.id)
           .map((unit) => {
@@ -125,6 +141,7 @@ export class LayoutService {
               alsoOn: unit.alsoOn,
               mergedInto: row.merged ? { id: row.merged.location_id, name: row.merged.locations.name } : null,
               includes: row.merged_units.map((part) => part.locations.name),
+              holder: holders.get(unit.id) ?? null,
             };
           }),
       })),

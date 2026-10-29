@@ -45,13 +45,13 @@ export class MembershipSettingsService {
     const [society, start, used] = await Promise.all([
       client.societies.findUniqueOrThrow({ where: { id: societyId }, select: { code: true } }),
       firstMemberNo(client, societyId),
-      client.memberships.aggregate({ where: { society_id: societyId }, _max: { member_no: true }, _count: { _all: true } }),
+      client.memberships.aggregate({ where: { society_id: societyId }, _max: { member_no: true }, _count: { member_no: true } }),
     ]);
     const next = nextMemberNumber(start, used._max.member_no);
     return {
       societyCode: society.code,
       firstMemberNo: start,
-      issued: used._count._all,
+      issued: used._count.member_no,
       highestMemberNo: used._max.member_no,
       nextMemberNo: next,
       nextMembershipCode: formatMembershipCode(society.code, next),

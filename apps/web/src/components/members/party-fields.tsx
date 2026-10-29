@@ -3,32 +3,59 @@
 import { TIME_ZONE } from "@s57/shared";
 import { CalendarX, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useId, useState } from "react";
+import { createContext, useContext, useId, useState } from "react";
 import { ConfirmButton } from "@/components/admin/confirm-button";
 import { TextField } from "@/components/cms/fields";
 import { Field, inputClass } from "@/components/kit";
 import { Button } from "@/components/ui/button";
+import { MemberLookup, PickedMemberCard, type PickedMember } from "./member-lookup";
 import { emptyPerson, PersonFields, personBody, type PersonValues } from "./person-fields";
 
 /** Today in Dhaka as `YYYY-MM-DD`, the default for start and end dates. */
 export const todayIso = () => new Intl.DateTimeFormat("en-CA", { timeZone: TIME_ZONE }).format(new Date());
 
-export type PartyValues = { kind: "person" | "organisation"; person: PersonValues; name: string; tradeLicence: string };
-export const emptyParty: PartyValues = { kind: "person", person: emptyPerson, name: "", tradeLicence: "" };
+export type PartyValues = { kind: "person" | "organisation"; person: PersonValues; name: string; tradeLicence: string; member: PickedMember | null };
+export const emptyParty: PartyValues = { kind: "person", person: emptyPerson, name: "", tradeLicence: "", member: null };
 
-/** The request body for an owner or renter. */
+/** The request body for an owner or renter. A picked member is linked by id, as on file. */
 export const partyBody = (values: PartyValues) =>
-  values.kind === "person"
-    ? ({ kind: "person", person: personBody(values.person) } as const)
-    : ({ kind: "organisation", organisation: { name: values.name, tradeLicence: values.tradeLicence } } as const);
+  values.member
+    ? ({ kind: "existing", party: { kind: values.member.person.kind, id: values.member.person.id } } as const)
+    : values.kind === "person"
+      ? ({ kind: "person", person: personBody(values.person) } as const)
+      : ({ kind: "organisation", organisation: { name: values.name, tradeLicence: values.tradeLicence } } as const);
 
-export const partyReady = (values: PartyValues) => (values.kind === "person" ? values.person.fullName.trim() : values.name.trim()) !== "";
+/** Does the society require an NID or trade licence of owners and renters? Set by the People panel. */
+export const IdsRequired = createContext(false);
 
-/** A person or an organisation, as typed. The API finds an existing one or adds a new one. */
-export function PartyFields({ id, values, onChange }: { id: string; values: PartyValues; onChange: (values: PartyValues) => void }) {
+/** A picked member is checked by the API against their record on file. */
+export const partyReady = (values: PartyValues, idsRequired = false) =>
+  values.member !== null ||
+  (values.kind === "person"
+    ? values.person.fullName.trim() !== "" && (!idsRequired || values.person.nid.trim() !== "")
+    : values.name.trim() !== "" && (!idsRequired || values.tradeLicence.trim() !== ""));
+
+/**
+ * A person or an organisation, as typed; the API finds an existing one or adds a new one.
+ * With `memberLookup`, a member can instead be picked by membership ID and linked as on file.
+ */
+export function PartyFields({
+  id,
+  values,
+  onChange,
+  memberLookup = false,
+}: {
+  id: string;
+  values: PartyValues;
+  onChange: (values: PartyValues) => void;
+  memberLookup?: boolean;
+}) {
   const t = useTranslations("Members");
+  const idsRequired = useContext(IdsRequired);
+  if (values.member) return <PickedMemberCard member={values.member} onClear={() => onChange({ ...values, member: null })} />;
   return (
     <div className="grid gap-3.5">
+      {memberLookup ? <MemberLookup id={id} onPick={(member) => onChange({ ...values, member })} /> : null}
       <fieldset className="flex flex-wrap gap-4">
         <legend className="mb-1.5 text-[13px] font-semibold">{t("people.partyKind")}</legend>
         {(["person", "organisation"] as const).map((kind) => (
@@ -39,16 +66,17 @@ export function PartyFields({ id, values, onChange }: { id: string; values: Part
         ))}
       </fieldset>
       {values.kind === "person" ? (
-        <PersonFields id={`${id}-person`} values={values.person} onChange={(person) => onChange({ ...values, person })} short />
+        <PersonFields id={`${id}-person`} values={values.person} onChange={(person) => onChange({ ...values, person })} short nidRequired={idsRequired} />
       ) : (
         <div className="grid gap-3.5 min-[600px]:grid-cols-2">
           <TextField id={`${id}-org`} label={t("orgName")} value={values.name} onChange={(e) => onChange({ ...values, name: e.target.value })} required />
           <TextField
             id={`${id}-licence`}
             label={t("tradeLicence")}
-            hint={t("optional")}
+            hint={t(idsRequired ? "tradeLicenceRequired" : "optional")}
             value={values.tradeLicence}
             onChange={(e) => onChange({ ...values, tradeLicence: e.target.value })}
+            required={idsRequired}
           />
         </div>
       )}

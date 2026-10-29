@@ -23,7 +23,8 @@ export const personBody = (values: PersonValues) => ({ ...values, gender: values
 
 /**
  * Name, English name, phone, NID and, unless `short`, email, date of birth and gender.
- * `nidHidden` replaces the NID box with a note (the caller may not see the number).
+ * `nidHidden` replaces the NID box with a note (the caller may not see the number);
+ * `nidRequired` marks the NID as needed (owners, renters and members, when the society requires it).
  */
 export function PersonFields({
   id,
@@ -31,12 +32,14 @@ export function PersonFields({
   onChange,
   short = false,
   nidHidden = false,
+  nidRequired = false,
 }: {
   id: string;
   values: PersonValues;
   onChange: (values: PersonValues) => void;
   short?: boolean;
   nidHidden?: boolean;
+  nidRequired?: boolean;
 }) {
   const t = useTranslations("Members");
   const set = <K extends keyof PersonValues>(key: K, value: PersonValues[K]) => onChange({ ...values, [key]: value });
@@ -76,10 +79,11 @@ export function PersonFields({
         <TextField
           id={`${id}-nid`}
           label={t("nid")}
-          hint={t("nidHint")}
+          hint={t(nidRequired ? "nidRequiredHint" : "nidHint")}
           inputMode="numeric"
           value={values.nid}
           onChange={(e) => set("nid", e.target.value)}
+          required={nidRequired}
           autoComplete="off"
         />
       )}

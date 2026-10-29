@@ -1,8 +1,13 @@
-import { DOCUMENT_UPLOAD, FORM_HONEYPOT, formReceiptSchema, type FormKey, type FormReceipt } from "@s57/shared";
+import { DOCUMENT_UPLOAD, FORM_HONEYPOT, formEntrySchema, formReceiptSchema, type FormEntry, type FormKey, type FormReceipt } from "@s57/shared";
+import { uploadFile } from "@/lib/api/upload";
 
+/** `id` is set when the office typed it in (the new application's page). */
 export type SubmitResult =
-  | { ok: true; receipt: FormReceipt }
+  | { ok: true; receipt: FormReceipt | FormEntry }
   | { ok: false; code: string | null; issues: { path: string; message: string }[] };
+
+/** How a form is sent: from the public website, or by the office from the dashboard. */
+export type FormSender = (formKey: FormKey, data: unknown, file: File | null, honeypot: string) => Promise<SubmitResult>;
 
 /** The API error code a document would get, checked in the browser first; null when it may be sent. */
 export function documentProblem(file: File): "fileWrongType" | "fileTooLarge" | null {
@@ -36,3 +41,23 @@ export async function submitForm(formKey: FormKey, data: unknown, file: File | n
     return { ok: false, code: "network", issues: [] };
   }
 }
+
+/**
+ * The office types in an application from the dashboard: `POST /forms/:formKey`, logged in with
+ * the CSRF header. The answers and the file are the same as on the website; there is no honeypot.
+ */
+export const enterForm: FormSender = async (formKey, data, file) => {
+  try {
+    const result = await uploadFile<unknown>(`/forms/${formKey}`, file, { data: JSON.stringify(data) });
+    if (result.ok) {
+      const entry = formEntrySchema.safeParse(result.data);
+      if (entry.success) return { ok: true, receipt: entry.data };
+      return { ok: false, code: null, issues: [] };
+    }
+    const error = (result.error ?? {}) as { code?: unknown; issues?: unknown };
+    const issues = Array.isArray(error.issues) ? (error.issues as { path: string; message: string }[]) : [];
+    return { ok: false, code: typeof error.code === "string" ? error.code : null, issues };
+  } catch {
+    return { ok: false, code: "network", issues: [] };
+  }
+};

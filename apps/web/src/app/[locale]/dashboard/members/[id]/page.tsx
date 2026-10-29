@@ -1,4 +1,4 @@
-import { canAnywhere, canSocietyWide, formatDate, localDigits, type Locale, type Place } from "@s57/shared";
+import { canAnywhere, canSocietyWide, localDigits, type Locale, type Place } from "@s57/shared";
 import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -8,14 +8,18 @@ import { BillsPanel } from "@/components/billing/bills-panel";
 import { CertificatesPanel } from "@/components/certificates/certificates-panel";
 import { DonationsPanel } from "@/components/donations/donations-panel";
 import { DocumentsPanel } from "@/components/documents/documents-panel";
-import { Chip, PageHeader } from "@/components/kit";
+import { Avatar, PageHeader } from "@/components/kit";
+import { IdCardPanel } from "@/components/members/id-card-panel";
+import { NidCopiesCard } from "@/components/members/id-copies";
+import { MembershipLine } from "@/components/members/labels";
 import { MakeMemberButton } from "@/components/members/make-members";
 import { PersonEditor } from "@/components/members/person-editor";
+import { RemoveMemberCard } from "@/components/members/remove-member";
 import { HouseholdTable, OwnershipTable, TenancyTable } from "@/components/members/record-tables";
 import { buttonVariants } from "@/components/ui/button";
 import { VehiclesPanel } from "@/components/vehicles/vehicles-panel";
 import { Link } from "@/i18n/navigation";
-import { getPerson } from "@/lib/api/members";
+import { getMemberCard, getNidCopies, getPerson } from "@/lib/api/members";
 import { requirePermission } from "@/lib/api/session";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/dashboard/members/[id]">): Promise<Metadata> {
@@ -34,9 +38,18 @@ export default async function PersonPage({ params }: PageProps<"/[locale]/dashbo
   const me = await requirePermission("members");
   const [t, person] = await Promise.all([getTranslations("Members"), getPerson(id)]);
   if (!person) notFound();
+  // An active member with an ID gets a card, printed by those who may edit them.
+  const hasCard = person.can.edit && person.membership?.status === "active" && person.membership.membershipCode !== null;
+  const [nidCopies, card] = await Promise.all([
+    person.can.edit ? getNidCopies(person.id) : null,
+    hasCard ? getMemberCard(person.membership!.id) : null,
+  ]);
   const open = { units: canAnywhere(me.access, "units"), locations: canAnywhere(me.access, "locations") };
   // Not an active member yet: whole-society roles can make them one, at a place they own or rent now.
   const mayMakeMember = person.membership?.status !== "active" && canSocietyWide(me.access, "members", "create");
+  // A membership made by mistake can be taken back while its ID is pending.
+  const pendingMembership = person.membership?.status === "active" && person.membership.membershipCode === null ? person.membership : null;
+  const mayRemoveMember = pendingMembership !== null && canSocietyWide(me.access, "members", "delete");
   const currentPlaces = [
     ...person.ownerships.filter((row) => row.endDate === null).map((row) => row.place),
     ...person.tenancies.filter((row) => row.status === "active" || row.status === "moving_out").map((row) => row.place),
@@ -45,6 +58,7 @@ export default async function PersonPage({ params }: PageProps<"/[locale]/dashbo
   return (
     <>
       <PageHeader
+        lead={<Avatar name={person.fullName} src={person.photoUrl} size="lg" />}
         title={person.fullName}
         sub={[person.fullNameEn, person.phone ? localDigits(person.phone, locale) : null].filter(Boolean).join(" · ") || undefined}
         actions={
@@ -55,20 +69,13 @@ export default async function PersonPage({ params }: PageProps<"/[locale]/dashbo
         }
       />
       <div className="grid gap-3.5">
-        {person.membership ? (
-          <p className="flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
-            <Chip tone={person.membership.status === "active" ? "good" : "neutral"}>
-              {localDigits(t("memberNo", { no: person.membership.memberNo }), locale)}
-            </Chip>
-            <span className="num">{t("membershipCode", { code: person.membership.membershipCode })}</span>
-            {person.membership.status === "active"
-              ? t("memberSince", { date: formatDate(person.membership.joinedOn, locale, "short") })
-              : t(`membershipStatus.${person.membership.status}`)}
-          </p>
-        ) : null}
-        {mayMakeMember ? <MakeMemberButton personId={person.id} places={currentPlaces} /> : null}
+        {person.membership ? <MembershipLine membership={person.membership} /> : null}
+        {mayMakeMember ? <MakeMemberButton member={{ kind: "person", id: person.id }} places={currentPlaces} /> : null}
+        {mayRemoveMember ? <RemoveMemberCard membershipId={pendingMembership!.id} name={person.fullName} /> : null}
         {!person.can.edit ? <Note>{t("readOnly")}</Note> : null}
         <PersonEditor key={person.id} person={person} />
+        {nidCopies ? <NidCopiesCard personId={person.id} copies={nidCopies} /> : null}
+        {card ? <IdCardPanel card={card} /> : null}
         <OwnershipTable rows={person.ownerships} locale={locale} open={open} />
         <TenancyTable rows={person.tenancies} locale={locale} open={open} />
         <HouseholdTable rows={person.households} open={open} />

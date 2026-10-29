@@ -182,7 +182,13 @@ export default async function BillingPage({ params, searchParams }: PageProps<"/
         </Button>
       </form>
 
-      {list.items.length ? <PrintSelected formId={PRINT_FORM_ID} action={getPathname({ href: "/dashboard/billing/print", locale })} /> : null}
+      {list.items.length ? (
+        <PrintSelected
+          formId={PRINT_FORM_ID}
+          action={getPathname({ href: "/dashboard/billing/print", locale })}
+          canCollect={canAnywhere(me.access, "payments", "create")}
+        />
+      ) : null}
       <BillsTable rows={list.items} locale={locale} empty={filtered ? t("emptyFiltered") : t("empty")} selectForm={PRINT_FORM_ID} />
 
       <Pager

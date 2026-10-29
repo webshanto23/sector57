@@ -10,6 +10,7 @@ export type SocietyContext = {
   nameBn: string;
   nameEn: string | null;
   fiscalYearStartMonth: number;
+  requireIdNumbers: boolean;
 } & Branding;
 
 type CacheEntry = { value: SocietyContext | null; active: boolean; expires: number };
@@ -33,7 +34,7 @@ export class SocietyService {
     return this.env.DEFAULT_SOCIETY_SLUG;
   }
 
-  /** Drops the cached row after the society itself changed (fiscal year start, name, branding). */
+  /** Drops the cached row after the society itself changed (fiscal year start, name, branding, ID rule). */
   forget(slug: string): void {
     this.cache.delete(slug);
   }
@@ -45,7 +46,9 @@ export class SocietyService {
     if (!entry || entry.expires <= now) {
       const row = await this.prisma.societies.findUnique({
         where: { slug },
-        include: { society_settings: { where: { key: SETTING_KEYS.branding }, select: { value: true } } },
+        include: {
+          society_settings: { where: { key: { in: [SETTING_KEYS.branding, SETTING_KEYS.requireIdNumbers] } }, select: { key: true, value: true } },
+        },
       });
       entry = {
         expires: now + CACHE_MS,
@@ -56,7 +59,8 @@ export class SocietyService {
           nameBn: row.name_bn,
           nameEn: row.name_en,
           fiscalYearStartMonth: row.fiscal_year_start_month,
-          ...brandingOf(row.society_settings?.[0]?.value, row.name_bn),
+          requireIdNumbers: row.society_settings.find((s) => s.key === SETTING_KEYS.requireIdNumbers)?.value === true,
+          ...brandingOf(row.society_settings.find((s) => s.key === SETTING_KEYS.branding)?.value, row.name_bn),
         },
       };
       this.cache.set(slug, entry);

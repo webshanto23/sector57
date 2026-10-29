@@ -11,14 +11,18 @@ import { useSubmit } from "@/components/property/use-submit";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api/client";
 
-type Ticks = { ticked: string[]; toggle: (personId: string) => void };
+type Ticks = { ticked: string[]; toggle: (id: string) => void };
+/** A person or an organisation that can be made a member. */
+export type MemberCandidate = { kind: "person" | "organisation"; id: string };
 const TicksContext = createContext<Ticks | null>(null);
 
 /**
- * Owners or renters list with tick boxes: the people who aren't members yet (`eligible`, in page
- * order) can be ticked and made members in one go, all joining on one day. Ticks clear afterwards.
+ * Owners or renters list with tick boxes: the people and organisations who aren't members yet
+ * (`eligible`, in page order) can be ticked and made members in one go, all joining on one day.
+ * Ticks clear afterwards.
  */
-export function MemberTicks({ eligible, children }: { eligible: string[]; children: ReactNode }) {
+export function MemberTicks({ eligible: candidates, children }: { eligible: MemberCandidate[]; children: ReactNode }) {
+  const eligible = candidates.map((candidate) => candidate.id);
   const t = useTranslations("Members");
   const locale = useLocale() as Locale;
   const { status, setStatus, busy, run } = useSubmit();
@@ -28,8 +32,8 @@ export function MemberTicks({ eligible, children }: { eligible: string[]; childr
   const live = ticked.filter((id) => eligible.includes(id));
   const allTicked = eligible.length > 0 && live.length === eligible.length;
 
-  const toggle = (personId: string) =>
-    setTicked((current) => (current.includes(personId) ? current.filter((id) => id !== personId) : [...current, personId]));
+  const toggle = (id: string) => setTicked((current) => (current.includes(id) ? current.filter((other) => other !== id) : [...current, id]));
+  const tickedOf = (kind: MemberCandidate["kind"]) => candidates.filter((c) => c.kind === kind && live.includes(c.id)).map((c) => c.id);
 
   return (
     <TicksContext value={{ ticked: live, toggle }}>
@@ -40,7 +44,7 @@ export function MemberTicks({ eligible, children }: { eligible: string[]; childr
             className="flex flex-wrap items-end gap-3.5"
             onSubmit={async (e) => {
               e.preventDefault();
-              const result = await run(() => api.POST("/memberships/bulk", { body: { personIds: live, joinedOn } }));
+              const result = await run(() => api.POST("/memberships/bulk", { body: { personIds: tickedOf("person"), organisationIds: tickedOf("organisation"), joinedOn } }));
               if (!result) return;
               setTicked([]);
               setStatus({ ok: true, text: localDigits(t("madeMembers", { created: result.created.length, skipped: result.skipped }), locale) });
@@ -79,7 +83,7 @@ export function MemberTicks({ eligible, children }: { eligible: string[]; childr
 }
 
 /** The tick box on one row; only inside `MemberTicks`. */
-export function TickBox({ personId, name }: { personId: string; name: string }) {
+export function TickBox({ id, name }: { id: string; name: string }) {
   const t = useTranslations("Members");
   const ticks = use(TicksContext);
   if (!ticks) return null;
@@ -88,16 +92,16 @@ export function TickBox({ personId, name }: { personId: string; name: string }) 
       type="checkbox"
       className="size-4 accent-primary"
       aria-label={t("tickPerson", { name })}
-      checked={ticks.ticked.includes(personId)}
-      onChange={() => ticks.toggle(personId)}
+      checked={ticks.ticked.includes(id)}
+      onChange={() => ticks.toggle(id)}
     />
   );
 }
 
 const placeLabel = (place: Place) => [...place.address, place.name].join(", ");
 
-/** "Make member" on a person's page: the place (one of their current ones, or none) and the joined day. */
-export function MakeMemberButton({ personId, places }: { personId: string; places: Place[] }) {
+/** "Make member" on a person's or organisation's page: the place (one of their current ones, or none) and the joined day. */
+export function MakeMemberButton({ member, places }: { member: MemberCandidate; places: Place[] }) {
   const t = useTranslations("Members");
   const { status, busy, run } = useSubmit();
   const [open, setOpen] = useState(false);
@@ -119,7 +123,9 @@ export function MakeMemberButton({ personId, places }: { personId: string; place
         className="grid gap-3.5"
         onSubmit={async (e) => {
           e.preventDefault();
-          const created = await run(() => api.POST("/memberships", { body: { personId, locationId: placeId || null, joinedOn } }));
+          const created = await run(() => api.POST("/memberships", {
+              body: { ...(member.kind === "person" ? { personId: member.id } : { organisationId: member.id }), locationId: placeId || null, joinedOn },
+            }));
           if (created) setOpen(false);
         }}
       >

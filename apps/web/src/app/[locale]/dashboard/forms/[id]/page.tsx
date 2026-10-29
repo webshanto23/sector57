@@ -56,7 +56,7 @@ export default async function FormPage({ params }: PageProps<"/[locale]/dashboar
     <>
       <PageHeader
         title={`${tForms(`kinds.${form.formKey}`)} · ${form.reference}`}
-        sub={t("submittedOn", { date: formatDate(form.submittedAt, locale, "long") })}
+        sub={[t("submittedOn", { date: formatDate(form.submittedAt, locale, "long") }), ...(form.enteredBy ? [t("enteredBy", { name: form.enteredBy })] : [])].join(" · ")}
         actions={
           <Link href="/dashboard/forms" className={buttonVariants({ variant: "outline" })}>
             <ChevronLeft aria-hidden />
@@ -128,7 +128,11 @@ export default async function FormPage({ params }: PageProps<"/[locale]/dashboar
             <h2 className="text-[15px]">{t("decision")}</h2>
             <div className="flex flex-wrap items-center gap-2">
               <FormStatusChip status={form.status} />
-              {form.memberNo ? <Chip tone="good" plain>{localDigits(t("memberNo", { no: form.memberNo }), locale)}</Chip> : null}
+              {form.membershipCode ? (
+                <Chip tone="good" plain>{t("memberNo", { no: form.membershipCode })}</Chip>
+              ) : form.formKey === "membership" && form.status === "approved" ? (
+                <Chip tone="warn" plain>{tMembers("idPending")}</Chip>
+              ) : null}
             </div>
             {form.reviewedAt && form.reviewerName ? (
               <p className="text-[13px] text-muted-foreground">
@@ -175,10 +179,17 @@ function Answers({
   tMembers: TMembers;
 }) {
   if (form.membership) {
-    const { applicant, livesHere } = form.membership;
+    const { applicantKind, applicant, organisation, livesHere } = form.membership;
     return (
       <Facts
         rows={[
+          [tForms("applyingAs"), tForms(`applicantKinds.${applicantKind}`)],
+          ...(applicantKind === "organisation" && organisation
+            ? ([
+                [tForms("orgName"), organisation.name],
+                [tForms("tradeLicence"), organisation.tradeLicence],
+              ] as [ReactNode, ReactNode][])
+            : []),
           [tForms("fullName"), applicant.fullName],
           ...(applicant.fullNameEn ? ([[tForms("fullNameEn"), applicant.fullNameEn]] as [ReactNode, ReactNode][]) : []),
           [tForms("phone"), digits(applicant.phone)],

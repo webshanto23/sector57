@@ -18,7 +18,7 @@ import { unitTypeCode } from './property.js';
  * See docs/glossary.md: an owner is not a member until the office approves a membership.
  */
 
-/** `q` matches names (fuzzy) or phone, in either digit form. */
+/** `q` matches names (fuzzy) or phone, in either digit form; on the members register also the membership ID. Organisations show with their contact person's phone. */
 const registerQuery = pagination.extend({
   q: z.string().transform(cleanText).pipe(z.string().max(100)).optional(),
   areaId: z.uuid().optional(),
@@ -73,7 +73,10 @@ export const memberRegisterQuery = registerQuery.extend({
 export type MemberRegisterQuery = z.infer<typeof memberRegisterQuery>;
 
 export const memberRegisterRowSchema = z.object({
-  memberNo: z.number().int(),
+  membershipId: z.uuid(),
+  /** Null while the ID waits for verification. */
+  memberNo: z.number().int().nullable(),
+  membershipCode: z.string().nullable(),
   status: z.enum(MEMBERSHIP_STATUSES),
   joinedOn: isoDay,
   person: partySchema,
@@ -114,8 +117,11 @@ export const ownerRegisterRowSchema = partySchema.extend({
   otherPlaces: z.number().int().min(0),
   /** Lives in a unit in the caller's area now; null for an organisation. */
   livesHere: z.boolean().nullable(),
-  /** The active membership number; null for a person who is not a member yet, and for an organisation. */
+  /** Has an active membership (its ID may still wait for verification). */
+  isMember: z.boolean(),
+  /** The active membership's number; null when not a member or not verified yet. */
   memberNo: z.number().int().nullable(),
+  membershipCode: z.string().nullable(),
 });
 export type OwnerRegisterRow = z.infer<typeof ownerRegisterRowSchema>;
 
@@ -156,8 +162,11 @@ export const renterRegisterRowSchema = z.object({
   unitType: z.object({ code: unitTypeCode, nameBn: z.string(), nameEn: z.string().nullable() }),
   /** Current residents of the renter's household. */
   residents: z.number().int().min(0),
-  /** The renter's active membership number; null when they aren't a member, and for an organisation. */
+  /** The renter has an active membership (its ID may still wait for verification). */
+  isMember: z.boolean(),
+  /** The active membership's number; null when not a member or not verified yet. */
   memberNo: z.number().int().nullable(),
+  membershipCode: z.string().nullable(),
 });
 export type RenterRegisterRow = z.infer<typeof renterRegisterRowSchema>;
 

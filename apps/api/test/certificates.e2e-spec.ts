@@ -179,7 +179,7 @@ describe('Certificates (e2e)', () => {
     expect(cert.sale.body).toContain(`সমিতি ${MARK}`);
 
     cert.membership = detail(await draft({ type: 'membership', unitId: ids.c1, personId: ids.rahim }).expect(201));
-    expect(cert.membership.body).toContain('সদস্য নম্বর: ৭');
+    expect(cert.membership.body).toMatch(/সদস্যপদ আইডি: \S+-০০০০০৭।/);
     cert.residence = detail(await draft({ type: 'residence', unitId: ids.c2, personId: ids.salma }).expect(201));
     cert.noDues = detail(await draft({ type: 'no_dues', unitId: ids.c1, personId: ids.rahim }).expect(201));
     cert.utility = detail(await draft({ type: 'noc_utility', unitId: ids.c2, personId: ids.karim }).expect(201));
@@ -262,7 +262,7 @@ describe('Certificates (e2e)', () => {
     const [a, b] = await Promise.all([issue(cert.membership.id, { allowDues: true }), issue(cert.utility.id)]);
     expect([a.status, b.status]).toEqual([200, 200]);
     expect([detail(a).certNo, detail(b).certNo].sort()).toEqual([firstNo(2), firstNo(3)]);
-    expect(detail(a).body).toContain('সদস্য নম্বর: ৭');
+    expect(detail(a).body).toMatch(/সদস্যপদ আইডি: \S+-০০০০০৭।/);
   });
 
   it('prints an issued certificate only, in its own language, with the header', async () => {
@@ -319,7 +319,7 @@ describe('Certificates (e2e)', () => {
     expect(saved.templates.residence).toEqual(saved.defaults.residence);
 
     expect(detail(await get(`/certificates/${cert.noDues.id}`).expect(200)).body).toMatch(/^রহিম \(সি-১, ভবন ৯, ব্লক সি\) এর কাছে সমিতি .+-এর পাওনা নেই, .+।$/);
-    expect(detail(await get(`/certificates/${cert.membership.id}`).expect(200)).body).toContain('সদস্য নম্বর: ৭');
+    expect(detail(await get(`/certificates/${cert.membership.id}`).expect(200)).body).toMatch(/সদস্যপদ আইডি: \S+-০০০০০৭।/);
     expect(await prisma.audit_logs.count({ where: { society_id: societyId, entity_type: 'setting', action: 'update' } })).toBe(1);
   });
 });

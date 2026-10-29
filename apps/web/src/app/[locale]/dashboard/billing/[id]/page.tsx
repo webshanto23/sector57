@@ -93,9 +93,9 @@ export default async function InvoicePage({ params }: PageProps<"/[locale]/dashb
               <Fact label={t("detail.billTo")}>
                 {billToLabel(billTo, locale, tr)}
                 {billTo.phone ? <span className="num block text-[13px] font-normal text-muted-foreground">{localDigits(billTo.phone, locale)}</span> : null}
-                {billTo.memberNo !== null ? (
+                {billTo.membershipCode ? (
                   <span className="block text-[13px] font-normal text-muted-foreground">
-                    {localDigits(t("memberNo", { no: billTo.memberNo }), locale)}
+                    {t("memberNo", { no: billTo.membershipCode })}
                   </span>
                 ) : null}
               </Fact>
@@ -152,7 +152,7 @@ export default async function InvoicePage({ params }: PageProps<"/[locale]/dashb
             </div>
             {open && canCollect ? (
               <Link
-                href={{ pathname: "/dashboard/collect", query: { ...(billTo.unit ? { unitId: billTo.unit.id } : { personId: billTo.id }), invoiceId: invoice.id } }}
+                href={{ pathname: "/dashboard/collect", query: { ...(billTo.unit ? { unitId: billTo.unit.id } : billTo.kind === "person" ? { personId: billTo.id } : { organisationId: billTo.id }), invoiceId: invoice.id } }}
                 className={`${buttonVariants()} mt-1`}
               >
                 <Banknote aria-hidden />

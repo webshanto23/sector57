@@ -195,8 +195,17 @@
       "unsupported_document": "Use a photo (JPEG, PNG, WebP) or a PDF.",
       "file_required": "Attach a photo or PDF of the deed.",
       "payload_too_large": "The file is larger than 5 MB.",
-      "validation_failed": "Please correct the fields marked in red."
-    }
+      "validation_failed": "Please correct the fields marked in red.",
+      "beyond_your_permissions": "This address is outside your area."
+    },
+    "applyingAs": "Applying as",
+    "applicantKinds": {
+      "person": "A person",
+      "organisation": "An organisation"
+    },
+    "orgName": "Organisation name",
+    "tradeLicence": "Trade licence number",
+    "contactHint": "Give your own details below; you will be the organisation's contact person."
   },
   "Auth": {
     "loginTitle": "Log in",
@@ -235,7 +244,19 @@
     "confirmPassword": "Repeat the new password",
     "savePassword": "Save password",
     "saving": "Saving…",
-    "passwordChanged": "Your password has been changed."
+    "passwordChanged": "Your password has been changed.",
+    "edit": "Edit",
+    "name": "Name (Bangla)",
+    "nameEn": "Name in English (optional)",
+    "saveName": "Save name",
+    "cancel": "Cancel",
+    "done": "Done",
+    "nameLocked": "Your details are verified, so only the office can change your name.",
+    "photoAfterName": "Save your name first; then you can add a photo.",
+    "addPhoto": "Add photo",
+    "changePhoto": "Change photo",
+    "removePhoto": "Remove photo",
+    "uploading": "Uploading…"
   },
   "Dashboard": {
     "label": "Dashboard",
@@ -475,6 +496,10 @@
       "location_code_taken": "Another location already has this holding number.",
       "location_has_children": "Something is still inside this location. Remove that first, or make it inactive.",
       "location_in_use": "Other records still refer to this location. Make it inactive instead.",
+      "remove_has_places": "A place you picked has other places inside. Remove those first.",
+      "remove_joined": "Joined units are history and can't be removed.",
+      "remove_in_use": "Owners, renters, bills or other records still refer to some of these. Make them inactive instead.",
+      "units_beside_floors": "This building has floors. Add units on a floor, or remove the floors and use \"Set up floors and units\".",
       "location_not_found": "This location no longer exists, or is outside your area. Reload the page.",
       "unit_not_found": "This unit no longer exists, or is outside your area. Reload the page.",
       "parent_inactive": "Nothing can be added inside an inactive location.",
@@ -493,10 +518,14 @@
       "person_nid_taken": "Another person has this NID.",
       "person_in_use": "This person is still linked to a unit, the committee, a login or bills.",
       "person_not_found": "This person no longer exists, or is outside your area. Reload the page.",
+      "name_locked": "Your name is verified; only the office can change it.",
+      "name_required": "Save your name before adding a photo.",
       "organisation_in_use": "This organisation still has ownership, tenancy or bill records.",
       "organisation_not_found": "This organisation no longer exists, or is outside your area.",
       "shares_over_100": "The current owners' shares can't add up to more than 100%.",
       "already_owner": "This owner is already a current owner here.",
+      "nid_required": "An owner, renter or member needs a national ID (NID). Type it, or add it on their profile first.",
+      "trade_licence_required": "An organisation that owns or rents needs a trade licence number. Type it, or add it on its profile first.",
       "duplicate_owner": "The same owner is listed twice.",
       "location_inactive": "This location is inactive.",
       "tenancy_open_exists": "This unit still has an open tenancy. End it first.",
@@ -602,6 +631,8 @@
       "document_archived": "This document is already archived.",
       "document_not_archived": "This document is not archived.",
       "too_many_documents": "There are already 50 documents here. Archive some first.",
+      "id_copy_not_found": "That copy is no longer on file.",
+      "too_many_licence_pages": "An organisation keeps at most 10 licence pages. Remove one first.",
       "invalid_doc_type": "That kind of document does not belong here.",
       "invalid_entity": "Choose whose document this is.",
       "staff_not_found": "Staff member not found, or outside your area.",
@@ -679,19 +710,22 @@
       "certificate_dues_unpaid": "Bills on this unit are still unpaid. Tick “Issue anyway” to issue it regardless.",
       "certificate_not_issued": "This certificate hasn't been issued yet. Reload the page.",
       "certificate_already_void": "This certificate is already void. Reload the page.",
-      "invalid_storey": "A unit can only cover floors beside its own, in the same building.",
       "floor_token_missing": "Put '{n}' where the floor number goes.",
       "letter_token_missing": "Put '{letter}' where each unit's letter goes.",
       "layout_not_empty": "Floors can only be set up in an empty building. Add more floors one by one instead.",
       "unit_merged": "This unit was combined into another one and is kept as history only.",
       "combine_unit_inactive": "An inactive or already combined unit can't be combined.",
-      "combine_not_side_by_side": "Only units on the same floor, or on floors of the same building, can be combined.",
+      "combine_not_side_by_side": "Only units on one floor, or on floors of one building, can be joined.",
+      "unit_not_joined": "This unit is not part of a joined unit.",
       "combine_owners_differ": "These units have different owners. Fix the owners first so they match.",
       "combine_open_bills": "A unit being retired still has unpaid bills. Settle them first.",
       "combine_open_tenancy": "A unit being retired still has a renter. End the tenancy first.",
       "combine_occupants": "People still live in a unit being retired. Move them first.",
       "combine_vehicles": "A unit being retired still has a vehicle or parking slot. Move it first.",
-      "society_code_taken": "Another society already uses this code."
+      "society_code_taken": "Another society already uses this code.",
+      "membership_has_id": "This member already has a membership ID, so the membership can no longer be removed.",
+      "membership_has_bills": "This member has membership bills that are not void. Void them first.",
+      "membership_not_found": "This membership no longer exists."
     }
   },
   "Cms": {
@@ -927,17 +961,13 @@
     "ownerNone": "not recorded",
     "ownerMore": "+{count} more",
     "storeys": {
-      "title": "Covers floors",
-      "hint": "For a duplex or an office over several floors. The unit stays on its own (lowest) floor; tick the other floors it takes up. Owners, renters and bills stay on this one unit.",
-      "save": "Save floors",
-      "alsoOn": "Also on {names}",
-      "home": "Main part on {name}",
-      "alsoHere": "Units from other floors that cover this one",
+      "floors": "On {floors}",
+      "alsoHere": "Units from other floors that also take up this one",
       "mergedInto": "Combined into {name} on {date}. This unit is kept as history only."
     },
     "layout": {
       "title": "Set up floors and units",
-      "hint": "For a new building: make all its floors and the units on each in one go. Fix shops or duplexes afterwards.",
+      "hint": "For a new building: make all its floors and the units on each in one go. Set shop types or join units afterwards.",
       "open": "Set up",
       "floors": "Floors",
       "floorPattern": "Floor name",
@@ -959,10 +989,14 @@
     },
     "grid": {
       "title": "Floors and units",
-      "hint": "Tick units, or a whole floor, and give them one type, such as shops on the ground floor.",
+      "hint": "Tick units, or a whole floor, and give them one type, such as shops on the ground floor. Tick two or more units to join them into one, on one floor or over several floors.",
       "pickFloor": "Pick every unit on {name}",
       "noUnits": "No units on this floor.",
-      "alsoOn": "Also on {names}",
+      "floors": "On {floors}",
+      "renterName": "Renter: {name}",
+      "ownerName": "Owner: {name}",
+      "holderMore": "+{count}",
+      "holderUnits": "{name} · {count} units",
       "includes": "Includes {names}",
       "partOf": "Part of <link>{name}</link>",
       "inactive": "Inactive",
@@ -972,11 +1006,22 @@
       "clear": "Clear",
       "done": "{count, plural, one {# unit} other {# units}} updated.",
       "combine": "Combine",
-      "combineTitle": "Combine into one unit",
-      "combineHint": "Pick the unit to keep. The others become history: inactive, their owners ended, their bills and documents kept. The kept unit covers their floors and its size becomes the total.",
+      "combineTitle": "Join units",
+      "combineHint": "Join only units made into one (a wall taken down, one door). Pick the unit to keep: it takes in the others, covers their floors and its size becomes the total; owners, renters and bills stay on it. The others become history: inactive, their owners ended, their bills and documents kept.",
       "keep": "Keep",
-      "confirmCombine": "Combine {count, plural, one {# unit} other {# units}}",
-      "combined": "Units combined."
+      "confirmCombine": "Join units",
+      "combined": "Units joined.",
+      "separate": "Separate",
+      "separateConfirm": "Take {name} back out of {from}? It gets its own copy of the current owners from today; bills already issued stay on {from}.",
+      "separated": "{name} is a unit of its own again."
+    },
+    "remove": {
+      "pick": "Select {name}",
+      "selectAll": "Select all",
+      "removeSelected": "Remove selected",
+      "confirm": "Remove {count, plural, one {# item} other {# items}} for good? A floor goes with the units on it. This cannot be undone.",
+      "done": "{count, plural, one {# item} other {# items}} removed.",
+      "names": "Check: {names}"
     },
     "seeUnits": "See its units",
     "name": "Name",
@@ -1080,7 +1125,7 @@
       "allBillTo": "Bills go to: anyone",
       "allStatus": "Active and inactive",
       "active": "Active",
-      "owners": "Owner",
+      "owners": "Unit owner",
       "renter": "Current renter",
       "more": "+{count}",
       "allMissing": "Any data",
@@ -1171,6 +1216,8 @@
     "email": "Email",
     "nid": "National ID (NID)",
     "nidHint": "10, 13 or 17 digits.",
+    "nidRequiredHint": "Required. 10, 13 or 17 digits.",
+    "tradeLicenceRequired": "Required.",
     "nidHidden": "An NID is on file. Only people who may edit this person see the number.",
     "dateOfBirth": "Date of birth",
     "genderLabel": "Gender",
@@ -1189,6 +1236,19 @@
     "changePhoto": "Change photo",
     "removePhoto": "Remove photo",
     "uploading": "Uploading…",
+    "nidCopy": "NID copy",
+    "nidFront": "Front",
+    "nidBack": "Back",
+    "uploadCopy": "Upload",
+    "replaceCopy": "Replace",
+    "removeCopy": "Remove",
+    "noCopy": "Not uploaded",
+    "licenceCopy": "Trade licence copy",
+    "addLicencePage": "Add page",
+    "licencePage": "Page {n}",
+    "noLicencePages": "No pages uploaded yet.",
+    "licencePagesHint": "Photos or PDFs, up to {max} pages.",
+    "idCopyPrivate": "Only people who may edit this record see these copies.",
     "delete": "Delete",
     "confirmDelete": "Delete “{name}”? This cannot be undone.",
     "deleteHint": "Only someone not linked to any unit, the committee, a login or bills can be deleted.",
@@ -1215,6 +1275,11 @@
       "owners": "Owners",
       "ownersAbove": "Owners of the places above",
       "ownersAboveHint": "Without an owner of its own, this belongs to the owner of the place above.",
+      "showOwnersAbove": "See Property Owners",
+      "hideOwnersAbove": "Hide Property Owners",
+      "aboveOwner": "{level} Owner",
+      "aboveName": "{level} Name",
+      "aboveMap": "Property Map",
       "noOwner": "No current owner recorded.",
       "pastOwners": "Past owners",
       "tenancy": "Tenancy",
@@ -1223,6 +1288,7 @@
       "household": "Residents",
       "noHousehold": "No residents recorded.",
       "pastHousehold": "Moved out",
+      "ownersOf": "Owners of this {level}",
       "addOwner": "Add owner",
       "transfer": "Transfer ownership",
       "addTenancy": "Add tenancy",
@@ -1247,7 +1313,14 @@
       "ownerHousehold": "The owner's household",
       "renterHousehold": "The current renter's household",
       "relationLabel": "Relation",
-      "reuseHint": "If someone with this phone or NID is already recorded, they are linked and their stored details are kept.",
+      "reuseHint": "If this phone or NID is already on file, that person is added, and what you typed here does not change their saved details.",
+      "memberLookup": "Membership ID",
+      "memberLookupPlaceholder": "e.g. S15-000123 or 123",
+      "memberSearch": "Search",
+      "memberNoMatch": "No member found.",
+      "memberLookupHint": "Already a member? Find them by membership ID to add their record on file, with nothing to type.",
+      "memberChange": "Change",
+      "memberPickedHint": "Their record on file is added as it is. To change their details, edit their profile.",
       "add": "Add",
       "added": "Added.",
       "ended": "Ended.",
@@ -1255,6 +1328,9 @@
       "livesHere": "Lives here",
       "livesHereHint": "If an owner lives in this unit, press “Lives here” to add them as a resident.",
       "renterIsResident": "A renter who is a person is added as a resident (head of household) automatically.",
+      "pastRenter": "Past renter of this unit",
+      "pastRenterNew": "New renter (type below)",
+      "pastRenterHint": "Pick someone who rented here before to add them again with their record on file.",
       "startMoveIn": "Start move-in",
       "startMoveOut": "Start move-out",
       "moveUnderWay": {
@@ -1263,7 +1339,7 @@
       },
       "openMove": "Open checklist"
     },
-    "memberNo": "Society member · no. {no}",
+    "memberNo": "Membership ID {no}",
     "membershipStatus": {
       "active": "Membership active",
       "lapsed": "Membership lapsed",
@@ -1277,7 +1353,7 @@
     "cancel": "Cancel",
     "memberPlaceNone": "No place",
     "makeMember": "Make member",
-    "makeMemberHint": "They get the next member number and a membership ID.",
+    "makeMemberHint": "They get a membership ID once marked as verified.",
     "tickAll": "Tick all on this page",
     "tickPerson": "Tick {name}",
     "makeMembers": "{count, plural, =0 {Make members} other {Make members (#)}}",
@@ -1294,6 +1370,66 @@
       "issued": "{count, plural, =0 {No IDs given yet.} one {# ID given so far.} other {# IDs given so far.}}",
       "recodeWarning": "Saving a new code re-issues {count, plural, one {the # ID} other {all # IDs}} already given. Receipts, bills and certificates printed before keep the old ID.",
       "save": "Save"
+    },
+    "idPending": "Membership ID pending verification",
+    "verifyIssuesId": "Marking as verified gives this member their membership ID.",
+    "removeMember": "Remove from members",
+    "removeMemberQuestion": "Remove {name} from the members? They stay on file as an owner or renter. Voided membership bills are kept.",
+    "removeMemberHint": "Made a member by mistake? While the membership ID is pending, the membership can be removed.",
+    "memberRemoved": "Removed from the members.",
+    "idCard": {
+      "title": "Membership ID card",
+      "hint": "Both sides at their real size. Print one side per page on a card printer, or both on A4 with cut lines.",
+      "preview": "Front and back of the card",
+      "printCard": "Print card (CR80)",
+      "printA4": "Print on A4",
+      "printHint": "The PDF has both sides in colour at the real card size, one side per page. Colours vary a little by printer; do a test print first.",
+      "memberCard": "Member card",
+      "membershipId": "Membership ID",
+      "phone": "Phone",
+      "email": "Email",
+      "since": "Since {date}",
+      "validTill": "Valid till {date}",
+      "termsTitle": "Terms of use",
+      "terms": {
+        "one": "This card belongs to the society and is not transferable.",
+        "two": "Show it at the society office for services and voting.",
+        "three": "If found, please return it to the society office."
+      },
+      "memberSignature": "Member's signature",
+      "seal": "Seal",
+      "secretary": "General Secretary",
+      "pdfName": "Member card {code}",
+      "downloadPdf": "Download PDF",
+      "pdfBusy": "Making the PDF…",
+      "pdfFailed": "Could not make the PDF. Try again, or use a print button.",
+      "tickAll": "Everyone on this page",
+      "tickMember": "Card for {name}",
+      "printSheets": "{count, plural, one {Print # card on A4} other {Print # cards on A4}}",
+      "sheetsHint": "Nine cards to an A4 page: fronts on one page and backs on the next, lined up for double-sided printing (flip on the long edge).",
+      "tooManyCards": "At most {max} cards at a time.",
+      "batchDone": "{count, plural, one {# card made.} other {# cards made.}}",
+      "batchPdfName": "Member cards ({count})",
+      "skip": {
+        "membership_not_found": "{count} outside your area.",
+        "beyond_your_permissions": "{count} you may not edit.",
+        "membership_id_pending": "{count} still waiting for an ID.",
+        "membership_not_active": "{count} not active."
+      }
+    },
+    "cardSettings": {
+      "title": "Membership ID card",
+      "hint": "What the back of the card says, how long it is valid and the signature label. The society's name, logo and address come from the receipt header.",
+      "termsBn": "Terms (Bangla)",
+      "termsEn": "Terms (English)",
+      "termsHint": "One per line, at most {max}. Leave blank for the standard terms.",
+      "termsEnHint": "For cards printed from the English pages; blank uses the Bangla terms.",
+      "years": "Valid for (years)",
+      "yearsHint": "From the day it is printed, at most {max}. Leave blank for no \"Valid till\" line.",
+      "signatureBn": "Signature label (Bangla)",
+      "signatureEn": "Signature label (English)",
+      "tooMany": "At most {max} lines of terms.",
+      "save": "Save"
     }
   },
   "Registers": {
@@ -1304,7 +1440,7 @@
     "inSomeArea": "Only one area",
     "clearArea": "Show all",
     "morePlaces": "+{count} more",
-    "memberNo": "Member no. {no}",
+    "memberNo": "Membership ID {no}",
     "call": "Call {name}",
     "whatsapp": "WhatsApp {name}",
     "col": {
@@ -1396,7 +1532,8 @@
       "openMove": "Open checklist",
       "noRenter": "Not recorded",
       "empty": "No renters match."
-    }
+    },
+    "idPending": "Member · ID pending"
   },
   "FormsAdmin": {
     "sub": "Check and approve applications sent from the website",
@@ -1415,7 +1552,8 @@
       "place": "Address",
       "phone": "Mobile",
       "submitted": "Submitted",
-      "status": "Status"
+      "status": "Status",
+      "source": "Entered by"
     },
     "searchLabel": "Search applications",
     "searchPlaceholder": "Reference, name or mobile",
@@ -1470,9 +1608,15 @@
     "tenancyStart": "Tenancy start date",
     "monthlyRent": "Monthly rent (optional)",
     "noApproveRight": "You don't have the permissions needed to approve in this area.",
-    "memberNo": "Member no. {no}",
+    "memberNo": "Membership ID {no}",
     "openPerson": "Person's page",
-    "openPlace": "Address page"
+    "openPlace": "Address page",
+    "add": "Add application",
+    "newTitle": "Add application",
+    "newHint": "Type in an application received on paper or by phone. It joins the queue like one sent from the website.",
+    "chooseForm": "Application type",
+    "enteredBy": "Entered by {name}",
+    "website": "Website"
   },
   "Finance": {
     "tabs": {
@@ -1514,6 +1658,8 @@
       "separateFundsHint": "When on, money for the mosque, gym and other facilities can be kept in funds of their own. When off, everything goes into the general fund.",
       "shareThana": "Share renter details with the thana",
       "shareThanaHint": "The renter list for the thana comes later; the decision can be recorded now.",
+      "requireIds": "Require NID or trade licence",
+      "requireIdsHint": "Owners, renters and members can only be added with a national ID (a person) or trade licence number (an organisation). Residents and staff are not affected.",
       "fiscalYear": "Fiscal year",
       "fiscalStart": "Fiscal year starts in",
       "fiscalNow": "Current fiscal year {label}: {start} to {end}.",
@@ -1641,7 +1787,7 @@
     "empty": "No bills yet.",
     "emptyFiltered": "No bills match this search.",
     "billToWithRole": "{name} ({role})",
-    "memberNo": "Member no. {no}",
+    "memberNo": "Membership ID {no}",
     "noUnit": "No unit",
     "periodRange": "{from} to {to}",
     "detail": {
@@ -1800,22 +1946,29 @@
     },
     "printMany": {
       "title": "Print bills",
-      "sub": "{count} bills. Print each on a page of its own, or all of them as one list.",
+      "sub": "{count} bills. Print each on a page of its own, all of them as one list, or as one combined bill for one payer.",
       "print": "Print all",
       "selected": "Print selected",
       "select": "Select bill {no}",
       "selectAll": "Select all",
+      "collect": "Take payment for ticked",
+      "collectMixed": "One receipt is for one unit or member: tick bills of one account only.",
+      "collectClosed": "A ticked bill is already paid or void.",
       "none": "No bills to print. Tick bills on the bills page first.",
       "made": "{count} bills made.",
       "printList": "Print as a list",
       "listTitle": "List of bills",
       "listDate": "Printed on {date}",
-      "listCount": "{count} bills"
+      "listCount": "{count} bills",
+      "printCombined": "Print combined bill",
+      "combinedTo": "Combined bill to",
+      "combinedTitle": "Combined bill",
+      "combinedNote": "Each bill keeps its own number. Payments are recorded against each bill, so quote the bill numbers when paying."
     },
     "printA4": {
       "billedTo": "Billed to",
       "details": "Bill details",
-      "memberNo": "Member no.",
+      "memberNo": "Membership ID",
       "phone": "Phone",
       "period": "Billing period",
       "dueDate": "Due date",
@@ -1846,7 +1999,8 @@
       "generated": "Computer-generated bill · Printed {at}",
       "page": "Page 1 of 1",
       "counterAmount": "Amount"
-    }
+    },
+    "idPending": "Membership ID pending"
   },
   "Recurring": {
     "sub": "Charges billed every month or every few months, and the history of billing runs.",
@@ -1979,9 +2133,10 @@
     "findPlaceholder": "Unit name, holding number, payer's name or phone, member no.",
     "search": "Search",
     "noMatch": "Nothing found in your area.",
+    "openBills": "Open bills, newest first",
     "choose": "Choose",
     "change": "Change",
-    "memberNo": "Member no. {no}",
+    "memberNo": "Membership ID {no}",
     "membershipFees": "Membership fees",
     "nothingDue": "Nothing is due.",
     "dueTotal": "Due: {amount}",
@@ -2584,10 +2739,16 @@
         "opening": "Start of day",
         "in": "In",
         "out": "Out",
-        "closing": "End of day"
+        "closing": "End of day",
+        "receipts": "Receipts"
       },
       "total": "Total (void ones not counted): {amount}",
-      "empty": "Nothing this day."
+      "empty": "Nothing this day.",
+      "sign": {
+        "cashier": "Cashier (prepared by)",
+        "treasurer": "Treasurer",
+        "secretary": "General Secretary"
+      }
     },
     "collection": {
       "title": "Collection by area",
@@ -2639,10 +2800,7 @@
       "voidMark": "Voided",
       "empty": "No receipts in this month.",
       "invalid": "This filter could not be shown, so this month is shown instead.",
-      "printButton": "Print A4",
       "printTitle": "Daily collection register",
-      "printed": "Printed {date}",
-      "printPage": "Page {page} of {pages}",
       "sign": {
         "collector": "Collector",
         "treasurer": "Treasurer",
@@ -2692,13 +2850,22 @@
         "head": "Expense head",
         "budget": "Budget",
         "spent": "Spent",
-        "remaining": "Left"
+        "remaining": "Left",
+        "amount": "Amount"
       },
       "noBudget": "No budget",
       "budgetHidden": "Budgets are set for the whole society, so they show only with all funds.",
       "partNote": "A part-paid bill's money counts against its lines in their order.",
       "emptyIncome": "No income this year.",
-      "emptyExpenditure": "No expenses paid this year."
+      "emptyExpenditure": "No expenses paid this year.",
+      "printSub": "Fiscal year {year} · {fund}",
+      "printSummary": "Summary",
+      "over": "over budget",
+      "sign": {
+        "treasurer": "Treasurer",
+        "secretary": "General Secretary",
+        "president": "President"
+      }
     },
     "occupancy": {
       "title": "Occupancy by area",
@@ -2727,16 +2894,26 @@
       "empty": "Nobody joined in this period.",
       "truncated": "Only the first {count} are listed. Choose a shorter period.",
       "col": {
-        "memberNo": "Member no.",
+        "memberNo": "Membership ID",
         "name": "Name",
         "address": "Address",
         "joinedOn": "Joined",
-        "status": "Status"
+        "status": "Status",
+        "serial": "No.",
+        "phone": "Mobile",
+        "count": "Count"
       },
       "status": {
         "active": "Active",
         "lapsed": "Lapsed",
         "cancelled": "Cancelled"
+      },
+      "idPending": "Pending",
+      "printRange": "{from} to {to}",
+      "printSummary": "Members by status",
+      "sign": {
+        "secretary": "General Secretary",
+        "president": "President"
       }
     },
     "renters": {
@@ -2777,6 +2954,12 @@
       "printPlace": "Area: {place}",
       "printDate": "As of {date}",
       "totalTenancies": "Rented units: {count}"
+    },
+    "print": {
+      "button": "Print A4",
+      "printed": "Printed {date}",
+      "page": "Page {page} of {pages}",
+      "none": "None"
     }
   },
   "Audit": {
@@ -2967,7 +3150,7 @@
       "place": "Unit",
       "relation": "Relation",
       "phone": "Phone",
-      "member": "Member no.",
+      "member": "Membership ID",
       "checked": "Checked"
     },
     "household": {
@@ -2975,7 +3158,7 @@
       "renter": "Renter's household"
     },
     "owner": "Owner",
-    "memberNo": "No. {no}",
+    "memberNo": "Membership ID {no}",
     "csv": "Download CSV",
     "print": "Print list",
     "printTitle": "Resident directory",
@@ -4073,7 +4256,7 @@
         "society": "The society's name",
         "date": "The day it is issued",
         "certNo": "The certificate number",
-        "memberNo": "The person's member number",
+        "memberNo": "The person's membership ID",
         "purpose": "The subject, as typed",
         "addressee": "Who it is addressed to, as typed"
       },

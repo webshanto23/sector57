@@ -58,7 +58,7 @@ export const tiedForCertificate = (type: CertificateType, ties: readonly UnitTie
  * What a template may say in braces. The API fills them when it shows a draft and freezes the
  * result at issue: `{name}` the person (in the letter's language when there is one), `{unit}`
  * the unit's address, `{society}` the society's name, `{date}` the issue day, `{certNo}` the
- * number, `{memberNo}` the person's member number, `{purpose}` and `{addressee}` as typed.
+ * number, `{memberNo}` the person's membership ID, `{purpose}` and `{addressee}` as typed.
  */
 export const CERTIFICATE_PLACEHOLDERS = ['name', 'unit', 'society', 'date', 'certNo', 'memberNo', 'purpose', 'addressee'] as const;
 export type CertificatePlaceholder = (typeof CERTIFICATE_PLACEHOLDERS)[number];
@@ -131,8 +131,8 @@ export const DEFAULT_CERTIFICATE_TEMPLATES: CertificateTemplates = {
     en: 'This is to certify that {name} lives at {unit}, within the area of {society}.',
   },
   membership: {
-    bn: 'এই মর্মে প্রত্যয়ন করা যাচ্ছে যে, {name} ({unit}) {society}-এর একজন নিবন্ধিত সদস্য। সদস্য নম্বর: {memberNo}।',
-    en: 'This is to certify that {name} ({unit}) is a registered member of {society}. Member number: {memberNo}.',
+    bn: 'এই মর্মে প্রত্যয়ন করা যাচ্ছে যে, {name} ({unit}) {society}-এর একজন নিবন্ধিত সদস্য। সদস্যপদ আইডি: {memberNo}।',
+    en: 'This is to certify that {name} ({unit}) is a registered member of {society}. Membership ID: {memberNo}.',
   },
   no_dues: {
     bn: 'এই মর্মে প্রত্যয়ন করা যাচ্ছে যে, {date} তারিখ পর্যন্ত {unit}-এর কাছে {society}-এর কোনো পাওনা বকেয়া নেই।',

@@ -17,6 +17,7 @@ import {
   type CollectLookupQuery,
   type CollectSummary,
   type InvoiceRow,
+  type Payer,
   type PayerOption,
   type PayerSnapshot,
   type PaymentCreate,
@@ -31,6 +32,7 @@ import {
 import { AuditService } from '../audit/audit.service.js';
 import { BillToService, type BillableUnit } from '../billing/bill-to.service.js';
 import { invoiceNotFound, invoiceSelect, toInvoiceRow } from '../billing/invoices.service.js';
+import { memberOf, memberOfRow, memberSearch, membershipsOf } from '../billing/member-accounts.js';
 import { isoDate, todayDate } from '../common/dates.js';
 import { NumberingService } from '../finance/numbering.service.js';
 import { SettingsService } from '../finance/settings.service.js';
@@ -100,6 +102,9 @@ const likeTerm = (term: string) => `%${term.replace(/[\\%_]/g, '\\$&')}%`;
 /** A payment's Dhaka day, in SQL. */
 const dhakaDay = Prisma.sql`(p.received_at AT TIME ZONE ${TIME_ZONE})::date`;
 
+/** How many accounts the collect page lists before any search. */
+const OPEN_ACCOUNTS = 20;
+
 /**
  * Cash taken at the office (`payments`): one receipt settles open bills of one unit, or one
  * member's membership bills, oldest first. Area-scoped through the payment's unit; a payment
@@ -123,8 +128,11 @@ export class PaymentsService {
 
   /** Units (and, for society-wide collectors, members) with their open bills, oldest first. */
   async lookup(actor: Actor, query: CollectLookupQuery): Promise<CollectLookup> {
-    const { q, unitId, personId } = query;
-    if (!q && !unitId && !personId) return { accounts: [] };
+    const { q, unitId } = query;
+    const member = memberOf(query);
+    // `open` only counts on its own: a search or a chosen account wins.
+    const open = Boolean(query.open && !q && !unitId && !member);
+    if (!q && !unitId && !member && !open) return { accounts: [] };
     const scope = actor.access.paths('create', 'payments');
     const today = isoDate(todayDate());
 
@@ -155,8 +163,23 @@ export class PaymentsService {
           LIMIT 25`,
       ]);
       unitIds = [...new Set([...byName.map((row) => row.location_id), ...byPayer.map((row) => row.unit_id)])];
+    } else if (open) {
+      // Units whose open bills were made most recently, in the caller's area.
+      const rows = await this.prisma.invoices.groupBy({
+        by: ['unit_id'],
+        where: {
+          society_id: actor.societyId,
+          unit_id: { not: null },
+          status: { in: [...OPEN_INVOICE_STATUSES] },
+          ...(scope === 'all' ? {} : { units: { OR: scope.map((prefix) => ({ locations: { path: { startsWith: prefix } } })) } }),
+        },
+        _max: { created_at: true },
+        orderBy: { _max: { created_at: 'desc' } },
+        take: OPEN_ACCOUNTS,
+      });
+      unitIds = rows.flatMap((row) => (row.unit_id ? [row.unit_id] : []));
     }
-    const units = unitIds.length
+    const found = unitIds.length
       ? await this.prisma.units.findMany({
           where: {
             society_id: actor.societyId,
@@ -165,35 +188,38 @@ export class PaymentsService {
           },
           select: { location_id: true, locations: { select: { name: true, code: true, path: true } } },
           orderBy: [{ locations: { name: 'asc' } }, { location_id: 'asc' }],
-          take: 10,
+          take: open ? OPEN_ACCOUNTS : 10,
         })
       : [];
+    // The open list keeps the newest-bill order.
+    const units = open ? [...found].sort((a, b) => unitIds.indexOf(a.location_id) - unitIds.indexOf(b.location_id)) : found;
 
     // Members, for membership fees: only a society-wide collector takes those.
-    let members: { person_id: string; member_no: number; name: string }[] = [];
-    if (scope === 'all' && (personId || (q && !unitId))) {
+    let members: { member: Payer; member_no: number | null; membership_code: string | null; name: string }[] = [];
+    if (scope === 'all' && (member || (q && !unitId) || open)) {
       const rows = await this.prisma.memberships.findMany({
         where: {
           society_id: actor.societyId,
-          ...(personId
-            ? { person_id: personId }
-            : {
-                OR: [
-                  ...digitVariants(q!).flatMap((term) => [
-                    { persons: { full_name: { contains: term, mode: 'insensitive' as const } } },
-                    { persons: { full_name_en: { contains: term, mode: 'insensitive' as const } } },
-                  ]),
-                  { persons: { phone: { contains: asciiDigits(q!) } } },
-                  ...(/^\d{1,9}$/.test(asciiDigits(q!)) ? [{ member_no: Number(asciiDigits(q!)) }] : []),
-                ],
-              }),
+          ...(member ? membershipsOf(member) : q ? memberSearch(q) : {}),
           invoices: { some: { status: { in: [...OPEN_INVOICE_STATUSES] } } },
         },
-        select: { person_id: true, member_no: true, persons: { select: { full_name: true } } },
+        select: {
+          person_id: true,
+          organisation_id: true,
+          member_no: true,
+          membership_code: true,
+          persons: { select: { full_name: true } },
+          organisations: { select: { name: true } },
+        },
         orderBy: { member_no: 'asc' },
-        take: 10,
+        take: open ? OPEN_ACCOUNTS : 10,
       });
-      members = rows.map((row) => ({ person_id: row.person_id, member_no: row.member_no, name: row.persons.full_name }));
+      members = rows.map((row) => ({
+        member: memberOfRow(row),
+        member_no: row.member_no,
+        membership_code: row.membership_code,
+        name: row.persons?.full_name ?? row.organisations?.name ?? '',
+      }));
     }
 
     const [unitBills, memberBills, names] = await Promise.all([
@@ -209,9 +235,9 @@ export class PaymentsService {
               society_id: actor.societyId,
               kind: 'membership',
               status: { in: [...OPEN_INVOICE_STATUSES] },
-              memberships: { person_id: { in: members.map((m) => m.person_id) } },
+              memberships: { OR: members.map((m) => membershipsOf(m.member)) },
             },
-            select: { ...invoiceSelect, memberships: { select: { person_id: true } } },
+            select: { ...invoiceSelect, memberships: { select: { person_id: true, organisation_id: true } } },
           })
         : [],
       this.tree.addressNames(actor.societyId, units.map((u) => u.locations.path)),
@@ -225,14 +251,23 @@ export class PaymentsService {
       accounts: [
         ...units.map((unit) =>
           account(
-            { kind: 'unit', id: unit.location_id, name: unit.locations.name, code: unit.locations.code, address: addressOf(unit.locations.path, names), memberNo: null },
+            { kind: 'unit', id: unit.location_id, memberKind: null, name: unit.locations.name, code: unit.locations.code, address: addressOf(unit.locations.path, names), memberNo: null, membershipCode: null },
             unitBills.filter((bill) => bill.unit_id === unit.location_id).map((bill) => toInvoiceRow(bill, today)),
           ),
         ),
         ...members.map((member) =>
           account(
-            { kind: 'member', id: member.person_id, name: member.name, code: null, address: [], memberNo: member.member_no },
-            memberBills.filter((bill) => bill.memberships?.person_id === member.person_id).map((bill) => toInvoiceRow(bill, today)),
+            {
+              kind: 'member',
+              id: member.member.id,
+              memberKind: member.member.kind,
+              name: member.name,
+              code: null,
+              address: [],
+              memberNo: member.member_no,
+              membershipCode: member.membership_code,
+            },
+            memberBills.filter((bill) => bill.memberships && memberOfRow(bill.memberships).id === member.member.id).map((bill) => toInvoiceRow(bill, today)),
           ),
         ),
       ],
@@ -411,7 +446,7 @@ export class PaymentsService {
       if (!bills.some(isPayer)) throw bad('invalid_payer', 'The payer must be someone the ticked bills were billed to');
 
       const snapshot = payerSnapshotSchema.parse(
-        await this.billTo.snapshot(tx, actor.societyId, input.payer, account.unit ? 'owner' : 'member', account.unit, account.memberNo),
+        await this.billTo.snapshot(tx, actor.societyId, input.payer, account.unit ? 'owner' : 'member', account.unit, account.member),
       );
       const number = await this.numbering.next(tx, actor.societyId, 'receipt', today);
       const payment = await tx.payments.create({
@@ -588,18 +623,19 @@ export class PaymentsService {
   private async account(
     tx: Tx,
     actor: Actor,
-    input: Pick<PaymentCreate, 'unitId' | 'personId'>,
-  ): Promise<{ unit: BillableUnit | null; membershipIds: Set<string>; memberNo: number | null }> {
-    if (input.personId) {
+    input: Pick<PaymentCreate, 'unitId' | 'personId' | 'organisationId'>,
+  ): Promise<{ unit: BillableUnit | null; membershipIds: Set<string>; member: { no: number | null; code: string | null } | null }> {
+    const payee = memberOf(input);
+    if (payee) {
       if (actor.access.paths('create', 'payments') !== 'all') throw onlySocietyWide();
       const memberships = await tx.memberships.findMany({
-        where: { society_id: actor.societyId, person_id: input.personId },
-        select: { id: true, member_no: true, status: true },
-        orderBy: { member_no: 'desc' },
+        where: { society_id: actor.societyId, ...membershipsOf(payee) },
+        select: { id: true, member_no: true, membership_code: true, status: true },
+        orderBy: [{ joined_on: 'desc' }, { created_at: 'desc' }],
       });
-      if (memberships.length === 0) throw bad('no_membership', 'This person has no membership');
+      if (memberships.length === 0) throw bad('no_membership', 'This member has no membership');
       const current = memberships.find((m) => m.status === 'active') ?? memberships[0]!;
-      return { unit: null, membershipIds: new Set(memberships.map((m) => m.id)), memberNo: current.member_no };
+      return { unit: null, membershipIds: new Set(memberships.map((m) => m.id)), member: { no: current.member_no, code: current.membership_code } };
     }
     const row = await tx.units.findFirst({
       where: { location_id: input.unitId!, society_id: actor.societyId },
@@ -610,7 +646,7 @@ export class PaymentsService {
     return {
       unit: { id: row.location_id, name: row.locations.name, code: row.locations.code, path: row.locations.path, isActive: row.locations.is_active },
       membershipIds: new Set(),
-      memberNo: null,
+      member: null,
     };
   }
 

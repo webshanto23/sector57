@@ -17,7 +17,9 @@ const failed = (what: string, status: number) => new Error(`Could not load ${wha
 
 /** Units and members with their open bills (`payments.create`). */
 export async function lookupCollect(query: CollectLookupQuery): Promise<CollectLookup> {
-  const { data, response } = await api.GET("/collect/lookup", { params: { query }, headers: await authHeaders(), cache: "no-store" });
+  const { open, ...rest } = query;
+  const params = { query: { ...rest, ...(open ? { open: "true" } : {}) } };
+  const { data, response } = await api.GET("/collect/lookup", { params, headers: await authHeaders(), cache: "no-store" });
   if (!data) throw failed("open bills", response.status);
   return data;
 }

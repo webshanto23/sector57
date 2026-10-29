@@ -6,11 +6,13 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Note } from "@/components/admin/form-status";
 import { DataTable, Field, inputClass, StatCard, type Column } from "@/components/kit";
 import { canExportReport } from "@/components/reports/access";
+import { MembersPrint } from "@/components/reports/members-print";
 import { ReportHeader } from "@/components/reports/report-header";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { csvHref, getMembersReport } from "@/lib/api/reports";
 import { getMe } from "@/lib/api/session";
+import { getBrand } from "@/lib/brand";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/dashboard/reports/members">): Promise<Metadata> {
   const { locale } = await params;
@@ -31,10 +33,11 @@ export default async function MembersReportPage({ params, searchParams }: PagePr
   const search = await searchParams;
   const text = (key: string) => (typeof search[key] === "string" && search[key].trim() ? search[key] : undefined);
   const parsed = membersReportQuery.safeParse({ from: text("from"), to: text("to"), locationId: text("locationId") });
-  const [t, tReports, tErrors, found] = await Promise.all([
+  const [t, tReports, tErrors, brand, found] = await Promise.all([
     getTranslations("Reports.members"),
     getTranslations("Reports"),
     getTranslations("Admin.errors"),
+    getBrand(locale),
     getMembersReport(parsed.success ? parsed.data : {}),
   ]);
   const report = found ?? (await getMembersReport({}));
@@ -43,14 +46,17 @@ export default async function MembersReportPage({ params, searchParams }: PagePr
   const personLinks = canAnywhere(me.access, "members");
 
   const columns: Column<Joined>[] = [
-    { key: "memberNo", header: t("col.memberNo"), numeric: true, cell: (row) => count(row.memberNo) },
+    { key: "memberNo", header: t("col.memberNo"), cell: (row) => row.membershipCode ?? t("idPending") },
     {
       key: "name",
       header: t("col.name"),
       cell: (row) => (
         <span className="grid">
           {personLinks ? (
-            <Link href={`/dashboard/members/${row.personId}`} className="font-semibold text-fg">
+            <Link
+              href={row.personId ? `/dashboard/members/${row.personId}` : `/dashboard/members/organisations/${row.organisationId}`}
+              className="font-semibold text-fg"
+            >
               {pick(row.name, row.nameEn, locale)}
             </Link>
           ) : (
@@ -71,6 +77,7 @@ export default async function MembersReportPage({ params, searchParams }: PagePr
         title={t("title")}
         sub={t("sub")}
         csv={canExportReport(me.access, "members") ? csvHref("members", { from: report.from, to: report.to, locationId: report.location?.id, lang: locale }) : null}
+        actions={<MembersPrint report={report} band={brand} />}
       />
 
       <div className="mb-3.5 grid gap-2.5 min-[381px]:grid-cols-3">
@@ -102,7 +109,7 @@ export default async function MembersReportPage({ params, searchParams }: PagePr
           <Note tone="warn">{t("truncated", { count: count(report.joined.length) })}</Note>
         </div>
       ) : null}
-      <DataTable columns={columns} rows={report.joined} rowKey={(row) => `${row.memberNo}`} caption={t("joinedTitle")} empty={t("empty")} />
+      <DataTable columns={columns} rows={report.joined} rowKey={(row) => row.personId ?? row.organisationId ?? ""} caption={t("joinedTitle")} empty={t("empty")} />
     </>
   );
 }

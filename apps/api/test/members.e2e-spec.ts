@@ -255,6 +255,28 @@ describe('Members: people, owners, renters and households (e2e)', () => {
       await send('patch', `/tenancies/${tenancy.id}`, admin.cookie).send({ status: 'active' }).expect(409);
     });
 
+    it('a past renter is added again by id as the same person; an unknown id is refused', async () => {
+      const flat = await addUnit('plot14', 'ফ্ল্যাট ৩এ');
+      const first = tenancySchema.parse(
+        (await send('post', '/tenancies', admin.cookie).send({ unitId: flat, renter: person('পুরনো ভাড়াটিয়া'), renterType: 'family', startDate: '2026-01-01' }).expect(201)).body,
+      );
+      await send('post', `/tenancies/${first.id}/end`, admin.cookie).send({ endDate: '2026-06-30' }).expect(200);
+      const missing = await send('post', '/tenancies', admin.cookie)
+        .send({ unitId: flat, renter: { kind: 'existing', party: { kind: 'person', id: randomUUID() } }, renterType: 'family', startDate: '2026-07-01' })
+        .expect(404);
+      expect(missing.body.code).toBe('person_not_found');
+      const again = tenancySchema.parse(
+        (
+          await send('post', '/tenancies', admin.cookie)
+            .send({ unitId: flat, renter: { kind: 'existing', party: { kind: 'person', id: first.renter!.id } }, renterType: 'family', startDate: '2026-07-01' })
+            .expect(201)
+        ).body,
+      );
+      expect(again.renter!.id).toBe(first.renter!.id);
+      // Parallel test files add people too, so count only this renter's name.
+      expect(await prisma.persons.count({ where: { full_name: { startsWith: 'পুরনো ভাড়াটিয়া' } } })).toBe(1);
+    });
+
     it('a transfer keeps the history; with no owner left the flats are vacant', async () => {
       const early = await send('post', '/ownerships/transfer', admin.cookie)
         .send({ locationId: tree.plot14.id, date: '2020-06-01', owners: [{ owner: person('নতুন মালিক'), sharePercent: '100' }] })
@@ -270,6 +292,9 @@ describe('Members: people, owners, renters and households (e2e)', () => {
       expect(people.owners!.filter((row) => row.endDate === null)).toHaveLength(1);
       expect(people.owners!.find((row) => row.id === ownershipId)).toMatchObject({ endDate: '2026-10-01' });
       expect(people.tenancies).toBeNull();
+      // The place's own level titles its owners ("Owners of this Plot").
+      const plotLevel = await prisma.locations.findUniqueOrThrow({ where: { id: tree.plot14.id }, select: { location_levels: { select: { name_bn: true } } } });
+      expect(people.location.levelBn).toBe(plotLevel.location_levels.name_bn);
 
       const flat = locationPeopleSchema.parse((await get(`/locations/${units.flat1A}/people`, admin.cookie).expect(200)).body);
       expect(flat.ownersAbove!.map((row) => row.place.id)).toEqual([tree.plot14.id]);

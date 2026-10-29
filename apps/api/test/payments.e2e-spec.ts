@@ -206,6 +206,16 @@ describe('Cash collection, receipts and handover (e2e)', () => {
       await get('/collect/lookup?q=x', users.nobody).expect(403);
       await get('/collect/lookup?q=x', users.treasurer).expect(403);
     });
+
+    it('lists accounts with open bills before any search, newest bill first, within the area', async () => {
+      const scoped = collectLookupSchema.parse((await get('/collect/lookup?open=true', users.collectorC).expect(200)).body);
+      expect(scoped.accounts.map((a) => [a.kind, a.name])).toEqual([['unit', 'সি-১']]);
+      const wide = collectLookupSchema.parse((await get('/collect/lookup?open=true').expect(200)).body);
+      expect(wide.accounts.filter((a) => a.kind === 'unit').map((a) => a.name)).toEqual(['ডি-১', 'সি-১']);
+      expect(wide.accounts.some((a) => a.kind === 'member' && a.name === 'করিম মিয়া')).toBe(true);
+      // Nothing asked, nothing listed.
+      expect(collectLookupSchema.parse((await get('/collect/lookup').expect(200)).body).accounts).toEqual([]);
+    });
   });
 
   describe('taking a payment', () => {
@@ -278,6 +288,26 @@ describe('Cash collection, receipts and handover (e2e)', () => {
       // A paid bill can't be paid again.
       await paid({ ...base, amount: '300' });
       expect((await pay({ ...base, amount: '1' }).expect(409)).body.code).toBe('invoice_changed');
+    });
+
+    it("takes an organisation member's membership fee, found by its membership ID", async () => {
+      const org = (await prisma.organisations.create({ data: { society_id: societyId, name: 'নূর ট্রেডার্স' } })).id;
+      const { membership_code: code } = await prisma.memberships.create({
+        data: { society_id: societyId, organisation_id: org, member_no: 4, joined_on: new Date('2025-01-01') },
+      });
+      const feeType = await prisma.charge_types.findFirstOrThrow({ where: { society_id: societyId, name_bn: 'সদস্য ফি' } });
+      await send('post', '/invoices').send({ organisationId: org, dueDate: due(), lines: [{ chargeTypeId: feeType.id, amount: '700' }] }).expect(201);
+
+      const found = collectLookupSchema.parse((await get(`/collect/lookup?q=${code}`).expect(200)).body).accounts;
+      const account = found.find((a) => a.kind === 'member')!;
+      expect(account).toMatchObject({ id: org, memberKind: 'organisation', name: 'নূর ট্রেডার্স', memberNo: 4, due: '700.00' });
+      const receipt = await paid(
+        { organisationId: org, invoiceIds: account.bills.map((b) => b.id), amount: '700', payer: { kind: 'organisation', id: org } },
+        users.admin,
+      );
+      expect(receipt.payer).toMatchObject({ id: org, memberNo: 4, membershipCode: code, unit: null });
+      const none = { organisationId: randomUUID(), invoiceIds: account.bills.map((b) => b.id), amount: '1', payer: { kind: 'organisation', id: org } };
+      expect((await pay(none, users.admin).expect(400)).body.code).toBe('no_membership');
     });
 
     it('lets only one of two payments on the same bill through', async () => {

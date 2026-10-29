@@ -118,6 +118,7 @@ export class TenanciesService {
     const open = await tx.tenancies.findFirst({ where: { unit_id: unit.id, status: { in: OPEN } }, select: { id: true } });
     if (open) throw openExists();
     const party = await this.parties.resolve(tx, actor.societyId, input.renter);
+    await this.parties.requireIds(tx, actor.societyId, party);
     const row = await tx.tenancies.create({
       data: {
         society_id: actor.societyId,

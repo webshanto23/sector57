@@ -90,6 +90,7 @@ export class OwnershipsService {
   async insert(tx: Tx, actor: Actor, location: LocationRow, input: OwnershipCreateInput): Promise<string> {
     await lockLocation(tx, location.id);
     const party = await this.parties.resolve(tx, actor.societyId, input.owner);
+    await this.parties.requireIds(tx, actor.societyId, party);
     const current = await this.current(tx, location.id);
     if (current.some((row) => sameParty(row, party))) throw alreadyOwner();
     const held = current.reduce((sum, row) => sum + shareHundredths(row.share_percent.toString()), 0);
@@ -126,6 +127,7 @@ export class OwnershipsService {
       const resolved: (ResolvedParty & { sharePercent: string })[] = [];
       for (const row of input.owners) {
         const party = await this.parties.resolve(tx, actor.societyId, row.owner);
+        await this.parties.requireIds(tx, actor.societyId, party);
         if (resolved.some((other) => sameParty({ person_id: other.personId, organisation_id: other.organisationId }, party))) {
           throw duplicateOwner();
         }

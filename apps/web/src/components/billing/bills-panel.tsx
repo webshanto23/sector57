@@ -42,8 +42,8 @@ export async function BillsPanel({
   // Null when the unit is outside the caller's billing area.
   const unit = lookup?.units[0] ?? null;
   const filter = unitId ? { unitId } : personId ? { personId } : { organisationId: organisationId! };
-  // Cash for a unit's bills; a person's are their membership fees (the collect page checks who may take those).
-  const collect = (unitId || personId) && canAnywhere(access, "payments", "create") && list.items.some((bill) => bill.due !== "0.00");
+  // Cash for a unit's bills; a person's or organisation's are their membership fees (the collect page checks who may take those).
+  const collect = canAnywhere(access, "payments", "create") && list.items.some((bill) => bill.due !== "0.00");
   const thisMonth = monthOfDay(todayInDhaka());
 
   return (
@@ -53,7 +53,7 @@ export async function BillsPanel({
         <div className="flex flex-wrap gap-2">
           {collect ? (
             <Link
-              href={{ pathname: "/dashboard/collect", query: unitId ? { unitId } : { personId: personId! } }}
+              href={{ pathname: "/dashboard/collect", query: filter }}
               className={buttonVariants({ size: "sm" })}
             >
               <Banknote aria-hidden />

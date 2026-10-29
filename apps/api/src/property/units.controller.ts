@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
 import {
   unitAreasQuery,
   unitAreasSchema,
@@ -7,7 +7,6 @@ import {
   unitDetailSchema,
   unitListQuery,
   unitListSchema,
-  unitStoreysInputSchema,
   unitTypeBulkSchema,
   unitCombineSchema,
   unitUpdateSchema,
@@ -21,6 +20,7 @@ import { Can, CurrentActor, type Actor } from '../permissions/permissions.decora
 import { BulkResultDto } from './locations.controller.js';
 import { CombineService } from './combine.service.js';
 import { LayoutService } from './layout.service.js';
+import { SeparateService } from './separate.service.js';
 import { UnitsService } from './units.service.js';
 
 export class UnitDetailDto extends createDto(unitDetailSchema) {}
@@ -31,9 +31,9 @@ export class UnitAreasQueryDto extends createDto(unitAreasQuery) {}
 export class UnitCreateDto extends createDto(unitCreateSchema) {}
 export class UnitUpdateDto extends createDto(unitUpdateSchema) {}
 export class UnitBulkDto extends createDto(unitBulkSchema) {}
-export class UnitStoreysDto extends createDto(unitStoreysInputSchema) {}
 export class UnitCombineDto extends createDto(unitCombineSchema) {}
 export class UnitCombineResultDto extends createDto(z.object({ keptId: z.uuid(), merged: z.number().int().min(1) })) {}
+export class UnitSeparateResultDto extends createDto(z.object({ keptId: z.uuid(), separatedId: z.uuid() })) {}
 export class UnitTypeBulkDto extends createDto(unitTypeBulkSchema) {}
 export class UnitTypeBulkResultDto extends createDto(z.object({ updated: z.number().int().min(0) })) {}
 
@@ -45,6 +45,7 @@ export class UnitsController {
     private readonly units: UnitsService,
     private readonly layout: LayoutService,
     private readonly combiner: CombineService,
+    private readonly separator: SeparateService,
   ) {}
 
   @Get()
@@ -93,6 +94,15 @@ export class UnitsController {
     return this.combiner.combine(actor, body);
   }
 
+  /** Takes one part back out of a joined unit: active again, with its own owners and size. */
+  @Post(':id/separate')
+  @HttpCode(200)
+  @Can('units', 'edit')
+  @ZodResponse({ status: 200, type: UnitSeparateResultDto })
+  separate(@CurrentActor() actor: Actor, @Param() { id }: IdParamDto) {
+    return this.separator.separate(actor, id);
+  }
+
   /** One type for many units (ground-floor shops in the building grid), all or none. */
   @Post('bulk-type')
   @HttpCode(200)
@@ -107,14 +117,6 @@ export class UnitsController {
   @ZodResponse({ status: 200, type: UnitDetailDto })
   update(@CurrentActor() actor: Actor, @Param() { id }: IdParamDto, @Body() body: UnitUpdateDto) {
     return this.units.update(actor, id, body);
-  }
-
-  /** The other storeys the unit covers (a duplex): replaces the whole list. */
-  @Put(':id/storeys')
-  @Can('units', 'edit')
-  @ZodResponse({ status: 200, type: UnitDetailDto })
-  setStoreys(@CurrentActor() actor: Actor, @Param() { id }: IdParamDto, @Body() body: UnitStoreysDto) {
-    return this.units.setStoreys(actor, id, body);
   }
 
   @Delete(':id')

@@ -11,9 +11,12 @@ import {
 } from '@s57/shared';
 import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import type { Party } from './grid-holders.policy.js';
 import { pathIds, scopeSql } from './tree.service.js';
 
 export type UnitPeople = { owners: UnitOwnerLevel[] | null; renters: PartyName[] | null };
+/** A unit's own owners and its renters with who they are (`kind:id`); null where the caller may not view them. */
+export type UnitParties = { owners: Party[] | null; renters: Party[] | null };
 
 const partySelect = {
   persons: { select: { full_name: true, full_name_en: true } },
@@ -24,6 +27,18 @@ type PartyRow = { persons: { full_name: string; full_name_en: string | null } | 
 
 const nameOf = (row: PartyRow): PartyName | null =>
   row.persons ? { name: row.persons.full_name, nameEn: row.persons.full_name_en } : row.organisations ? { name: row.organisations.name, nameEn: null } : null;
+
+/** The party select with ids, so one person or organisation can be told apart from a namesake. */
+const partyIdSelect = {
+  persons: { select: { id: true, full_name: true, full_name_en: true } },
+  organisations: { select: { id: true, name: true } },
+} as const;
+
+const partyOf = (row: { persons: PartyRow['persons'] & { id: string } | null; organisations: { id: string; name: string } | null }): Party | null => {
+  const name = nameOf(row);
+  if (!name) return null;
+  return { ...name, key: row.persons ? `person:${row.persons.id}` : `organisation:${row.organisations!.id}` };
+};
 
 const escapeLike = (value: string) => value.replace(/[\\%_]/g, (char) => `\\${char}`);
 
@@ -52,6 +67,40 @@ export class UnitPeopleService {
       if (name) owners.get(row.location_id)!.push(name);
     }
     return owners;
+  }
+
+  /** Each unit's own owners (largest share first) and current renters, for the building grid. */
+  async partiesOf(actor: Actor, units: { id: string; path: string }[]): Promise<Map<string, UnitParties>> {
+    const owning = units.filter((unit) => actor.access.can('view', 'ownerships', { path: unit.path })).map((unit) => unit.id);
+    const renting = units.filter((unit) => actor.access.can('view', 'tenancies', { path: unit.path })).map((unit) => unit.id);
+    const [ownerships, tenancies] = await Promise.all([
+      owning.length
+        ? this.prisma.ownerships.findMany({
+            where: { society_id: actor.societyId, location_id: { in: owning }, end_date: null },
+            select: { location_id: true, ...partyIdSelect },
+            orderBy: [{ share_percent: 'desc' }, { start_date: 'asc' }, { id: 'asc' }],
+          })
+        : [],
+      renting.length
+        ? this.prisma.tenancies.findMany({
+            where: { society_id: actor.societyId, unit_id: { in: renting }, status: { in: [...RENTED_STATUSES] } },
+            select: { unit_id: true, ...partyIdSelect },
+            orderBy: [{ start_date: 'asc' }, { id: 'asc' }],
+          })
+        : [],
+    ]);
+    const parties = new Map<string, UnitParties>(units.map((unit) => [unit.id, { owners: null, renters: null }]));
+    for (const id of owning) parties.get(id)!.owners = [];
+    for (const id of renting) parties.get(id)!.renters = [];
+    for (const row of ownerships) {
+      const party = partyOf(row);
+      if (party) parties.get(row.location_id)!.owners!.push(party);
+    }
+    for (const row of tenancies) {
+      const party = partyOf(row);
+      if (party) parties.get(row.unit_id)!.renters!.push(party);
+    }
+    return parties;
   }
 
   /** Owners and renters of a page of units, by unit id. */

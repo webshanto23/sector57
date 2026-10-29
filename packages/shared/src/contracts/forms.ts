@@ -60,13 +60,36 @@ const applicantSchema = z.object({
   nid: nidSchema,
 });
 
-/** Membership application: an owner of a plot, building or flat asks to become a member. */
-export const membershipFormSchema = z.object({
-  applicant: applicantSchema.extend({ nid: nidSchema.pipe(z.string({ error: 'required' })) }),
-  /** The place they own: a plot, building or flat. */
-  locationId: z.uuid(),
-  livesHere: z.boolean(),
-});
+/** The NID when the form must have one. */
+const requiredNid = nidSchema.pipe(z.string({ error: 'required' }));
+
+/** Who applies for membership: a person for themselves, or an organisation through its contact person. */
+export const APPLICANT_KINDS = ['person', 'organisation'] as const;
+export type ApplicantKind = (typeof APPLICANT_KINDS)[number];
+
+/**
+ * Membership application: an owner of a plot, building or flat asks to become a member. A person
+ * gives their NID; an organisation gives its name and trade licence, and `applicant` is the
+ * person filling in the form for it (the office calls them back).
+ */
+export const membershipFormSchema = z
+  .object({
+    applicantKind: z.enum(APPLICANT_KINDS).default('person'),
+    applicant: applicantSchema,
+    organisation: z
+      .object({ name: text(200), tradeLicence: text(100) })
+      .nullish()
+      .transform((value) => value ?? null),
+    /** The place they own: a plot, building or flat. */
+    locationId: z.uuid(),
+    livesHere: z.boolean(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.applicantKind === 'person' && !value.applicant.nid) ctx.addIssue({ code: 'custom', path: ['applicant', 'nid'], message: 'required' });
+    if (value.applicantKind === 'organisation' && !value.organisation) {
+      ctx.addIssue({ code: 'custom', path: ['organisation', 'name'], message: 'required' });
+    }
+  });
 export type MembershipFormInput = z.input<typeof membershipFormSchema>;
 export type MembershipForm = z.output<typeof membershipFormSchema>;
 
@@ -87,6 +110,9 @@ export const renterFormSchema = z.object({
 export type RenterFormInput = z.input<typeof renterFormSchema>;
 export type RenterForm = z.output<typeof renterFormSchema>;
 
+/** Renter registration when the society requires an NID of renters (the `requireIdNumbers` setting). */
+export const renterFormNidSchema = renterFormSchema.extend({ renter: applicantSchema.extend({ nid: requiredNid }) });
+
 /** The schema each form's `data` field is checked against. */
 export const formSchemas = {
   membership: membershipFormSchema,
@@ -103,6 +129,10 @@ export const formReceiptSchema = z.object({
   submittedAt: z.iso.datetime({ offset: true }),
 });
 export type FormReceipt = z.infer<typeof formReceiptSchema>;
+
+/** `POST /forms/:formKey` answer (the office typed it in): the receipt and the new application's id. */
+export const formEntrySchema = formReceiptSchema.extend({ id: z.uuid() });
+export type FormEntry = z.infer<typeof formEntrySchema>;
 
 /** `GET /public/locations?parentId=`: one step of the address dropdowns. Names only, nothing about who lives there. */
 export const publicPlaceSchema = z.object({
@@ -132,6 +162,8 @@ export const formRowSchema = z.object({
   place: placeSchema.nullable(),
   submittedAt: z.iso.datetime({ offset: true }),
   files: z.number().int().min(0),
+  /** The user who typed it in from the dashboard; null when it came from the public website. */
+  enteredBy: z.string().nullable(),
 });
 export type FormRow = z.infer<typeof formRowSchema>;
 
@@ -168,9 +200,11 @@ const storedApplicant = z.object({
   nid: z.string().nullable(),
 });
 
-/** A membership application as stored (the office's view). */
+/** A membership application as stored (the office's view). Applications sent before organisations could apply are a person's. */
 export const membershipDataSchema = z.object({
+  applicantKind: z.enum(APPLICANT_KINDS).default('person'),
   applicant: storedApplicant,
+  organisation: z.object({ name: z.string(), tradeLicence: z.string() }).nullable().default(null),
   locationId: z.uuid(),
   livesHere: z.boolean(),
 });
@@ -215,6 +249,8 @@ export const formDetailSchema = z.object({
   reviewedAt: z.iso.datetime({ offset: true }).nullable(),
   reviewNote: z.string().nullable(),
   reviewerName: z.string().nullable(),
+  /** The user who typed it in from the dashboard; null when it came from the public website. */
+  enteredBy: z.string().nullable(),
   place: placeSchema.nullable(),
   /** One of these is set, matching `formKey`. */
   membership: membershipDataSchema.nullable(),
@@ -223,9 +259,10 @@ export const formDetailSchema = z.object({
   nidHidden: z.boolean(),
   files: z.array(formFileSchema),
   matches: z.array(formMatchSchema),
-  /** The person the approval created or reused. */
+  /** The person or organisation the approval made a member (or a renter), created or reused. */
   person: partySchema.nullable(),
   memberNo: z.number().int().nullable(),
+  membershipCode: z.string().nullable(),
   can: z.object({
     review: z.boolean(),
     /** `forms.approve` here, plus what approving creates (a member or a tenancy). */

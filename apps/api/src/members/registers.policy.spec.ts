@@ -1,4 +1,4 @@
-import { feeOf, holdingsOf, placesOf, type OwnedRow } from './registers.policy.js';
+import { feeOf, holdingsOf, membershipIdTerm, placesOf, type OwnedRow } from './registers.policy.js';
 
 const row = (location: string, level: string, depth: number): OwnedRow => ({
   party_id: 'p',
@@ -39,5 +39,14 @@ describe('feeOf', () => {
     expect(feeOf({ fee_bills: 0, fee_open: 0, fee_owed: null, fee_open_bill: null })).toEqual({ state: 'not_billed', owed: null, openBillId: null });
     expect(feeOf({ fee_bills: 2, fee_open: 0, fee_owed: null, fee_open_bill: null })).toEqual({ state: 'paid', owed: null, openBillId: null });
     expect(feeOf({ fee_bills: 2, fee_open: 1, fee_owed: '500', fee_open_bill: bill })).toEqual({ state: 'unpaid', owed: '500', openBillId: bill });
+  });
+});
+
+describe('membershipIdTerm', () => {
+  it('reads a full code, a bare number and Bangla digits', () => {
+    expect(membershipIdTerm(' s15-000123 ')).toEqual({ code: 'S15-000123', number: null });
+    expect(membershipIdTerm('123')).toEqual({ code: '123', number: 123 });
+    expect(membershipIdTerm('০০১২৩')).toEqual({ code: '00123', number: 123 });
+    expect(membershipIdTerm('রহিম')).toEqual({ code: 'রহিম', number: null });
   });
 });

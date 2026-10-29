@@ -20,9 +20,10 @@ export type CombineFacts = {
 const sameOwners = (a: string[], b: string[]) => a.length === b.length && [...a].sort().join() === [...b].sort().join();
 
 /**
- * Why `keep` and `merge` can't be combined, or null when they can. All must be active,
- * side by side (one parent, or parents under one place), with the same owners; the retired
- * ones must have no unpaid bill, open tenancy, residents, vehicle or parking slot.
+ * Why `keep` and `merge` can't be joined, or null when they can. All must be active, side by
+ * side (one floor, or floors of one building), with the same owners; the retired ones must
+ * have no unpaid bill, open tenancy, residents, vehicle or parking slot. Join only units made
+ * into one; an office that just uses several flats keeps them separate.
  */
 export function combineProblem(keep: CombineFacts, merge: CombineFacts[]): CombineProblem | null {
   const all = [keep, ...merge];
@@ -44,6 +45,18 @@ export function combinedSize(keep: string | null, merge: (string | null)[]): str
   // Sizes have two decimals; add in hundredths to stay exact.
   const hundredths = [keep, ...(merge as string[])].reduce((sum, size) => sum + Math.round(Number(size) * 100), 0);
   return (hundredths / 100).toFixed(2);
+}
+
+/** The kept unit's size after a part is separated: less the part's when both are known (and something is left), else unchanged. */
+export function separatedSize(keep: string | null, part: string | null): string | null {
+  if (keep === null || part === null) return keep;
+  const hundredths = Math.round(Number(keep) * 100) - Math.round(Number(part) * 100);
+  return hundredths > 0 ? (hundredths / 100).toFixed(2) : keep;
+}
+
+/** The storeys the kept unit still covers once a part goes: all but the part's floor, unless another part still sits there. */
+export function coversAfterSeparate(covers: string[], partFloor: string, otherFloors: string[]): string[] {
+  return otherFloors.includes(partFloor) ? covers : covers.filter((id) => id !== partFloor);
 }
 
 /** The storeys the kept unit covers after the combine: its own links plus the others' places and links, minus its own place. */

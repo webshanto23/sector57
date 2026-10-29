@@ -5,13 +5,14 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Pager } from "@/components/cms/pager";
 import { Chip, DataTable, PageHeader, StatCard, type Column } from "@/components/kit";
 import { OccupancyChip } from "@/components/property/labels";
+import { UnitTypeIcon } from "@/components/property/unit-type-icon";
 import { unitTypeName } from "@/components/property/unit-types";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getUnitAreas, getUnits, getUnitTypes } from "@/lib/api/property";
 import { requirePermission } from "@/lib/api/session";
 import { UnitFilters } from "./unit-filters";
-import { OwnerLevels, Renters } from "./unit-people";
+import { Renters, UnitOwners } from "./unit-people";
 
 const PAGE_SIZE = 25;
 
@@ -68,28 +69,38 @@ export default async function UnitsPage({ params, searchParams }: PageProps<"/[l
   const columns: Column<UnitListItem>[] = [
     {
       key: "name",
-      header: t("name"),
-      cell: (unit) => (
-        <Link href={`/dashboard/units/${unit.id}`} className="inline-flex flex-wrap items-center gap-2 font-semibold text-fg">
-          {unit.name}
-          {unit.mergedInto ? (
-            <Chip>{tUnits("partOf", { name: unit.mergedInto.name })}</Chip>
-          ) : !unit.isActive ? (
-            <Chip tone="warn">{t("inactive")}</Chip>
-          ) : null}
-          {unit.includes.length > 0 ? <Chip tone="info">{t("grid.includes", { names: unit.includes.join(", ") })}</Chip> : null}
-        </Link>
-      ),
-    },
-    {
-      key: "address",
-      header: tUnits("address"),
-      cell: (unit) => <span className="whitespace-normal">{unit.address.join(" › ")}</span>,
+      header: `${t("name")} · ${tUnits("address")}`,
+      // Name on the first line, address on one truncated line below it, so rows stay two lines high.
+      cell: (unit) => {
+        const address = unit.address.join(" › ");
+        return (
+          <div className="min-w-56 max-w-88">
+            <Link href={`/dashboard/units/${unit.id}`} className="flex items-center gap-2 font-semibold text-fg">
+              <span className="truncate">{unit.name}</span>
+              {unit.mergedInto ? (
+                <Chip>{tUnits("partOf", { name: unit.mergedInto.name })}</Chip>
+              ) : !unit.isActive ? (
+                <Chip tone="warn">{t("inactive")}</Chip>
+              ) : null}
+              {unit.includes.length > 0 ? <Chip tone="info">{t("grid.includes", { names: unit.includes.join(", ") })}</Chip> : null}
+            </Link>
+            <div className="truncate text-[12.5px] font-normal text-muted-foreground" title={address}>
+              {address}
+            </div>
+          </div>
+        );
+      },
     },
     { key: "code", header: t("code"), cell: (unit) => (unit.code ? <span className="num">{unit.code}</span> : "—") },
-    { key: "type", header: t("unitTypeLabel"), cell: (unit) => unitTypeName(unitTypes, unit.unitType, locale) },
+    { key: "type", header: t("unitTypeLabel"), cell: (unit) => (
+        <span className="inline-flex items-center gap-1.5">
+          <UnitTypeIcon code={unit.unitType} className="size-3.5 shrink-0 text-muted-foreground" />
+          {unitTypeName(unitTypes, unit.unitType, locale)}
+        </span>
+      ),
+    },
     ...(canAnywhere(me.access, "ownerships")
-      ? [{ key: "owners", header: tUnits("owners"), cell: (unit: UnitListItem) => <OwnerLevels levels={unit.owners} locale={locale} /> }]
+      ? [{ key: "owners", header: tUnits("owners"), cell: (unit: UnitListItem) => <UnitOwners levels={unit.owners} locale={locale} /> }]
       : []),
     ...(canAnywhere(me.access, "tenancies")
       ? [{ key: "renters", header: tUnits("renter"), cell: (unit: UnitListItem) => <Renters renters={unit.renters} locale={locale} /> }]

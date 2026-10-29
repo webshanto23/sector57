@@ -50,7 +50,7 @@ export default async function DirectoryPage({ params, searchParams }: PageProps<
       header: t("col.name"),
       cell: (row) => (
         <div className="flex items-center gap-2.5">
-          <Avatar name={row.person.name} />
+          <Avatar name={row.person.name} src={row.person.photoUrl} />
           <div className="grid">
             <Link href={`/dashboard/members/${row.person.id}`} className="font-semibold text-fg underline-offset-2 hover:underline">
               {row.person.name}
@@ -73,7 +73,7 @@ export default async function DirectoryPage({ params, searchParams }: PageProps<
       ),
     },
     { key: "phone", header: t("col.phone"), cell: (row) => (row.person.phone ? <span className="num">{localDigits(row.person.phone, locale)}</span> : "—") },
-    { key: "member", header: t("col.member"), cell: (row) => (row.memberNo !== null ? <span className="num">{n(row.memberNo)}</span> : "—") },
+    { key: "member", header: t("col.member"), cell: (row) => (row.membershipCode ?? "—") },
   ];
 
   return (

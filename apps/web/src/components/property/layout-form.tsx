@@ -16,7 +16,7 @@ const issue = (message: string): FieldError => ({ type: "custom", message });
 
 /**
  * "Set up floors and units" for an empty building: floors from a numbered pattern and the
- * units on each, with a live preview. Exceptions (shops, duplexes) are fixed afterwards.
+ * units on each, with a live preview. Exceptions (shops, units over several floors) are fixed afterwards.
  */
 export function LayoutForm({ locationId, unitTypes }: { locationId: string; unitTypes: UnitTypeItem[] }) {
   const t = useTranslations("Property.layout");

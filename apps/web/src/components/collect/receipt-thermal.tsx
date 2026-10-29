@@ -1,4 +1,4 @@
-import { amountInWords, formatDate, formatTaka, localDigits, pick, type Locale } from "@s57/shared";
+import { amountInWords, formatDate, formatTaka, pick, type Locale } from "@s57/shared";
 import { useTranslations } from "next-intl";
 import { ThermalHead, ThermalRow } from "@/components/print/thermal-head";
 import { ThermalRule, ThermalSheet } from "@/components/print/thermal-sheet";
@@ -15,7 +15,7 @@ export function ReceiptThermal({ data, locale }: { data: ReceiptData; locale: Lo
   const tc = useTranslations("Collect");
   const tMethod = useTranslations("Finance.method");
   const payer = data.payer ? pick(data.payer.name, data.payer.nameEn, locale) : t("anonymous");
-  const member = data.payer && data.payer.memberNo !== null ? localDigits(tc("memberNo", { no: data.payer.memberNo }), locale) : null;
+  const member = data.payer?.membershipCode ? tc("memberNo", { no: data.payer.membershipCode }) : null;
   const unit = data.unit ? [data.unit.name, ...[...data.unit.address].reverse()].join(", ") : null;
   const mark = data.mark === "void" ? t("void") : data.mark === "duplicate" ? t("duplicate") : null;
 

@@ -2,6 +2,7 @@ import {
   FORM_KEYS,
   formApproveSchema,
   formDetailSchema,
+  formEntrySchema,
   formListQuery,
   formListSchema,
   formReceiptSchema,
@@ -16,6 +17,7 @@ import { createDto } from '../common/create-dto.js';
 export class FormKeyParamDto extends createDto(z.object({ formKey: z.enum(FORM_KEYS) })) {}
 export class FormFileParamDto extends createDto(z.object({ id: z.uuid(), fileId: z.uuid() })) {}
 export class FormReceiptDto extends createDto(formReceiptSchema) {}
+export class FormEntryDto extends createDto(formEntrySchema) {}
 export class PublicPlaceListDto extends createDto(publicPlaceListSchema) {}
 export class PublicPlaceQueryDto extends createDto(publicPlaceQuery) {}
 export class FormListDto extends createDto(formListSchema) {}

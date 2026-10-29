@@ -101,7 +101,7 @@ export class BillToService {
     payer: Payer,
     role: BillToSnapshot['role'],
     unit: BillableUnit | null,
-    memberNo: number | null = null,
+    member: { no: number | null; code: string | null } | null = null,
   ): Promise<BillToSnapshot> {
     const party =
       payer.kind === 'person'
@@ -117,7 +117,8 @@ export class BillToService {
       id: payer.id,
       ...party,
       role,
-      memberNo,
+      memberNo: member?.no ?? null,
+      membershipCode: member?.code ?? null,
       unit: unit ? { id: unit.id, name: unit.name, code: unit.code, address: addressOf(unit.path, names) } : null,
     };
   }
@@ -151,6 +152,7 @@ export class BillToService {
         ...party,
         role: choice.role,
         memberNo: null,
+        membershipCode: null,
         unit: { id: unit.id, name: unit.name, code: unit.code, address: addressOf(unit.path, names) },
       });
     }

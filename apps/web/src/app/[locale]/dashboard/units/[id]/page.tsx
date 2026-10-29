@@ -9,16 +9,17 @@ import { CertificatesPanel } from "@/components/certificates/certificates-panel"
 import { DocumentsPanel } from "@/components/documents/documents-panel";
 import { DashboardBreadcrumb } from "@/components/dashboard/dashboard-breadcrumb";
 import { visibleNavKeys } from "@/components/dashboard/nav";
-import { PageHeader } from "@/components/kit";
+import { Chip, PageHeader } from "@/components/kit";
 import { PeoplePanel } from "@/components/members/people-panel";
 import { OccupancyChip, propertyTrail } from "@/components/property/labels";
+import { SeparateButton } from "@/components/property/separate-button";
 import { UnitForm } from "@/components/property/unit-form";
-import { UnitStoreysCard } from "@/components/property/unit-storeys-card";
 import { unitTypeName } from "@/components/property/unit-types";
 import { VehiclesPanel } from "@/components/vehicles/vehicles-panel";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getLocationPeople } from "@/lib/api/members";
+import { getSociety } from "@/lib/api/public";
 import { getUnit, getUnitTypes } from "@/lib/api/property";
 import { requirePermission } from "@/lib/api/session";
 
@@ -35,7 +36,13 @@ export default async function UnitPage({ params }: PageProps<"/[locale]/dashboar
   setRequestLocale(locale as Locale);
 
   const me = await requirePermission("units");
-  const [t, unit, people, unitTypes] = await Promise.all([getTranslations("Property"), getUnit(id), getLocationPeople(id), getUnitTypes()]);
+  const [t, unit, people, unitTypes, society] = await Promise.all([
+    getTranslations("Property"),
+    getUnit(id),
+    getLocationPeople(id),
+    getUnitTypes(),
+    getSociety(),
+  ]);
   if (!unit) notFound();
 
   return (
@@ -47,6 +54,9 @@ export default async function UnitPage({ params }: PageProps<"/[locale]/dashboar
           <span className="inline-flex flex-wrap items-center gap-2">
             {unitTypeName(unitTypes, unit.unitType, locale as Locale)}
             <OccupancyChip occupancy={unit.occupancy} />
+            {unit.covers.length > 0 ? (
+              <Chip tone="info">{t("storeys.floors", { floors: [unit.breadcrumb.at(-1)?.name, ...unit.covers.map((storey) => storey.name)].filter(Boolean).join(" + ") })}</Chip>
+            ) : null}
           </span>
         }
         actions={
@@ -58,17 +68,19 @@ export default async function UnitPage({ params }: PageProps<"/[locale]/dashboar
       />
       <div className="grid gap-3.5">
         {unit.mergedInto ? (
-          <Note>
-            <Link href={`/dashboard/units/${unit.mergedInto.id}`} className="font-semibold underline-offset-2 hover:underline">
-              {t("storeys.mergedInto", { name: unit.mergedInto.name, date: formatDate(unit.mergedInto.on, locale as Locale, "short") })}
-            </Link>
-          </Note>
+          <>
+            <Note>
+              <Link href={`/dashboard/units/${unit.mergedInto.id}`} className="font-semibold underline-offset-2 hover:underline">
+                {t("storeys.mergedInto", { name: unit.mergedInto.name, date: formatDate(unit.mergedInto.on, locale as Locale, "short") })}
+              </Link>
+            </Note>
+            {unit.can.separate ? <SeparateButton key={unit.id} id={unit.id} name={unit.name} from={unit.mergedInto.name} /> : null}
+          </>
         ) : !unit.can.edit ? (
           <Note>{t("readOnly")}</Note>
         ) : null}
         <UnitForm key={unit.id} unit={unit} unitTypes={unitTypes} />
-        <UnitStoreysCard key={`storeys-${unit.id}`} unit={unit} />
-        {people ? <PeoplePanel key={`people-${unit.id}`} people={people} /> : null}
+        {people ? <PeoplePanel key={`people-${unit.id}`} people={people} idsRequired={society?.requireIdNumbers ?? false} /> : null}
         <BillsPanel access={me.access} locale={locale as Locale} unitId={unit.id} />
         <VehiclesPanel access={me.access} locale={locale as Locale} unitId={unit.id} />
         <CertificatesPanel access={me.access} locale={locale as Locale} unitId={unit.id} />

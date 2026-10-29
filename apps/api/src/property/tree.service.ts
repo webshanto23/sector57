@@ -31,6 +31,9 @@ type NodeRow = {
   child_count: number;
   unit_count: number;
   also_on: string[];
+  unit_type: string | null;
+  type_bn: string | null;
+  type_en: string | null;
 };
 
 export const locationNotFound = () => new NotFoundException({ code: 'location_not_found', message: 'Location not found' });
@@ -104,9 +107,12 @@ export class TreeService {
         (select count(*) from units u join locations d on d.id = u.location_id
           where d.society_id = l.society_id and d.id <> l.id and starts_with(d.path, l.path))::int as unit_count,
         array(select s.name from unit_storeys us join locations s on s.id = us.storey_id
-          where us.unit_id = l.id order by s.name, s.id) as also_on
+          where us.unit_id = l.id order by s.name, s.id) as also_on,
+        u.unit_type, ut.name_bn as type_bn, ut.name_en as type_en
       from locations l
       join location_levels lv on lv.id = l.level_id
+      left join units u on u.location_id = l.id
+      left join unit_types ut on ut.society_id = u.society_id and ut.code = u.unit_type
       where l.society_id = ${societyId}::uuid and ${where}
       order by lv.depth, l.name, l.id`;
     return rows.map((row) => ({
@@ -124,6 +130,7 @@ export class TreeService {
       childCount: row.child_count,
       unitCount: row.unit_count,
       alsoOn: row.also_on,
+      unitType: row.unit_type && row.type_bn ? { code: row.unit_type, nameBn: row.type_bn, nameEn: row.type_en } : null,
     }));
   }
 

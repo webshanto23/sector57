@@ -9,13 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { api } from "@/lib/api/client";
 import { OCCUPANCY_TONES } from "./occupancy";
+import { SeparateButton } from "./separate-button";
+import { UnitTypeIcon } from "./unit-type-icon";
 import { unitTypeName } from "./unit-types";
 import { useSubmit } from "./use-submit";
 
 /**
  * A building at a glance: one row per floor with its units. Editors tick units (or a whole
- * floor) and give them one type, such as shops on the ground floor, or combine them into one
- * unit (a duplex): the kept unit carries on and the others become history.
+ * floor) and give them one type, such as shops on the ground floor, or join units made into one
+ * (on one floor or over several): the kept unit carries on and the others become history.
  */
 export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitTypes: UnitTypeItem[]; unitsOpen: boolean }) {
   const t = useTranslations("Property.grid");
@@ -26,8 +28,17 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
   const [unitType, setUnitType] = useState(unitTypes[0]?.code ?? "");
   const [keepId, setKeepId] = useState<string | null>(null);
   // Picked units, lowest floor first: the first one is kept unless the editor picks another.
-  const picked = grid.floors.flatMap((floor) => floor.units.filter((unit) => chosen.has(unit.id)).map((unit) => ({ ...unit, floor: floor.name })));
+  const picked = grid.floors.flatMap((floor) => floor.units.filter((unit) => chosen.has(unit.id)).map((unit) => ({ ...unit, floor: floor.name, floorId: floor.id })));
   const keep = picked.find((unit) => unit.id === keepId) ?? picked[0];
+  const holderName = (holder: { name: string; nameEn: string | null }) => (locale === "en" ? (holder.nameEn ?? holder.name) : holder.name);
+  const unitName = (id: string, name: string, className?: string) =>
+    unitsOpen ? (
+      <Link href={`/dashboard/units/${id}`} className={className}>
+        {name}
+      </Link>
+    ) : (
+      name
+    );
 
   const toggle = (ids: string[], on: boolean) => {
     const next = new Set(chosen);
@@ -82,7 +93,7 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
                 ) : null}
                 {floor.name}
               </div>
-              {floor.units.length === 0 ? (
+              {floor.units.length === 0 && floor.coveredBy.length === 0 ? (
                 <p className="text-[13px] text-muted-foreground">{t("noUnits")}</p>
               ) : (
                 <ul className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">
@@ -104,6 +115,7 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
                                 ),
                             })}
                           </span>
+                          {grid.canEdit ? <SeparateButton id={unit.id} name={unit.name} from={unit.mergedInto.name} /> : null}
                         </div>
                       </li>
                     ) : (
@@ -120,25 +132,39 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
                               onChange={(e) => toggle([unit.id], e.target.checked)}
                             />
                           ) : null}
-                          {unitsOpen ? (
-                            <Link href={`/dashboard/units/${unit.id}`} className="underline-offset-2 hover:underline">
-                              {unit.name}
-                            </Link>
-                          ) : (
-                            unit.name
-                          )}
+                          {unitName(unit.id, unit.name, "underline-offset-2 hover:underline")}
                         </span>
-                        <span className="text-muted-foreground">{unitTypeName(unitTypes, unit.unitType, locale)}</span>
+                        <span className="flex items-center gap-1.5 text-muted-foreground">
+                          <UnitTypeIcon code={unit.unitType} className="size-3.5 shrink-0" />
+                          {unitTypeName(unitTypes, unit.unitType, locale)}
+                        </span>
+                        {unit.holder ? (
+                          <span className="truncate" title={holderName(unit.holder)}>
+                            {t(unit.holder.role === "renter" ? "renterName" : "ownerName", { name: holderName(unit.holder) })}
+                            {unit.holder.more > 0 ? <span className="text-muted-foreground"> {localDigits(t("holderMore", { count: unit.holder.more }), locale)}</span> : null}
+                          </span>
+                        ) : null}
                         <span className="flex flex-wrap gap-1">
                           <Chip tone={OCCUPANCY_TONES[unit.occupancy]}>{tOcc(unit.occupancy)}</Chip>
-                          {unit.alsoOn.length > 0 ? <Chip tone="info">{t("alsoOn", { names: unit.alsoOn.join(", ") })}</Chip> : null}
+                          {unit.alsoOn.length > 0 ? <Chip tone="info">{t("floors", { floors: [floor.name, ...unit.alsoOn].join(" + ") })}</Chip> : null}
                           {unit.includes.length > 0 ? <Chip tone="info">{t("includes", { names: unit.includes.join(", ") })}</Chip> : null}
+                          {unit.holder && unit.holder.units > 1 ? (
+                            // Names stay as typed; only the count takes the page's digits.
+                            <Chip tone="acc">{t("holderUnits", { name: holderName(unit.holder), count: localDigits(String(unit.holder.units), locale) })}</Chip>
+                          ) : null}
                           {!unit.isActive ? <Chip tone="warn">{t("inactive")}</Chip> : null}
                         </span>
                       </label>
                     </li>
                     ),
                   )}
+                  {floor.coveredBy.map((joined) => (
+                    <li key={`covered-${joined.id}`}>
+                      <div className="grid gap-1 rounded-[8px] border border-dashed border-line bg-surface-2 p-2 text-[13px] text-muted-foreground">
+                        <span>{t.rich("partOf", { name: joined.name, link: () => unitName(joined.id, joined.name, "font-semibold underline underline-offset-2") })}</span>
+                      </div>
+                    </li>
+                  ))}
                 </ul>
               )}
             </li>
@@ -162,7 +188,7 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
           </fieldset>
           <div>
             <Button type="button" variant="outline" disabled={busy} onClick={() => void combine()}>
-              {localDigits(t("confirmCombine", { count: picked.length }), locale)}
+              {t("confirmCombine")}
             </Button>
           </div>
         </div>

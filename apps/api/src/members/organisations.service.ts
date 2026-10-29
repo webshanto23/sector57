@@ -8,7 +8,8 @@ import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { beyondPermissions } from '../property/tree.service.js';
 import { MemberRowsService, personPartySelect } from './member-rows.service.js';
-import { auditOf, canOnParty, organisationNotFound, PartiesService } from './parties.service.js';
+import { MembershipsService } from './memberships.service.js';
+import { auditOf, canOnParty, organisationNotFound, PartiesService, tradeLicenceRequired } from './parties.service.js';
 
 const inUse = () => new ConflictException({ code: 'organisation_in_use', message: 'This organisation still owns, rents or has bills' });
 
@@ -16,6 +17,7 @@ const select = {
   id: true,
   name: true,
   trade_licence: true,
+  verified_at: true,
   created_at: true,
   persons: { select: personPartySelect },
 } satisfies Prisma.organisationsSelect;
@@ -31,29 +33,56 @@ export class OrganisationsService {
     private readonly audit: AuditService,
     private readonly parties: PartiesService,
     private readonly rows: MemberRowsService,
+    private readonly memberships: MembershipsService,
   ) {}
 
   async get(actor: Actor, id: string): Promise<OrganisationDetail> {
     const { row, paths } = await this.visible(actor, id);
     const at = (module: 'ownerships' | 'tenancies') => scopeWhere(actor.access, 'view', module, (prefix) => ({ path: { startsWith: prefix } }));
-    const [ownerships, tenancies] = await Promise.all([
+    const [ownerships, tenancies, membership] = await Promise.all([
       this.rows.ownerships(actor.societyId, { organisation_id: id, locations: at('ownerships') }),
       this.rows.tenancies(actor.societyId, { organisation_id: id, units: { locations: at('tenancies') } }),
+      this.rows.membership(actor.societyId, { organisation_id: id }),
     ]);
     return {
       id: row.id,
       name: row.name,
       tradeLicence: row.trade_licence,
       contact: row.persons ? this.rows.personParty(row.persons) : null,
+      verifiedAt: row.verified_at?.toISOString() ?? null,
       createdAt: row.created_at.toISOString(),
       ownerships,
       tenancies,
-      can: { edit: canOnParty(actor.access, 'edit', paths), delete: canOnParty(actor.access, 'delete', paths) },
+      membership,
+      can: { edit: canOnParty(actor.access, 'edit', paths), verify: canOnParty(actor.access, 'approve', paths), delete: canOnParty(actor.access, 'delete', paths) },
     };
+  }
+
+  /** Like a person's verification (`members.approve`): marking issues the membership ID of a member still waiting for one; clearing keeps it. */
+  async setVerified(actor: Actor, id: string, verified: boolean): Promise<OrganisationDetail> {
+    const { row } = await this.allowed(actor, id, 'approve');
+    await this.prisma.$transaction(async (tx) => {
+      await tx.organisations.update({ where: { id }, data: { verified_at: verified ? (row.verified_at ?? new Date()) : null } });
+      await this.audit.record(
+        { ...auditOf(actor, 'organisation', verified ? 'verify' : 'unverify', id), before: { verified: row.verified_at !== null }, after: { verified } },
+        tx,
+      );
+      if (verified) await this.memberships.issueId(tx, actor, { personId: null, organisationId: id });
+    });
+    return this.get(actor, id);
   }
 
   async update(actor: Actor, id: string, input: OrganisationUpdateInput): Promise<OrganisationDetail> {
     const { row: before } = await this.allowed(actor, id, 'edit');
+    // An organisation that owns or rents keeps its trade licence while the society requires it.
+    if (
+      before.trade_licence &&
+      !input.tradeLicence &&
+      (await this.parties.idsRequired(this.prisma, actor.societyId)) &&
+      (await this.parties.holdsRole(actor.societyId, { organisationId: id }))
+    ) {
+      throw tradeLicenceRequired();
+    }
     await this.prisma.$transaction(async (tx) => {
       const after = await tx.organisations.update({ where: { id }, data: { name: input.name, trade_licence: input.tradeLicence }, select });
       await this.audit.record({ ...auditOf(actor, 'organisation', 'update', id), before: snapshot(before), after: snapshot(after) }, tx);

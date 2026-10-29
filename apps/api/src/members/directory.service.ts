@@ -34,6 +34,7 @@ type Row = {
   path: string;
   is_owner: boolean;
   member_no: number | null;
+  membership_code: string | null;
 };
 
 const escapeLike = (value: string) => value.replace(/[\\%_]/g, (char) => `\\${char}`);
@@ -118,7 +119,8 @@ export class DirectoryService {
                SELECT 1 FROM ownerships w JOIN locations wl ON wl.id = w.location_id
                WHERE w.person_id = o.person_id AND w.end_date IS NULL AND starts_with(l.path, wl.path)
              ) AS is_owner,
-             (SELECT m.member_no FROM memberships m WHERE m.person_id = o.person_id AND m.status = 'active' ORDER BY m.member_no LIMIT 1) AS member_no
+             (SELECT m.member_no FROM memberships m WHERE m.person_id = o.person_id AND m.status = 'active' ORDER BY m.member_no LIMIT 1) AS member_no,
+             (SELECT m.membership_code FROM memberships m WHERE m.person_id = o.person_id AND m.status = 'active' ORDER BY m.member_no LIMIT 1) AS membership_code
       FROM occupants o JOIN locations l ON l.id = o.unit_id JOIN persons p ON p.id = o.person_id
       WHERE ${where}
       ORDER BY (
@@ -146,6 +148,7 @@ export class DirectoryService {
       household: row.tenancy_id ? 'renter' : 'owner',
       isOwner: row.is_owner,
       memberNo: row.member_no,
+      membershipCode: row.membership_code,
       place: { id: row.unit_id, name: row.unit_name, address: addressOf(row.path, names), isUnit: true },
       since: isoDate(row.start_date),
     }));

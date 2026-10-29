@@ -1127,6 +1127,88 @@ Asked for by Anis on 2026-10-28. Decided: `/dashboard/members/new` registers a m
   - The society code is still `SECTOR57` (from the slug); set it in Settings.
   - Adding a person with no unit and no membership is no longer offered on the web; `POST /persons` is still there.
 
+## Organisation members — Built, awaiting review
+
+Branch `feat/people-display-and-membership-ids`, four slices (2026-10-29). Member certificates for organisations are left out (Anis).
+
+- **Slice 1 (schema and API):** migration `29_organisation_members` (`memberships.organisation_id` beside `person_id`, exactly one); `POST /memberships` and bulk take organisations; the public membership form takes `applicantKind`; the records report lists organisation members.
+- **Slice 2 (registers):** the members register lists organisation members and finds them by membership ID; the owners and renters registers show an organisation's membership ID.
+- **Slice 3 (billing):** bills, the billing and collect lookups and payments take `organisationId` beside `personId`; collect accounts carry `memberKind`.
+- **Slice 4 (web):** Add member has a Person / Organisation choice; the organisation page shows its membership and "Make member" (`GET /organisations/:id` returns `membership`); owners and renters lists tick organisations too; the public membership form has "Applying as" with the organisation's name and licence, and the review page shows them. The directory is unchanged (only people are residents); the members report CSV already lists organisations.
+- **Tests:** e2e in `memberships`, `billing` and `payments` specs. The new screens were typechecked and linted, not clicked through in a browser.
+
+## ID copies on the member pages — Built, awaiting review
+
+Same branch, 2026-10-29. Anis decided: the `members` edit right is enough (no `documents` grant); NID and licence copies are both seen only by those who may edit the record; NID sides are photos only; at most 10 licence pages.
+
+- **API:** `IdCopiesService` + `id-copies.controller.ts` (`GET|POST|DELETE /persons/:id/nid-copy(/:side)`, `GET /persons/:id/id-copies/:docId/file`, `GET|POST /organisations/:id/licence-pages`, `DELETE|GET …/:docId(/file)`). Private `documents` rows (no migration); a replaced or removed copy is archived. The documents library filters these types out.
+- **Web:** "NID copy" card (front and back slots) on the person page and "Trade licence copy" card (pages, multi-file upload) on the organisation page, shown only to editors.
+- **Tests:** `id-copies.policy.spec.ts`, `test/id-copies.e2e-spec.ts` (replace archives, editor-only access, out-of-area and other society 404, library never shows them, page limit); `documents.e2e-spec.ts` still passes. Not clicked through in a browser.
+- **Out:** requiring the copies under `requireIdNumbers`, reordering licence pages, copies on the public forms.
+
+## Membership ID after verification — Built, awaiting review
+
+Same branch, 2026-10-29. Anis decided: the ID is issued only by "Mark as verified"; removing the mark keeps an issued ID; the migration takes the IDs back from current members who aren't verified (all organisation members, since organisations had no verification); membership fee bills are allowed while the ID waits.
+
+- **Schema:** migration `30_membership_verification`: `memberships.member_no` / `membership_code` nullable (the trigger leaves the code null without a number), `organisations.verified_at`, and the clean-up of unverified current members (ended memberships keep their IDs). Applied to the dev and test databases.
+- **API:** `MembershipsService.issueId` (from person and organisation verification), `insert` numbers only verified holders; `PUT /organisations/:id/verified` with `can.verify`; contracts make `memberNo` / `membershipCode` nullable; owners and renters rows carry `isMember` (filters and counts use it); members register sorts waiting members last; the settings' `issued` counts issued IDs only.
+- **Web:** `VerifyCard` (person and organisation pages) says verifying issues the ID; "ID pending verification" on the membership line, members register, owners and renters chips, member lookups, bill and collect forms, the form review and the members report.
+- **Tests:** `memberships.e2e-spec.ts` (pending on create, issued on verify and kept on unverify, already verified at once, concurrent verifications, organisation verification, pending owner counted as member); `forms`, `membership-settings`, `billing` and `registers` specs updated; full e2e passes (`overview` timed out once under load and passes alone). `moves.e2e-spec.ts` had a stale CSV header ("Member no." → "Membership ID") from Step 38, fixed. Not clicked through in a browser.
+- **Note:** numbers taken back by the migration can be issued again to someone else (the next number is one past the highest in use).
+- **Remove a member made by mistake** (Anis: allowed when every membership bill is void, society-wide `members.delete`): `DELETE /memberships/:id` refuses an issued ID or a bill that isn't void, detaches voided bills (migration `31_membership_removal` relaxes `invoices_kind_fields_check` for void membership bills; applied to dev and test), deletes the row and audits it. The person and organisation pages show "Remove from members" (confirm) while the ID is pending; `membershipSchema` carries the membership `id`. e2e in `memberships.e2e-spec.ts`.
+
+## Duplexes, offices over several flats, combined bill — Built, awaiting review
+
+Same branch, 2026-10-29. Anis found "Set type" in the building grid and "Covers floors" on the unit page confusing and asked for only two cases: a duplex, and an office taking several flats or floors, with the duplex label and the shared owner or renter visible. He decided: an office keeps separate units and separate bills, with an optional combined printout.
+
+- **Slice A, units over several floors (35cea75):** "Join floors" in the grid (the old Combine) takes one unit from each floor of one building (`combine_same_floor`); the tile, unit page and storey page list the floors ("On Floor 5 + Floor 6"; Anis dropped the word "duplex" since it fits homes only); floors it covers show a "Part of 5A" tile (`coveredBy` on grid floors). The unit page's "Covers floors" card and `PUT /units/:id/storeys` are gone; existing `unit_storeys` links stay.
+- **Slice B, office (cbd9ea0):** each grid tile shows its renter, else its own owner, and "Name · N units" when one person or organisation holds several units in the building (`grid-holders.policy.ts`, `UnitPeopleService.partiesOf`; names need `ownerships.view` / `tenancies.view`).
+- **Slice C, combined bill:** "Print combined bill" on the bills print page (ticked bills): one A4 page to one payer name (first bill's bill-to, editable), a row per bill with amount, paid and due, one total payable. Print only (`bill-combined-a4.tsx`); no API or migration.
+- **Tests:** `combine.policy.spec.ts`, `grid-holders.policy.spec.ts`, `multi-storey.e2e-spec.ts` (10). Not clicked through in a browser; the combined bill's print preview is not checked yet.
+
+- **Join units on one floor (later the same day):** Anis asked to join two flats on one floor too, for flats made into one. The same-floor rule is gone (no `combine_same_floor`); the grid action is "Join units", the kept unit shows "Includes 5B". e2e "joins two flats on one floor into one".
+- **Separate (unjoin):** "Separate" on a retired part's grid tile and unit page (`POST /units/:id/separate`): the part is active again with its own copy of the current owners, the kept unit gives back its size and floor; bills already issued stay on the kept unit. e2e "separates a joined part with its own owners, size and floor".
+
+## Add application from the dashboard — Built, awaiting review
+
+Same branch, 2026-10-29. Anis asked for an "Add application" button on `/dashboard/forms`, like Add member, with the same fields as the public Membership Application and Renter Registration and a selector between them. He decided: the deed stays required, and the queue shows the name of the user who entered it.
+
+- **API:** `POST /forms/:formKey` (`forms.create`, plus `forms.view` and `forms.create` at the place, else 403), multipart like the public form. `PublicFormsService.save` is shared by both routes; the office route skips the honeypot and the daily limit per phone but keeps the duplicate check. Migration `32_form_entered_by` adds `form_submissions.entered_by`; rows and detail carry `enteredBy` (the user's name), audited as `enter`.
+- **Web:** `/dashboard/forms/new` (radio cards for the form type, then the public form components with `send={enterForm}`), opening the new application after saving; an "Entered by" column on the queue (else "Website") and on the detail page's subtitle.
+- **Tests:** `forms.e2e-spec.ts` "office entry" (4). Not clicked through in a browser.
+
+## Remove floors and units, one or many — Built, awaiting review
+
+Same branch, 2026-10-29. Anis set up "Alo chaya" with Add many twice: 11 floors, then 22 units that landed beside the floors instead of on them, so the grid and Join floors missed them. He asked to remove floors and units singly and in bulk.
+
+- **API:** `POST /locations/remove-many` (`LocationRemovalService`, `removal.policy.ts` + spec): a floor goes with its units; places with places inside, joined units and anything in use (catalog of foreign keys plus documents) are refused with names; per-row delete rights; audited. Unit add (single and bulk) refuses a place that already holds floors (`units_beside_floors`). Location view `can.deleteUnit`.
+- **Web:** tick boxes on the cards inside a place, "Select all" and "Remove selected (N)" with a confirm (`remove-selected.tsx`).
+- **Tests:** `removal.policy.spec.ts`, `multi-storey.e2e-spec.ts` (14). Full e2e: only `finance.e2e-spec.ts` "corrects the opening with reversing rows" failed; it orders ledger rows by random UUID, unrelated (for Codex). Not clicked through in a browser.
+- **Fix for Alo chaya:** select all on the building, Remove selected, then "Set up floors and units" with letters AB.
+
+## A4 print for more reports — Built, awaiting review
+
+Same branch, 2026-10-29. Anis asked which reports lack an A4 print. Five do (Day book, Collection, Income, Members, Occupancy); he agreed to add Day book, then Income, then Members, and leave Collection and Occupancy on screen and CSV.
+
+- **Day book:** "Print A4" on `/dashboard/reports/day-book`: A4 portrait, the society band from `getBrand`, the same sections as the screen (only those the user may see), voided rows struck and marked, "None" for an empty section, signature lines for cashier (prepared by), treasurer and general secretary, page footer. The band, footer and signatures moved into the shared `ReportPrint`; the collection register uses it unchanged. Web only.
+- **Income:** "Print A4" on `/dashboard/reports/income`: the year and fund under the title, a summary (income, expenditure, surplus or deficit), income by charge type with donations and the total, spending by head with budget and what is left ("over budget" marked) when all funds are shown; signatures treasurer, general secretary, president.
+- **Members:** "Print A4" on `/dashboard/reports/members`: the place and date range under the title, members by status with the total, then the joiners numbered with membership ID, name, mobile, address, joined date and status; signatures general secretary, president.
+- The tables share `PrintSection` (`report-print.tsx`). Not printed from a browser yet (no admin login).
+
+## Membership ID cards — Slices 1–3 built, awaiting review
+
+Same branch, 2026-10-29, to the mock `docs/mocks/sector57-member-id-card-gradient-filled-both.png`. Decided by Anis: RGB only, printed from the browser (no CMYK, no server PDF for now); both a CR80 card layout and an A4 layout. Defaults taken where he did not answer: "Valid till" from an optional "valid for N years" setting (blank: no line); no QR or public verify page yet; printed by callers with `members.edit` in the member's area; an organisation's card has its name and the badge in place of a photo.
+
+- **Slice 1, API:** `GET/PUT /settings/member-card` (`settings`; `society_settings` key `member_card`: terms in Bangla and English, at most 4 lines, valid years 1–10 or none, signature labels). `GET /memberships/:id/card` (`members.edit` where the member owns, rents, lives or holds the membership; 404 outside the area, 403 view only; 409 `membership_id_pending`, `membership_not_active`): name, ID, photo, contact, joined, valid till (`cardValidTill`, from the print day), the receipt header with the badge, the settings. Each read is audited (`card`). `member-card.e2e-spec.ts` (5), `member-card.spec.ts` (4).
+- **Slice 2, web:** "Membership ID card" on the person and organisation member pages (active with an ID, `can.edit`): both faces at real size, "Print card (CR80)" (named page `id-card`, 54 × 85.6 mm, front then back) and "Print on A4" (front and back side by side with dashed cut lines) and "Download PDF" (made in the browser with `html-to-image` and `jspdf`: each face as a picture at about 575 dpi, one per page at card size, colour). Settings › "Membership ID card" card. Not seen in a browser or printed yet.
+- **Slice 3, many at once:** `POST /memberships/cards` (`members.edit`, at most `MAX_CARD_BATCH` = 90, each once): the cards in the order ticked, and `skipped` with a reason per membership (outside the area, no edit right, ID pending, not active) instead of failing the batch. Member register rows carry `membershipId`. The members list has tick boxes on active members with an ID (callers with `members.edit` anywhere) and three outputs: A4 sheets of nine (fronts page, then backs page mirrored per row for long-edge double-sided printing; `cardSheets`), the card printer (front and back per card), and one PDF (card-size pages, JPEG at about 380 dpi to keep it small). Single and batch PDFs share `card-pdf.ts`. `member-card.e2e-spec.ts` (7), `member-card.spec.ts` (6). Not printed yet.
+- **Later: QR with a random verify token (migration) and a public verify page; a CMYK PDF for print shops if ever needed.
+
+## Collect from the bills list — built, awaiting review
+
+Same branch, 2026-10-29. Anis found no way to take payment after ticking bills, and new bills not showing on the collect page until searched. Built (feb9935): "Take payment for ticked" on the bills list (one account per receipt), several `invoiceId`s on the collect page, and an "Open bills, newest first" list there before any search (`GET /collect/lookup?open=true`); the receipt column shows once an account is chosen. `payments.e2e-spec.ts` (20). Not clicked through in a browser.
+- **Open:** bulk collection across units (one receipt per account, one transaction) was offered; Anis has not decided, nor whether a unit's row takes only the ticked bills or all its open bills. Also offered: a "Membership fees" tag so membership bills are not mistaken for duplicate unit bills.
+
 ## Later: beyond milestone 3
 
 These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.

@@ -5,6 +5,7 @@ import {
   OPEN_TENANCY_STATUSES,
   RENTER_TYPES,
   localDigits,
+  pick,
   type Locale,
   type LocationPeople,
   type Occupant,
@@ -15,7 +16,7 @@ import {
 } from "@s57/shared";
 import { ArrowRightLeft, House, Plus, UserPlus, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useState, type ReactNode } from "react";
+import { useContext, useState, type ReactNode } from "react";
 import { FormStatus } from "@/components/admin/form-status";
 import { CheckField, TextField } from "@/components/cms/fields";
 import { Card, Chip, Field, inputClass } from "@/components/kit";
@@ -23,8 +24,10 @@ import { useSubmit } from "@/components/property/use-submit";
 import { Button } from "@/components/ui/button";
 import { Link, useRouter } from "@/i18n/navigation";
 import { api } from "@/lib/api/client";
-import { DateRange, PartyLink, PlaceLink, TenancyStatusChip } from "./labels";
-import { DateField, emptyParty, PartyFields, partyBody, partyReady, RowActions, todayIso, type PartyValues } from "./party-fields";
+import { DateRange, PartyLink, TenancyStatusChip } from "./labels";
+import { OwnersAbove } from "./owners-above";
+import { PastRenterSelect, pastRenters } from "./past-renter-select";
+import { DateField, emptyParty, IdsRequired, PartyFields, partyBody, partyReady, RowActions, todayIso, type PartyValues } from "./party-fields";
 import { emptyPerson, PersonFields, personBody } from "./person-fields";
 
 type Submit = ReturnType<typeof useSubmit>;
@@ -86,6 +89,7 @@ function OwnerLine({ row }: { row: Ownership }) {
 
 function AddOwnerForm({ locationId, submit, onDone }: { locationId: string; submit: Submit; onDone: () => void }) {
   const t = useTranslations("Members");
+  const ids = useContext(IdsRequired);
   const [party, setParty] = useState<PartyValues>(emptyParty);
   const [share, setShare] = useState("100");
   const [startDate, setStartDate] = useState(todayIso);
@@ -102,18 +106,19 @@ function AddOwnerForm({ locationId, submit, onDone }: { locationId: string; subm
         if (done) onDone();
       }}
     >
-      <PartyFields id="owner" values={party} onChange={setParty} />
+      <PartyFields id="owner" values={party} onChange={setParty} memberLookup />
       <div className="grid gap-3.5 min-[600px]:grid-cols-2">
         <TextField id="owner-share" label={t("share")} inputMode="decimal" value={share} onChange={(e) => setShare(e.target.value)} />
         <DateField id="owner-start" label={t("people.startDate")} value={startDate} onChange={setStartDate} />
       </div>
-      <FormActions busy={submit.busy} ready={partyReady(party) && !!startDate} onCancel={onDone} />
+      <FormActions busy={submit.busy} ready={partyReady(party, ids) && !!startDate} onCancel={onDone} />
     </form>
   );
 }
 
 function TransferForm({ locationId, submit, onDone }: { locationId: string; submit: Submit; onDone: () => void }) {
   const t = useTranslations("Members");
+  const ids = useContext(IdsRequired);
   const locale = useLocale() as Locale;
   const [date, setDate] = useState(todayIso);
   const [owners, setOwners] = useState<{ party: PartyValues; share: string }[]>([{ party: emptyParty, share: "100" }]);
@@ -141,7 +146,7 @@ function TransferForm({ locationId, submit, onDone }: { locationId: string; subm
       {owners.map((owner, index) => (
         <fieldset key={index} className="grid gap-3 rounded-[10px] border border-line p-3">
           <legend className="px-1 text-[13px] font-semibold">{t("people.newOwnerN", { n: localDigits(index + 1, locale) })}</legend>
-          <PartyFields id={`transfer-${index}`} values={owner.party} onChange={(party) => change(index, { party })} />
+          <PartyFields id={`transfer-${index}`} values={owner.party} onChange={(party) => change(index, { party })} memberLookup />
           <div className="flex flex-wrap items-end gap-2">
             <TextField
               id={`transfer-${index}-share`}
@@ -170,23 +175,23 @@ function TransferForm({ locationId, submit, onDone }: { locationId: string; subm
         <Plus aria-hidden />
         {t("people.addAnother")}
       </Button>
-      <FormActions busy={submit.busy} ready={!!date && owners.every((owner) => partyReady(owner.party))} onCancel={onDone} />
+      <FormActions busy={submit.busy} ready={!!date && owners.every((owner) => partyReady(owner.party, ids))} onCancel={onDone} />
     </form>
   );
 }
 
 function OwnersSection({ people, submit }: { people: LocationPeople; submit: Submit }) {
   const t = useTranslations("Members");
+  const locale = useLocale() as Locale;
   const [adding, setAdding] = useState<"owner" | "transfer" | null>(null);
   const owners = people.owners ?? [];
   const current = owners.filter((row) => row.endDate === null);
   const past = owners.filter((row) => row.endDate !== null);
   const can = people.can.ownerships;
-  const above = people.ownersAbove ?? [];
 
   return (
     <Block
-      title={t("people.owners")}
+      title={people.location.levelBn ? t("people.ownersOf", { level: pick(people.location.levelBn, people.location.levelEn, locale) }) : t("people.owners")}
       actions={
         adding ? null : (
           <>
@@ -226,22 +231,7 @@ function OwnersSection({ people, submit }: { people: LocationPeople; submit: Sub
           ))}
         </ul>
       )}
-      {above.length > 0 ? (
-        <div className="grid gap-1.5 rounded-[10px] bg-surface-2 p-3 text-[13px]">
-          <p className="font-semibold">{t("people.ownersAbove")}</p>
-          <p className="text-[12.5px] text-muted-foreground">{t("people.ownersAboveHint")}</p>
-          <ul className="grid gap-1">
-            {above.map((row) => (
-              <li key={row.id} className="flex flex-wrap items-center gap-x-2">
-                <PartyLink party={row.owner} />
-                <span className="text-muted-foreground">
-                  · <PlaceLink place={row.place} />
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      <OwnersAbove rows={people.ownersAbove ?? []} />
       <Past title={t("people.pastOwners")} count={past.length}>
         {past.map((row) => (
           <li key={row.id} className="flex flex-wrap items-start justify-between gap-2">
@@ -264,9 +254,12 @@ function OwnersSection({ people, submit }: { people: LocationPeople; submit: Sub
 // Tenancy
 // ---------------------------------------------------------------------------
 
-function AddTenancyForm({ unitId, submit, onDone }: { unitId: string; submit: Submit; onDone: () => void }) {
+function AddTenancyForm({ unitId, past, submit, onDone }: { unitId: string; past: Tenancy[]; submit: Submit; onDone: () => void }) {
   const t = useTranslations("Members");
+  const ids = useContext(IdsRequired);
   const [party, setParty] = useState<PartyValues>(emptyParty);
+  const renters = pastRenters(past);
+  const [picked, setPicked] = useState<(typeof renters)[number] | null>(null);
   const [values, setValues] = useState({
     renterType: "family" as RenterType,
     status: "active" as "pending" | "active",
@@ -280,12 +273,23 @@ function AddTenancyForm({ unitId, submit, onDone }: { unitId: string; submit: Su
       className="grid gap-3.5 rounded-[10px] border border-line p-3"
       onSubmit={async (e) => {
         e.preventDefault();
-        const done = await submit.run(() => api.POST("/tenancies", { body: { unitId, renter: partyBody(party), ...values } }), t("people.added"));
+        const renter = picked ? ({ kind: "existing", party: { kind: picked.renter.kind, id: picked.renter.id } } as const) : partyBody(party);
+        const done = await submit.run(() => api.POST("/tenancies", { body: { unitId, renter, ...values } }), t("people.added"));
         if (done) onDone();
       }}
     >
-      <PartyFields id="renter" values={party} onChange={setParty} />
-      {party.kind === "person" ? <p className="text-[12.5px] text-muted-foreground">{t("people.renterIsResident")}</p> : null}
+      {renters.length > 0 ? (
+        <PastRenterSelect
+          rows={renters}
+          value={picked?.id ?? ""}
+          onChange={(row) => {
+            setPicked(row);
+            if (row) setValues({ ...values, renterType: row.renterType, monthlyRent: row.monthlyRent ?? "" });
+          }}
+        />
+      ) : null}
+      {picked ? null : <PartyFields id="renter" values={party} onChange={setParty} />}
+      {(picked ? picked.renter.kind : party.kind) === "person" ? <p className="text-[12.5px] text-muted-foreground">{t("people.renterIsResident")}</p> : null}
       <div className="grid gap-3.5 min-[600px]:grid-cols-2">
         <Field label={t("col.role")} htmlFor="renter-type">
           <select
@@ -331,7 +335,7 @@ function AddTenancyForm({ unitId, submit, onDone }: { unitId: string; submit: Su
         checked={values.policeFormSubmitted}
         onChange={(e) => setValues({ ...values, policeFormSubmitted: e.target.checked })}
       />
-      <FormActions busy={submit.busy} ready={partyReady(party) && !!values.startDate} onCancel={onDone} />
+      <FormActions busy={submit.busy} ready={(picked !== null || partyReady(party, ids)) && !!values.startDate} onCancel={onDone} />
     </form>
   );
 }
@@ -440,7 +444,7 @@ function TenancySection({ people, submit }: { people: LocationPeople; submit: Su
         ) : null
       }
     >
-      {adding ? <AddTenancyForm unitId={people.location.id} submit={submit} onDone={() => setAdding(false)} /> : null}
+      {adding ? <AddTenancyForm unitId={people.location.id} past={rows} submit={submit} onDone={() => setAdding(false)} /> : null}
       {open ? <OpenTenancy row={open} can={can} submit={submit} /> : adding ? null : <Empty>{t("people.noTenancy")}</Empty>}
       <Past title={t("people.pastTenancies")} count={past.length}>
         {past.map((row) => (
@@ -628,16 +632,18 @@ function FormActions({ busy, ready, onCancel }: { busy: boolean; ready: boolean;
  * Units get all three blocks; other locations only the owners. Each block shows only
  * when the caller may view it there.
  */
-export function PeoplePanel({ people }: { people: LocationPeople }) {
+export function PeoplePanel({ people, idsRequired }: { people: LocationPeople; idsRequired: boolean }) {
   const t = useTranslations("Members.people");
   const submit = useSubmit();
   return (
-    <Card className="grid gap-4">
-      <h2 className="text-[15px]">{t("title")}</h2>
-      <FormStatus status={submit.status} />
-      {people.owners !== null ? <OwnersSection people={people} submit={submit} /> : null}
-      {people.location.isUnit && people.tenancies !== null ? <TenancySection people={people} submit={submit} /> : null}
-      {people.location.isUnit && people.occupants !== null ? <HouseholdSection people={people} submit={submit} /> : null}
-    </Card>
+    <IdsRequired value={idsRequired}>
+      <Card className="grid gap-4">
+        <h2 className="text-[15px]">{t("title")}</h2>
+        <FormStatus status={submit.status} />
+        {people.owners !== null ? <OwnersSection people={people} submit={submit} /> : null}
+        {people.location.isUnit && people.tenancies !== null ? <TenancySection people={people} submit={submit} /> : null}
+        {people.location.isUnit && people.occupants !== null ? <HouseholdSection people={people} submit={submit} /> : null}
+      </Card>
+    </IdsRequired>
   );
 }

@@ -1,6 +1,8 @@
-import { BadRequestException, HttpException, HttpStatus, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Inject, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import type { ChangePasswordInput, LoginInput, Me } from '@s57/shared';
 import { AuditService } from '../audit/audit.service.js';
+import { mediaUrl } from '../common/media.js';
+import { ENV, type Env } from '../config/env.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { afterFailure, type AttemptResult, UnknownPhoneAttempts } from './login-attempts.js';
 import { PasswordService } from './password.service.js';
@@ -10,19 +12,28 @@ import { type AuthUser, TokensService } from './tokens.service.js';
 /** What a successful login or refresh hands to the controller to put in cookies. */
 export type IssuedTokens = { accessToken: string; refreshToken: string; csrfToken: string };
 
-const meSelect = {
+export const meSelect = {
   id: true,
   phone: true,
   language: true,
-  persons: { select: { full_name: true, full_name_en: true } },
+  persons: { select: { full_name: true, full_name_en: true, photo_url: true, verified_at: true } },
 } as const;
 
-function toMe(user: { id: string; phone: string; language: string; persons: { full_name: string; full_name_en: string | null } | null }): Me {
+type MeRow = {
+  id: string;
+  phone: string;
+  language: string;
+  persons: { full_name: string; full_name_en: string | null; photo_url: string | null; verified_at: Date | null } | null;
+};
+
+export function toMe(user: MeRow, mediaBaseUrl: string | undefined): Me {
   return {
     id: user.id,
     phone: user.phone,
     name: user.persons?.full_name ?? null,
     nameEn: user.persons?.full_name_en ?? null,
+    photoUrl: mediaUrl(user.persons?.photo_url, mediaBaseUrl),
+    nameLocked: user.persons?.verified_at != null,
     language: user.language === 'en' ? 'en' : 'bn',
   };
 }
@@ -55,6 +66,7 @@ export class AuthService {
     private readonly tokens: TokensService,
     private readonly sessions: SessionsService,
     private readonly audit: AuditService,
+    @Inject(ENV) private readonly env: Env,
   ) {}
 
   /**
@@ -119,7 +131,7 @@ export class AuthService {
     const session = await this.sessions.start(user, meta, now);
     await this.audit.record({ ...auditBase, userId: user.id, entityId: user.id, action: 'login' });
     return {
-      me: toMe(user),
+      me: toMe(user, this.env.MEDIA_BASE_URL),
       tokens: await this.issue({ userId: user.id, societyId, sessionId: session.sessionId }, session.refreshToken, now),
     };
   }
@@ -146,7 +158,7 @@ export class AuthService {
       select: meSelect,
     });
     if (!user) throw new UnauthorizedException({ code: 'unauthenticated', message: 'Please log in' });
-    return toMe(user);
+    return toMe(user, this.env.MEDIA_BASE_URL);
   }
 
   /** The user changes their own password; their other devices are logged out. */

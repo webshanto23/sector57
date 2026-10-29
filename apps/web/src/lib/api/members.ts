@@ -1,8 +1,12 @@
 import "server-only";
 
 import {
+  type LicencePages,
   type LocationPeople,
+  type MemberCard,
+  type MemberCardSettings,
   type MembershipSettings,
+  type NidCopies,
   type OrganisationDetail,
   type PersonDetail,
 } from "@s57/shared";
@@ -35,6 +39,18 @@ export async function getOrganisation(id: string): Promise<OrganisationDetail | 
   return data;
 }
 
+/** The NID copies of a person; null unless the caller may edit them. */
+export async function getNidCopies(id: string): Promise<NidCopies | null> {
+  const { data } = await api.GET("/persons/{id}/nid-copy", { params: { path: { id } }, headers: await authHeaders(), cache: "no-store" });
+  return data ?? null;
+}
+
+/** The trade licence pages of an organisation; null unless the caller may edit them. */
+export async function getLicencePages(id: string): Promise<LicencePages | null> {
+  const { data } = await api.GET("/organisations/{id}/licence-pages", { params: { path: { id } }, headers: await authHeaders(), cache: "no-store" });
+  return data ?? null;
+}
+
 /** Owners, tenancies and households of a location; null when the caller may see none of them there. */
 export async function getLocationPeople(id: string): Promise<LocationPeople | null> {
   const { data, response } = await api.GET("/locations/{id}/people", {
@@ -51,5 +67,23 @@ export async function getLocationPeople(id: string): Promise<LocationPeople | nu
 export async function getMembershipSettings(): Promise<MembershipSettings> {
   const { data, response } = await api.GET("/settings/membership", { headers: await authHeaders(), cache: "no-store" });
   if (!data) throw failed("the membership settings", response.status);
+  return data;
+}
+
+export async function getMemberCardSettings(): Promise<MemberCardSettings> {
+  const { data, response } = await api.GET("/settings/member-card", { headers: await authHeaders(), cache: "no-store" });
+  if (!data) throw failed("the member card settings", response.status);
+  return data;
+}
+
+/** A member's ID card; null when there is none to print (ID pending, not active, or not the caller's to edit). */
+export async function getMemberCard(membershipId: string): Promise<MemberCard | null> {
+  const { data, response } = await api.GET("/memberships/{id}/card", {
+    params: { path: { id: membershipId } },
+    headers: await authHeaders(),
+    cache: "no-store",
+  });
+  if ([403, 404, 409].includes(response.status)) return null;
+  if (!data) throw failed("the member card", response.status);
   return data;
 }

@@ -17,6 +17,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Pager } from "@/components/cms/pager";
 import { Avatar, Chip, DataTable, inputClass, PageHeader, SearchInput, StatCard, type Column, type Tone } from "@/components/kit";
+import { CardTickBox, CardTicks } from "@/components/members/card-batch";
 import { PartyLink } from "@/components/members/labels";
 import { AreaNote, HoldingChips, PhoneActions, searchText } from "@/components/members/register-parts";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -70,7 +71,7 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
   // The fee shows only to society-wide billing viewers (the API sends null otherwise).
   const feeShown = list.counts.feeNotPaid !== null;
   const canBill = canSocietyWide(me.access, "billing", "create");
-  const feeCell = (fee: MemberFee, personId: string) => {
+  const feeCell = (fee: MemberFee, member: MemberRegisterRow["person"]) => {
     if (fee.state === "paid") return <Chip tone="good">{t("members.fee.paid")}</Chip>;
     if (fee.state === "unpaid") {
       return (
@@ -83,7 +84,7 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
       <span className="flex flex-wrap items-center gap-2">
         <Chip tone="bad">{t("members.fee.notBilled")}</Chip>
         {canBill ? (
-          <Link href={{ pathname: "/dashboard/billing/new", query: { personId } }} className="text-[13px] font-semibold whitespace-nowrap text-primary">
+          <Link href={{ pathname: "/dashboard/billing/new", query: member.kind === "person" ? { personId: member.id } : { organisationId: member.id } }} className="text-[13px] font-semibold whitespace-nowrap text-primary">
             {t("members.fee.makeBill")}
           </Link>
         ) : null}
@@ -91,16 +92,21 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
     );
   };
 
+  // ID cards: active members with an ID, ticked by callers who may edit members (the API checks each one's area).
+  const cardable = (row: MemberRegisterRow) => row.status === "active" && row.membershipCode !== null;
+  const canPrintCards = canAnywhere(me.access, "members", "edit");
+
   const columns: Column<MemberRegisterRow>[] = [
     {
       key: "name",
       header: t("col.name"),
       cell: (row) => (
         <div className="flex items-center gap-2.5">
-          <Avatar name={row.person.name} />
+          {canPrintCards && cardable(row) ? <CardTickBox id={row.membershipId} name={row.person.name} /> : null}
+          <Avatar name={row.person.name} src={row.person.photoUrl} />
           <div className="grid">
             <PartyLink party={row.person} />
-            <span className="num text-[12.5px] text-muted-foreground">{t("memberNo", { no: n(row.memberNo) })}</span>
+            <span className="num text-[12.5px] text-muted-foreground">{row.membershipCode ? t("memberNo", { no: row.membershipCode }) : t("idPending")}</span>
           </div>
         </div>
       ),
@@ -110,7 +116,7 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
     { key: "joined", header: t("members.col.joined"), cell: (row) => <span className="whitespace-nowrap">{formatDate(row.joinedOn, locale, "short")}</span> },
     { key: "status", header: t("col.status"), cell: (row) => <Chip tone={STATUS_TONES[row.status]}>{t(`members.status.${row.status}`)}</Chip> },
     ...(feeShown
-      ? [{ key: "fee", header: t("members.col.fee"), cell: (row: MemberRegisterRow) => (row.fee ? feeCell(row.fee, row.person.id) : "—") }]
+      ? [{ key: "fee", header: t("members.col.fee"), cell: (row: MemberRegisterRow) => (row.fee ? feeCell(row.fee, row.person) : "—") }]
       : []),
   ];
 
@@ -168,7 +174,13 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
         </Button>
       </form>
 
-      <DataTable columns={columns} rows={list.items} rowKey={(row) => String(row.memberNo)} caption={tNav("members")} empty={t("members.empty")} />
+      {canPrintCards ? (
+        <CardTicks eligible={list.items.filter(cardable).map((row) => row.membershipId)}>
+          <DataTable columns={columns} rows={list.items} rowKey={(row) => row.membershipId} caption={tNav("members")} empty={t("members.empty")} />
+        </CardTicks>
+      ) : (
+        <DataTable columns={columns} rows={list.items} rowKey={(row) => row.membershipId} caption={tNav("members")} empty={t("members.empty")} />
+      )}
 
       <Pager
         locale={locale}

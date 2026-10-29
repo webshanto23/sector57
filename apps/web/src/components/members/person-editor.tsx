@@ -1,21 +1,22 @@
 "use client";
 
-import { formatDate, type Locale, type PersonDetail } from "@s57/shared";
-import { BadgeCheck, Camera, ImageOff, ShieldOff, Trash2 } from "lucide-react";
+import type { PersonDetail } from "@s57/shared";
+import { Camera, ImageOff, Trash2 } from "lucide-react";
 import Image from "next/image";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { errorMessageKey } from "@/components/admin/errors";
 import { ConfirmButton } from "@/components/admin/confirm-button";
 import { FormStatus } from "@/components/admin/form-status";
 import { imageProblem, ImageUploadButton } from "@/components/cms/image-upload";
-import { Card, Chip } from "@/components/kit";
+import { Card } from "@/components/kit";
 import { useSubmit } from "@/components/property/use-submit";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
 import { api } from "@/lib/api/client";
 import { uploadFile } from "@/lib/api/upload";
 import { PersonFields, personBody, type PersonValues } from "./person-fields";
+import { VerifyCard } from "./verify-card";
 
 const toValues = (person: PersonDetail): PersonValues => ({
   fullName: person.fullName,
@@ -31,7 +32,6 @@ const toValues = (person: PersonDetail): PersonValues => ({
 export function PersonEditor({ person }: { person: PersonDetail }) {
   const t = useTranslations("Members");
   const tRoot = useTranslations();
-  const locale = useLocale() as Locale;
   const router = useRouter();
   const { status, setStatus, busy, run } = useSubmit();
   const [values, setValues] = useState<PersonValues>(() => toValues(person));
@@ -75,32 +75,12 @@ export function PersonEditor({ person }: { person: PersonDetail }) {
       </Card>
 
       <div className="grid content-start gap-3.5">
-        <Card className="grid content-start gap-2.5">
-          <div className="flex flex-wrap items-center gap-2">
-            {person.verifiedAt ? (
-              <Chip tone="good">{t("verifiedOn", { date: formatDate(person.verifiedAt, locale, "short") })}</Chip>
-            ) : (
-              <Chip tone="warn">{t("notVerified")}</Chip>
-            )}
-          </div>
-          {person.can.verify ? (
-            <>
-              {!person.verifiedAt ? <p className="text-[12.5px] text-muted-foreground">{t("verifyHint")}</p> : null}
-              <Button
-                type="button"
-                variant="outline"
-                className="justify-self-start"
-                disabled={busy}
-                onClick={() =>
-                  run(() => api.PUT("/persons/{id}/verified", { params: { path: { id } }, body: { verified: !person.verifiedAt } }))
-                }
-              >
-                {person.verifiedAt ? <ShieldOff aria-hidden /> : <BadgeCheck aria-hidden />}
-                {person.verifiedAt ? t("unverify") : t("verify")}
-              </Button>
-            </>
-          ) : null}
-        </Card>
+        <VerifyCard
+          party={{ kind: "person", id }}
+          verifiedAt={person.verifiedAt}
+          canVerify={person.can.verify}
+          idPending={person.membership?.status === "active" && person.membership.membershipCode === null}
+        />
 
         {person.can.edit ? (
           <Card className="flex flex-wrap items-center gap-2">

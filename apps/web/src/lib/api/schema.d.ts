@@ -369,7 +369,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        patch: operations["AccountController_update"];
         trace?: never;
     };
     "/me/password": {
@@ -596,6 +596,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/locations/remove-many": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["LocationsController_removeMany"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/locations/{id}/grid": {
         parameters: {
             query?: never;
@@ -724,6 +740,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/units/{id}/separate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UnitsController_separate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/units/bulk-type": {
         parameters: {
             query?: never;
@@ -734,22 +766,6 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["UnitsController_bulkType"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/units/{id}/storeys": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["UnitsController_setStoreys"];
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -834,6 +850,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["OrganisationsController_update"];
+        trace?: never;
+    };
+    "/organisations/{id}/verified": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["OrganisationsController_verify"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/ownerships": {
@@ -1204,6 +1236,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/memberships/{id}/card": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MembershipsController_card"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/memberships/cards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MembershipsController_batchCards"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/memberships/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["MembershipsController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/settings/membership": {
         parameters: {
             query?: never;
@@ -1220,14 +1300,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/public/locations": {
+    "/settings/member-card": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["PublicFormsController_places"];
+        get: operations["MemberCardSettingsController_get"];
+        put: operations["MemberCardSettingsController_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/persons/{id}/nid-copy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PersonIdCopiesController_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1236,7 +1332,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/public/forms/{formKey}": {
+    "/persons/{id}/nid-copy/{side}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1245,21 +1341,21 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["PublicFormsController_submit"];
-        delete?: never;
+        post: operations["PersonIdCopiesController_set"];
+        delete: operations["PersonIdCopiesController_remove"];
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/forms": {
+    "/persons/{id}/id-copies/{docId}/file": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["FormsController_list"];
+        get: operations["PersonIdCopiesController_file"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1268,14 +1364,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/forms/{id}": {
+    "/organisations/{id}/licence-pages": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["FormsController_get"];
+        get: operations["OrganisationIdCopiesController_list"];
+        put?: never;
+        post: operations["OrganisationIdCopiesController_add"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organisations/{id}/licence-pages/{docId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["OrganisationIdCopiesController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organisations/{id}/licence-pages/{docId}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OrganisationIdCopiesController_file"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1284,23 +1412,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/forms/{id}/files/{fileId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["FormsController_file"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/forms/{id}/review": {
+    "/me/photo": {
         parameters: {
             query?: never;
             header?: never;
@@ -1309,40 +1421,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["FormsController_review"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/forms/{id}/approve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["FormsController_approve"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/forms/{id}/reject": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["FormsController_reject"];
-        delete?: never;
+        post: operations["AccountController_setPhoto"];
+        delete: operations["AccountController_removePhoto"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1486,6 +1566,150 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["ChargeTypesController_restore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicFormsController_places"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/forms/{formKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublicFormsController_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FormsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FormsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/{formKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["FormsController_enter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/{id}/files/{fileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FormsController_file"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["FormsController_review"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["FormsController_approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["FormsController_reject"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3903,6 +4127,7 @@ export interface components {
             nameBn: string;
             nameEn: string | null;
             fiscalYearStartMonth: number;
+            requireIdNumbers: boolean;
             mark: string;
             placeBn: string | null;
             placeEn: string | null;
@@ -4164,6 +4389,8 @@ export interface components {
             phone: string;
             name: string | null;
             nameEn: string | null;
+            photoUrl: string | null;
+            nameLocked: boolean;
             /** @enum {string} */
             language: "bn" | "en";
         };
@@ -4173,6 +4400,8 @@ export interface components {
             phone: string;
             name: string | null;
             nameEn: string | null;
+            photoUrl: string | null;
+            nameLocked: boolean;
             /** @enum {string} */
             language: "bn" | "en";
             access: {
@@ -4376,6 +4605,11 @@ export interface components {
                 childCount: number;
                 unitCount: number;
                 alsoOn: string[];
+                unitType: {
+                    code: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                } | null;
             } | null;
             breadcrumb: {
                 /** Format: uuid */
@@ -4402,6 +4636,11 @@ export interface components {
                 childCount: number;
                 unitCount: number;
                 alsoOn: string[];
+                unitType: {
+                    code: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                } | null;
             }[];
             alsoHere: {
                 /** Format: uuid */
@@ -4420,6 +4659,11 @@ export interface components {
                 childCount: number;
                 unitCount: number;
                 alsoOn: string[];
+                unitType: {
+                    code: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                } | null;
                 homeName: string;
             }[];
             can: {
@@ -4427,6 +4671,7 @@ export interface components {
                 createUnit: boolean;
                 edit: boolean;
                 delete: boolean;
+                deleteUnit: boolean;
             };
         };
         LocationSearchDto_Output: {
@@ -4447,6 +4692,11 @@ export interface components {
                 childCount: number;
                 unitCount: number;
                 alsoOn: string[];
+                unitType: {
+                    code: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                } | null;
                 address: string[];
                 owners: {
                     name: string;
@@ -4480,6 +4730,12 @@ export interface components {
         BulkResultDto_Output: {
             created: number;
         };
+        LocationRemoveManyDto: {
+            ids: string[];
+        };
+        LocationRemoveManyResultDto_Output: {
+            removed: number;
+        };
         BuildingGridDto_Output: {
             floors: {
                 /** Format: uuid */
@@ -4500,6 +4756,19 @@ export interface components {
                         name: string;
                     } | null;
                     includes: string[];
+                    holder: {
+                        name: string;
+                        nameEn: string | null;
+                        /** @enum {string} */
+                        role: "renter" | "owner";
+                        more: number;
+                        units: number;
+                    } | null;
+                }[];
+                coveredBy: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
                 }[];
             }[];
             canEdit: boolean;
@@ -4654,11 +4923,6 @@ export interface components {
                 id: string;
                 name: string;
             }[];
-            coverOptions: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-            }[];
             mergedInto: {
                 /** Format: uuid */
                 id: string;
@@ -4669,6 +4933,7 @@ export interface components {
             can: {
                 edit: boolean;
                 delete: boolean;
+                separate: boolean;
             };
         };
         UnitCreateDto: {
@@ -4700,6 +4965,12 @@ export interface components {
             keptId: string;
             merged: number;
         };
+        UnitSeparateResultDto_Output: {
+            /** Format: uuid */
+            keptId: string;
+            /** Format: uuid */
+            separatedId: string;
+        };
         UnitTypeBulkDto: {
             unitIds: string[];
             unitType: string;
@@ -4715,9 +4986,6 @@ export interface components {
             sizeSqft?: string | null;
             /** @enum {string} */
             billTo?: "owner" | "renter";
-        };
-        UnitStoreysDto: {
-            storeyIds: string[];
         };
         PersonInputDto: {
             fullName: string;
@@ -4835,8 +5103,10 @@ export interface components {
                 endDate: string | null;
             }[];
             membership: {
-                memberNo: number;
-                membershipCode: string;
+                /** Format: uuid */
+                id: string;
+                memberNo: number | null;
+                membershipCode: string | null;
                 /** @enum {string} */
                 status: "active" | "lapsed" | "cancelled";
                 /** Format: date */
@@ -4877,6 +5147,7 @@ export interface components {
                 photoUrl: string | null;
                 verified: boolean | null;
             } | null;
+            verifiedAt: string | null;
             /** Format: date-time */
             createdAt: string;
             ownerships: {
@@ -4942,8 +5213,20 @@ export interface components {
                     kind: "move_in" | "move_out";
                 } | null;
             }[];
+            membership: {
+                /** Format: uuid */
+                id: string;
+                memberNo: number | null;
+                membershipCode: string | null;
+                /** @enum {string} */
+                status: "active" | "lapsed" | "cancelled";
+                /** Format: date */
+                joinedOn: string;
+                endedOn: string | null;
+            } | null;
             can: {
                 edit: boolean;
+                verify: boolean;
                 delete: boolean;
             };
         };
@@ -4981,6 +5264,15 @@ export interface components {
                         dateOfBirth?: string | null;
                         gender?: ("male" | "female" | "other") | null;
                     } | null;
+                };
+            } | {
+                /** @constant */
+                kind: "existing";
+                party: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
                 };
             };
             sharePercent?: string;
@@ -5046,6 +5338,15 @@ export interface components {
                             dateOfBirth?: string | null;
                             gender?: ("male" | "female" | "other") | null;
                         } | null;
+                    };
+                } | {
+                    /** @constant */
+                    kind: "existing";
+                    party: {
+                        /** @enum {string} */
+                        kind: "person" | "organisation";
+                        /** Format: uuid */
+                        id: string;
                     };
                 };
                 sharePercent?: string;
@@ -5118,6 +5419,15 @@ export interface components {
                         dateOfBirth?: string | null;
                         gender?: ("male" | "female" | "other") | null;
                     } | null;
+                };
+            } | {
+                /** @constant */
+                kind: "existing";
+                party: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
                 };
             };
             /** @enum {string} */
@@ -5240,6 +5550,8 @@ export interface components {
                 id: string;
                 name: string;
                 isUnit: boolean;
+                levelBn: string;
+                levelEn: string | null;
             };
             owners: {
                 /** Format: uuid */
@@ -5292,6 +5604,8 @@ export interface components {
                 /** Format: date */
                 startDate: string;
                 endDate: string | null;
+                levelBn: string;
+                levelEn: string | null;
             }[] | null;
             tenancies: {
                 /** Format: uuid */
@@ -5533,6 +5847,7 @@ export interface components {
                 household: "owner" | "renter";
                 isOwner: boolean;
                 memberNo: number | null;
+                membershipCode: string | null;
                 place: {
                     /** Format: uuid */
                     id: string;
@@ -5574,6 +5889,7 @@ export interface components {
                 household: "owner" | "renter";
                 isOwner: boolean;
                 memberNo: number | null;
+                membershipCode: string | null;
                 place: {
                     /** Format: uuid */
                     id: string;
@@ -5588,7 +5904,10 @@ export interface components {
         };
         MemberRegisterDto_Output: {
             items: {
-                memberNo: number;
+                /** Format: uuid */
+                membershipId: string;
+                memberNo: number | null;
+                membershipCode: string | null;
                 /** @enum {string} */
                 status: "active" | "lapsed" | "cancelled";
                 /** Format: date */
@@ -5655,7 +5974,9 @@ export interface components {
                 };
                 otherPlaces: number;
                 livesHere: boolean | null;
+                isMember: boolean;
                 memberNo: number | null;
+                membershipCode: string | null;
             }[];
             total: number;
             page: number;
@@ -5709,7 +6030,9 @@ export interface components {
                     nameEn: string | null;
                 };
                 residents: number;
+                isMember: boolean;
                 memberNo: number | null;
+                membershipCode: string | null;
             }[];
             total: number;
             page: number;
@@ -5732,28 +6055,136 @@ export interface components {
                 gender?: ("male" | "female" | "other") | null;
             } | null;
             personId?: string | null;
+            organisation?: {
+                name: string;
+                tradeLicence?: string | null;
+                contact?: {
+                    fullName: string;
+                    fullNameEn?: string | null;
+                    phone?: string | null;
+                    email?: string | null;
+                    nid?: string | null;
+                    dateOfBirth?: string | null;
+                    gender?: ("male" | "female" | "other") | null;
+                } | null;
+            } | null;
+            organisationId?: string | null;
             locationId?: string | null;
             joinedOn?: string | null;
         };
         MemberCreatedDto_Output: {
-            /** Format: uuid */
-            personId: string;
-            memberNo: number;
-            membershipCode: string;
+            personId: string | null;
+            organisationId: string | null;
+            memberNo: number | null;
+            membershipCode: string | null;
             reusedPerson: boolean;
         };
         MemberBulkDto: {
+            /** @default [] */
             personIds: string[];
+            /** @default [] */
+            organisationIds: string[];
             joinedOn?: string | null;
         };
         MemberBulkResultDto_Output: {
             created: {
-                /** Format: uuid */
-                personId: string;
-                memberNo: number;
-                membershipCode: string;
+                personId: string | null;
+                organisationId: string | null;
+                memberNo: number | null;
+                membershipCode: string | null;
             }[];
             skipped: number;
+        };
+        MemberCardDto_Output: {
+            /** Format: uuid */
+            membershipId: string;
+            membershipCode: string;
+            /** @enum {string} */
+            kind: "person" | "organisation";
+            name: string;
+            nameEn: string | null;
+            photoUrl: string | null;
+            phone: string | null;
+            email: string | null;
+            /** Format: date */
+            joinedOn: string;
+            validTill: string | null;
+            /** @enum {string} */
+            status: "active" | "lapsed" | "cancelled";
+            header: {
+                nameBn: string;
+                nameEn: string | null;
+                addressBn: string | null;
+                addressEn: string | null;
+                phone: string | null;
+                /** @default null */
+                email: string | null;
+                /** @default null */
+                regNo: string | null;
+                /** @default null */
+                officeHoursBn: string | null;
+                /** @default null */
+                officeHoursEn: string | null;
+                mark: string;
+            };
+            settings: {
+                termsBn: string[];
+                termsEn: string[];
+                validYears: number | null;
+                signatureBn: string | null;
+                signatureEn: string | null;
+            };
+        };
+        MemberCardsInputDto: {
+            membershipIds: string[];
+        };
+        MemberCardsDto_Output: {
+            items: {
+                /** Format: uuid */
+                membershipId: string;
+                membershipCode: string;
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                name: string;
+                nameEn: string | null;
+                photoUrl: string | null;
+                phone: string | null;
+                email: string | null;
+                /** Format: date */
+                joinedOn: string;
+                validTill: string | null;
+                /** @enum {string} */
+                status: "active" | "lapsed" | "cancelled";
+                header: {
+                    nameBn: string;
+                    nameEn: string | null;
+                    addressBn: string | null;
+                    addressEn: string | null;
+                    phone: string | null;
+                    /** @default null */
+                    email: string | null;
+                    /** @default null */
+                    regNo: string | null;
+                    /** @default null */
+                    officeHoursBn: string | null;
+                    /** @default null */
+                    officeHoursEn: string | null;
+                    mark: string;
+                };
+                settings: {
+                    termsBn: string[];
+                    termsEn: string[];
+                    validYears: number | null;
+                    signatureBn: string | null;
+                    signatureEn: string | null;
+                };
+            }[];
+            skipped: {
+                /** Format: uuid */
+                membershipId: string;
+                /** @enum {string} */
+                code: "membership_not_found" | "beyond_your_permissions" | "membership_id_pending" | "membership_not_active";
+            }[];
         };
         MembershipSettingsDto_Output: {
             societyCode: string;
@@ -5767,166 +6198,56 @@ export interface components {
             societyCode: string;
             firstMemberNo: number;
         };
-        PublicPlaceListDto_Output: {
-            items: {
+        MemberCardSettingsDto_Output: {
+            termsBn: string[];
+            termsEn: string[];
+            validYears: number | null;
+            signatureBn: string | null;
+            signatureEn: string | null;
+        };
+        MemberCardSettingsInputDto: {
+            termsBn: string[];
+            termsEn: string[];
+            validYears: number | null;
+            signatureBn: string | null;
+            signatureEn: string | null;
+        };
+        NidCopiesDto_Output: {
+            front: {
                 /** Format: uuid */
                 id: string;
-                name: string;
-                levelBn: string;
-                levelEn: string | null;
-                isUnit: boolean;
-                hasChildren: boolean;
-            }[];
-        };
-        FormReceiptDto_Output: {
-            reference: string;
-            /** @enum {string} */
-            formKey: "membership" | "renter_registration";
-            /** Format: date-time */
-            submittedAt: string;
-        };
-        FormListDto_Output: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                reference: string;
                 /** @enum {string} */
-                formKey: "membership" | "renter_registration";
-                /** @enum {string} */
-                status: "new" | "in_review" | "approved" | "rejected";
-                name: string;
-                phone: string | null;
-                place: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    address: string[];
-                    isUnit: boolean;
-                } | null;
+                kind: "pdf" | "image";
                 /** Format: date-time */
-                submittedAt: string;
-                files: number;
-            }[];
-            total: number;
-            page: number;
-            pageSize: number;
-            counts: {
-                new: number;
-                in_review: number;
-                approved: number;
-                rejected: number;
-            };
-        };
-        FormDetailDto_Output: {
-            /** Format: uuid */
-            id: string;
-            reference: string;
-            /** @enum {string} */
-            formKey: "membership" | "renter_registration";
-            /** @enum {string} */
-            status: "new" | "in_review" | "approved" | "rejected";
-            /** Format: date-time */
-            submittedAt: string;
-            reviewedAt: string | null;
-            reviewNote: string | null;
-            reviewerName: string | null;
-            place: {
+                uploadedAt: string;
+            } | null;
+            back: {
                 /** Format: uuid */
                 id: string;
-                name: string;
-                address: string[];
-                isUnit: boolean;
-            } | null;
-            membership: {
-                applicant: {
-                    fullName: string;
-                    fullNameEn: string | null;
-                    phone: string;
-                    email: string | null;
-                    nid: string | null;
-                };
-                /** Format: uuid */
-                locationId: string;
-                livesHere: boolean;
-            } | null;
-            renter: {
-                renter: {
-                    fullName: string;
-                    fullNameEn: string | null;
-                    phone: string;
-                    email: string | null;
-                    nid: string | null;
-                };
-                occupation: string | null;
-                permanentAddress: string | null;
                 /** @enum {string} */
-                renterType: "family" | "bachelor";
-                /** Format: uuid */
-                unitId: string;
-                /** Format: date */
-                moveInDate: string;
-                owner: {
-                    name: string;
-                    phone: string | null;
-                };
-                household: {
-                    fullName: string;
-                    /** @enum {string} */
-                    relation: "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
-                }[];
+                kind: "pdf" | "image";
+                /** Format: date-time */
+                uploadedAt: string;
             } | null;
-            nidHidden: boolean;
-            files: {
+        };
+        LicencePagesDto_Output: {
+            items: {
                 /** Format: uuid */
                 id: string;
-                fileName: string;
-                docType: string;
-                isImage: boolean;
-            }[];
-            matches: {
-                /** Format: uuid */
-                personId: string;
-                name: string;
-                by: ("phone" | "nid")[];
-                open: boolean;
-            }[];
-            person: {
                 /** @enum {string} */
-                kind: "person" | "organisation";
-                /** Format: uuid */
-                id: string;
-                name: string;
-                nameEn: string | null;
-                phone: string | null;
-                photoUrl: string | null;
-                verified: boolean | null;
-            } | null;
-            memberNo: number | null;
-            can: {
-                review: boolean;
-                approve: boolean;
-                reject: boolean;
-                addOwnership: boolean;
-            };
+                kind: "pdf" | "image";
+                /** Format: date-time */
+                uploadedAt: string;
+            }[];
         };
-        FormReviewDto: {
-            note?: string | null;
-        };
-        FormApproveDto: {
-            note?: string | null;
-            /** @default false */
-            addOwnership: boolean;
-            sharePercent?: string;
-            /** Format: date */
-            startDate?: string;
-            monthlyRent?: string | null;
-        };
-        FormRejectDto: {
-            note: string;
+        MeUpdateDto: {
+            name: string;
+            nameEn?: string | null;
         };
         SocietySettingsDto_Output: {
             shareRentersWithThana: boolean;
             separateFacilityFunds: boolean;
+            requireIdNumbers: boolean;
             fiscalYearStartMonth: number;
             fiscalYearLocked: boolean;
             receiptHeader: {
@@ -5969,6 +6290,7 @@ export interface components {
         SettingsInputDto: {
             shareRentersWithThana?: boolean;
             separateFacilityFunds?: boolean;
+            requireIdNumbers?: boolean;
             fiscalYearStartMonth?: number;
             receiptHeader?: {
                 nameBn: string;
@@ -6107,6 +6429,185 @@ export interface components {
             defaultAmount: string | null;
             archived: boolean;
         };
+        PublicPlaceListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                levelBn: string;
+                levelEn: string | null;
+                isUnit: boolean;
+                hasChildren: boolean;
+            }[];
+        };
+        FormReceiptDto_Output: {
+            reference: string;
+            /** @enum {string} */
+            formKey: "membership" | "renter_registration";
+            /** Format: date-time */
+            submittedAt: string;
+        };
+        FormListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                reference: string;
+                /** @enum {string} */
+                formKey: "membership" | "renter_registration";
+                /** @enum {string} */
+                status: "new" | "in_review" | "approved" | "rejected";
+                name: string;
+                phone: string | null;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                } | null;
+                /** Format: date-time */
+                submittedAt: string;
+                files: number;
+                enteredBy: string | null;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                new: number;
+                in_review: number;
+                approved: number;
+                rejected: number;
+            };
+        };
+        FormDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            reference: string;
+            /** @enum {string} */
+            formKey: "membership" | "renter_registration";
+            /** @enum {string} */
+            status: "new" | "in_review" | "approved" | "rejected";
+            /** Format: date-time */
+            submittedAt: string;
+            reviewedAt: string | null;
+            reviewNote: string | null;
+            reviewerName: string | null;
+            enteredBy: string | null;
+            place: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string[];
+                isUnit: boolean;
+            } | null;
+            membership: {
+                /**
+                 * @default person
+                 * @enum {string}
+                 */
+                applicantKind: "person" | "organisation";
+                applicant: {
+                    fullName: string;
+                    fullNameEn: string | null;
+                    phone: string;
+                    email: string | null;
+                    nid: string | null;
+                };
+                /** @default null */
+                organisation: {
+                    name: string;
+                    tradeLicence: string;
+                } | null;
+                /** Format: uuid */
+                locationId: string;
+                livesHere: boolean;
+            } | null;
+            renter: {
+                renter: {
+                    fullName: string;
+                    fullNameEn: string | null;
+                    phone: string;
+                    email: string | null;
+                    nid: string | null;
+                };
+                occupation: string | null;
+                permanentAddress: string | null;
+                /** @enum {string} */
+                renterType: "family" | "bachelor";
+                /** Format: uuid */
+                unitId: string;
+                /** Format: date */
+                moveInDate: string;
+                owner: {
+                    name: string;
+                    phone: string | null;
+                };
+                household: {
+                    fullName: string;
+                    /** @enum {string} */
+                    relation: "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
+                }[];
+            } | null;
+            nidHidden: boolean;
+            files: {
+                /** Format: uuid */
+                id: string;
+                fileName: string;
+                docType: string;
+                isImage: boolean;
+            }[];
+            matches: {
+                /** Format: uuid */
+                personId: string;
+                name: string;
+                by: ("phone" | "nid")[];
+                open: boolean;
+            }[];
+            person: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                photoUrl: string | null;
+                verified: boolean | null;
+            } | null;
+            memberNo: number | null;
+            membershipCode: string | null;
+            can: {
+                review: boolean;
+                approve: boolean;
+                reject: boolean;
+                addOwnership: boolean;
+            };
+        };
+        FormEntryDto_Output: {
+            reference: string;
+            /** @enum {string} */
+            formKey: "membership" | "renter_registration";
+            /** Format: date-time */
+            submittedAt: string;
+            /** Format: uuid */
+            id: string;
+        };
+        FormReviewDto: {
+            note?: string | null;
+        };
+        FormApproveDto: {
+            note?: string | null;
+            /** @default false */
+            addOwnership: boolean;
+            sharePercent?: string;
+            /** Format: date */
+            startDate?: string;
+            monthlyRent?: string | null;
+        };
+        FormRejectDto: {
+            note: string;
+        };
         InvoiceListDto_Output: {
             items: {
                 /** Format: uuid */
@@ -6137,6 +6638,8 @@ export interface components {
                     /** @enum {string} */
                     role: "owner" | "renter" | "member";
                     memberNo: number | null;
+                    /** @default null */
+                    membershipCode: string | null;
                     unit: {
                         /** Format: uuid */
                         id: string;
@@ -6193,6 +6696,8 @@ export interface components {
                     /** @enum {string} */
                     role: "owner" | "renter" | "member";
                     memberNo: number | null;
+                    /** @default null */
+                    membershipCode: string | null;
                     unit: {
                         /** Format: uuid */
                         id: string;
@@ -6306,6 +6811,8 @@ export interface components {
                 /** @enum {string} */
                 role: "owner" | "renter" | "member";
                 memberNo: number | null;
+                /** @default null */
+                membershipCode: string | null;
                 unit: {
                     /** Format: uuid */
                     id: string;
@@ -6392,6 +6899,7 @@ export interface components {
         InvoiceCreateDto: {
             unitId?: string | null;
             personId?: string | null;
+            organisationId?: string | null;
             /** Format: date */
             dueDate: string;
             periodFrom?: string | null;
@@ -6522,7 +7030,8 @@ export interface components {
                 phone: string | null;
                 photoUrl: string | null;
                 verified: boolean | null;
-                memberNo: number;
+                memberNo: number | null;
+                membershipCode: string | null;
             }[];
         };
         BillableUnitsDto_Output: {
@@ -6810,10 +7319,12 @@ export interface components {
                 kind: "unit" | "member";
                 /** Format: uuid */
                 id: string;
+                memberKind: ("person" | "organisation") | null;
                 name: string;
                 code: string | null;
                 address: string[];
                 memberNo: number | null;
+                membershipCode: string | null;
                 bills: {
                     /** Format: uuid */
                     id: string;
@@ -6843,6 +7354,8 @@ export interface components {
                         /** @enum {string} */
                         role: "owner" | "renter" | "member";
                         memberNo: number | null;
+                        /** @default null */
+                        membershipCode: string | null;
                         unit: {
                             /** Format: uuid */
                             id: string;
@@ -6921,6 +7434,8 @@ export interface components {
                     nameEn: string | null;
                     phone: string | null;
                     memberNo: number | null;
+                    /** @default null */
+                    membershipCode: string | null;
                     unit: {
                         /** Format: uuid */
                         id: string;
@@ -6973,6 +7488,8 @@ export interface components {
                 nameEn: string | null;
                 phone: string | null;
                 memberNo: number | null;
+                /** @default null */
+                membershipCode: string | null;
                 unit: {
                     /** Format: uuid */
                     id: string;
@@ -7055,6 +7572,7 @@ export interface components {
         PaymentCreateDto: {
             unitId?: string | null;
             personId?: string | null;
+            organisationId?: string | null;
             invoiceIds: string[];
             amount: string;
             payer: {
@@ -7195,6 +7713,8 @@ export interface components {
                     nameEn: string | null;
                     phone: string | null;
                     memberNo: number | null;
+                    /** @default null */
+                    membershipCode: string | null;
                     unit: {
                         /** Format: uuid */
                         id: string;
@@ -7286,6 +7806,8 @@ export interface components {
                 nameEn: string | null;
                 phone: string | null;
                 memberNo: number | null;
+                /** @default null */
+                membershipCode: string | null;
                 unit: {
                     /** Format: uuid */
                     id: string;
@@ -7329,6 +7851,8 @@ export interface components {
                     nameEn: string | null;
                     phone: string | null;
                     memberNo: number | null;
+                    /** @default null */
+                    membershipCode: string | null;
                     unit: {
                         /** Format: uuid */
                         id: string;
@@ -8304,9 +8828,10 @@ export interface components {
                 cancelled: number;
             };
             joined: {
-                memberNo: number;
-                /** Format: uuid */
-                personId: string;
+                memberNo: number | null;
+                membershipCode: string | null;
+                personId: string | null;
+                organisationId: string | null;
                 name: string;
                 nameEn: string | null;
                 phone: string | null;
@@ -11533,6 +12058,29 @@ export interface operations {
             };
         };
     };
+    AccountController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MeUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeDto_Output"];
+                };
+            };
+        };
+    };
     MeController_changePassword: {
         parameters: {
             query?: never;
@@ -12037,6 +12585,29 @@ export interface operations {
             };
         };
     };
+    LocationsController_removeMany: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocationRemoveManyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationRemoveManyResultDto_Output"];
+                };
+            };
+        };
+    };
     LocationsController_grid: {
         parameters: {
             query?: never;
@@ -12310,6 +12881,27 @@ export interface operations {
             };
         };
     };
+    UnitsController_separate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitSeparateResultDto_Output"];
+                };
+            };
+        };
+    };
     UnitsController_bulkType: {
         parameters: {
             query?: never;
@@ -12329,31 +12921,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UnitTypeBulkResultDto_Output"];
-                };
-            };
-        };
-    };
-    UnitsController_setStoreys: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UnitStoreysDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UnitDetailDto_Output"];
                 };
             };
         };
@@ -12572,6 +13139,31 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["OrganisationUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganisationDetailDto_Output"];
+                };
+            };
+        };
+    };
+    OrganisationsController_verify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonVerifyDto"];
             };
         };
         responses: {
@@ -13238,6 +13830,69 @@ export interface operations {
             };
         };
     };
+    MembershipsController_card: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberCardDto_Output"];
+                };
+            };
+        };
+    };
+    MembershipsController_batchCards: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberCardsInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberCardsDto_Output"];
+                };
+            };
+        };
+    };
+    MembershipsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     MembershipSettingsController_get: {
         parameters: {
             query?: never;
@@ -13280,11 +13935,9 @@ export interface operations {
             };
         };
     };
-    PublicFormsController_places: {
+    MemberCardSettingsController_get: {
         parameters: {
-            query?: {
-                parentId?: string;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -13296,75 +13949,91 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PublicPlaceListDto_Output"];
+                    "application/json": components["schemas"]["MemberCardSettingsDto_Output"];
                 };
             };
         };
     };
-    PublicFormsController_submit: {
+    MemberCardSettingsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberCardSettingsInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberCardSettingsDto_Output"];
+                };
+            };
+        };
+    };
+    PersonIdCopiesController_list: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                formKey: "membership" | "renter_registration";
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NidCopiesDto_Output"];
+                };
+            };
+        };
+    };
+    PersonIdCopiesController_set: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                side: "front" | "back";
             };
             cookie?: never;
         };
         requestBody: {
             content: {
                 "multipart/form-data": {
-                    /** @description The answers, as JSON */
-                    data: string;
-                    /** @description Leave empty */
-                    website?: string;
                     /** Format: binary */
-                    file?: string;
+                    file: string;
                 };
             };
         };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FormReceiptDto_Output"];
-                };
-            };
-        };
-    };
-    FormsController_list: {
-        parameters: {
-            query?: {
-                page?: number;
-                pageSize?: number;
-                status?: "new" | "in_review" | "approved" | "rejected";
-                formKey?: "membership" | "renter_registration";
-                areaId?: string;
-                q?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
         responses: {
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FormListDto_Output"];
+                    "application/json": components["schemas"]["NidCopiesDto_Output"];
                 };
             };
         };
     };
-    FormsController_get: {
+    PersonIdCopiesController_remove: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 id: string;
+                side: "front" | "back";
             };
             cookie?: never;
         };
@@ -13375,18 +14044,18 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FormDetailDto_Output"];
+                    "application/json": components["schemas"]["NidCopiesDto_Output"];
                 };
             };
         };
     };
-    FormsController_file: {
+    PersonIdCopiesController_file: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 id: string;
-                fileId: string;
+                docId: string;
             };
             cookie?: never;
         };
@@ -13400,7 +14069,7 @@ export interface operations {
             };
         };
     };
-    FormsController_review: {
+    OrganisationIdCopiesController_list: {
         parameters: {
             query?: never;
             header?: never;
@@ -13409,23 +14078,19 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FormReviewDto"];
-            };
-        };
+        requestBody?: never;
         responses: {
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FormDetailDto_Output"];
+                    "application/json": components["schemas"]["LicencePagesDto_Output"];
                 };
             };
         };
     };
-    FormsController_approve: {
+    OrganisationIdCopiesController_add: {
         parameters: {
             query?: never;
             header?: never;
@@ -13436,7 +14101,10 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["FormApproveDto"];
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
             };
         };
         responses: {
@@ -13445,23 +14113,66 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FormDetailDto_Output"];
+                    "application/json": components["schemas"]["LicencePagesDto_Output"];
                 };
             };
         };
     };
-    FormsController_reject: {
+    OrganisationIdCopiesController_remove: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 id: string;
+                docId: string;
             };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LicencePagesDto_Output"];
+                };
+            };
+        };
+    };
+    OrganisationIdCopiesController_file: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                docId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AccountController_setPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["FormRejectDto"];
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
             };
         };
         responses: {
@@ -13470,7 +14181,26 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FormDetailDto_Output"];
+                    "application/json": components["schemas"]["MeDto_Output"];
+                };
+            };
+        };
+    };
+    AccountController_removePhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeDto_Output"];
                 };
             };
         };
@@ -13739,6 +14469,233 @@ export interface operations {
             };
         };
     };
+    PublicFormsController_places: {
+        parameters: {
+            query?: {
+                parentId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicPlaceListDto_Output"];
+                };
+            };
+        };
+    };
+    PublicFormsController_submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                formKey: "membership" | "renter_registration";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** @description The answers, as JSON */
+                    data: string;
+                    /** @description Leave empty */
+                    website?: string;
+                    /** Format: binary */
+                    file?: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormReceiptDto_Output"];
+                };
+            };
+        };
+    };
+    FormsController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                status?: "new" | "in_review" | "approved" | "rejected";
+                formKey?: "membership" | "renter_registration";
+                areaId?: string;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormListDto_Output"];
+                };
+            };
+        };
+    };
+    FormsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormDetailDto_Output"];
+                };
+            };
+        };
+    };
+    FormsController_enter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                formKey: "membership" | "renter_registration";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** @description The answers, as JSON */
+                    data: string;
+                    /** @description Leave empty */
+                    website?: string;
+                    /** Format: binary */
+                    file?: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormEntryDto_Output"];
+                };
+            };
+        };
+    };
+    FormsController_file: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                fileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FormsController_review: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FormReviewDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormDetailDto_Output"];
+                };
+            };
+        };
+    };
+    FormsController_approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FormApproveDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormDetailDto_Output"];
+                };
+            };
+        };
+    };
+    FormsController_reject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FormRejectDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormDetailDto_Output"];
+                };
+            };
+        };
+    };
     InvoicesController_list: {
         parameters: {
             query?: {
@@ -13934,6 +14891,7 @@ export interface operations {
                 q?: string;
                 unitId?: string;
                 personId?: string;
+                organisationId?: string;
             };
             header?: never;
             path?: never;
@@ -14218,8 +15176,10 @@ export interface operations {
         parameters: {
             query?: {
                 q?: string;
+                open?: string;
                 unitId?: string;
                 personId?: string;
+                organisationId?: string;
             };
             header?: never;
             path?: never;

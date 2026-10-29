@@ -67,6 +67,7 @@ export class SettingsService {
       profile: { nameBn: society.name_bn, nameEn: society.name_en, ...brandingOf(value('branding'), society.name_bn) },
       shareRentersWithThana: value('shareRentersWithThana') === true,
       separateFacilityFunds: value('separateFacilityFunds') === true,
+      requireIdNumbers: value('requireIdNumbers') === true,
       fiscalYearStartMonth: society.fiscal_year_start_month,
       fiscalYearLocked: ledgerRow !== null,
       receiptHeader: header.success
@@ -136,6 +137,7 @@ export class SettingsService {
       const values: { [K in SettingKey]?: Prisma.InputJsonValue } = {
         shareRentersWithThana: input.shareRentersWithThana,
         separateFacilityFunds: input.separateFacilityFunds,
+        requireIdNumbers: input.requireIdNumbers,
         receiptHeader: input.receiptHeader satisfies ReceiptHeader | undefined,
         // Only the documents sent change; the others keep what is saved.
         printFormats: input.printFormats && ({ ...before.printFormats, ...input.printFormats } satisfies PrintFormats),
@@ -177,8 +179,8 @@ export class SettingsService {
       );
       return after;
     });
-    // The cached society carries the fiscal year, the name and the branding.
-    if (input.fiscalYearStartMonth !== undefined || input.profile) this.societies.forget(societySlug);
+    // The cached society carries the fiscal year, the name, the branding and the ID rule.
+    if (input.fiscalYearStartMonth !== undefined || input.profile || input.requireIdNumbers !== undefined) this.societies.forget(societySlug);
     return after;
   }
 }

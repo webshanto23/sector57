@@ -80,7 +80,8 @@ export function letterValues(input: {
   society: { name_bn: string; name_en: string | null };
   day: string;
   certNo: string | null;
-  memberNo: number | null;
+  /** The membership ID (`S15-000042`); fills the `{memberNo}` placeholder. */
+  memberNo: string | null;
   addressee: string | null;
   purpose: string | null;
 }): CertificateValues {
