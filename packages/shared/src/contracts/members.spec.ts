@@ -113,6 +113,9 @@ describe('membership contracts', () => {
     expect(memberCreateSchema.parse({ person: { fullName: 'রহিম' } }).person?.fullName).toBe('রহিম');
     expect(memberCreateSchema.safeParse({ person: { fullName: 'রহিম' }, personId: id }).success).toBe(false);
     expect(memberCreateSchema.safeParse({}).success).toBe(false);
+    expect(memberCreateSchema.parse({ organisationId: id })).toMatchObject({ person: null, personId: null, organisationId: id });
+    expect(memberCreateSchema.parse({ organisation: { name: 'নূর' } }).organisation?.name).toBe('নূর');
+    expect(memberCreateSchema.safeParse({ organisationId: id, personId: id }).success).toBe(false);
   });
 
   it('lists each person once, up to the bulk limit', () => {
@@ -121,6 +124,8 @@ describe('membership contracts', () => {
     expect(memberBulkSchema.safeParse({ personIds: [id, id] }).success).toBe(false);
     const many = Array.from({ length: MAX_BULK_MEMBERS + 1 }, (_, i) => `3f0e7a52-9a0c-4a5e-9a52-${String(i).padStart(12, '0')}`);
     expect(memberBulkSchema.safeParse({ personIds: many }).success).toBe(false);
+    expect(memberBulkSchema.parse({ organisationIds: [id] })).toMatchObject({ personIds: [], organisationIds: [id] });
+    expect(memberBulkSchema.safeParse({ personIds: many.slice(0, 150), organisationIds: many.slice(150) }).success).toBe(false);
   });
 });
 

@@ -63,13 +63,33 @@ const applicantSchema = z.object({
 /** The NID when the form must have one. */
 const requiredNid = nidSchema.pipe(z.string({ error: 'required' }));
 
-/** Membership application: an owner of a plot, building or flat asks to become a member. */
-export const membershipFormSchema = z.object({
-  applicant: applicantSchema.extend({ nid: requiredNid }),
-  /** The place they own: a plot, building or flat. */
-  locationId: z.uuid(),
-  livesHere: z.boolean(),
-});
+/** Who applies for membership: a person for themselves, or an organisation through its contact person. */
+export const APPLICANT_KINDS = ['person', 'organisation'] as const;
+export type ApplicantKind = (typeof APPLICANT_KINDS)[number];
+
+/**
+ * Membership application: an owner of a plot, building or flat asks to become a member. A person
+ * gives their NID; an organisation gives its name and trade licence, and `applicant` is the
+ * person filling in the form for it (the office calls them back).
+ */
+export const membershipFormSchema = z
+  .object({
+    applicantKind: z.enum(APPLICANT_KINDS).default('person'),
+    applicant: applicantSchema,
+    organisation: z
+      .object({ name: text(200), tradeLicence: text(100) })
+      .nullish()
+      .transform((value) => value ?? null),
+    /** The place they own: a plot, building or flat. */
+    locationId: z.uuid(),
+    livesHere: z.boolean(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.applicantKind === 'person' && !value.applicant.nid) ctx.addIssue({ code: 'custom', path: ['applicant', 'nid'], message: 'required' });
+    if (value.applicantKind === 'organisation' && !value.organisation) {
+      ctx.addIssue({ code: 'custom', path: ['organisation', 'name'], message: 'required' });
+    }
+  });
 export type MembershipFormInput = z.input<typeof membershipFormSchema>;
 export type MembershipForm = z.output<typeof membershipFormSchema>;
 
@@ -174,9 +194,11 @@ const storedApplicant = z.object({
   nid: z.string().nullable(),
 });
 
-/** A membership application as stored (the office's view). */
+/** A membership application as stored (the office's view). Applications sent before organisations could apply are a person's. */
 export const membershipDataSchema = z.object({
+  applicantKind: z.enum(APPLICANT_KINDS).default('person'),
   applicant: storedApplicant,
+  organisation: z.object({ name: z.string(), tradeLicence: z.string() }).nullable().default(null),
   locationId: z.uuid(),
   livesHere: z.boolean(),
 });
@@ -229,7 +251,7 @@ export const formDetailSchema = z.object({
   nidHidden: z.boolean(),
   files: z.array(formFileSchema),
   matches: z.array(formMatchSchema),
-  /** The person the approval created or reused. */
+  /** The person or organisation the approval made a member (or a renter), created or reused. */
   person: partySchema.nullable(),
   memberNo: z.number().int().nullable(),
   membershipCode: z.string().nullable(),

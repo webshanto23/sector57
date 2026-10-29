@@ -40,7 +40,7 @@ export function MemberTicks({ eligible, children }: { eligible: string[]; childr
             className="flex flex-wrap items-end gap-3.5"
             onSubmit={async (e) => {
               e.preventDefault();
-              const result = await run(() => api.POST("/memberships/bulk", { body: { personIds: live, joinedOn } }));
+              const result = await run(() => api.POST("/memberships/bulk", { body: { personIds: live, organisationIds: [], joinedOn } }));
               if (!result) return;
               setTicked([]);
               setStatus({ ok: true, text: localDigits(t("madeMembers", { created: result.created.length, skipped: result.skipped }), locale) });

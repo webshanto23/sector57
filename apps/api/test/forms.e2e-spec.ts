@@ -182,6 +182,7 @@ describe('Public forms and the office review (e2e)', () => {
       await prisma.user_roles.deleteMany({ where: { user_id: { in: userIds } } });
       await prisma.roles.deleteMany({ where: { name: { startsWith: MARK } } });
       await prisma.users.deleteMany({ where: { id: { in: userIds } } });
+      await prisma.organisations.deleteMany({ where: { name: { contains: MARK } } });
       await prisma.persons.deleteMany({ where: { id: { in: persons.map((p) => p.id) } } });
       const rows = await prisma.locations.findMany({ where: { OR: [paths, { society_id: otherSocietyId }] }, select: { id: true, path: true } });
       rows.sort((a, b) => b.path.length - a.path.length);
@@ -451,6 +452,25 @@ describe('Public forms and the office review (e2e)', () => {
       const nextId = (await submissionOf(next.reference)).id;
       const approved = formDetailSchema.parse((await send('post', `/forms/${nextId}/approve`, admin.cookie).send({}).expect(200)).body);
       expect(approved.memberNo).toBe(first.member_no + 1);
+    });
+
+    it("approves an organisation's application: the organisation is the member and owner, the applicant its contact", async () => {
+      const phone = randomPhone();
+      const organisation = { name: `সোনালী ট্রেডার্স ${MARK}`, tradeLicence: `TL-F-${MARK}` };
+      const data = { applicantKind: 'organisation', applicant: { fullName: `যোগাযোগ ${MARK}`, phone, nid: null }, organisation, locationId: units.shopD1, livesHere: false };
+      // An organisation's details are needed; the contact's NID is not.
+      await submit('membership', { ...data, organisation: null }, deed()).expect(400);
+      await submit('membership', data, deed()).expect(201);
+      const submission = await prisma.form_submissions.findFirstOrThrow({ where: { phone, form_key: 'membership' } });
+
+      const res = formDetailSchema.parse(
+        (await send('post', `/forms/${submission.id}/approve`, admin.cookie).send({ addOwnership: true, sharePercent: '100' }).expect(200)).body,
+      );
+      expect(res.person).toMatchObject({ kind: 'organisation', name: organisation.name });
+      const row = await prisma.organisations.findFirstOrThrow({ where: { name: organisation.name }, include: { persons: true } });
+      expect(row.persons?.phone).toBe(phone);
+      expect(await prisma.memberships.count({ where: { organisation_id: row.id, status: 'active', member_no: res.memberNo! } })).toBe(1);
+      expect(await prisma.ownerships.count({ where: { organisation_id: row.id, location_id: units.shopD1, end_date: null } })).toBe(1);
     });
 
     it('approves a renter registration as a pending tenancy with the household', async () => {

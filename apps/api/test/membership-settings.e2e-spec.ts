@@ -56,7 +56,7 @@ describe('Membership settings: society code and first member number (e2e)', () =
   async function addMember(name: string) {
     const person = await prisma.persons.create({ data: { society_id: ownId, full_name: `${name} ${MARK}` } });
     return prisma.$transaction((tx) =>
-      app.get(MembershipsService).insert(tx, ownId, { personId: person.id, locationId: null, joinedOn: new Date('2026-01-01'), submissionId: null }),
+      app.get(MembershipsService).insert(tx, ownId, { personId: person.id, organisationId: null, locationId: null, joinedOn: new Date('2026-01-01'), submissionId: null }),
     );
   }
 

@@ -150,7 +150,7 @@ export class PartiesService {
     }
   }
 
-  /** Is the person or organisation an owner or renter now, or (a person) an active member? */
+  /** Is the person or organisation an owner or renter now, or an active member? */
   async holdsRole(societyId: string, party: { personId?: string; organisationId?: string }): Promise<boolean> {
     const person = party.personId ?? null;
     const organisation = party.organisationId ?? null;
@@ -159,7 +159,8 @@ export class PartiesService {
           and (o.person_id = ${person}::uuid or o.organisation_id = ${organisation}::uuid))
         or exists (select 1 from tenancies t where t.society_id = ${societyId}::uuid and t.status <> 'ended'
           and (t.primary_person_id = ${person}::uuid or t.organisation_id = ${organisation}::uuid))
-        or exists (select 1 from memberships m where m.society_id = ${societyId}::uuid and m.status = 'active' and m.person_id = ${person}::uuid) as held`;
+        or exists (select 1 from memberships m where m.society_id = ${societyId}::uuid and m.status = 'active'
+          and (m.person_id = ${person}::uuid or m.organisation_id = ${organisation}::uuid)) as held`;
     return row?.held === true;
   }
 

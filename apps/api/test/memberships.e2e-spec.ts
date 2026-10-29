@@ -97,14 +97,16 @@ describe('Memberships: the office adds members with a global membership ID (e2e)
       const paths = tree.sector ? { path: { startsWith: tree.sector.path } } : { id: { in: [] } };
       const locations = await prisma.locations.findMany({ where: paths, select: { id: true, path: true } });
       const locationIds = locations.map((row) => row.id);
+      const organisations = (await prisma.organisations.findMany({ where: { name: { contains: MARK } }, select: { id: true } })).map((o) => o.id);
       await prisma.invoices.deleteMany({ where: { bill_to_person_id: { in: personIds } } });
-      await prisma.memberships.deleteMany({ where: { person_id: { in: personIds } } });
+      await prisma.memberships.deleteMany({ where: { OR: [{ person_id: { in: personIds } }, { organisation_id: { in: organisations } }] } });
       await prisma.tenancies.deleteMany({ where: { unit_id: { in: locationIds } } });
       await prisma.ownerships.deleteMany({ where: { location_id: { in: locationIds } } });
       await prisma.audit_logs.deleteMany({ where: { OR: [{ user_id: { in: userIds } }, { society_id: otherSocietyId }] } });
       await prisma.user_roles.deleteMany({ where: { user_id: { in: userIds } } });
       await prisma.roles.deleteMany({ where: { name: { startsWith: MARK } } });
       await prisma.users.deleteMany({ where: { id: { in: userIds } } });
+      await prisma.organisations.deleteMany({ where: { id: { in: organisations } } });
       await prisma.persons.deleteMany({ where: { id: { in: personIds } } });
       await prisma.units.deleteMany({ where: { location_id: { in: locationIds } } });
       locations.sort((x, y) => y.path.length - x.path.length);
@@ -181,6 +183,35 @@ describe('Memberships: the office adds members with a global membership ID (e2e)
       (await request(server()).get(`/registers/renters?areaId=${tree.sector.id}`).set('Cookie', admin.cookie).expect(200)).body,
     );
     expect(register.items.find((row) => row.renter?.id === renter)?.memberNo).toBe(result.created[0]!.memberNo);
+  });
+
+  it('makes an organisation a member: typed, on file or ticked, once, in the same numbering', async () => {
+    const typed = memberCreatedSchema.parse(
+      (await post('/memberships', admin.cookie).send({ organisation: { name: `নূর ট্রেডার্স ${MARK}`, tradeLicence: `TL-1-${MARK}` } }).expect(201)).body,
+    );
+    expect(typed).toMatchObject({ personId: null, reusedPerson: false, membershipCode: codeOf(typed.memberNo) });
+    expect((await post('/memberships', admin.cookie).send({ organisationId: typed.organisationId }).expect(409)).body.code).toBe('already_member');
+    // The same licence again finds the same organisation, already a member.
+    expect((await post('/memberships', admin.cookie).send({ organisation: { name: 'অন্য নাম', tradeLicence: `TL-1-${MARK}` } }).expect(409)).body.code).toBe(
+      'already_member',
+    );
+
+    const owner = (await prisma.organisations.create({ data: { society_id: societyId, name: `রহিম স্টোর ${MARK}`, trade_licence: `TL-2-${MARK}` } })).id;
+    await prisma.ownerships.create({ data: { society_id: societyId, location_id: tree.plot.id, organisation_id: owner, share_percent: 100, start_date: new Date('2025-01-01') } });
+    const person = await addPerson('সঙ্গে');
+    const res = await post('/memberships/bulk', admin.cookie).send({ personIds: [person], organisationIds: [owner] }).expect(201);
+    const result = memberBulkResultSchema.parse(res.body);
+    expect(result.created.map((row) => [row.personId, row.organisationId])).toEqual([
+      [person, null],
+      [null, owner],
+    ]);
+    expect(result.created[1]!.memberNo).toBe(result.created[0]!.memberNo + 1);
+    // Its place is the plot it owns.
+    expect((await prisma.memberships.findFirstOrThrow({ where: { organisation_id: owner } })).location_id).toBe(tree.plot.id);
+
+    const outsider = (await prisma.organisations.create({ data: { society_id: otherSocietyId, name: `বাইরের ${MARK}` } })).id;
+    expect((await post('/memberships/bulk', admin.cookie).send({ organisationIds: [outsider] }).expect(404)).body.code).toBe('organisation_not_found');
+    await post('/memberships/bulk', admin.cookie).send({}).expect(400);
   });
 
   it('adds nobody when a ticked id is not a person of the society', async () => {

@@ -194,7 +194,12 @@ export class PaymentsService {
         orderBy: { member_no: 'asc' },
         take: 10,
       });
-      members = rows.map((row) => ({ person_id: row.person_id, member_no: row.member_no, membership_code: row.membership_code, name: row.persons.full_name }));
+      // Membership fees are billed to people; organisation members are not offered here yet.
+      members = rows.flatMap((row) =>
+        row.person_id && row.persons
+          ? [{ person_id: row.person_id, member_no: row.member_no, membership_code: row.membership_code, name: row.persons.full_name }]
+          : [],
+      );
     }
 
     const [unitBills, memberBills, names] = await Promise.all([

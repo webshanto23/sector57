@@ -6,11 +6,15 @@ import { isoDate, todayDate } from '../common/dates.js';
 import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { firstMemberNo, lockMemberNumbers } from './membership-settings.service.js';
-import { auditOf, onlySocietyWide, PartiesService, personNotFound } from './parties.service.js';
+import { auditOf, onlySocietyWide, organisationNotFound, PartiesService, personNotFound } from './parties.service.js';
 
 type Tx = Prisma.TransactionClient;
 
-export const alreadyMember = () => new ConflictException({ code: 'already_member', message: 'This person is already a member' });
+export const alreadyMember = () => new ConflictException({ code: 'already_member', message: 'This person or organisation is already a member' });
+
+/** Who holds a membership: a person or an organisation, exactly one. */
+type Holder = { personId: string | null; organisationId: string | null };
+const keyOf = (holder: Holder) => (holder.personId ? `p:${holder.personId}` : `o:${holder.organisationId}`);
 const placeNotFound = () => new NotFoundException({ code: 'location_not_found', message: 'Place not found' });
 
 /**
@@ -26,7 +30,7 @@ export class MembershipsService {
     private readonly parties: PartiesService,
   ) {}
 
-  /** One member: new details, or someone on file (an owner, a renter). */
+  /** One member: new details, or someone on file (an owner, a renter), a person or an organisation. */
   async create(actor: Actor, input: MemberCreateInput): Promise<MemberCreated> {
     if (actor.access.paths('create', 'members') !== 'all') throw onlySocietyWide();
     return this.prisma.$transaction(async (tx) => {
@@ -37,66 +41,94 @@ export class MembershipsService {
         });
         if (!place) throw placeNotFound();
       }
-      let person: { id: string; reused: boolean };
-      if (input.personId) {
-        const found = await tx.persons.findFirst({ where: { id: input.personId, society_id: actor.societyId }, select: { id: true } });
-        if (!found) throw personNotFound();
-        person = { id: found.id, reused: true };
-      } else {
-        person = await this.parties.resolvePerson(tx, actor.societyId, input.person!);
-      }
-      const locationId = input.locationId ?? (await this.homePlaces(tx, actor.societyId, [person.id])).get(person.id) ?? null;
+      const holder = await this.holderOf(tx, actor.societyId, input);
+      const locationId = input.locationId ?? (await this.homePlaces(tx, actor.societyId, [holder])).get(keyOf(holder)) ?? null;
       const row = await this.insert(tx, actor.societyId, {
-        personId: person.id,
+        personId: holder.personId,
+        organisationId: holder.organisationId,
         locationId,
         joinedOn: input.joinedOn ? new Date(input.joinedOn) : todayDate(),
         submissionId: null,
       });
-      await this.recordCreate(tx, actor, person.id, row);
-      return { personId: person.id, memberNo: row.member_no, membershipCode: row.membership_code, reusedPerson: person.reused };
+      await this.recordCreate(tx, actor, holder, row);
+      return {
+        personId: holder.personId,
+        organisationId: holder.organisationId,
+        memberNo: row.member_no,
+        membershipCode: row.membership_code,
+        reusedPerson: holder.reused,
+      };
     });
   }
 
+  /** Who the new member is: found or added from the details given, or one on file by id (404 when not in the society). */
+  private async holderOf(tx: Tx, societyId: string, input: MemberCreateInput): Promise<Holder & { reused: boolean }> {
+    if (input.personId) {
+      const found = await tx.persons.findFirst({ where: { id: input.personId, society_id: societyId }, select: { id: true } });
+      if (!found) throw personNotFound();
+      return { personId: found.id, organisationId: null, reused: true };
+    }
+    if (input.organisationId) {
+      const found = await tx.organisations.findFirst({ where: { id: input.organisationId, society_id: societyId }, select: { id: true } });
+      if (!found) throw organisationNotFound();
+      return { personId: null, organisationId: found.id, reused: true };
+    }
+    if (input.organisation) {
+      const organisation = await this.parties.resolveOrganisation(tx, societyId, input.organisation);
+      return { personId: null, organisationId: organisation.id, reused: organisation.reused };
+    }
+    const person = await this.parties.resolvePerson(tx, societyId, input.person!);
+    return { personId: person.id, organisationId: null, reused: person.reused };
+  }
+
   /**
-   * People on file made members in one go, numbered in the order given, all or none. Those who
-   * already are members are skipped. 404 when any id isn't a person of the society.
+   * People and organisations on file made members in one go, numbered in the order given (people
+   * first), all or none. Those who already are members are skipped. 404 when any id isn't in the society.
    */
   async bulk(actor: Actor, input: MemberBulkInput): Promise<MemberBulkResult> {
     if (actor.access.paths('create', 'members') !== 'all') throw onlySocietyWide();
     const joinedOn = input.joinedOn ? new Date(input.joinedOn) : todayDate();
     return this.prisma.$transaction(async (tx) => {
-      const found = await tx.persons.findMany({ where: { id: { in: input.personIds }, society_id: actor.societyId }, select: { id: true } });
-      if (found.length !== input.personIds.length) throw personNotFound();
-      const members = await tx.memberships.findMany({
-        where: { person_id: { in: input.personIds }, status: 'active' },
-        select: { person_id: true },
-      });
-      const taken = new Set(members.map((m) => m.person_id));
-      const todo = input.personIds.filter((id) => !taken.has(id));
+      const where = { society_id: actor.societyId };
+      const [persons, organisations, members] = await Promise.all([
+        tx.persons.count({ where: { ...where, id: { in: input.personIds } } }),
+        tx.organisations.count({ where: { ...where, id: { in: input.organisationIds } } }),
+        tx.memberships.findMany({
+          where: { status: 'active', OR: [{ person_id: { in: input.personIds } }, { organisation_id: { in: input.organisationIds } }] },
+          select: { person_id: true, organisation_id: true },
+        }),
+      ]);
+      if (persons !== input.personIds.length) throw personNotFound();
+      if (organisations !== input.organisationIds.length) throw organisationNotFound();
+      const taken = new Set(members.map((m) => keyOf({ personId: m.person_id, organisationId: m.organisation_id })));
+      const todo = [
+        ...input.personIds.map((id): Holder => ({ personId: id, organisationId: null })),
+        ...input.organisationIds.map((id): Holder => ({ personId: null, organisationId: id })),
+      ].filter((holder) => !taken.has(keyOf(holder)));
       const places = await this.homePlaces(tx, actor.societyId, todo);
       const created: MemberBulkResult['created'] = [];
-      for (const personId of todo) {
-        const row = await this.insert(tx, actor.societyId, { personId, locationId: places.get(personId) ?? null, joinedOn, submissionId: null });
-        await this.recordCreate(tx, actor, personId, row);
-        created.push({ personId, memberNo: row.member_no, membershipCode: row.membership_code });
+      for (const holder of todo) {
+        const row = await this.insert(tx, actor.societyId, { ...holder, locationId: places.get(keyOf(holder)) ?? null, joinedOn, submissionId: null });
+        await this.recordCreate(tx, actor, holder, row);
+        created.push({ ...holder, memberNo: row.member_no, membershipCode: row.membership_code });
       }
       return { created, skipped: taken.size };
     });
   }
 
-  /** A new active membership with the next member number. 409 `already_member` when the person has one. */
-  async insert(
-    tx: Tx,
-    societyId: string,
-    input: { personId: string; locationId: string | null; joinedOn: Date; submissionId: string | null },
-  ) {
-    const active = await tx.memberships.findFirst({ where: { person_id: input.personId, status: 'active' }, select: { id: true } });
+  /** A new active membership with the next member number. 409 `already_member` when the person or organisation has one. */
+  async insert(tx: Tx, societyId: string, input: Holder & { locationId: string | null; joinedOn: Date; submissionId: string | null }) {
+    const active = await tx.memberships.findFirst({
+      where: input.personId ? { person_id: input.personId, status: 'active' } : { organisation_id: input.organisationId, status: 'active' },
+      select: { id: true },
+    });
     if (active) throw alreadyMember();
-    await this.parties.requireIds(tx, societyId, { personId: input.personId, organisationId: null });
+    await this.parties.requireIds(tx, societyId, input);
     return tx.memberships.create({
       data: {
         society_id: societyId,
         person_id: input.personId,
+        organisation_id: input.organisationId,
         location_id: input.locationId,
         member_no: await this.nextMemberNo(tx, societyId),
         joined_on: input.joinedOn,
@@ -106,32 +138,48 @@ export class MembershipsService {
     });
   }
 
-  /** Each person's first current place: the earliest ownership still running, else the earliest open tenancy. */
-  private async homePlaces(tx: Tx, societyId: string, personIds: string[]): Promise<Map<string, string>> {
-    if (personIds.length === 0) return new Map();
+  /** Each member's first current place (by `keyOf`): the earliest ownership still running, else the earliest open tenancy. */
+  private async homePlaces(tx: Tx, societyId: string, holders: Holder[]): Promise<Map<string, string>> {
+    if (holders.length === 0) return new Map();
+    const personIds = holders.flatMap((h) => (h.personId ? [h.personId] : []));
+    const organisationIds = holders.flatMap((h) => (h.organisationId ? [h.organisationId] : []));
     const [owned, rented] = await Promise.all([
       tx.ownerships.findMany({
-        where: { society_id: societyId, person_id: { in: personIds }, end_date: null },
+        where: { society_id: societyId, end_date: null, OR: [{ person_id: { in: personIds } }, { organisation_id: { in: organisationIds } }] },
         orderBy: [{ start_date: 'asc' }, { id: 'asc' }],
-        select: { person_id: true, location_id: true },
+        select: { person_id: true, organisation_id: true, location_id: true },
       }),
       tx.tenancies.findMany({
-        where: { society_id: societyId, primary_person_id: { in: personIds }, status: { in: ['active', 'moving_out'] } },
+        where: {
+          society_id: societyId,
+          status: { in: ['active', 'moving_out'] },
+          OR: [{ primary_person_id: { in: personIds } }, { organisation_id: { in: organisationIds } }],
+        },
         orderBy: [{ start_date: 'asc' }, { id: 'asc' }],
-        select: { primary_person_id: true, unit_id: true },
+        select: { primary_person_id: true, organisation_id: true, unit_id: true },
       }),
     ]);
     const places = new Map<string, string>();
-    for (const row of owned) if (row.person_id && !places.has(row.person_id)) places.set(row.person_id, row.location_id);
-    for (const row of rented) if (row.primary_person_id && !places.has(row.primary_person_id)) places.set(row.primary_person_id, row.unit_id);
+    const add = (holder: Holder, place: string) => {
+      const key = keyOf(holder);
+      if (!places.has(key)) places.set(key, place);
+    };
+    for (const row of owned) add({ personId: row.person_id, organisationId: row.organisation_id }, row.location_id);
+    for (const row of rented) add({ personId: row.primary_person_id, organisationId: row.organisation_id }, row.unit_id);
     return places;
   }
 
-  private recordCreate(tx: Tx, actor: Actor, personId: string, row: { id: string; member_no: number; membership_code: string; joined_on: Date }) {
+  private recordCreate(tx: Tx, actor: Actor, holder: Holder, row: { id: string; member_no: number; membership_code: string; joined_on: Date }) {
     return this.audit.record(
       {
         ...auditOf(actor, 'membership', 'create', row.id),
-        after: { personId, memberNo: row.member_no, membershipCode: row.membership_code, joinedOn: isoDate(row.joined_on) },
+        after: {
+          personId: holder.personId,
+          organisationId: holder.organisationId,
+          memberNo: row.member_no,
+          membershipCode: row.membership_code,
+          joinedOn: isoDate(row.joined_on),
+        },
       },
       tx,
     );

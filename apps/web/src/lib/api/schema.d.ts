@@ -5789,24 +5789,41 @@ export interface components {
                 gender?: ("male" | "female" | "other") | null;
             } | null;
             personId?: string | null;
+            organisation?: {
+                name: string;
+                tradeLicence?: string | null;
+                contact?: {
+                    fullName: string;
+                    fullNameEn?: string | null;
+                    phone?: string | null;
+                    email?: string | null;
+                    nid?: string | null;
+                    dateOfBirth?: string | null;
+                    gender?: ("male" | "female" | "other") | null;
+                } | null;
+            } | null;
+            organisationId?: string | null;
             locationId?: string | null;
             joinedOn?: string | null;
         };
         MemberCreatedDto_Output: {
-            /** Format: uuid */
-            personId: string;
+            personId: string | null;
+            organisationId: string | null;
             memberNo: number;
             membershipCode: string;
             reusedPerson: boolean;
         };
         MemberBulkDto: {
+            /** @default [] */
             personIds: string[];
+            /** @default [] */
+            organisationIds: string[];
             joinedOn?: string | null;
         };
         MemberBulkResultDto_Output: {
             created: {
-                /** Format: uuid */
-                personId: string;
+                personId: string | null;
+                organisationId: string | null;
                 memberNo: number;
                 membershipCode: string;
             }[];
@@ -5895,6 +5912,11 @@ export interface components {
                 isUnit: boolean;
             } | null;
             membership: {
+                /**
+                 * @default person
+                 * @enum {string}
+                 */
+                applicantKind: "person" | "organisation";
                 applicant: {
                     fullName: string;
                     fullNameEn: string | null;
@@ -5902,6 +5924,11 @@ export interface components {
                     email: string | null;
                     nid: string | null;
                 };
+                /** @default null */
+                organisation: {
+                    name: string;
+                    tradeLicence: string;
+                } | null;
                 /** Format: uuid */
                 locationId: string;
                 livesHere: boolean;
@@ -8386,8 +8413,8 @@ export interface components {
             joined: {
                 memberNo: number;
                 membershipCode: string;
-                /** Format: uuid */
-                personId: string;
+                personId: string | null;
+                organisationId: string | null;
                 name: string;
                 nameEn: string | null;
                 phone: string | null;

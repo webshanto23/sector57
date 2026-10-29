@@ -80,7 +80,9 @@ export const membersReportSchema = z.object({
     z.object({
       memberNo: z.number().int(),
       membershipCode: z.string(),
-      personId: z.uuid(),
+      /** The member: a person or an organisation (exactly one is set). */
+      personId: z.uuid().nullable(),
+      organisationId: z.uuid().nullable(),
       name: z.string(),
       nameEn: z.string().nullable(),
       phone: z.string().nullable(),

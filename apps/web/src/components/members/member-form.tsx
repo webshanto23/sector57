@@ -35,7 +35,7 @@ export function NewMemberForm({ nidRequired }: { nidRequired: boolean }) {
           const created = await run(() =>
             api.POST("/memberships", { body: { person: personBody(values), locationId: place?.id ?? null, joinedOn } }),
           );
-          if (created) router.push(`/dashboard/members/${created.personId}`);
+          if (created?.personId) router.push(`/dashboard/members/${created.personId}`);
         }}
       >
         <PersonFields id="new-member" values={values} onChange={setValues} nidRequired={nidRequired} />

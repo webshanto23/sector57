@@ -35,6 +35,15 @@ describe('membershipFormSchema', () => {
     expect(issues(membership({ phone: '' }))).toEqual([['applicant.phone', 'invalid_phone']]);
     expect(issues({ ...membership(), locationId: '' })?.[0]?.[0]).toBe('locationId');
   });
+
+  it('lets an organisation apply with its name and licence; its contact needs no NID', () => {
+    const organisation = { name: ' নূর ট্রেডার্স ', tradeLicence: 'TL-1' };
+    const parsed = membershipFormSchema.parse({ ...membership({ nid: '' }), applicantKind: 'organisation', organisation });
+    expect(parsed).toMatchObject({ applicantKind: 'organisation', applicant: { nid: null }, organisation: { name: 'নূর ট্রেডার্স', tradeLicence: 'TL-1' } });
+    const issues = (input: unknown) => membershipFormSchema.safeParse(input).error?.issues.map((issue) => [issue.path.join('.'), issue.message]);
+    expect(issues({ ...membership(), applicantKind: 'organisation' })).toEqual([['organisation.name', 'required']]);
+    expect(membershipFormSchema.parse(membership()).applicantKind).toBe('person');
+  });
 });
 
 describe('renterFormSchema', () => {

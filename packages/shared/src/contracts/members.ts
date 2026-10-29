@@ -345,20 +345,23 @@ export const membershipSchema = z.object({
 export type Membership = z.infer<typeof membershipSchema>;
 
 /**
- * `POST /memberships`: the office registers a member directly (whole-society callers). Either
- * `person` (matched by phone, then NID, else added) or `personId` (someone on file, such as an
- * owner or renter). A blank `locationId` takes their first current unit or plot (owned, then
- * rented); a blank `joinedOn` is today.
+ * `POST /memberships`: the office registers a member directly (whole-society callers). One of
+ * `person` (matched by phone, then NID, else added), `personId` (someone on file, such as an
+ * owner or renter), `organisation` (matched by trade licence, then name, else added) or
+ * `organisationId` (one on file). A blank `locationId` takes their first current unit or plot
+ * (owned, then rented); a blank `joinedOn` is today.
  */
 export const memberCreateSchema = z
   .object({
     person: personInputSchema.nullish().transform((value) => value ?? null),
     personId: z.uuid().nullish().transform((value) => value ?? null),
+    organisation: organisationInputSchema.nullish().transform((value) => value ?? null),
+    organisationId: z.uuid().nullish().transform((value) => value ?? null),
     locationId: z.uuid().nullish().transform((value) => value ?? null),
     joinedOn: optionalDay,
   })
-  .refine((value) => (value.person === null) !== (value.personId === null), {
-    message: 'Give either person or personId',
+  .refine((value) => [value.person, value.personId, value.organisation, value.organisationId].filter((v) => v !== null).length === 1, {
+    message: 'Give one of person, personId, organisation or organisationId',
     path: ['personId'],
   });
 export type MemberCreateInput = z.infer<typeof memberCreateSchema>;
@@ -408,29 +411,41 @@ export const membershipSettingsInputSchema = z.object({
 });
 export type MembershipSettingsInput = z.infer<typeof membershipSettingsInputSchema>;
 
-/** People made members in one go from the owners or renters list. */
+/** People and organisations made members in one go from the owners or renters list. */
 export const MAX_BULK_MEMBERS = 200;
 
-/** `POST /memberships/bulk`: people on file, numbered in this order, all joining on one day (blank is today). */
-export const memberBulkSchema = z.object({
-  personIds: z
-    .array(z.uuid())
-    .min(1)
-    .max(MAX_BULK_MEMBERS)
-    .refine((ids) => new Set(ids).size === ids.length, { message: 'Each person once' }),
-  joinedOn: optionalDay,
-});
+const uniqueIds = z
+  .array(z.uuid())
+  .max(MAX_BULK_MEMBERS)
+  .refine((ids) => new Set(ids).size === ids.length, { message: 'Each one once' })
+  .default([]);
+
+/**
+ * `POST /memberships/bulk`: people and organisations on file, numbered in this order (people
+ * first), all joining on one day (blank is today). At least one, at most `MAX_BULK_MEMBERS` in all.
+ */
+export const memberBulkSchema = z
+  .object({ personIds: uniqueIds, organisationIds: uniqueIds, joinedOn: optionalDay })
+  .refine((value) => value.personIds.length + value.organisationIds.length >= 1, { message: 'Pick at least one', path: ['personIds'] })
+  .refine((value) => value.personIds.length + value.organisationIds.length <= MAX_BULK_MEMBERS, {
+    message: 'Too many at once',
+    path: ['personIds'],
+  });
 export type MemberBulkInput = z.infer<typeof memberBulkSchema>;
 
-/** The new memberships, and how many people were skipped because they already are members. */
+/** The new memberships, and how many were skipped because they already are members. */
 export const memberBulkResultSchema = z.object({
-  created: z.array(z.object({ personId: z.uuid(), memberNo: z.number().int(), membershipCode: z.string() })),
+  created: z.array(
+    z.object({ personId: z.uuid().nullable(), organisationId: z.uuid().nullable(), memberNo: z.number().int(), membershipCode: z.string() }),
+  ),
   skipped: z.number().int().min(0),
 });
 export type MemberBulkResult = z.infer<typeof memberBulkResultSchema>;
 
+/** The new member: a person or an organisation. `reusedPerson`: they were on file already. */
 export const memberCreatedSchema = z.object({
-  personId: z.uuid(),
+  personId: z.uuid().nullable(),
+  organisationId: z.uuid().nullable(),
   memberNo: z.number().int(),
   membershipCode: z.string(),
   reusedPerson: z.boolean(),

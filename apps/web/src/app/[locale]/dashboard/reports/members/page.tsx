@@ -50,7 +50,10 @@ export default async function MembersReportPage({ params, searchParams }: PagePr
       cell: (row) => (
         <span className="grid">
           {personLinks ? (
-            <Link href={`/dashboard/members/${row.personId}`} className="font-semibold text-fg">
+            <Link
+              href={row.personId ? `/dashboard/members/${row.personId}` : `/dashboard/members/organisations/${row.organisationId}`}
+              className="font-semibold text-fg"
+            >
               {pick(row.name, row.nameEn, locale)}
             </Link>
           ) : (

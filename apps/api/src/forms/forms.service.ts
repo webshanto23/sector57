@@ -26,7 +26,7 @@ import { scopeWhere } from '../permissions/caller-access.js';
 import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { beyondPermissions, TreeService } from '../property/tree.service.js';
-import { MemberRowsService, personPartySelect, placeSelect } from '../members/member-rows.service.js';
+import { MemberRowsService, organisationPartySelect, personPartySelect, placeSelect } from '../members/member-rows.service.js';
 import { MembershipsService } from '../members/memberships.service.js';
 import { OwnershipsService } from '../members/ownerships.service.js';
 import { auditOf, canOnParty, PartiesService } from '../members/parties.service.js';
@@ -186,7 +186,10 @@ export class FormsService {
       }),
       this.matches(actor, row.phone, nid),
       row.person_id ? this.prisma.persons.findFirst({ where: { id: row.person_id, society_id: actor.societyId }, select: personPartySelect }) : null,
-      this.prisma.memberships.findFirst({ where: { submission_id: id, society_id: actor.societyId }, select: { member_no: true, membership_code: true } }),
+      this.prisma.memberships.findFirst({
+        where: { submission_id: id, society_id: actor.societyId },
+        select: { member_no: true, membership_code: true, organisations: { select: organisationPartySelect } },
+      }),
     ]);
 
     // Stored answers are re-read through the office schemas; the NID is blanked for callers who can't edit.
@@ -214,7 +217,8 @@ export class FormsService {
         isImage: documentContentType(doc.file_url) !== 'application/pdf',
       })),
       matches: mayEdit ? matches : matches.map((match) => ({ ...match, by: match.by.filter((by) => by === 'phone') })).filter((match) => match.by.length > 0),
-      person: person ? this.rows.personParty(person) : null,
+      // An organisation's application shows the organisation made a member, not its contact.
+      person: membership?.organisations ? this.rows.organisationParty(membership.organisations) : person ? this.rows.personParty(person) : null,
       memberNo: membership?.member_no ?? null,
       membershipCode: membership?.membership_code ?? null,
       can: {
@@ -272,21 +276,26 @@ export class FormsService {
 
       if (formKey === 'membership') {
         const form = membershipDataSchema.parse(row.data);
-        const person = await this.parties.resolvePerson(tx, actor.societyId, { ...form.applicant, dateOfBirth: null, gender: null });
+        const applicant = { ...form.applicant, dateOfBirth: null, gender: null };
+        // A person applies for themselves; an organisation through its contact, the applicant.
+        const person = await this.parties.resolvePerson(tx, actor.societyId, applicant);
         personId = person.id;
-        const membership = await this.memberships.insert(tx, actor.societyId, {
-          personId,
-          locationId: place.id,
-          joinedOn: today,
-          submissionId: id,
-        });
+        const organisation =
+          form.applicantKind === 'organisation' && form.organisation
+            ? await this.parties.resolveOrganisation(tx, actor.societyId, { ...form.organisation, contact: applicant })
+            : null;
+        const holder = organisation ? { personId: null, organisationId: organisation.id } : { personId, organisationId: null };
+        const membership = await this.memberships.insert(tx, actor.societyId, { ...holder, locationId: place.id, joinedOn: today, submissionId: id });
         extra['memberNo'] = membership.member_no;
         extra['membershipCode'] = membership.membership_code;
         extra['reusedPerson'] = person.reused;
+        if (organisation) extra['organisationId'] = organisation.id;
         if (input.addOwnership) {
           extra['ownershipId'] = await this.ownerships.insert(tx, actor, place, {
             locationId: place.id,
-            owner: { kind: 'person', person: { ...form.applicant, dateOfBirth: null, gender: null } },
+            owner: organisation
+              ? { kind: 'existing', party: { kind: 'organisation', id: organisation.id } }
+              : { kind: 'person', person: applicant },
             sharePercent: input.sharePercent,
             startDate: input.startDate ?? isoDate(today),
           });

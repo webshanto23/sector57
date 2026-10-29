@@ -248,7 +248,8 @@ export class InvoicesService {
             where: {
               society_id: actor.societyId,
               status: 'active',
-              ...(personId ? { person_id: personId } : {}),
+              // Membership fees are billed to people; organisation members are not offered here yet.
+              person_id: personId ?? { not: null },
               ...(q
                 ? {
                     OR: [
@@ -268,7 +269,7 @@ export class InvoicesService {
             take: 10,
           })
         : [];
-    const memberParties = await this.billTo.parties(members.map((m) => ({ kind: 'person' as const, id: m.person_id })));
+    const memberParties = await this.billTo.parties(members.flatMap((m) => (m.person_id ? [{ kind: 'person' as const, id: m.person_id }] : [])));
 
     return {
       units: units.map((unit) => {
@@ -285,7 +286,7 @@ export class InvoicesService {
         };
       }),
       members: members.flatMap((m) => {
-        const party = memberParties.get(m.person_id);
+        const party = m.person_id ? memberParties.get(m.person_id) : undefined;
         return party ? [{ ...party, memberNo: m.member_no, membershipCode: m.membership_code }] : [];
       }),
     };
