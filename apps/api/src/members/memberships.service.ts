@@ -11,6 +11,9 @@ import { auditOf, onlySocietyWide, organisationNotFound, PartiesService, personN
 type Tx = Prisma.TransactionClient;
 
 export const alreadyMember = () => new ConflictException({ code: 'already_member', message: 'This person or organisation is already a member' });
+const membershipNotFound = () => new NotFoundException({ code: 'membership_not_found', message: 'Membership not found' });
+const hasId = () => new ConflictException({ code: 'membership_has_id', message: 'A member with a membership ID can not be removed' });
+const hasBills = () => new ConflictException({ code: 'membership_has_bills', message: 'This member has membership bills that are not void' });
 
 /** Who holds a membership: a person or an organisation, exactly one. */
 type Holder = { personId: string | null; organisationId: string | null };
@@ -31,6 +34,36 @@ export class MembershipsService {
     private readonly audit: AuditService,
     private readonly parties: PartiesService,
   ) {}
+
+  /**
+   * Takes back a membership made by mistake, while it has no membership ID (409 `membership_has_id`
+   * once issued). Open or paid membership bills keep it (409 `membership_has_bills`); voided ones
+   * are kept but no longer point at it. The person or organisation stays as they are.
+   * Whole-society callers only.
+   */
+  async remove(actor: Actor, id: string): Promise<void> {
+    if (actor.access.paths('delete', 'members') !== 'all') throw onlySocietyWide();
+    await this.prisma.$transaction(async (tx) => {
+      await lockMemberNumbers(tx, actor.societyId);
+      const row = await tx.memberships.findFirst({
+        where: { id, society_id: actor.societyId },
+        select: { member_no: true, person_id: true, organisation_id: true, status: true, joined_on: true },
+      });
+      if (!row) throw membershipNotFound();
+      if (row.member_no !== null) throw hasId();
+      if (await tx.invoices.count({ where: { membership_id: id, status: { not: 'void' } } })) throw hasBills();
+      const detached = await tx.invoices.updateMany({ where: { membership_id: id }, data: { membership_id: null } });
+      await tx.memberships.delete({ where: { id } });
+      await this.audit.record(
+        {
+          ...auditOf(actor, 'membership', 'remove', id),
+          before: { personId: row.person_id, organisationId: row.organisation_id, status: row.status, joinedOn: isoDate(row.joined_on) },
+          after: { voidBillsDetached: detached.count },
+        },
+        tx,
+      );
+    });
+  }
 
   /** One member: new details, or someone on file (an owner, a renter), a person or an organisation. */
   async create(actor: Actor, input: MemberCreateInput): Promise<MemberCreated> {
@@ -179,6 +212,8 @@ export class MembershipsService {
    * yet; call it in the transaction that marks them as verified. Returns the ID issued, or null.
    */
   async issueId(tx: Tx, actor: Actor, holder: Holder): Promise<string | null> {
+    // Before reading, so a removal of the same membership waits or goes first.
+    await lockMemberNumbers(tx, actor.societyId);
     const pending = await tx.memberships.findFirst({
       where: { society_id: actor.societyId, status: 'active', member_no: null, ...(holder.personId ? { person_id: holder.personId } : { organisation_id: holder.organisationId }) },
       select: { id: true },

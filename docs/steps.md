@@ -1155,6 +1155,7 @@ Same branch, 2026-10-29. Anis decided: the ID is issued only by "Mark as verifie
 - **Web:** `VerifyCard` (person and organisation pages) says verifying issues the ID; "ID pending verification" on the membership line, members register, owners and renters chips, member lookups, bill and collect forms, the form review and the members report.
 - **Tests:** `memberships.e2e-spec.ts` (pending on create, issued on verify and kept on unverify, already verified at once, concurrent verifications, organisation verification, pending owner counted as member); `forms`, `membership-settings`, `billing` and `registers` specs updated; full e2e passes (`overview` timed out once under load and passes alone). `moves.e2e-spec.ts` had a stale CSV header ("Member no." → "Membership ID") from Step 38, fixed. Not clicked through in a browser.
 - **Note:** numbers taken back by the migration can be issued again to someone else (the next number is one past the highest in use).
+- **Remove a member made by mistake** (Anis: allowed when every membership bill is void, society-wide `members.delete`): `DELETE /memberships/:id` refuses an issued ID or a bill that isn't void, detaches voided bills (migration `31_membership_removal` relaxes `invoices_kind_fields_check` for void membership bills; applied to dev and test), deletes the row and audits it. The person and organisation pages show "Remove from members" (confirm) while the ID is pending; `membershipSchema` carries the membership `id`. e2e in `memberships.e2e-spec.ts`.
 
 ## Later: beyond milestone 3
 

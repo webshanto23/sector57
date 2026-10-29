@@ -13,6 +13,7 @@ import { NidCopiesCard } from "@/components/members/id-copies";
 import { MembershipLine } from "@/components/members/labels";
 import { MakeMemberButton } from "@/components/members/make-members";
 import { PersonEditor } from "@/components/members/person-editor";
+import { RemoveMemberCard } from "@/components/members/remove-member";
 import { HouseholdTable, OwnershipTable, TenancyTable } from "@/components/members/record-tables";
 import { buttonVariants } from "@/components/ui/button";
 import { VehiclesPanel } from "@/components/vehicles/vehicles-panel";
@@ -40,6 +41,9 @@ export default async function PersonPage({ params }: PageProps<"/[locale]/dashbo
   const open = { units: canAnywhere(me.access, "units"), locations: canAnywhere(me.access, "locations") };
   // Not an active member yet: whole-society roles can make them one, at a place they own or rent now.
   const mayMakeMember = person.membership?.status !== "active" && canSocietyWide(me.access, "members", "create");
+  // A membership made by mistake can be taken back while its ID is pending.
+  const pendingMembership = person.membership?.status === "active" && person.membership.membershipCode === null ? person.membership : null;
+  const mayRemoveMember = pendingMembership !== null && canSocietyWide(me.access, "members", "delete");
   const currentPlaces = [
     ...person.ownerships.filter((row) => row.endDate === null).map((row) => row.place),
     ...person.tenancies.filter((row) => row.status === "active" || row.status === "moving_out").map((row) => row.place),
@@ -61,6 +65,7 @@ export default async function PersonPage({ params }: PageProps<"/[locale]/dashbo
       <div className="grid gap-3.5">
         {person.membership ? <MembershipLine membership={person.membership} /> : null}
         {mayMakeMember ? <MakeMemberButton member={{ kind: "person", id: person.id }} places={currentPlaces} /> : null}
+        {mayRemoveMember ? <RemoveMemberCard membershipId={pendingMembership!.id} name={person.fullName} /> : null}
         {!person.can.edit ? <Note>{t("readOnly")}</Note> : null}
         <PersonEditor key={person.id} person={person} />
         {nidCopies ? <NidCopiesCard personId={person.id} copies={nidCopies} /> : null}

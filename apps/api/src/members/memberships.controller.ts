@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Put } from '@nestjs/common';
 import {
   memberBulkResultSchema,
   memberBulkSchema,
@@ -10,6 +10,7 @@ import {
 import { ZodResponse } from 'nestjs-zod';
 import { SkipAudit } from '../audit/audit.decorators.js';
 import { createDto } from '../common/create-dto.js';
+import { IdParamDto } from '../common/id-param.dto.js';
 import { Can, CurrentActor, type Actor } from '../permissions/permissions.decorators.js';
 import { MembershipSettingsService } from './membership-settings.service.js';
 import { MembershipsService } from './memberships.service.js';
@@ -45,6 +46,14 @@ export class MembershipsController {
   @ZodResponse({ status: 201, type: MemberBulkResultDto })
   bulk(@CurrentActor() actor: Actor, @Body() body: MemberBulkDto) {
     return this.memberships.bulk(actor, body);
+  }
+
+  /** A membership made by mistake, while it has no ID. 409 `membership_has_id` or `membership_has_bills` (not void); whole-society callers only. */
+  @Delete(':id')
+  @HttpCode(204)
+  @Can('members', 'delete')
+  async remove(@CurrentActor() actor: Actor, @Param() { id }: IdParamDto): Promise<void> {
+    await this.memberships.remove(actor, id);
   }
 }
 

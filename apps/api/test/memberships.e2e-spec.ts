@@ -328,6 +328,43 @@ describe('Memberships: the office adds members with a global membership ID (e2e)
     expect(paid.notPaid).toBeGreaterThanOrEqual(0);
   });
 
+  it('removes a member made by mistake while they have no ID, detaching voided bills only', async () => {
+    const del = (url: string, cookie = admin.cookie) => request(server()).delete(url).set('Cookie', cookie).set('Origin', ORIGIN).set(CSRF_HEADER, CSRF);
+    const chargeType = await prisma.charge_types.findFirstOrThrow({ where: { society_id: societyId, archived_at: null } });
+    const bill = async (personId: string) =>
+      (
+        await post('/invoices', admin.cookie)
+          .send({ personId, dueDate: '2026-12-31', lines: [{ chargeTypeId: chargeType.id, amount: '300' }] })
+          .expect(201)
+      ).body.id as string;
+
+    // An open bill keeps the membership; once voided, the member can go and the bill stays.
+    const mistaken = await addPerson('ভুলে সদস্য');
+    await post('/memberships', admin.cookie).send({ personId: mistaken }).expect(201);
+    const membershipId = (await membershipOf(mistaken)).id;
+    const invoice = await bill(mistaken);
+    expect((await del(`/memberships/${membershipId}`).expect(409)).body.code).toBe('membership_has_bills');
+    await post(`/invoices/${invoice}/void`, admin.cookie).send({ reason: 'ভুল সদস্য' }).expect(200);
+
+    // Only whole-society callers with members.delete.
+    const permission = await prisma.permissions.findFirstOrThrow({ where: { module: 'members', action: 'delete' } });
+    const role = await prisma.roles.create({ data: { society_id: societyId, name: `${MARK}-remover` } });
+    await prisma.role_permissions.create({ data: { role_id: role.id, permission_id: permission.id } });
+    await del(`/memberships/${membershipId}`, (await makeUser(role.id, tree.block.id)).cookie).expect(403);
+
+    await del(`/memberships/${membershipId}`).expect(204);
+    expect(await prisma.memberships.count({ where: { id: membershipId } })).toBe(0);
+    expect(await prisma.invoices.findUniqueOrThrow({ where: { id: invoice } })).toMatchObject({ status: 'void', membership_id: null });
+    expect(await prisma.persons.count({ where: { id: mistaken } })).toBe(1);
+    expect(await prisma.audit_logs.count({ where: { entity_type: 'membership', entity_id: membershipId, action: 'remove' } })).toBe(1);
+    expect((await del(`/memberships/${membershipId}`).expect(404)).body.code).toBe('membership_not_found');
+
+    // They can be made a member again; once verified, the ID stays.
+    await post('/memberships', admin.cookie).send({ personId: mistaken }).expect(201);
+    await verify(mistaken);
+    expect((await del(`/memberships/${(await membershipOf(mistaken)).id}`).expect(409)).body.code).toBe('membership_has_id');
+  });
+
   it('refuses an unknown place and a caller limited to part of the society', async () => {
     const missing = await post('/memberships', admin.cookie).send(member('কোথাও নেই', randomPhone(), { locationId: randomUUID() })).expect(404);
     expect(missing.body.code).toBe('location_not_found');

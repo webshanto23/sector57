@@ -11,6 +11,7 @@ import { MembershipLine, PartyLink } from "@/components/members/labels";
 import { MakeMemberButton } from "@/components/members/make-members";
 import { LicencePagesCard } from "@/components/members/id-copies";
 import { OrganisationEditor } from "@/components/members/organisation-editor";
+import { RemoveMemberCard } from "@/components/members/remove-member";
 import { VerifyCard } from "@/components/members/verify-card";
 import { OwnershipTable, TenancyTable } from "@/components/members/record-tables";
 import { buttonVariants } from "@/components/ui/button";
@@ -38,6 +39,10 @@ export default async function OrganisationPage({ params }: PageProps<"/[locale]/
   const open = { units: canAnywhere(me.access, "units"), locations: canAnywhere(me.access, "locations") };
   // Not an active member yet: whole-society roles can make it one, at a place it owns or rents now.
   const mayMakeMember = organisation.membership?.status !== "active" && canSocietyWide(me.access, "members", "create");
+  // A membership made by mistake can be taken back while its ID is pending.
+  const pendingMembership =
+    organisation.membership?.status === "active" && organisation.membership.membershipCode === null ? organisation.membership : null;
+  const mayRemoveMember = pendingMembership !== null && canSocietyWide(me.access, "members", "delete");
   const currentPlaces = [
     ...organisation.ownerships.filter((row) => row.endDate === null).map((row) => row.place),
     ...organisation.tenancies.filter((row) => row.status === "active" || row.status === "moving_out").map((row) => row.place),
@@ -58,6 +63,7 @@ export default async function OrganisationPage({ params }: PageProps<"/[locale]/
       <div className="grid gap-3.5">
         {organisation.membership ? <MembershipLine membership={organisation.membership} /> : null}
         {mayMakeMember ? <MakeMemberButton member={{ kind: "organisation", id: organisation.id }} places={currentPlaces} /> : null}
+        {mayRemoveMember ? <RemoveMemberCard membershipId={pendingMembership!.id} name={organisation.name} /> : null}
         {!organisation.can.edit ? <Note>{t("readOnly")}</Note> : null}
         <OrganisationEditor key={organisation.id} organisation={organisation} />
         <VerifyCard

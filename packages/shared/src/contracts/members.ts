@@ -338,6 +338,7 @@ export const toMembershipStatus = oneOf(MEMBERSHIP_STATUSES, 'cancelled');
 
 /** A person's or organisation's society membership, on their page. */
 export const membershipSchema = z.object({
+  id: z.uuid(),
   /** Null until the person or organisation is verified; the ID is issued then and kept. */
   memberNo: z.number().int().nullable(),
   /** Unique across all societies: the society code and the padded member number (`S15-000042`); null while `memberNo` is. */

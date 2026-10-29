@@ -703,7 +703,10 @@
       "combine_open_tenancy": "A unit being retired still has a renter. End the tenancy first.",
       "combine_occupants": "People still live in a unit being retired. Move them first.",
       "combine_vehicles": "A unit being retired still has a vehicle or parking slot. Move it first.",
-      "society_code_taken": "Another society already uses this code."
+      "society_code_taken": "Another society already uses this code.",
+      "membership_has_id": "This member already has a membership ID, so the membership can no longer be removed.",
+      "membership_has_bills": "This member has membership bills that are not void. Void them first.",
+      "membership_not_found": "This membership no longer exists."
     }
   },
   "Cms": {
@@ -1339,7 +1342,11 @@
       "save": "Save"
     },
     "idPending": "Membership ID pending verification",
-    "verifyIssuesId": "Marking as verified gives this member their membership ID."
+    "verifyIssuesId": "Marking as verified gives this member their membership ID.",
+    "removeMember": "Remove from members",
+    "removeMemberQuestion": "Remove {name} from the members? They stay on file as an owner or renter. Voided membership bills are kept.",
+    "removeMemberHint": "Made a member by mistake? While the membership ID is pending, the membership can be removed.",
+    "memberRemoved": "Removed from the members."
   },
   "Registers": {
     "add": "Add member",

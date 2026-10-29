@@ -1220,6 +1220,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/memberships/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["MembershipsController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/settings/membership": {
         parameters: {
             query?: never;
@@ -4968,6 +4984,8 @@ export interface components {
                 endDate: string | null;
             }[];
             membership: {
+                /** Format: uuid */
+                id: string;
                 memberNo: number | null;
                 membershipCode: string | null;
                 /** @enum {string} */
@@ -5077,6 +5095,8 @@ export interface components {
                 } | null;
             }[];
             membership: {
+                /** Format: uuid */
+                id: string;
                 memberNo: number | null;
                 membershipCode: string | null;
                 /** @enum {string} */
@@ -13524,6 +13544,25 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["MemberBulkResultDto_Output"];
                 };
+            };
+        };
+    };
+    MembershipsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
