@@ -70,7 +70,7 @@ async function ChildCard({
   unitsOpen: boolean;
   address?: string[];
   owners?: PartyName[] | null;
-  /** For a unit shown on a storey it only covers: the name of its own storey. */
+  /** For a unit over several storeys: the name of its own storey, listed first. */
   home?: string;
 }) {
   const t = await getTranslations("Property");
@@ -84,8 +84,7 @@ async function ChildCard({
       </div>
       <div className="flex flex-wrap gap-1.5">
         <Chip plain>{node.unitType ? pick(node.unitType.nameBn, node.unitType.nameEn, locale) : levelName(node, locale)}</Chip>
-        {home ? <Chip tone="info">{t("storeys.home", { name: home })}</Chip> : null}
-        {!home && node.alsoOn.length > 0 ? <Chip tone="info">{t("storeys.alsoOn", { names: node.alsoOn.join(", ") })}</Chip> : null}
+        {node.alsoOn.length > 0 ? <Chip tone="info">{t("storeys.floors", { floors: [home, ...node.alsoOn].filter(Boolean).join(" + ") })}</Chip> : null}
         {!node.isActive ? <Chip tone="warn">{t("inactive")}</Chip> : null}
       </div>
       {address?.length ? <p className="text-[12.5px] break-words text-muted-foreground">{address.join(" › ")}</p> : null}
@@ -264,7 +263,7 @@ export async function LocationPage({
                 <ul className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-2.5">
                   {children.map((child) => (
                     <li key={child.id} className="grid">
-                      <ChildCard node={child} locale={locale} unitsOpen={unitsOpen} />
+                      <ChildCard node={child} locale={locale} unitsOpen={unitsOpen} home={child.isUnit ? location?.name : undefined} />
                     </li>
                   ))}
                 </ul>

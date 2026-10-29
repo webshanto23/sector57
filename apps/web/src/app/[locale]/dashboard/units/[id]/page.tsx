@@ -53,7 +53,9 @@ export default async function UnitPage({ params }: PageProps<"/[locale]/dashboar
           <span className="inline-flex flex-wrap items-center gap-2">
             {unitTypeName(unitTypes, unit.unitType, locale as Locale)}
             <OccupancyChip occupancy={unit.occupancy} />
-            {unit.covers.length > 0 ? <Chip tone="info">{t("storeys.alsoOn", { names: unit.covers.map((storey) => storey.name).join(", ") })}</Chip> : null}
+            {unit.covers.length > 0 ? (
+              <Chip tone="info">{t("storeys.floors", { floors: [unit.breadcrumb.at(-1)?.name, ...unit.covers.map((storey) => storey.name)].filter(Boolean).join(" + ") })}</Chip>
+            ) : null}
           </span>
         }
         actions={
