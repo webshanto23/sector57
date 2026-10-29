@@ -6,6 +6,7 @@ Shared money rules are in `docs/rules/finance.md`.
 
 - Make bills only through `InvoicesService` (`src/billing`); who a unit's bill goes to is `BillToService.choose` (rule `pickBillTo` in shared). A bill keeps `bill_to_snapshot`, `fund_id` (one fund per bill) and `kind` (`regular`, `opening`, `membership`); lines carry `position`.
 - Bills are area-scoped through their unit's path; a membership bill has no unit and needs a society-wide billing grant. `overdue` is derived, never stored.
+- A membership bill is for a member: a person (`personId`) or an organisation (`organisationId`), exactly one beside `unitId` (`oneAccount` in shared); it needs an active membership (400 `no_membership`) and is billed to the member with their membership ID in the snapshot. The billing and collect lookups find members of both kinds by name, phone (an organisation's contact person) or membership ID (`member-accounts.ts` in `src/billing`).
 - Lines never change after issue. A bill is voided (reason, who, when) only while nothing is paid; anything that changes `paid` locks the bill row `FOR UPDATE` first.
 
 ## Schedules and runs

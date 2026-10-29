@@ -100,7 +100,7 @@ export function InvoiceForm({
       return;
     }
     const body = {
-      ...(target.kind === "unit" ? { unitId: target.unit.id } : { personId: target.member.id }),
+      ...(target.kind === "unit" ? { unitId: target.unit.id } : target.member.kind === "person" ? { personId: target.member.id } : { organisationId: target.member.id }),
       dueDate,
       periodFrom: periodFrom || null,
       periodTo: periodTo || null,

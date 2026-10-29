@@ -279,6 +279,26 @@ describe('Bills (e2e)', () => {
       expect(lookup.members).toMatchObject([{ id: ids.rahim, memberNo: 7 }]);
     });
 
+    it('bills an organisation member, found by name or membership ID', async () => {
+      const org = (await prisma.organisations.create({ data: { society_id: societyId, name: 'নূর ট্রেডার্স' } })).id;
+      const { membership_code: code } = await prisma.memberships.create({
+        data: { society_id: societyId, organisation_id: org, member_no: 8, joined_on: new Date('2025-01-01') },
+      });
+      for (const q of ['নূর', code, '৮']) {
+        const lookup = billingLookupSchema.parse((await get(`/billing/lookup?q=${encodeURIComponent(q)}`).expect(200)).body);
+        expect(lookup.members).toContainEqual(expect.objectContaining({ kind: 'organisation', id: org, memberNo: 8, membershipCode: code }));
+      }
+      const fee = await create({ organisationId: org, dueDate: inDays(30), lines: [line(ids.service, '900')] });
+      expect(fee).toMatchObject({ kind: 'membership', billTo: { kind: 'organisation', id: org, role: 'member', memberNo: 8, unit: null } });
+      const theirs = await list(`?organisationId=${org}&kind=membership`);
+      expect(theirs.items.map((item) => item.id)).toEqual([fee.id]);
+      const both = await send('post', '/invoices').send({ personId: ids.rahim, organisationId: org, dueDate: inDays(30), lines: [line(ids.service, '1')] });
+      expect(both.status).toBe(400);
+      const stranger = (await prisma.organisations.create({ data: { society_id: societyId, name: 'অচেনা দোকান' } })).id;
+      const none = await send('post', '/invoices').send({ organisationId: stranger, dueDate: inDays(30), lines: [line(ids.service, '1')] }).expect(400);
+      expect(none.body.code).toBe('no_membership');
+    });
+
     it('gives two bills made at once two different numbers', async () => {
       const made = await Promise.all([1, 2, 3, 4].map(() => create(bill(ids.c1, [line(ids.service, '10')]))));
       expect(new Set(made.map((m) => m.invoiceNo)).size).toBe(4);

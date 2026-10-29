@@ -23,8 +23,8 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/dashboar
 
 /**
  * The mockup's cash collection page: take a payment beside the live receipt, the caller's
- * figures for today, and "close day and hand over". `?unitId=` or `?personId=` starts with
- * that unit or member; `?invoiceId=` (from a bill page) ticks only that bill.
+ * figures for today, and "close day and hand over". `?unitId=`, `?personId=` or `?organisationId=`
+ * starts with that unit or member; `?invoiceId=` (from a bill page) ticks only that bill.
  */
 export default async function CollectPage({ params, searchParams }: PageProps<"/[locale]/dashboard/collect">) {
   const { locale: raw } = await params;
@@ -37,6 +37,7 @@ export default async function CollectPage({ params, searchParams }: PageProps<"/
   const id = (key: string) => (typeof search[key] === "string" && UUID.test(search[key]) ? search[key] : undefined);
   const unitId = id("unitId");
   const personId = unitId ? undefined : id("personId");
+  const organisationId = unitId || personId ? undefined : id("organisationId");
   const invoiceId = id("invoiceId");
   const today = todayInDhaka();
 
@@ -44,10 +45,10 @@ export default async function CollectPage({ params, searchParams }: PageProps<"/
     getTranslations("Collect"),
     getTranslations("Dashboard.nav"),
     canCollect ? getCollectSummary() : Promise.resolve(null),
-    canCollect && (unitId || personId) ? lookupCollect({ unitId, personId }) : Promise.resolve(null),
+    canCollect && (unitId || personId || organisationId) ? lookupCollect({ unitId, personId, organisationId }) : Promise.resolve(null),
     canCollect ? getPayments({ collectorId: "me", from: today, to: today, pageSize: 20 }) : Promise.resolve(null),
   ]);
-  const initial = start?.accounts.find((account) => (personId ? account.kind === "member" : account.kind === "unit")) ?? null;
+  const initial = start?.accounts.find((account) => (unitId ? account.kind === "unit" : account.kind === "member")) ?? null;
   const n = (value: number) => formatNumber(value, locale);
 
   return (

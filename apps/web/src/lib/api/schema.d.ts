@@ -6485,6 +6485,7 @@ export interface components {
         InvoiceCreateDto: {
             unitId?: string | null;
             personId?: string | null;
+            organisationId?: string | null;
             /** Format: date */
             dueDate: string;
             periodFrom?: string | null;
@@ -6904,6 +6905,7 @@ export interface components {
                 kind: "unit" | "member";
                 /** Format: uuid */
                 id: string;
+                memberKind: ("person" | "organisation") | null;
                 name: string;
                 code: string | null;
                 address: string[];
@@ -7156,6 +7158,7 @@ export interface components {
         PaymentCreateDto: {
             unitId?: string | null;
             personId?: string | null;
+            organisationId?: string | null;
             invoiceIds: string[];
             amount: string;
             payer: {
@@ -14042,6 +14045,7 @@ export interface operations {
                 q?: string;
                 unitId?: string;
                 personId?: string;
+                organisationId?: string;
             };
             header?: never;
             path?: never;
@@ -14328,6 +14332,7 @@ export interface operations {
                 q?: string;
                 unitId?: string;
                 personId?: string;
+                organisationId?: string;
             };
             header?: never;
             path?: never;

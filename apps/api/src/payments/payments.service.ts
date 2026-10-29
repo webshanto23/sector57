@@ -17,6 +17,7 @@ import {
   type CollectLookupQuery,
   type CollectSummary,
   type InvoiceRow,
+  type Payer,
   type PayerOption,
   type PayerSnapshot,
   type PaymentCreate,
@@ -31,6 +32,7 @@ import {
 import { AuditService } from '../audit/audit.service.js';
 import { BillToService, type BillableUnit } from '../billing/bill-to.service.js';
 import { invoiceNotFound, invoiceSelect, toInvoiceRow } from '../billing/invoices.service.js';
+import { memberOf, memberOfRow, memberSearch, membershipsOf } from '../billing/member-accounts.js';
 import { isoDate, todayDate } from '../common/dates.js';
 import { NumberingService } from '../finance/numbering.service.js';
 import { SettingsService } from '../finance/settings.service.js';
@@ -123,8 +125,9 @@ export class PaymentsService {
 
   /** Units (and, for society-wide collectors, members) with their open bills, oldest first. */
   async lookup(actor: Actor, query: CollectLookupQuery): Promise<CollectLookup> {
-    const { q, unitId, personId } = query;
-    if (!q && !unitId && !personId) return { accounts: [] };
+    const { q, unitId } = query;
+    const member = memberOf(query);
+    if (!q && !unitId && !member) return { accounts: [] };
     const scope = actor.access.paths('create', 'payments');
     const today = isoDate(todayDate());
 
@@ -170,36 +173,31 @@ export class PaymentsService {
       : [];
 
     // Members, for membership fees: only a society-wide collector takes those.
-    let members: { person_id: string; member_no: number; membership_code: string; name: string }[] = [];
-    if (scope === 'all' && (personId || (q && !unitId))) {
+    let members: { member: Payer; member_no: number; membership_code: string; name: string }[] = [];
+    if (scope === 'all' && (member || (q && !unitId))) {
       const rows = await this.prisma.memberships.findMany({
         where: {
           society_id: actor.societyId,
-          ...(personId
-            ? { person_id: personId }
-            : {
-                OR: [
-                  ...digitVariants(q!).flatMap((term) => [
-                    { persons: { full_name: { contains: term, mode: 'insensitive' as const } } },
-                    { persons: { full_name_en: { contains: term, mode: 'insensitive' as const } } },
-                  ]),
-                  { persons: { phone: { contains: asciiDigits(q!) } } },
-                  ...(/^\d{1,9}$/.test(asciiDigits(q!)) ? [{ member_no: Number(asciiDigits(q!)) }] : []),
-                  { membership_code: { equals: asciiDigits(q!).trim(), mode: 'insensitive' as const } },
-                ],
-              }),
+          ...(member ? membershipsOf(member) : memberSearch(q!)),
           invoices: { some: { status: { in: [...OPEN_INVOICE_STATUSES] } } },
         },
-        select: { person_id: true, member_no: true, membership_code: true, persons: { select: { full_name: true } } },
+        select: {
+          person_id: true,
+          organisation_id: true,
+          member_no: true,
+          membership_code: true,
+          persons: { select: { full_name: true } },
+          organisations: { select: { name: true } },
+        },
         orderBy: { member_no: 'asc' },
         take: 10,
       });
-      // Membership fees are billed to people; organisation members are not offered here yet.
-      members = rows.flatMap((row) =>
-        row.person_id && row.persons
-          ? [{ person_id: row.person_id, member_no: row.member_no, membership_code: row.membership_code, name: row.persons.full_name }]
-          : [],
-      );
+      members = rows.map((row) => ({
+        member: memberOfRow(row),
+        member_no: row.member_no,
+        membership_code: row.membership_code,
+        name: row.persons?.full_name ?? row.organisations?.name ?? '',
+      }));
     }
 
     const [unitBills, memberBills, names] = await Promise.all([
@@ -215,9 +213,9 @@ export class PaymentsService {
               society_id: actor.societyId,
               kind: 'membership',
               status: { in: [...OPEN_INVOICE_STATUSES] },
-              memberships: { person_id: { in: members.map((m) => m.person_id) } },
+              memberships: { OR: members.map((m) => membershipsOf(m.member)) },
             },
-            select: { ...invoiceSelect, memberships: { select: { person_id: true } } },
+            select: { ...invoiceSelect, memberships: { select: { person_id: true, organisation_id: true } } },
           })
         : [],
       this.tree.addressNames(actor.societyId, units.map((u) => u.locations.path)),
@@ -231,14 +229,23 @@ export class PaymentsService {
       accounts: [
         ...units.map((unit) =>
           account(
-            { kind: 'unit', id: unit.location_id, name: unit.locations.name, code: unit.locations.code, address: addressOf(unit.locations.path, names), memberNo: null, membershipCode: null },
+            { kind: 'unit', id: unit.location_id, memberKind: null, name: unit.locations.name, code: unit.locations.code, address: addressOf(unit.locations.path, names), memberNo: null, membershipCode: null },
             unitBills.filter((bill) => bill.unit_id === unit.location_id).map((bill) => toInvoiceRow(bill, today)),
           ),
         ),
         ...members.map((member) =>
           account(
-            { kind: 'member', id: member.person_id, name: member.name, code: null, address: [], memberNo: member.member_no, membershipCode: member.membership_code },
-            memberBills.filter((bill) => bill.memberships?.person_id === member.person_id).map((bill) => toInvoiceRow(bill, today)),
+            {
+              kind: 'member',
+              id: member.member.id,
+              memberKind: member.member.kind,
+              name: member.name,
+              code: null,
+              address: [],
+              memberNo: member.member_no,
+              membershipCode: member.membership_code,
+            },
+            memberBills.filter((bill) => bill.memberships && memberOfRow(bill.memberships).id === member.member.id).map((bill) => toInvoiceRow(bill, today)),
           ),
         ),
       ],
@@ -594,16 +601,17 @@ export class PaymentsService {
   private async account(
     tx: Tx,
     actor: Actor,
-    input: Pick<PaymentCreate, 'unitId' | 'personId'>,
+    input: Pick<PaymentCreate, 'unitId' | 'personId' | 'organisationId'>,
   ): Promise<{ unit: BillableUnit | null; membershipIds: Set<string>; member: { no: number; code: string } | null }> {
-    if (input.personId) {
+    const payee = memberOf(input);
+    if (payee) {
       if (actor.access.paths('create', 'payments') !== 'all') throw onlySocietyWide();
       const memberships = await tx.memberships.findMany({
-        where: { society_id: actor.societyId, person_id: input.personId },
+        where: { society_id: actor.societyId, ...membershipsOf(payee) },
         select: { id: true, member_no: true, membership_code: true, status: true },
         orderBy: { member_no: 'desc' },
       });
-      if (memberships.length === 0) throw bad('no_membership', 'This person has no membership');
+      if (memberships.length === 0) throw bad('no_membership', 'This member has no membership');
       const current = memberships.find((m) => m.status === 'active') ?? memberships[0]!;
       return { unit: null, membershipIds: new Set(memberships.map((m) => m.id)), member: { no: current.member_no, code: current.membership_code } };
     }

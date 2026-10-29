@@ -82,8 +82,8 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
     return (
       <span className="flex flex-wrap items-center gap-2">
         <Chip tone="bad">{t("members.fee.notBilled")}</Chip>
-        {canBill && member.kind === "person" ? (
-          <Link href={{ pathname: "/dashboard/billing/new", query: { personId: member.id } }} className="text-[13px] font-semibold whitespace-nowrap text-primary">
+        {canBill ? (
+          <Link href={{ pathname: "/dashboard/billing/new", query: member.kind === "person" ? { personId: member.id } : { organisationId: member.id } }} className="text-[13px] font-semibold whitespace-nowrap text-primary">
             {t("members.fee.makeBill")}
           </Link>
         ) : null}

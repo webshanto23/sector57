@@ -2,7 +2,6 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import { Prisma } from '@s57/db';
 import {
   addMoney,
-  asciiDigits,
   billToSnapshotSchema,
   CHARGE_KINDS,
   digitVariants,
@@ -25,6 +24,7 @@ import {
   type InvoiceTotals,
   type InvoiceVoidInput,
   type OpeningArrears,
+  type Payer,
   type PermissionAction,
 } from '@s57/shared';
 import { AuditService } from '../audit/audit.service.js';
@@ -39,17 +39,18 @@ import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { addressOf, beyondPermissions, TreeService } from '../property/tree.service.js';
 import { BillToService, type BillableUnit } from './bill-to.service.js';
+import { memberOf, memberOfRow, memberSearch, membershipsOf } from './member-accounts.js';
 import { unitsDues } from './unit-dues.js';
 
 type Tx = Prisma.TransactionClient;
 
 type LineSpec = { chargeTypeId: string; amount: string; description: string | null; descriptionEn: string | null };
 
-/** A bill to issue: for a unit, or for a member (`personId`). */
+/** A bill to issue: for a unit, or for a member (a person or an organisation). */
 type BillSpec = {
   kind: InvoiceKind;
   unitId: string | null;
-  personId: string | null;
+  member: Payer | null;
   issueDate: string;
   dueDate: string;
   period: { start: string; end: string } | null;
@@ -209,8 +210,9 @@ export class InvoicesService {
 
   /** Units and members to bill, for the new-bill form. */
   async lookup(actor: Actor, query: BillingLookupQuery): Promise<BillingLookup> {
-    const { q, unitId, personId } = query;
-    if (!q && !unitId && !personId) return { units: [], members: [] };
+    const { q, unitId } = query;
+    const member = memberOf(query);
+    if (!q && !unitId && !member) return { units: [], members: [] };
     const scope = actor.access.paths('create', 'billing');
     const and: Prisma.unitsWhereInput[] = [{ society_id: actor.societyId }];
     if (scope !== 'all') and.push({ OR: scope.map((prefix) => ({ locations: { path: { startsWith: prefix } } })) });
@@ -223,7 +225,7 @@ export class InvoicesService {
         ]),
       });
     }
-    // `personId` alone looks up one member and no units.
+    // A member alone (`personId` or `organisationId`) looks up that member and no units.
     const units = !q && !unitId ? [] : await this.prisma.units.findMany({
       where: { AND: and },
       select: { location_id: true, locations: { select: { name: true, code: true, path: true, is_active: true } } },
@@ -243,33 +245,20 @@ export class InvoicesService {
     const withOpening = new Set(openings.map((row) => row.unit_id));
 
     const members =
-      (q || personId) && scope === 'all'
+      (q || member) && scope === 'all'
         ? await this.prisma.memberships.findMany({
             where: {
               society_id: actor.societyId,
               status: 'active',
-              // Membership fees are billed to people; organisation members are not offered here yet.
-              person_id: personId ?? { not: null },
-              ...(q
-                ? {
-                    OR: [
-                      ...digitVariants(q).flatMap((term) => [
-                        { persons: { full_name: { contains: term, mode: 'insensitive' as const } } },
-                        { persons: { full_name_en: { contains: term, mode: 'insensitive' as const } } },
-                      ]),
-                      { persons: { phone: { contains: asciiDigits(q) } } },
-                      ...(/^\d{1,9}$/.test(asciiDigits(q)) ? [{ member_no: Number(asciiDigits(q)) }] : []),
-                      { membership_code: { equals: asciiDigits(q).trim(), mode: 'insensitive' as const } },
-                    ],
-                  }
-                : {}),
+              ...(member ? membershipsOf(member) : {}),
+              ...(q ? memberSearch(q) : {}),
             },
-            select: { member_no: true, membership_code: true, person_id: true },
+            select: { member_no: true, membership_code: true, person_id: true, organisation_id: true },
             orderBy: { member_no: 'asc' },
             take: 10,
           })
         : [];
-    const memberParties = await this.billTo.parties(members.flatMap((m) => (m.person_id ? [{ kind: 'person' as const, id: m.person_id }] : [])));
+    const memberParties = await this.billTo.parties(members.map(memberOfRow));
 
     return {
       units: units.map((unit) => {
@@ -286,7 +275,7 @@ export class InvoicesService {
         };
       }),
       members: members.flatMap((m) => {
-        const party = m.person_id ? memberParties.get(m.person_id) : undefined;
+        const party = memberParties.get(memberOfRow(m).id);
         return party ? [{ ...party, memberNo: m.member_no, membershipCode: m.membership_code }] : [];
       }),
     };
@@ -296,13 +285,14 @@ export class InvoicesService {
   // Writing
   // -------------------------------------------------------------------------
 
-  /** A bill for a unit or, with `personId`, a membership fee. Dated today. */
+  /** A bill for a unit or, with `personId` or `organisationId`, a membership fee. Dated today. */
   async create(actor: Actor, input: InvoiceCreate): Promise<InvoiceDetail> {
     const today = isoDate(todayDate());
+    const member = memberOf(input);
     return this.issue(actor, {
-      kind: input.personId ? 'membership' : 'regular',
+      kind: member ? 'membership' : 'regular',
       unitId: input.unitId ?? null,
-      personId: input.personId ?? null,
+      member,
       issueDate: today,
       dueDate: input.dueDate,
       period: periodDays(input.periodFrom, input.periodTo),
@@ -316,7 +306,7 @@ export class InvoicesService {
     return this.issue(actor, {
       kind: 'opening',
       unitId: input.unitId,
-      personId: null,
+      member: null,
       issueDate: input.asOf,
       dueDate: input.asOf,
       period: null,
@@ -348,12 +338,12 @@ export class InvoicesService {
    */
   async issueUnitBillIn(tx: Tx, actor: Actor, unitId: string, dueDate: string, lines: LineSpec[]): Promise<{ id: string; invoiceNo: string }> {
     const today = isoDate(todayDate());
-    return this.issueIn(tx, actor, { kind: 'regular', unitId, personId: null, issueDate: today, dueDate: dueDate < today ? today : dueDate, period: null, lines });
+    return this.issueIn(tx, actor, { kind: 'regular', unitId, member: null, issueDate: today, dueDate: dueDate < today ? today : dueDate, period: null, lines });
   }
 
   /** A regular unit bill with its period, dated today, inside the caller's transaction (a batch). The same checks as `POST /invoices`. */
   async issueRegularIn(tx: Tx, actor: Actor, bill: Pick<BillSpec, 'dueDate' | 'period' | 'lines'> & { unitId: string }): Promise<{ id: string; invoiceNo: string }> {
-    return this.issueIn(tx, actor, { kind: 'regular', personId: null, issueDate: isoDate(todayDate()), ...bill });
+    return this.issueIn(tx, actor, { kind: 'regular', member: null, issueDate: isoDate(todayDate()), ...bill });
   }
 
   private async issueIn(tx: Tx, actor: Actor, spec: BillSpec): Promise<{ id: string; invoiceNo: string }> {
@@ -458,16 +448,16 @@ export class InvoicesService {
   private async target(
     tx: Tx,
     actor: Actor,
-    input: Pick<BillSpec, 'unitId' | 'personId'>,
+    input: Pick<BillSpec, 'unitId' | 'member'>,
   ): Promise<{ unit: BillableUnit | null; membershipId: string | null; snapshot: BillToSnapshot }> {
-    if (input.personId) {
+    if (input.member) {
       if (actor.access.paths('create', 'billing') !== 'all') throw onlySocietyWide();
       const membership = await tx.memberships.findFirst({
-        where: { society_id: actor.societyId, person_id: input.personId, status: 'active' },
+        where: { society_id: actor.societyId, ...membershipsOf(input.member), status: 'active' },
         select: { id: true, member_no: true, membership_code: true },
       });
-      if (!membership) throw bad('no_membership', 'This person has no active membership');
-      const snapshot = await this.billTo.snapshot(tx, actor.societyId, { kind: 'person', id: input.personId }, 'member', null, { no: membership.member_no, code: membership.membership_code });
+      if (!membership) throw bad('no_membership', 'This member has no active membership');
+      const snapshot = await this.billTo.snapshot(tx, actor.societyId, input.member, 'member', null, { no: membership.member_no, code: membership.membership_code });
       return { unit: null, membershipId: membership.id, snapshot };
     }
 

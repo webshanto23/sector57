@@ -280,6 +280,26 @@ describe('Cash collection, receipts and handover (e2e)', () => {
       expect((await pay({ ...base, amount: '1' }).expect(409)).body.code).toBe('invoice_changed');
     });
 
+    it("takes an organisation member's membership fee, found by its membership ID", async () => {
+      const org = (await prisma.organisations.create({ data: { society_id: societyId, name: 'নূর ট্রেডার্স' } })).id;
+      const { membership_code: code } = await prisma.memberships.create({
+        data: { society_id: societyId, organisation_id: org, member_no: 4, joined_on: new Date('2025-01-01') },
+      });
+      const feeType = await prisma.charge_types.findFirstOrThrow({ where: { society_id: societyId, name_bn: 'সদস্য ফি' } });
+      await send('post', '/invoices').send({ organisationId: org, dueDate: due(), lines: [{ chargeTypeId: feeType.id, amount: '700' }] }).expect(201);
+
+      const found = collectLookupSchema.parse((await get(`/collect/lookup?q=${code}`).expect(200)).body).accounts;
+      const account = found.find((a) => a.kind === 'member')!;
+      expect(account).toMatchObject({ id: org, memberKind: 'organisation', name: 'নূর ট্রেডার্স', memberNo: 4, due: '700.00' });
+      const receipt = await paid(
+        { organisationId: org, invoiceIds: account.bills.map((b) => b.id), amount: '700', payer: { kind: 'organisation', id: org } },
+        users.admin,
+      );
+      expect(receipt.payer).toMatchObject({ id: org, memberNo: 4, membershipCode: code, unit: null });
+      const none = { organisationId: randomUUID(), invoiceIds: account.bills.map((b) => b.id), amount: '1', payer: { kind: 'organisation', id: org } };
+      expect((await pay(none, users.admin).expect(400)).body.code).toBe('no_membership');
+    });
+
     it('lets only one of two payments on the same bill through', async () => {
       const target = await bill(ids.c2, '100');
       const body = { unitId: ids.c2, invoiceIds: [target.id], amount: '100', payer: rahim() };

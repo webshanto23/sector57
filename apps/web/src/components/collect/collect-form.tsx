@@ -132,7 +132,7 @@ export function CollectForm({
   async function save() {
     if (!account || !payer || !parsed.success || problem || !methodReady(paidBy)) return;
     const body = {
-      ...(account.kind === "unit" ? { unitId: account.id } : { personId: account.id }),
+      ...(account.kind === "unit" ? { unitId: account.id } : account.memberKind === "organisation" ? { organisationId: account.id } : { personId: account.id }),
       invoiceIds: bills.map((bill) => bill.id),
       amount: parsed.data,
       payer: { kind: payer.kind, id: payer.id },
