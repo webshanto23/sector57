@@ -3,6 +3,8 @@ import "server-only";
 import {
   type LicencePages,
   type LocationPeople,
+  type MemberCard,
+  type MemberCardSettings,
   type MembershipSettings,
   type NidCopies,
   type OrganisationDetail,
@@ -65,5 +67,23 @@ export async function getLocationPeople(id: string): Promise<LocationPeople | nu
 export async function getMembershipSettings(): Promise<MembershipSettings> {
   const { data, response } = await api.GET("/settings/membership", { headers: await authHeaders(), cache: "no-store" });
   if (!data) throw failed("the membership settings", response.status);
+  return data;
+}
+
+export async function getMemberCardSettings(): Promise<MemberCardSettings> {
+  const { data, response } = await api.GET("/settings/member-card", { headers: await authHeaders(), cache: "no-store" });
+  if (!data) throw failed("the member card settings", response.status);
+  return data;
+}
+
+/** A member's ID card; null when there is none to print (ID pending, not active, or not the caller's to edit). */
+export async function getMemberCard(membershipId: string): Promise<MemberCard | null> {
+  const { data, response } = await api.GET("/memberships/{id}/card", {
+    params: { path: { id: membershipId } },
+    headers: await authHeaders(),
+    cache: "no-store",
+  });
+  if ([403, 404, 409].includes(response.status)) return null;
+  if (!data) throw failed("the member card", response.status);
   return data;
 }

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AuditModule } from '../audit/audit.module.js';
+import { FinanceModule } from '../finance/finance.module.js';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { PropertyModule } from '../property/property.module.js';
 import { StorageModule } from '../storage/storage.module.js';
@@ -8,6 +9,7 @@ import { DirectoryController } from './directory.controller.js';
 import { DirectoryService } from './directory.service.js';
 import { OrganisationIdCopiesController, PersonIdCopiesController } from './id-copies.controller.js';
 import { IdCopiesService } from './id-copies.service.js';
+import { MemberCardService } from './member-card.service.js';
 import { MemberRowsService } from './member-rows.service.js';
 import {
   LocationPeopleController,
@@ -18,7 +20,7 @@ import {
   TenanciesController,
 } from './members.controller.js';
 import { MembershipSettingsService } from './membership-settings.service.js';
-import { MembershipSettingsController, MembershipsController } from './memberships.controller.js';
+import { MemberCardSettingsController, MembershipSettingsController, MembershipsController } from './memberships.controller.js';
 import { MembershipsService } from './memberships.service.js';
 import { MovesController } from './moves.controller.js';
 import { MovesService } from './moves.service.js';
@@ -31,9 +33,9 @@ import { RegistersController } from './registers.controller.js';
 import { RegistersService } from './registers.service.js';
 import { TenanciesService } from './tenancies.service.js';
 
-/** Step 10: people, organisations, ownerships, tenancies and households. Step 20: move-in and move-out checklists, the resident directory. Step 36: the members, owners and renters registers. NID and trade licence copies on the member pages. */
+/** Step 10: people, organisations, ownerships, tenancies and households. Step 20: move-in and move-out checklists, the resident directory. Step 36: the members, owners and renters registers. NID and trade licence copies on the member pages. Membership ID cards. */
 @Module({
-  imports: [PrismaModule, AuditModule, PropertyModule, StorageModule],
+  imports: [PrismaModule, AuditModule, PropertyModule, StorageModule, FinanceModule],
   controllers: [
       PersonsController,
     OrganisationsController,
@@ -46,6 +48,7 @@ import { TenanciesService } from './tenancies.service.js';
     RegistersController,
     MembershipsController,
     MembershipSettingsController,
+    MemberCardSettingsController,
     PersonIdCopiesController,
     OrganisationIdCopiesController,
   ],
@@ -63,6 +66,7 @@ import { TenanciesService } from './tenancies.service.js';
     RegistersService,
     MembershipsService,
     MembershipSettingsService,
+    MemberCardService,
     IdCopiesService,
   ],
   // The office review (forms module) approves applications through these.

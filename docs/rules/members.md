@@ -18,6 +18,13 @@ Read `docs/glossary.md` for Person, Owner, Renter, Resident and Member.
 - The registers list organisation members as well: `GET /registers/members` returns them in the `person` party slot with `kind: 'organisation'` (name, the contact person's phone, no photo or verification); search by name, contact phone or membership ID works the same. A scoped caller sees an organisation member through its membership's place or anything it owns or rents in the area. The owners and renters registers show an organisation's membership ID, and "not a member" counts organisations too.
 - ID copies (2026-10-29): a person's NID front and back (photos only) and an organisation's trade licence pages (photos or PDFs, at most `MAX_LICENCE_PAGES` = 10, upload order) go only through `IdCopiesService` (`src/members`): private files with a `documents` row (`entity_type` `person` / `organisation`, `doc_type` `nid_front`, `nid_back`, `trade_licence`). Every route, including the file, needs the right to edit the person or organisation (the `members` grant in their area, not `documents`), as for the NID number. A new side or a removal archives the earlier row; nothing is deleted. Uploads, removals and file reads are audited on the person or organisation. The documents library never lists, counts or serves these types (`ID_COPY_TYPES`).
 
+## Membership ID cards
+
+- A card is for an active membership with an ID only, read through `MemberCardService.card` (`GET /memberships/:id/card`): `members.edit` where the member owns, rents, lives or holds the membership; every read is audited (`card`). The card's band and contact line are the receipt header with the badge (data, never code); its terms, validity and signature label are the `member_card` setting (`memberCardSettingsSchema`); blank terms print the standard terms from i18n.
+- "Valid till" is counted from the day the card is printed (`cardValidTill`), not from joining; no setting means no line.
+- Printing is RGB from the browser (Anis, 2026-10-29: no CMYK for now). Card faces are sized in millimetres (CR80 standing, 54 × 85.6 mm) and keep the flag colours like the logo; the card printer layout uses the named page `id-card`.
+- The membership ID is sequential, so any future public verify page must look a card up by a random token, never by the ID.
+
 ## Public forms and office review
 
 - Form files (deeds, NID copies) are private files (`docs/rules/cms-storage.md`).

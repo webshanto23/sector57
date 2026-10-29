@@ -312,6 +312,14 @@
   .print-portal .print-a4-landscape tr {
     break-inside: avoid;
   }
+  /* A membership ID card on a card printer: CR80 standing up, no margin, one face per page. */
+  @page id-card {
+    size: 54mm 85.6mm;
+    margin: 0;
+  }
+  .print-portal .print-id-card {
+    page: id-card;
+  }
   /* An 80 mm thermal roll: its length is set by ThermalSheet (components/print/thermal-sheet.tsx). */
   .print-portal .print-thermal {
     page: thermal80;

@@ -1236,6 +1236,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/memberships/{id}/card": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MembershipsController_card"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/memberships/{id}": {
         parameters: {
             query?: never;
@@ -1261,6 +1277,22 @@ export interface paths {
         };
         get: operations["MembershipSettingsController_get"];
         put: operations["MembershipSettingsController_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/settings/member-card": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MemberCardSettingsController_get"];
+        put: operations["MemberCardSettingsController_update"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1358,150 +1390,6 @@ export interface paths {
         get: operations["OrganisationIdCopiesController_file"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/public/locations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["PublicFormsController_places"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/public/forms/{formKey}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["PublicFormsController_submit"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/forms": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["FormsController_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/forms/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["FormsController_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/forms/{formKey}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["FormsController_enter"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/forms/{id}/files/{fileId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["FormsController_file"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/forms/{id}/review": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["FormsController_review"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/forms/{id}/approve": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["FormsController_approve"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/forms/{id}/reject": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["FormsController_reject"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1646,6 +1534,150 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["ChargeTypesController_restore"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicFormsController_places"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/forms/{formKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublicFormsController_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FormsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FormsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/{formKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["FormsController_enter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/{id}/files/{fileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["FormsController_file"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["FormsController_review"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["FormsController_approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["FormsController_reject"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6025,6 +6057,46 @@ export interface components {
             }[];
             skipped: number;
         };
+        MemberCardDto_Output: {
+            /** Format: uuid */
+            membershipId: string;
+            membershipCode: string;
+            /** @enum {string} */
+            kind: "person" | "organisation";
+            name: string;
+            nameEn: string | null;
+            photoUrl: string | null;
+            phone: string | null;
+            email: string | null;
+            /** Format: date */
+            joinedOn: string;
+            validTill: string | null;
+            /** @enum {string} */
+            status: "active" | "lapsed" | "cancelled";
+            header: {
+                nameBn: string;
+                nameEn: string | null;
+                addressBn: string | null;
+                addressEn: string | null;
+                phone: string | null;
+                /** @default null */
+                email: string | null;
+                /** @default null */
+                regNo: string | null;
+                /** @default null */
+                officeHoursBn: string | null;
+                /** @default null */
+                officeHoursEn: string | null;
+                mark: string;
+            };
+            settings: {
+                termsBn: string[];
+                termsEn: string[];
+                validYears: number | null;
+                signatureBn: string | null;
+                signatureEn: string | null;
+            };
+        };
         MembershipSettingsDto_Output: {
             societyCode: string;
             firstMemberNo: number;
@@ -6036,6 +6108,20 @@ export interface components {
         MembershipSettingsInputDto: {
             societyCode: string;
             firstMemberNo: number;
+        };
+        MemberCardSettingsDto_Output: {
+            termsBn: string[];
+            termsEn: string[];
+            validYears: number | null;
+            signatureBn: string | null;
+            signatureEn: string | null;
+        };
+        MemberCardSettingsInputDto: {
+            termsBn: string[];
+            termsEn: string[];
+            validYears: number | null;
+            signatureBn: string | null;
+            signatureEn: string | null;
         };
         NidCopiesDto_Output: {
             front: {
@@ -6064,185 +6150,6 @@ export interface components {
                 /** Format: date-time */
                 uploadedAt: string;
             }[];
-        };
-        PublicPlaceListDto_Output: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                levelBn: string;
-                levelEn: string | null;
-                isUnit: boolean;
-                hasChildren: boolean;
-            }[];
-        };
-        FormReceiptDto_Output: {
-            reference: string;
-            /** @enum {string} */
-            formKey: "membership" | "renter_registration";
-            /** Format: date-time */
-            submittedAt: string;
-        };
-        FormListDto_Output: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                reference: string;
-                /** @enum {string} */
-                formKey: "membership" | "renter_registration";
-                /** @enum {string} */
-                status: "new" | "in_review" | "approved" | "rejected";
-                name: string;
-                phone: string | null;
-                place: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    address: string[];
-                    isUnit: boolean;
-                } | null;
-                /** Format: date-time */
-                submittedAt: string;
-                files: number;
-                enteredBy: string | null;
-            }[];
-            total: number;
-            page: number;
-            pageSize: number;
-            counts: {
-                new: number;
-                in_review: number;
-                approved: number;
-                rejected: number;
-            };
-        };
-        FormDetailDto_Output: {
-            /** Format: uuid */
-            id: string;
-            reference: string;
-            /** @enum {string} */
-            formKey: "membership" | "renter_registration";
-            /** @enum {string} */
-            status: "new" | "in_review" | "approved" | "rejected";
-            /** Format: date-time */
-            submittedAt: string;
-            reviewedAt: string | null;
-            reviewNote: string | null;
-            reviewerName: string | null;
-            enteredBy: string | null;
-            place: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                address: string[];
-                isUnit: boolean;
-            } | null;
-            membership: {
-                /**
-                 * @default person
-                 * @enum {string}
-                 */
-                applicantKind: "person" | "organisation";
-                applicant: {
-                    fullName: string;
-                    fullNameEn: string | null;
-                    phone: string;
-                    email: string | null;
-                    nid: string | null;
-                };
-                /** @default null */
-                organisation: {
-                    name: string;
-                    tradeLicence: string;
-                } | null;
-                /** Format: uuid */
-                locationId: string;
-                livesHere: boolean;
-            } | null;
-            renter: {
-                renter: {
-                    fullName: string;
-                    fullNameEn: string | null;
-                    phone: string;
-                    email: string | null;
-                    nid: string | null;
-                };
-                occupation: string | null;
-                permanentAddress: string | null;
-                /** @enum {string} */
-                renterType: "family" | "bachelor";
-                /** Format: uuid */
-                unitId: string;
-                /** Format: date */
-                moveInDate: string;
-                owner: {
-                    name: string;
-                    phone: string | null;
-                };
-                household: {
-                    fullName: string;
-                    /** @enum {string} */
-                    relation: "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
-                }[];
-            } | null;
-            nidHidden: boolean;
-            files: {
-                /** Format: uuid */
-                id: string;
-                fileName: string;
-                docType: string;
-                isImage: boolean;
-            }[];
-            matches: {
-                /** Format: uuid */
-                personId: string;
-                name: string;
-                by: ("phone" | "nid")[];
-                open: boolean;
-            }[];
-            person: {
-                /** @enum {string} */
-                kind: "person" | "organisation";
-                /** Format: uuid */
-                id: string;
-                name: string;
-                nameEn: string | null;
-                phone: string | null;
-                photoUrl: string | null;
-                verified: boolean | null;
-            } | null;
-            memberNo: number | null;
-            membershipCode: string | null;
-            can: {
-                review: boolean;
-                approve: boolean;
-                reject: boolean;
-                addOwnership: boolean;
-            };
-        };
-        FormEntryDto_Output: {
-            reference: string;
-            /** @enum {string} */
-            formKey: "membership" | "renter_registration";
-            /** Format: date-time */
-            submittedAt: string;
-            /** Format: uuid */
-            id: string;
-        };
-        FormReviewDto: {
-            note?: string | null;
-        };
-        FormApproveDto: {
-            note?: string | null;
-            /** @default false */
-            addOwnership: boolean;
-            sharePercent?: string;
-            /** Format: date */
-            startDate?: string;
-            monthlyRent?: string | null;
-        };
-        FormRejectDto: {
-            note: string;
         };
         SocietySettingsDto_Output: {
             shareRentersWithThana: boolean;
@@ -6428,6 +6335,185 @@ export interface components {
             };
             defaultAmount: string | null;
             archived: boolean;
+        };
+        PublicPlaceListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                levelBn: string;
+                levelEn: string | null;
+                isUnit: boolean;
+                hasChildren: boolean;
+            }[];
+        };
+        FormReceiptDto_Output: {
+            reference: string;
+            /** @enum {string} */
+            formKey: "membership" | "renter_registration";
+            /** Format: date-time */
+            submittedAt: string;
+        };
+        FormListDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                reference: string;
+                /** @enum {string} */
+                formKey: "membership" | "renter_registration";
+                /** @enum {string} */
+                status: "new" | "in_review" | "approved" | "rejected";
+                name: string;
+                phone: string | null;
+                place: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    address: string[];
+                    isUnit: boolean;
+                } | null;
+                /** Format: date-time */
+                submittedAt: string;
+                files: number;
+                enteredBy: string | null;
+            }[];
+            total: number;
+            page: number;
+            pageSize: number;
+            counts: {
+                new: number;
+                in_review: number;
+                approved: number;
+                rejected: number;
+            };
+        };
+        FormDetailDto_Output: {
+            /** Format: uuid */
+            id: string;
+            reference: string;
+            /** @enum {string} */
+            formKey: "membership" | "renter_registration";
+            /** @enum {string} */
+            status: "new" | "in_review" | "approved" | "rejected";
+            /** Format: date-time */
+            submittedAt: string;
+            reviewedAt: string | null;
+            reviewNote: string | null;
+            reviewerName: string | null;
+            enteredBy: string | null;
+            place: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                address: string[];
+                isUnit: boolean;
+            } | null;
+            membership: {
+                /**
+                 * @default person
+                 * @enum {string}
+                 */
+                applicantKind: "person" | "organisation";
+                applicant: {
+                    fullName: string;
+                    fullNameEn: string | null;
+                    phone: string;
+                    email: string | null;
+                    nid: string | null;
+                };
+                /** @default null */
+                organisation: {
+                    name: string;
+                    tradeLicence: string;
+                } | null;
+                /** Format: uuid */
+                locationId: string;
+                livesHere: boolean;
+            } | null;
+            renter: {
+                renter: {
+                    fullName: string;
+                    fullNameEn: string | null;
+                    phone: string;
+                    email: string | null;
+                    nid: string | null;
+                };
+                occupation: string | null;
+                permanentAddress: string | null;
+                /** @enum {string} */
+                renterType: "family" | "bachelor";
+                /** Format: uuid */
+                unitId: string;
+                /** Format: date */
+                moveInDate: string;
+                owner: {
+                    name: string;
+                    phone: string | null;
+                };
+                household: {
+                    fullName: string;
+                    /** @enum {string} */
+                    relation: "spouse" | "child" | "parent" | "sibling" | "relative" | "co_renter" | "domestic_help" | "driver" | "other";
+                }[];
+            } | null;
+            nidHidden: boolean;
+            files: {
+                /** Format: uuid */
+                id: string;
+                fileName: string;
+                docType: string;
+                isImage: boolean;
+            }[];
+            matches: {
+                /** Format: uuid */
+                personId: string;
+                name: string;
+                by: ("phone" | "nid")[];
+                open: boolean;
+            }[];
+            person: {
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                /** Format: uuid */
+                id: string;
+                name: string;
+                nameEn: string | null;
+                phone: string | null;
+                photoUrl: string | null;
+                verified: boolean | null;
+            } | null;
+            memberNo: number | null;
+            membershipCode: string | null;
+            can: {
+                review: boolean;
+                approve: boolean;
+                reject: boolean;
+                addOwnership: boolean;
+            };
+        };
+        FormEntryDto_Output: {
+            reference: string;
+            /** @enum {string} */
+            formKey: "membership" | "renter_registration";
+            /** Format: date-time */
+            submittedAt: string;
+            /** Format: uuid */
+            id: string;
+        };
+        FormReviewDto: {
+            note?: string | null;
+        };
+        FormApproveDto: {
+            note?: string | null;
+            /** @default false */
+            addOwnership: boolean;
+            sharePercent?: string;
+            /** Format: date */
+            startDate?: string;
+            monthlyRent?: string | null;
+        };
+        FormRejectDto: {
+            note: string;
         };
         InvoiceListDto_Output: {
             items: {
@@ -13628,6 +13714,27 @@ export interface operations {
             };
         };
     };
+    MembershipsController_card: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberCardDto_Output"];
+                };
+            };
+        };
+    };
     MembershipsController_remove: {
         parameters: {
             query?: never;
@@ -13685,6 +13792,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MembershipSettingsDto_Output"];
+                };
+            };
+        };
+    };
+    MemberCardSettingsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberCardSettingsDto_Output"];
+                };
+            };
+        };
+    };
+    MemberCardSettingsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberCardSettingsInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberCardSettingsDto_Output"];
                 };
             };
         };
@@ -13869,233 +14018,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    PublicFormsController_places: {
-        parameters: {
-            query?: {
-                parentId?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PublicPlaceListDto_Output"];
-                };
-            };
-        };
-    };
-    PublicFormsController_submit: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                formKey: "membership" | "renter_registration";
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": {
-                    /** @description The answers, as JSON */
-                    data: string;
-                    /** @description Leave empty */
-                    website?: string;
-                    /** Format: binary */
-                    file?: string;
-                };
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FormReceiptDto_Output"];
-                };
-            };
-        };
-    };
-    FormsController_list: {
-        parameters: {
-            query?: {
-                page?: number;
-                pageSize?: number;
-                status?: "new" | "in_review" | "approved" | "rejected";
-                formKey?: "membership" | "renter_registration";
-                areaId?: string;
-                q?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FormListDto_Output"];
-                };
-            };
-        };
-    };
-    FormsController_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FormDetailDto_Output"];
-                };
-            };
-        };
-    };
-    FormsController_enter: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                formKey: "membership" | "renter_registration";
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": {
-                    /** @description The answers, as JSON */
-                    data: string;
-                    /** @description Leave empty */
-                    website?: string;
-                    /** Format: binary */
-                    file?: string;
-                };
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FormEntryDto_Output"];
-                };
-            };
-        };
-    };
-    FormsController_file: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                fileId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    FormsController_review: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FormReviewDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FormDetailDto_Output"];
-                };
-            };
-        };
-    };
-    FormsController_approve: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FormApproveDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FormDetailDto_Output"];
-                };
-            };
-        };
-    };
-    FormsController_reject: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FormRejectDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FormDetailDto_Output"];
-                };
             };
         };
     };
@@ -14359,6 +14281,233 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ChargeTypeDto_Output"];
+                };
+            };
+        };
+    };
+    PublicFormsController_places: {
+        parameters: {
+            query?: {
+                parentId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicPlaceListDto_Output"];
+                };
+            };
+        };
+    };
+    PublicFormsController_submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                formKey: "membership" | "renter_registration";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** @description The answers, as JSON */
+                    data: string;
+                    /** @description Leave empty */
+                    website?: string;
+                    /** Format: binary */
+                    file?: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormReceiptDto_Output"];
+                };
+            };
+        };
+    };
+    FormsController_list: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+                status?: "new" | "in_review" | "approved" | "rejected";
+                formKey?: "membership" | "renter_registration";
+                areaId?: string;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormListDto_Output"];
+                };
+            };
+        };
+    };
+    FormsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormDetailDto_Output"];
+                };
+            };
+        };
+    };
+    FormsController_enter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                formKey: "membership" | "renter_registration";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** @description The answers, as JSON */
+                    data: string;
+                    /** @description Leave empty */
+                    website?: string;
+                    /** Format: binary */
+                    file?: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormEntryDto_Output"];
+                };
+            };
+        };
+    };
+    FormsController_file: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                fileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    FormsController_review: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FormReviewDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormDetailDto_Output"];
+                };
+            };
+        };
+    };
+    FormsController_approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FormApproveDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormDetailDto_Output"];
+                };
+            };
+        };
+    };
+    FormsController_reject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FormRejectDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormDetailDto_Output"];
                 };
             };
         };

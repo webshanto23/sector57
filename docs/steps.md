@@ -1195,6 +1195,14 @@ Same branch, 2026-10-29. Anis asked which reports lack an A4 print. Five do (Day
 - **Members:** "Print A4" on `/dashboard/reports/members`: the place and date range under the title, members by status with the total, then the joiners numbered with membership ID, name, mobile, address, joined date and status; signatures general secretary, president.
 - The tables share `PrintSection` (`report-print.tsx`). Not printed from a browser yet (no admin login).
 
+## Membership ID cards — Slices 1–2 built, awaiting review
+
+Same branch, 2026-10-29, to the mock `docs/mocks/sector57-member-id-card-gradient-filled-both.png`. Decided by Anis: RGB only, printed from the browser (no CMYK, no server PDF for now); both a CR80 card layout and an A4 layout. Defaults taken where he did not answer: "Valid till" from an optional "valid for N years" setting (blank: no line); no QR or public verify page yet; printed by callers with `members.edit` in the member's area; an organisation's card has its name and the badge in place of a photo.
+
+- **Slice 1, API:** `GET/PUT /settings/member-card` (`settings`; `society_settings` key `member_card`: terms in Bangla and English, at most 4 lines, valid years 1–10 or none, signature labels). `GET /memberships/:id/card` (`members.edit` where the member owns, rents, lives or holds the membership; 404 outside the area, 403 view only; 409 `membership_id_pending`, `membership_not_active`): name, ID, photo, contact, joined, valid till (`cardValidTill`, from the print day), the receipt header with the badge, the settings. Each read is audited (`card`). `member-card.e2e-spec.ts` (5), `member-card.spec.ts` (4).
+- **Slice 2, web:** "Membership ID card" on the person and organisation member pages (active with an ID, `can.edit`): both faces at real size, "Print card (CR80)" (named page `id-card`, 54 × 85.6 mm, front then back) and "Print on A4" (front and back side by side with dashed cut lines) and "Download PDF" (made in the browser with `html-to-image` and `jspdf`: each face as a picture at about 575 dpi, one per page at card size, colour). Settings › "Membership ID card" card. Not seen in a browser or printed yet.
+- **Next:** slice 3, printing many cards from the members list (A4 sheets of 8, backs lined up for double-sided). Later: QR with a random verify token (migration) and a public verify page; a CMYK PDF for print shops if ever needed.
+
 ## Later: beyond milestone 3
 
 These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.

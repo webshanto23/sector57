@@ -1362,7 +1362,48 @@
     "removeMember": "Remove from members",
     "removeMemberQuestion": "Remove {name} from the members? They stay on file as an owner or renter. Voided membership bills are kept.",
     "removeMemberHint": "Made a member by mistake? While the membership ID is pending, the membership can be removed.",
-    "memberRemoved": "Removed from the members."
+    "memberRemoved": "Removed from the members.",
+    "idCard": {
+      "title": "Membership ID card",
+      "hint": "Both sides at their real size. Print one side per page on a card printer, or both on A4 with cut lines.",
+      "preview": "Front and back of the card",
+      "printCard": "Print card (CR80)",
+      "printA4": "Print on A4",
+      "printHint": "The PDF has both sides in colour at the real card size, one side per page. Colours vary a little by printer; do a test print first.",
+      "memberCard": "Member card",
+      "membershipId": "Membership ID",
+      "phone": "Phone",
+      "email": "Email",
+      "since": "Since {date}",
+      "validTill": "Valid till {date}",
+      "termsTitle": "Terms of use",
+      "terms": {
+        "one": "This card belongs to the society and is not transferable.",
+        "two": "Show it at the society office for services and voting.",
+        "three": "If found, please return it to the society office."
+      },
+      "memberSignature": "Member's signature",
+      "seal": "Seal",
+      "secretary": "General Secretary",
+      "pdfName": "Member card {code}",
+      "downloadPdf": "Download PDF",
+      "pdfBusy": "Making the PDF…",
+      "pdfFailed": "Could not make the PDF. Try again, or use a print button."
+    },
+    "cardSettings": {
+      "title": "Membership ID card",
+      "hint": "What the back of the card says, how long it is valid and the signature label. The society's name, logo and address come from the receipt header.",
+      "termsBn": "Terms (Bangla)",
+      "termsEn": "Terms (English)",
+      "termsHint": "One per line, at most {max}. Leave blank for the standard terms.",
+      "termsEnHint": "For cards printed from the English pages; blank uses the Bangla terms.",
+      "years": "Valid for (years)",
+      "yearsHint": "From the day it is printed, at most {max}. Leave blank for no \"Valid till\" line.",
+      "signatureBn": "Signature label (Bangla)",
+      "signatureEn": "Signature label (English)",
+      "tooMany": "At most {max} lines of terms.",
+      "save": "Save"
+    }
   },
   "Registers": {
     "add": "Add member",
