@@ -10,6 +10,8 @@ Shared money rules are in `docs/rules/finance.md`.
 - A void reverses the bills' `paid` and the ledger rows, never deletes; after the day or once handed over it needs `payments.approve`.
 - Handovers are confirmed by someone other than the collector, and take all of a collector's **cash** payments, bills and donations alike. Bank, cheque and mobile payments went straight to the bank account: they never enter a handover or the "in hand" figures.
 - Printable documents go in `PrintSheet` (`components/print`); the print CSS in `globals.css` shows only that, on A5 unless a named page says otherwise (`a4` lists, `bill-a4`, `thermal80`), in light colours. Receipts (bill payments and donations) print on A5 or the 80 mm roll through the paper picker (`print_formats.receipt`, in the receipt detail as `print`); the thermal receipt is `collect/receipt-thermal.tsx`, from the same `receiptOf` data.
+- The collect page opens with `?unitId=` / `?personId=` / `?organisationId=` and any number of `invoiceId` params (only those bills start ticked). The bills list's "Take payment for ticked" uses it; it needs open bills of one account, since one receipt is for one unit or member. Bulk collection across accounts is not built.
+- `GET /collect/lookup?open=true` (no other parameter) lists the accounts in the caller's area whose open bills are newest (`OPEN_ACCOUNTS` = 20 units, plus members for society-wide collectors); with nothing asked it still returns none.
 
 ## Donations
 

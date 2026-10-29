@@ -1204,6 +1204,11 @@ Same branch, 2026-10-29, to the mock `docs/mocks/sector57-member-id-card-gradien
 - **Slice 3, many at once:** `POST /memberships/cards` (`members.edit`, at most `MAX_CARD_BATCH` = 90, each once): the cards in the order ticked, and `skipped` with a reason per membership (outside the area, no edit right, ID pending, not active) instead of failing the batch. Member register rows carry `membershipId`. The members list has tick boxes on active members with an ID (callers with `members.edit` anywhere) and three outputs: A4 sheets of nine (fronts page, then backs page mirrored per row for long-edge double-sided printing; `cardSheets`), the card printer (front and back per card), and one PDF (card-size pages, JPEG at about 380 dpi to keep it small). Single and batch PDFs share `card-pdf.ts`. `member-card.e2e-spec.ts` (7), `member-card.spec.ts` (6). Not printed yet.
 - **Later: QR with a random verify token (migration) and a public verify page; a CMYK PDF for print shops if ever needed.
 
+## Collect from the bills list — built, awaiting review
+
+Same branch, 2026-10-29. Anis found no way to take payment after ticking bills, and new bills not showing on the collect page until searched. Built (feb9935): "Take payment for ticked" on the bills list (one account per receipt), several `invoiceId`s on the collect page, and an "Open bills, newest first" list there before any search (`GET /collect/lookup?open=true`); the receipt column shows once an account is chosen. `payments.e2e-spec.ts` (20). Not clicked through in a browser.
+- **Open:** bulk collection across units (one receipt per account, one transaction) was offered; Anis has not decided, nor whether a unit's row takes only the ticked bills or all its open bills. Also offered: a "Membership fees" tag so membership bills are not mistaken for duplicate unit bills.
+
 ## Later: beyond milestone 3
 
 These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.
