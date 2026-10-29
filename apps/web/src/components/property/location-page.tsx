@@ -31,6 +31,7 @@ import { levelName, propertyTrail } from "./labels";
 import { LayoutForm } from "./layout-form";
 import { LevelBar } from "./level-bar";
 import { LocationEditor } from "./location-editor";
+import { RemoveSelected } from "./remove-selected";
 import { unitTypeIcon } from "./unit-types";
 
 /** The level picker and search: what is chosen, the chip counts, and the results (null on the tree). */
@@ -64,6 +65,7 @@ async function ChildCard({
   address,
   owners,
   home,
+  pickGroup,
 }: {
   node: LocationNode;
   locale: Locale;
@@ -72,6 +74,8 @@ async function ChildCard({
   owners?: PartyName[] | null;
   /** For a unit over several storeys: the name of its own storey, listed first. */
   home?: string;
+  /** Adds a tick box for "Remove selected" (`RemoveSelected` with this group). */
+  pickGroup?: string;
 }) {
   const t = await getTranslations("Property");
   const ownerNames = (owners ?? []).slice(0, CARD_OWNERS).map((owner) => (locale === "en" ? (owner.nameEn ?? owner.name) : owner.name));
@@ -115,12 +119,26 @@ async function ChildCard({
     </>
   );
   const className = "grid content-start gap-2 rounded-[12px] border border-line bg-surface p-3.5";
-  return href ? (
+  const card = href ? (
     <Link href={href} className={`${className} transition-colors hover:border-muted-foreground`}>
       {body}
     </Link>
   ) : (
     <div className={className}>{body}</div>
+  );
+  if (!pickGroup) return card;
+  // The tick box sits on the card, outside the link, so ticking never opens the place.
+  return (
+    <div className="relative grid">
+      {card}
+      <input
+        type="checkbox"
+        data-pick={pickGroup}
+        value={node.id}
+        aria-label={t("remove.pick", { name: node.name })}
+        className="absolute right-3 bottom-3 size-4 accent-primary"
+      />
+    </div>
   );
 }
 
@@ -260,13 +278,22 @@ export async function LocationPage({
                   {location ? t("empty") : can.create ? t("emptyTop") : t("noAccess")}
                 </div>
               ) : (
-                <ul className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-2.5">
-                  {children.map((child) => (
-                    <li key={child.id} className="grid">
-                      <ChildCard node={child} locale={locale} unitsOpen={unitsOpen} home={child.isUnit ? location?.name : undefined} />
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  {location && (can.delete || can.deleteUnit) ? <RemoveSelected group={`remove-${location.id}`} /> : null}
+                  <ul className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-2.5">
+                    {children.map((child) => (
+                      <li key={child.id} className="grid">
+                        <ChildCard
+                          node={child}
+                          locale={locale}
+                          unitsOpen={unitsOpen}
+                          home={child.isUnit ? location?.name : undefined}
+                          pickGroup={location && (child.isUnit ? can.deleteUnit : can.delete) ? `remove-${location.id}` : undefined}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </>
               )}
               {alsoHere.length > 0 ? (
                 <>

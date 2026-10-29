@@ -168,6 +168,8 @@ export const locationViewSchema = z.object({
     createUnit: z.boolean(),
     edit: z.boolean(),
     delete: z.boolean(),
+    /** Remove units here (the place page's "Remove selected" also needs this for units). */
+    deleteUnit: z.boolean(),
   }),
 });
 export type LocationView = z.infer<typeof locationViewSchema>;
@@ -244,6 +246,24 @@ export const locationBulkSchema = z.object({
   names: bulkNames,
 });
 export type LocationBulkInput = z.infer<typeof locationBulkSchema>;
+
+/**
+ * `POST /locations/remove-many`: places and units picked on a place page, removed together,
+ * all or none. A picked place goes with the units straight inside it (a floor with its flats).
+ */
+export const locationRemoveManySchema = z.object({
+  ids: z
+    .array(z.uuid())
+    .min(1)
+    .max(MAX_BULK_NAMES)
+    .refine((ids) => new Set(ids).size === ids.length, 'duplicate_location'),
+});
+export type LocationRemoveManyInput = z.infer<typeof locationRemoveManySchema>;
+export const locationRemoveManyResultSchema = z.object({ removed: z.number().int().min(1) });
+
+/** Why a removal is refused (409 `remove_<problem>`, with the names in `details.names`); `in_use` comes from the records check. */
+export const REMOVAL_PROBLEMS = ['has_places', 'joined'] as const;
+export type RemovalProblem = (typeof REMOVAL_PROBLEMS)[number];
 
 /** `POST /locations/bulk` and `POST /units/bulk` response. */
 export const bulkResultSchema = z.object({ created: z.number().int().min(0) });

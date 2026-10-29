@@ -214,6 +214,63 @@ describe('Multi-storey buildings: duplexes and setting up floors (e2e)', () => {
     });
   });
 
+  describe('removing places and units together', () => {
+    const removeMany = (ids: string[], cookie = admin.cookie) => send('post', '/locations/remove-many', cookie).send({ ids });
+    const exists = async (id: string) => (await prisma.locations.count({ where: { id } })) > 0;
+    const addUnits = (parentId: string, names: string[]) =>
+      send('post', '/units/bulk', admin.cookie).send({ parentId, names, unitType: 'residential', sizeSqft: null, billTo: 'owner' });
+    let building: string;
+    let floors: Record<'one' | 'two' | 'three', string>;
+
+    beforeAll(async () => {
+      building = await addLocation(places.plot, 5, 'ভবন এফ');
+      floors = { one: await addLocation(building, 6, '১ তলা'), two: await addLocation(building, 6, '২ তলা'), three: await addLocation(building, 6, '৩ তলা') };
+      await addUnits(floors.one, ['১এ', '১বি']).expect(201);
+      await addUnits(floors.two, ['২এ']).expect(201);
+      await addUnits(floors.three, ['৩এ']).expect(201);
+    });
+
+    it('adds no units beside the floors of a building', async () => {
+      expect((await addUnits(building, ['এ', 'বি']).expect(409)).body.code).toBe('units_beside_floors');
+      const single = await send('post', '/units', admin.cookie).send({ parentId: building, name: 'এ', code: null, unitType: 'residential', sizeSqft: null, billTo: 'owner' });
+      expect(single.status).toBe(409);
+      expect(single.body.code).toBe('units_beside_floors');
+    });
+
+    it('removes a floor with the units on it, all audited', async () => {
+      const units = await prisma.locations.findMany({ where: { parent_id: floors.one }, select: { id: true } });
+      expect((await removeMany([floors.one]).expect(200)).body).toEqual({ removed: 3 });
+      for (const id of [floors.one, ...units.map((unit) => unit.id)]) expect(await exists(id)).toBe(false);
+      expect(await prisma.audit_logs.count({ where: { entity_id: { in: [floors.one, ...units.map((unit) => unit.id)] }, action: 'delete' } })).toBe(3);
+    });
+
+    it('refuses places with places inside, joined units, records and unknown rows, removing nothing', async () => {
+      const refused = async (ids: string[], code: string) => {
+        const res = await removeMany(ids).expect(409);
+        expect(res.body.code).toBe(code);
+        return res.body.details.names as string[];
+      };
+      expect(await refused([building], 'remove_has_places')).toEqual(['ভবন এফ']);
+      expect(await refused([duplex.id], 'remove_joined')).toEqual(['ফ্ল্যাট ৩এ']);
+
+      const unit = (await prisma.locations.findFirstOrThrow({ where: { parent_id: floors.two }, select: { id: true } })).id;
+      const person = (await prisma.persons.create({ data: { society_id: societyId, full_name: `মালিক এফ ${MARK}` } })).id;
+      await prisma.ownerships.create({ data: { society_id: societyId, location_id: unit, person_id: person, start_date: new Date('2026-01-01') } });
+      expect(await refused([floors.two, floors.three], 'remove_in_use')).toEqual(['২এ']);
+      expect(await exists(floors.three)).toBe(true);
+
+      expect((await removeMany([floors.three, randomUUID()]).expect(404)).body.code).toBe('location_not_found');
+    });
+
+    it('needs the delete right for both places and units', async () => {
+      const placesOnly = await makeUser([{ roleId: await makeRole(['locations:view', 'locations:delete']) }]);
+      expect((await removeMany([floors.three], placesOnly.cookie).expect(403)).body.code).toBe('beyond_your_permissions');
+      const elsewhere = await makeUser([{ roleId: await makeRole(['locations:view', 'locations:delete', 'units:view', 'units:delete']), scope: places.buildingB }]);
+      await removeMany([floors.three], elsewhere.cookie).expect(404);
+      expect(await exists(floors.three)).toBe(true);
+    });
+  });
+
   describe('making a duplex', () => {
     const combine = (keepId: string, mergeIds: string[], cookie = admin.cookie) => send('post', '/units/combine', cookie).send({ keepId, mergeIds });
     const unitAt = async (floor: string, name: string) =>

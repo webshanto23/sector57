@@ -1174,6 +1174,15 @@ Same branch, 2026-10-29. Anis asked for an "Add application" button on `/dashboa
 - **Web:** `/dashboard/forms/new` (radio cards for the form type, then the public form components with `send={enterForm}`), opening the new application after saving; an "Entered by" column on the queue (else "Website") and on the detail page's subtitle.
 - **Tests:** `forms.e2e-spec.ts` "office entry" (4). Not clicked through in a browser.
 
+## Remove floors and units, one or many — Built, awaiting review
+
+Same branch, 2026-10-29. Anis set up "Alo chaya" with Add many twice: 11 floors, then 22 units that landed beside the floors instead of on them, so the grid and Join floors missed them. He asked to remove floors and units singly and in bulk.
+
+- **API:** `POST /locations/remove-many` (`LocationRemovalService`, `removal.policy.ts` + spec): a floor goes with its units; places with places inside, joined units and anything in use (catalog of foreign keys plus documents) are refused with names; per-row delete rights; audited. Unit add (single and bulk) refuses a place that already holds floors (`units_beside_floors`). Location view `can.deleteUnit`.
+- **Web:** tick boxes on the cards inside a place, "Select all" and "Remove selected (N)" with a confirm (`remove-selected.tsx`).
+- **Tests:** `removal.policy.spec.ts`, `multi-storey.e2e-spec.ts` (14). Full e2e: only `finance.e2e-spec.ts` "corrects the opening with reversing rows" failed; it orders ledger rows by random UUID, unrelated (for Codex). Not clicked through in a browser.
+- **Fix for Alo chaya:** select all on the building, Remove selected, then "Set up floors and units" with letters AB.
+
 ## Later: beyond milestone 3
 
 These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.

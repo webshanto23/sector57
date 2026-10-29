@@ -484,6 +484,10 @@
       "location_code_taken": "Another location already has this holding number.",
       "location_has_children": "Something is still inside this location. Remove that first, or make it inactive.",
       "location_in_use": "Other records still refer to this location. Make it inactive instead.",
+      "remove_has_places": "A place you picked has other places inside. Remove those first.",
+      "remove_joined": "Units joined over floors are history and can't be removed.",
+      "remove_in_use": "Owners, renters, bills or other records still refer to some of these. Make them inactive instead.",
+      "units_beside_floors": "This building has floors. Add units on a floor, or remove the floors and use \"Set up floors and units\".",
       "location_not_found": "This location no longer exists, or is outside your area. Reload the page.",
       "unit_not_found": "This unit no longer exists, or is outside your area. Reload the page.",
       "parent_inactive": "Nothing can be added inside an inactive location.",
@@ -993,6 +997,14 @@
       "keep": "Keep",
       "confirmCombine": "Join floors",
       "combined": "Floors joined."
+    },
+    "remove": {
+      "pick": "Select {name}",
+      "selectAll": "Select all",
+      "removeSelected": "Remove selected",
+      "confirm": "Remove {count, plural, one {# item} other {# items}} for good? A floor goes with the units on it. This cannot be undone.",
+      "done": "{count, plural, one {# item} other {# items}} removed.",
+      "names": "Check: {names}"
     },
     "seeUnits": "See its units",
     "name": "Name",

@@ -596,6 +596,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/locations/remove-many": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["LocationsController_removeMany"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/locations/{id}/grid": {
         parameters: {
             query?: never;
@@ -4571,6 +4587,7 @@ export interface components {
                 createUnit: boolean;
                 edit: boolean;
                 delete: boolean;
+                deleteUnit: boolean;
             };
         };
         LocationSearchDto_Output: {
@@ -4628,6 +4645,12 @@ export interface components {
         };
         BulkResultDto_Output: {
             created: number;
+        };
+        LocationRemoveManyDto: {
+            ids: string[];
+        };
+        LocationRemoveManyResultDto_Output: {
+            removed: number;
         };
         BuildingGridDto_Output: {
             floors: {
@@ -12333,6 +12356,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BulkResultDto_Output"];
+                };
+            };
+        };
+    };
+    LocationsController_removeMany: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocationRemoveManyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocationRemoveManyResultDto_Output"];
                 };
             };
         };

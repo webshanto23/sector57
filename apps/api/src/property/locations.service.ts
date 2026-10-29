@@ -42,7 +42,7 @@ export class LocationsService {
       breadcrumb: [],
       alsoHere: [],
       children,
-      can: { create: actor.access.paths('create', 'locations') === 'all', createUnit: false, edit: false, delete: false },
+      can: { create: actor.access.paths('create', 'locations') === 'all', createUnit: false, edit: false, delete: false, deleteUnit: false },
     };
   }
 
@@ -65,6 +65,7 @@ export class LocationsService {
         createUnit: actor.access.can('create', 'units', located),
         edit: actor.access.can('edit', 'locations', located),
         delete: actor.access.can('delete', 'locations', located),
+        deleteUnit: actor.access.can('delete', 'units', located),
       },
     };
   }

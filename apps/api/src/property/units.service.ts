@@ -180,6 +180,7 @@ export class UnitsService {
 
   async create(actor: Actor, input: UnitCreateInput): Promise<UnitDetail> {
     const parent = (await this.tree.parentFor(actor.access, actor.societyId, input.parentId, 'units'))!;
+    await this.assertNoFloorsInside(actor.societyId, parent.id);
     const levelId = await this.unitLevel(actor.societyId);
     if (await this.tree.codeInUse(actor.societyId, input.code)) throw codeTaken();
     await this.unitTypes.assertCodes(actor.societyId, [input.unitType]);
@@ -215,6 +216,7 @@ export class UnitsService {
   /** Many units with the same facts under one parent, all or none. */
   async bulk(actor: Actor, input: UnitBulkInput): Promise<BulkResult> {
     const parent = (await this.tree.parentFor(actor.access, actor.societyId, input.parentId, 'units'))!;
+    await this.assertNoFloorsInside(actor.societyId, parent.id);
     const levelId = await this.unitLevel(actor.societyId);
     const taken = await this.tree.takenNames(actor.societyId, parent.id, input.names);
     if (taken.length > 0) throw takenError(taken);
@@ -287,6 +289,17 @@ export class UnitsService {
       if (isForeignKeyViolation(error)) throw inUse();
       throw error;
     }
+  }
+
+  /**
+   * Units go on a floor, not beside it: a place that already holds floors (places at the
+   * deepest level above the units) takes no units of its own. Other mixes stay allowed.
+   */
+  private async assertNoFloorsInside(societyId: string, parentId: string): Promise<void> {
+    const floor = await this.prisma.location_levels.findFirst({ where: { society_id: societyId, is_unit_level: false }, orderBy: { depth: 'desc' }, select: { id: true } });
+    if (!floor) return;
+    const floors = await this.prisma.locations.count({ where: { society_id: societyId, parent_id: parentId, level_id: floor.id } });
+    if (floors > 0) throw new ConflictException({ code: 'units_beside_floors', message: 'Add units on one of the floors here' });
   }
 
   private async visibleRow(actor: Actor, id: string): Promise<UnitRow> {
