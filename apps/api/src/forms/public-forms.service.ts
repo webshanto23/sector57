@@ -4,6 +4,8 @@ import {
   FORM_DOCUMENT_REQUIRED,
   formSchemas,
   OPEN_FORM_STATUSES,
+  renterFormNidSchema,
+  SETTING_KEYS,
   type FormKey,
   type FormReceipt,
   type MembershipForm,
@@ -86,7 +88,7 @@ export class PublicFormsService {
   }
 
   /** Parses the `data` field of a form post against the form's schema (400 `validation_failed` with issues). */
-  parse(formKey: FormKey, data: unknown): ParsedForm {
+  parse(formKey: FormKey, data: unknown, nidRequired = false): ParsedForm {
     let json: unknown;
     try {
       json = typeof data === 'string' ? JSON.parse(data) : undefined;
@@ -99,7 +101,7 @@ export class PublicFormsService {
       if (!result.success) throw new ZodValidationException(result.error);
       return { formKey, form: result.data };
     }
-    const result = formSchemas.renter_registration.safeParse(json);
+    const result = (nidRequired ? renterFormNidSchema : formSchemas.renter_registration).safeParse(json);
     if (!result.success) throw new ZodValidationException(result.error);
     return { formKey, form: result.data };
   }
@@ -113,7 +115,12 @@ export class PublicFormsService {
       this.logger.warn({ formKey, ip }, 'Form honeypot filled in; nothing saved');
       return { reference: newReference(formKey), formKey, submittedAt: new Date().toISOString() };
     }
-    const parsed = this.parse(formKey, data);
+    // A renter's NID is required while the society requires IDs of renters (the membership form always asks).
+    const rule = await this.prisma.society_settings.findUnique({
+      where: { society_id_key: { society_id: societyId, key: SETTING_KEYS.requireIdNumbers } },
+      select: { value: true },
+    });
+    const parsed = this.parse(formKey, data, rule?.value === true);
     if (FORM_DOCUMENT_REQUIRED[formKey] && !upload?.length) throw fileRequired();
     const { phone, locationId } = factsOf(parsed);
 

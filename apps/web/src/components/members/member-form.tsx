@@ -16,7 +16,8 @@ import { emptyPerson, PersonFields, personBody, type PersonValues } from "./pers
  * The office adds a society member directly: the person (matched by phone or NID, else added),
  * their place and the day they joined. Opens the person's page once saved.
  */
-export function NewMemberForm() {
+/** `nidRequired`: the society requires an NID of members. */
+export function NewMemberForm({ nidRequired }: { nidRequired: boolean }) {
   const t = useTranslations("Members");
   const router = useRouter();
   const { status, busy, run } = useSubmit();
@@ -37,7 +38,7 @@ export function NewMemberForm() {
           if (created) router.push(`/dashboard/members/${created.personId}`);
         }}
       >
-        <PersonFields id="new-member" values={values} onChange={setValues} />
+        <PersonFields id="new-member" values={values} onChange={setValues} nidRequired={nidRequired} />
         <div className="grid gap-3.5 min-[600px]:grid-cols-2">
           <div className="grid gap-1.5">
             <p className="text-[13px] font-medium">{t("memberPlace")}</p>
@@ -53,7 +54,7 @@ export function NewMemberForm() {
           />
         </div>
         <FormStatus status={status} />
-        <Button type="submit" disabled={busy || !values.fullName.trim()} className="justify-self-start">
+        <Button type="submit" disabled={busy || !values.fullName.trim() || (nidRequired && !values.nid.trim())} className="justify-self-start">
           {t("create")}
         </Button>
       </form>

@@ -92,6 +92,7 @@ export class MembershipsService {
   ) {
     const active = await tx.memberships.findFirst({ where: { person_id: input.personId, status: 'active' }, select: { id: true } });
     if (active) throw alreadyMember();
+    await this.parties.requireIds(tx, societyId, { personId: input.personId, organisationId: null });
     return tx.memberships.create({
       data: {
         society_id: societyId,

@@ -3903,6 +3903,7 @@ export interface components {
             nameBn: string;
             nameEn: string | null;
             fiscalYearStartMonth: number;
+            requireIdNumbers: boolean;
             mark: string;
             placeBn: string | null;
             placeEn: string | null;
@@ -5984,6 +5985,7 @@ export interface components {
         SocietySettingsDto_Output: {
             shareRentersWithThana: boolean;
             separateFacilityFunds: boolean;
+            requireIdNumbers: boolean;
             fiscalYearStartMonth: number;
             fiscalYearLocked: boolean;
             receiptHeader: {
@@ -6026,6 +6028,7 @@ export interface components {
         SettingsInputDto: {
             shareRentersWithThana?: boolean;
             separateFacilityFunds?: boolean;
+            requireIdNumbers?: boolean;
             fiscalYearStartMonth?: number;
             receiptHeader?: {
                 nameBn: string;

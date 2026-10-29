@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/kit";
 import { NewMemberForm } from "@/components/members/member-form";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { getSociety } from "@/lib/api/public";
 import { requirePermission } from "@/lib/api/session";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/dashboard/members/new">): Promise<Metadata> {
@@ -22,7 +23,7 @@ export default async function NewMemberPage({ params }: PageProps<"/[locale]/das
 
   const me = await requirePermission("members", "create");
   if (!canSocietyWide(me.access, "members", "create")) notFound();
-  const t = await getTranslations("Members");
+  const [t, society] = await Promise.all([getTranslations("Members"), getSociety()]);
 
   return (
     <>
@@ -36,7 +37,7 @@ export default async function NewMemberPage({ params }: PageProps<"/[locale]/das
           </Link>
         }
       />
-      <NewMemberForm />
+      <NewMemberForm nidRequired={society?.requireIdNumbers ?? false} />
     </>
   );
 }

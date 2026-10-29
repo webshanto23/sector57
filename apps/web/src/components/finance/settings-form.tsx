@@ -71,6 +71,7 @@ export function SettingsForm({ settings, canEdit }: { settings: SocietySettings;
   const [saved, setSaved] = useState(settings);
   const [thana, setThana] = useState(settings.shareRentersWithThana);
   const [separate, setSeparate] = useState(settings.separateFacilityFunds);
+  const [requireIds, setRequireIds] = useState(settings.requireIdNumbers);
   const [month, setMonth] = useState(settings.fiscalYearStartMonth);
   const [header, setHeader] = useState(() => toHeader(settings.receiptHeader));
   const [profile, setProfile] = useState(() => toProfile(settings.profile));
@@ -88,6 +89,7 @@ export function SettingsForm({ settings, canEdit }: { settings: SocietySettings;
     const body: SettingsInput = {};
     if (thana !== saved.shareRentersWithThana) body.shareRentersWithThana = thana;
     if (separate !== saved.separateFacilityFunds) body.separateFacilityFunds = separate;
+    if (requireIds !== saved.requireIdNumbers) body.requireIdNumbers = requireIds;
     if (month !== saved.fiscalYearStartMonth) body.fiscalYearStartMonth = month;
     // Blank fields become null in the API.
     if (headerChanged) body.receiptHeader = header;
@@ -99,14 +101,15 @@ export function SettingsForm({ settings, canEdit }: { settings: SocietySettings;
       setHeader(toHeader(result.receiptHeader));
       setProfile(toProfile(result.profile));
       setPaper(toPaper(result.printFormats));
-      if (profileChanged) {
-        // The name and badge are on every public page and in the header above.
+      if (profileChanged || body.requireIdNumbers !== undefined) {
+        // The name and badge are on every public page and in the header above; the ID rule is on the forms page.
         await refreshPublicSite().catch(() => undefined);
         router.refresh();
       }
     } else if (result === undefined) {
       // Put the switches back where the server has them; the message says why.
       setSeparate(saved.separateFacilityFunds);
+      setRequireIds(saved.requireIdNumbers);
       setMonth(saved.fiscalYearStartMonth);
     }
   }
@@ -200,6 +203,14 @@ export function SettingsForm({ settings, canEdit }: { settings: SocietySettings;
           checked={thana}
           disabled={readOnly}
           onChange={(e) => setThana(e.target.checked)}
+        />
+        <CheckField
+          id="require-ids"
+          label={t("requireIds")}
+          hint={t("requireIdsHint")}
+          checked={requireIds}
+          disabled={readOnly}
+          onChange={(e) => setRequireIds(e.target.checked)}
         />
       </Card>
 

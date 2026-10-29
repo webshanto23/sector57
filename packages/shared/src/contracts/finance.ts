@@ -16,6 +16,8 @@ import { brandingSchema } from './society.js';
 export const SETTING_KEYS = {
   shareRentersWithThana: 'share_renters_with_thana',
   separateFacilityFunds: 'separate_facility_funds',
+  /** Owners, renters and members need an NID (a person) or trade licence (an organisation) on file. */
+  requireIdNumbers: 'require_id_numbers',
   receiptHeader: 'receipt_header',
   /** Logo badge and place line (`brandingSchema`); the name itself is the `societies` row. */
   branding: 'branding',
@@ -75,6 +77,7 @@ export const societyProfileInputSchema = z.object({
 export const societySettingsSchema = z.object({
   shareRentersWithThana: z.boolean(),
   separateFacilityFunds: z.boolean(),
+  requireIdNumbers: z.boolean(),
   fiscalYearStartMonth: z.number().int().min(1).max(12),
   /** True once the ledger has any entry: moving the year then would split vouchers and reports. */
   fiscalYearLocked: z.boolean(),
@@ -89,6 +92,7 @@ export const settingsInputSchema = z
   .object({
     shareRentersWithThana: z.boolean(),
     separateFacilityFunds: z.boolean(),
+    requireIdNumbers: z.boolean(),
     fiscalYearStartMonth: z.number().int().min(1).max(12),
     receiptHeader: receiptHeaderInputSchema,
     profile: societyProfileInputSchema,

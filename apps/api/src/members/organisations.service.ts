@@ -8,7 +8,7 @@ import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { beyondPermissions } from '../property/tree.service.js';
 import { MemberRowsService, personPartySelect } from './member-rows.service.js';
-import { auditOf, canOnParty, organisationNotFound, PartiesService } from './parties.service.js';
+import { auditOf, canOnParty, organisationNotFound, PartiesService, tradeLicenceRequired } from './parties.service.js';
 
 const inUse = () => new ConflictException({ code: 'organisation_in_use', message: 'This organisation still owns, rents or has bills' });
 
@@ -54,6 +54,15 @@ export class OrganisationsService {
 
   async update(actor: Actor, id: string, input: OrganisationUpdateInput): Promise<OrganisationDetail> {
     const { row: before } = await this.allowed(actor, id, 'edit');
+    // An organisation that owns or rents keeps its trade licence while the society requires it.
+    if (
+      before.trade_licence &&
+      !input.tradeLicence &&
+      (await this.parties.idsRequired(this.prisma, actor.societyId)) &&
+      (await this.parties.holdsRole(actor.societyId, { organisationId: id }))
+    ) {
+      throw tradeLicenceRequired();
+    }
     await this.prisma.$transaction(async (tx) => {
       const after = await tx.organisations.update({ where: { id }, data: { name: input.name, trade_licence: input.tradeLicence }, select });
       await this.audit.record({ ...auditOf(actor, 'organisation', 'update', id), before: snapshot(before), after: snapshot(after) }, tx);

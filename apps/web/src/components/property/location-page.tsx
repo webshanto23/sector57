@@ -24,6 +24,7 @@ import { PeoplePanel } from "@/components/members/people-panel";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getBuildingGrid, getUnitTypes } from "@/lib/api/property";
+import { getSociety } from "@/lib/api/public";
 import { AddPanel } from "./add-panel";
 import { BuildingGrid } from "./building-grid";
 import { levelName, propertyTrail } from "./labels";
@@ -145,11 +146,12 @@ export async function LocationPage({
 }) {
   const { location, children, alsoHere, can } = view;
   const withGrid = location !== null && holdsFloors(location, levels) && children.some((child) => !child.isUnit);
-  const [t, tNav, unitTypes, grid] = await Promise.all([
+  const [t, tNav, unitTypes, grid, society] = await Promise.all([
     getTranslations("Property"),
     getTranslations("Dashboard.nav"),
     can.createUnit || withGrid ? getUnitTypes() : Promise.resolve([]),
     withGrid ? getBuildingGrid(location.id) : Promise.resolve(null),
+    people ? getSociety() : Promise.resolve(null),
   ]);
   const unitsOpen = canAnywhere(me.access, "units");
   const canEditLevels = canAnywhere(me.access, "settings", "edit");
@@ -195,7 +197,7 @@ export async function LocationPage({
           </Card>
         ) : null}
 
-        {people ? <PeoplePanel key={`people-${people.location.id}`} people={people} /> : null}
+        {people ? <PeoplePanel key={`people-${people.location.id}`} people={people} idsRequired={society?.requireIdNumbers ?? false} /> : null}
         {view.location ? <DocumentsPanel access={me.access} entityType="location" entityId={view.location.id} /> : null}
 
         {grid ? <BuildingGrid grid={grid} unitTypes={unitTypes} unitsOpen={unitsOpen} /> : null}

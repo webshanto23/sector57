@@ -3,7 +3,7 @@
 import { TIME_ZONE } from "@s57/shared";
 import { CalendarX, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useId, useState } from "react";
+import { createContext, useContext, useId, useState } from "react";
 import { ConfirmButton } from "@/components/admin/confirm-button";
 import { TextField } from "@/components/cms/fields";
 import { Field, inputClass } from "@/components/kit";
@@ -25,8 +25,15 @@ export const partyBody = (values: PartyValues) =>
       ? ({ kind: "person", person: personBody(values.person) } as const)
       : ({ kind: "organisation", organisation: { name: values.name, tradeLicence: values.tradeLicence } } as const);
 
-export const partyReady = (values: PartyValues) =>
-  values.member !== null || (values.kind === "person" ? values.person.fullName.trim() : values.name.trim()) !== "";
+/** Does the society require an NID or trade licence of owners and renters? Set by the People panel. */
+export const IdsRequired = createContext(false);
+
+/** A picked member is checked by the API against their record on file. */
+export const partyReady = (values: PartyValues, idsRequired = false) =>
+  values.member !== null ||
+  (values.kind === "person"
+    ? values.person.fullName.trim() !== "" && (!idsRequired || values.person.nid.trim() !== "")
+    : values.name.trim() !== "" && (!idsRequired || values.tradeLicence.trim() !== ""));
 
 /**
  * A person or an organisation, as typed; the API finds an existing one or adds a new one.
@@ -44,6 +51,7 @@ export function PartyFields({
   memberLookup?: boolean;
 }) {
   const t = useTranslations("Members");
+  const idsRequired = useContext(IdsRequired);
   if (values.member) return <PickedMemberCard member={values.member} onClear={() => onChange({ ...values, member: null })} />;
   return (
     <div className="grid gap-3.5">
@@ -58,16 +66,17 @@ export function PartyFields({
         ))}
       </fieldset>
       {values.kind === "person" ? (
-        <PersonFields id={`${id}-person`} values={values.person} onChange={(person) => onChange({ ...values, person })} short />
+        <PersonFields id={`${id}-person`} values={values.person} onChange={(person) => onChange({ ...values, person })} short nidRequired={idsRequired} />
       ) : (
         <div className="grid gap-3.5 min-[600px]:grid-cols-2">
           <TextField id={`${id}-org`} label={t("orgName")} value={values.name} onChange={(e) => onChange({ ...values, name: e.target.value })} required />
           <TextField
             id={`${id}-licence`}
             label={t("tradeLicence")}
-            hint={t("optional")}
+            hint={t(idsRequired ? "tradeLicenceRequired" : "optional")}
             value={values.tradeLicence}
             onChange={(e) => onChange({ ...values, tradeLicence: e.target.value })}
+            required={idsRequired}
           />
         </div>
       )}

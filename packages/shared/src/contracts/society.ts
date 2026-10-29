@@ -36,6 +36,8 @@ export const societySchema = z
     nameBn: z.string(),
     nameEn: z.string().nullable(),
     fiscalYearStartMonth: z.number().int().min(1).max(12),
+    /** Owners, renters and members need an NID or trade licence (the public renter form asks for the NID). */
+    requireIdNumbers: z.boolean(),
   })
   .extend(brandingSchema.shape);
 export type Society = z.infer<typeof societySchema>;

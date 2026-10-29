@@ -19,6 +19,7 @@ import { VehiclesPanel } from "@/components/vehicles/vehicles-panel";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getLocationPeople } from "@/lib/api/members";
+import { getSociety } from "@/lib/api/public";
 import { getUnit, getUnitTypes } from "@/lib/api/property";
 import { requirePermission } from "@/lib/api/session";
 
@@ -35,7 +36,13 @@ export default async function UnitPage({ params }: PageProps<"/[locale]/dashboar
   setRequestLocale(locale as Locale);
 
   const me = await requirePermission("units");
-  const [t, unit, people, unitTypes] = await Promise.all([getTranslations("Property"), getUnit(id), getLocationPeople(id), getUnitTypes()]);
+  const [t, unit, people, unitTypes, society] = await Promise.all([
+    getTranslations("Property"),
+    getUnit(id),
+    getLocationPeople(id),
+    getUnitTypes(),
+    getSociety(),
+  ]);
   if (!unit) notFound();
 
   return (
@@ -68,7 +75,7 @@ export default async function UnitPage({ params }: PageProps<"/[locale]/dashboar
         ) : null}
         <UnitForm key={unit.id} unit={unit} unitTypes={unitTypes} />
         <UnitStoreysCard key={`storeys-${unit.id}`} unit={unit} />
-        {people ? <PeoplePanel key={`people-${unit.id}`} people={people} /> : null}
+        {people ? <PeoplePanel key={`people-${unit.id}`} people={people} idsRequired={society?.requireIdNumbers ?? false} /> : null}
         <BillsPanel access={me.access} locale={locale as Locale} unitId={unit.id} />
         <VehiclesPanel access={me.access} locale={locale as Locale} unitId={unit.id} />
         <CertificatesPanel access={me.access} locale={locale as Locale} unitId={unit.id} />

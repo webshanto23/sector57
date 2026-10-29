@@ -6,6 +6,7 @@ import {
   localDigits,
   MAX_HOUSEHOLD,
   PUBLIC_RENTER_TYPES,
+  renterFormNidSchema,
   renterFormSchema,
   type FormReceipt,
   type Locale,
@@ -25,7 +26,7 @@ import { PlacePicker } from "./place-picker";
 import { submitForm } from "./submit";
 
 /** Renter registration: the renter, the flat, the move-in date, the flat's owner and the others in the household. */
-export function RenterRegistration({ onDone }: { onDone: (receipt: FormReceipt) => void }) {
+export function RenterRegistration({ onDone, nidRequired }: { onDone: (receipt: FormReceipt) => void; nidRequired: boolean }) {
   const t = useTranslations("Forms");
   const tMembers = useTranslations("Members");
   const locale = useLocale() as Locale;
@@ -41,7 +42,7 @@ export function RenterRegistration({ onDone }: { onDone: (receipt: FormReceipt) 
     setError,
     formState: { errors, isSubmitting },
   } = useForm<RenterFormInput, unknown, RenterForm>({
-    resolver: zodResolver(renterFormSchema),
+    resolver: zodResolver(nidRequired ? renterFormNidSchema : renterFormSchema),
     defaultValues: {
       renter: { fullName: "", fullNameEn: "", phone: "", email: "", nid: "" },
       occupation: "",
@@ -70,7 +71,7 @@ export function RenterRegistration({ onDone }: { onDone: (receipt: FormReceipt) 
         <TextField id="rr-name" label={t("fullName")} autoComplete="name" error={errors.renter?.fullName} {...register("renter.fullName")} />
         <TextField id="rr-name-en" label={t("fullNameEn")} lang="en" error={errors.renter?.fullNameEn} {...register("renter.fullNameEn")} />
         <TextField id="rr-phone" label={t("phone")} type="tel" inputMode="tel" autoComplete="tel" error={errors.renter?.phone} {...register("renter.phone")} />
-        <TextField id="rr-nid" label={t("nidOptional")} hint={t("nidHint")} inputMode="numeric" error={errors.renter?.nid} {...register("renter.nid")} />
+        <TextField id="rr-nid" label={t(nidRequired ? "nid" : "nidOptional")} hint={t("nidHint")} inputMode="numeric" error={errors.renter?.nid} {...register("renter.nid")} />
         <Field label={t("renterType")} htmlFor="rr-type">
           <select id="rr-type" className={inputClass} {...register("renterType")}>
             {PUBLIC_RENTER_TYPES.map((type) => (

@@ -60,9 +60,12 @@ const applicantSchema = z.object({
   nid: nidSchema,
 });
 
+/** The NID when the form must have one. */
+const requiredNid = nidSchema.pipe(z.string({ error: 'required' }));
+
 /** Membership application: an owner of a plot, building or flat asks to become a member. */
 export const membershipFormSchema = z.object({
-  applicant: applicantSchema.extend({ nid: nidSchema.pipe(z.string({ error: 'required' })) }),
+  applicant: applicantSchema.extend({ nid: requiredNid }),
   /** The place they own: a plot, building or flat. */
   locationId: z.uuid(),
   livesHere: z.boolean(),
@@ -86,6 +89,9 @@ export const renterFormSchema = z.object({
 });
 export type RenterFormInput = z.input<typeof renterFormSchema>;
 export type RenterForm = z.output<typeof renterFormSchema>;
+
+/** Renter registration when the society requires an NID of renters (the `requireIdNumbers` setting). */
+export const renterFormNidSchema = renterFormSchema.extend({ renter: applicantSchema.extend({ nid: requiredNid }) });
 
 /** The schema each form's `data` field is checked against. */
 export const formSchemas = {

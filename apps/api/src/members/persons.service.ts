@@ -15,6 +15,7 @@ import { MemberRowsService } from './member-rows.service.js';
 import {
   auditOf,
   canOnParty,
+  nidRequired,
   nidTaken,
   onlySocietyWide,
   PartiesService,
@@ -137,6 +138,15 @@ export class PersonsService {
   async update(actor: Actor, id: string, input: PersonUpdateInput): Promise<PersonDetail> {
     const { row: before } = await this.allowed(actor, id, 'edit');
     await this.checkUnique(actor.societyId, input, id);
+    // An owner, renter or member keeps their NID while the society requires it.
+    if (
+      before.nid &&
+      !input.nid &&
+      (await this.parties.idsRequired(this.prisma, actor.societyId)) &&
+      (await this.parties.holdsRole(actor.societyId, { personId: id }))
+    ) {
+      throw nidRequired();
+    }
     try {
       await this.prisma.$transaction(async (tx) => {
         const after = await tx.persons.update({ where: { id }, data: personData(input), select });

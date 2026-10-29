@@ -8,6 +8,7 @@ describe('societySchema', () => {
       nameBn: 'উত্তরা সেক্টর ১৫',
       nameEn: null,
       fiscalYearStartMonth: 7,
+      requireIdNumbers: false,
       mark: '১৫',
       placeBn: null,
       placeEn: null,

@@ -9,6 +9,7 @@ const row = (status = 'active') => ({
   name_en: 'Uttara Sector 15 Welfare Society',
   fiscal_year_start_month: 7,
   status,
+  society_settings: [{ key: 'require_id_numbers', value: true }],
 });
 
 function make(found: ReturnType<typeof row> | null) {
@@ -29,6 +30,7 @@ describe('SocietyService', () => {
       nameBn: row().name_bn,
       nameEn: row().name_en,
       fiscalYearStartMonth: 7,
+      requireIdNumbers: true,
       // Nothing saved yet: the badge comes from the number in the name.
       mark: '১৫',
       placeBn: null,
