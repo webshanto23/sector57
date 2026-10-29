@@ -14,6 +14,7 @@ const KNOWN = [
   "file_required",
   "payload_too_large",
   "validation_failed",
+  "beyond_your_permissions",
 ] as const;
 type Known = (typeof KNOWN)[number];
 

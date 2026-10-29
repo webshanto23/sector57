@@ -130,6 +130,10 @@ export const formReceiptSchema = z.object({
 });
 export type FormReceipt = z.infer<typeof formReceiptSchema>;
 
+/** `POST /forms/:formKey` answer (the office typed it in): the receipt and the new application's id. */
+export const formEntrySchema = formReceiptSchema.extend({ id: z.uuid() });
+export type FormEntry = z.infer<typeof formEntrySchema>;
+
 /** `GET /public/locations?parentId=`: one step of the address dropdowns. Names only, nothing about who lives there. */
 export const publicPlaceSchema = z.object({
   id: z.uuid(),
@@ -158,6 +162,8 @@ export const formRowSchema = z.object({
   place: placeSchema.nullable(),
   submittedAt: z.iso.datetime({ offset: true }),
   files: z.number().int().min(0),
+  /** The user who typed it in from the dashboard; null when it came from the public website. */
+  enteredBy: z.string().nullable(),
 });
 export type FormRow = z.infer<typeof formRowSchema>;
 
@@ -243,6 +249,8 @@ export const formDetailSchema = z.object({
   reviewedAt: z.iso.datetime({ offset: true }).nullable(),
   reviewNote: z.string().nullable(),
   reviewerName: z.string().nullable(),
+  /** The user who typed it in from the dashboard; null when it came from the public website. */
+  enteredBy: z.string().nullable(),
   place: placeSchema.nullable(),
   /** One of these is set, matching `formKey`. */
   membership: membershipDataSchema.nullable(),

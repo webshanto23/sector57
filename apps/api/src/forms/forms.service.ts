@@ -60,8 +60,12 @@ const rowSelect = {
   person_id: true,
   locations: { select: { ...placeSelect, is_active: true } },
   users: { select: { phone: true, persons: { select: { full_name: true } } } },
+  entered: { select: { phone: true, persons: { select: { full_name: true } } } },
 } satisfies Prisma.form_submissionsSelect;
 type Row = Prisma.form_submissionsGetPayload<{ select: typeof rowSelect }>;
+
+/** A user's name for the screens: their person's name, else the phone they log in with. */
+const userName = (user: { phone: string; persons: { full_name: string } | null } | null) => (user ? (user.persons?.full_name ?? user.phone) : null);
 
 const toFormKey = (value: string): FormKey => ((FORM_KEYS as readonly string[]).includes(value) ? (value as FormKey) : 'membership');
 const toFormStatus = (value: string): FormStatus =>
@@ -161,6 +165,7 @@ export class FormsService {
         place: row.locations ? place(row.locations) : null,
         submittedAt: row.submitted_at.toISOString(),
         files: filesOf.get(row.id) ?? 0,
+        enteredBy: userName(row.entered),
       };
     });
     return { items, total, page: query.page, pageSize: query.pageSize, counts };
@@ -205,7 +210,8 @@ export class FormsService {
       submittedAt: row.submitted_at.toISOString(),
       reviewedAt: row.reviewed_at?.toISOString() ?? null,
       reviewNote: row.review_note,
-      reviewerName: row.users ? (row.users.persons?.full_name ?? row.users.phone) : null,
+      reviewerName: userName(row.users),
+      enteredBy: userName(row.entered),
       place,
       membership: formKey === 'membership' ? membershipDataSchema.parse(hideNid(row.data, 'applicant')) : null,
       renter: formKey === 'renter_registration' ? renterDataSchema.parse(hideNid(row.data, 'renter')) : null,

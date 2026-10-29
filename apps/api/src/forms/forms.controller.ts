@@ -1,24 +1,31 @@
-import { Body, Controller, Get, Header, HttpCode, Param, Post, Query, StreamableFile } from '@nestjs/common';
+import { Body, Controller, Get, Header, HttpCode, Param, Post, Query, StreamableFile, UploadedFile } from '@nestjs/common';
 import { ZodResponse } from 'nestjs-zod';
 import { SkipAudit } from '../audit/audit.decorators.js';
 import { IdParamDto } from '../common/id-param.dto.js';
 import { Can, CurrentActor, type Actor } from '../permissions/permissions.decorators.js';
+import { DocumentUpload, type UploadedImage } from '../storage/image-upload.js';
 import {
   FormApproveDto,
   FormDetailDto,
+  FormEntryDto,
   FormFileParamDto,
+  FormKeyParamDto,
   FormListDto,
   FormListQueryDto,
   FormRejectDto,
   FormReviewDto,
 } from './forms.dto.js';
 import { FormsService } from './forms.service.js';
+import { PublicFormsService } from './public-forms.service.js';
 
 /** The office's review queue. The service checks every row against the caller's area and writes the audit rows. */
 @Controller('forms')
 @SkipAudit()
 export class FormsController {
-  constructor(private readonly forms: FormsService) {}
+  constructor(
+    private readonly forms: FormsService,
+    private readonly entries: PublicFormsService,
+  ) {}
 
   @Get()
   @Can('forms', 'view')
@@ -32,6 +39,25 @@ export class FormsController {
   @ZodResponse({ status: 200, type: FormDetailDto })
   get(@CurrentActor() actor: Actor, @Param() { id }: IdParamDto) {
     return this.forms.get(actor, id);
+  }
+
+  /**
+   * The office types in an application: multipart like the public form (`data` as JSON, the
+   * `file`; required for membership). Needs `forms.view` and `forms.create` at the place (403
+   * otherwise); 409 `already_submitted` for the same open application. No daily limit per phone.
+   */
+  @Post(':formKey')
+  @HttpCode(201)
+  @Can('forms', 'create')
+  @DocumentUpload()
+  @ZodResponse({ status: 201, type: FormEntryDto })
+  enter(
+    @CurrentActor() actor: Actor,
+    @Param() { formKey }: FormKeyParamDto,
+    @Body() body: Record<string, unknown>,
+    @UploadedFile() file: UploadedImage | undefined,
+  ) {
+    return this.entries.enter(actor, formKey, body['data'], file?.buffer);
   }
 
   /** An attached deed or NID copy. Photos open in the browser; PDFs always download. */

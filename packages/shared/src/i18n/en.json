@@ -195,7 +195,8 @@
       "unsupported_document": "Use a photo (JPEG, PNG, WebP) or a PDF.",
       "file_required": "Attach a photo or PDF of the deed.",
       "payload_too_large": "The file is larger than 5 MB.",
-      "validation_failed": "Please correct the fields marked in red."
+      "validation_failed": "Please correct the fields marked in red.",
+      "beyond_your_permissions": "This address is outside your area."
     },
     "applyingAs": "Applying as",
     "applicantKinds": {
@@ -1468,7 +1469,8 @@
       "place": "Address",
       "phone": "Mobile",
       "submitted": "Submitted",
-      "status": "Status"
+      "status": "Status",
+      "source": "Entered by"
     },
     "searchLabel": "Search applications",
     "searchPlaceholder": "Reference, name or mobile",
@@ -1525,7 +1527,13 @@
     "noApproveRight": "You don't have the permissions needed to approve in this area.",
     "memberNo": "Membership ID {no}",
     "openPerson": "Person's page",
-    "openPlace": "Address page"
+    "openPlace": "Address page",
+    "add": "Add application",
+    "newTitle": "Add application",
+    "newHint": "Type in an application received on paper or by phone. It joins the queue like one sent from the website.",
+    "chooseForm": "Application type",
+    "enteredBy": "Entered by {name}",
+    "website": "Website"
   },
   "Finance": {
     "tabs": {

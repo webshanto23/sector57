@@ -195,7 +195,8 @@
       "unsupported_document": "শুধু ছবি (JPEG, PNG, WebP) বা পিডিএফ দিন।",
       "file_required": "দলিলের ছবি বা পিডিএফ যুক্ত করুন।",
       "payload_too_large": "ফাইলটি ৫ এমবির বেশি বড়।",
-      "validation_failed": "লাল চিহ্নিত ঘরগুলো ঠিক করুন।"
+      "validation_failed": "লাল চিহ্নিত ঘরগুলো ঠিক করুন।",
+      "beyond_your_permissions": "এই ঠিকানা আপনার এলাকার বাইরে।"
     },
     "applyingAs": "আবেদনকারী",
     "applicantKinds": {
@@ -1468,7 +1469,8 @@
       "place": "ঠিকানা",
       "phone": "মোবাইল",
       "submitted": "জমার সময়",
-      "status": "অবস্থা"
+      "status": "অবস্থা",
+      "source": "এন্ট্রি"
     },
     "searchLabel": "আবেদন খুঁজুন",
     "searchPlaceholder": "রেফারেন্স, নাম বা মোবাইল",
@@ -1525,7 +1527,13 @@
     "noApproveRight": "অনুমোদন করতে এই এলাকায় প্রয়োজনীয় অনুমতি আপনার নেই।",
     "memberNo": "সদস্যপদ আইডি {no}",
     "openPerson": "ব্যক্তির পাতা",
-    "openPlace": "ঠিকানার পাতা"
+    "openPlace": "ঠিকানার পাতা",
+    "add": "আবেদন যোগ করুন",
+    "newTitle": "আবেদন যোগ করুন",
+    "newHint": "কাগজে বা ফোনে পাওয়া আবেদন এখানে লিখুন। ওয়েবসাইট থেকে আসা আবেদনের মতোই এটি তালিকায় যোগ হবে।",
+    "chooseForm": "আবেদনের ধরন",
+    "enteredBy": "{name} এন্ট্রি করেছেন",
+    "website": "ওয়েবসাইট"
   },
   "Finance": {
     "tabs": {

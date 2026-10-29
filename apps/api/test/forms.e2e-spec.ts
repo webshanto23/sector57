@@ -5,6 +5,7 @@ import {
   CSRF_HEADER,
   FORM_HONEYPOT,
   formDetailSchema,
+  formEntrySchema,
   formListSchema,
   formReceiptSchema,
   locationViewSchema,
@@ -513,6 +514,62 @@ describe('Public forms and the office review (e2e)', () => {
       expect(rejected).toMatchObject({ status: 'rejected', reviewNote: 'ভুল ফ্ল্যাট' });
       const audit = await prisma.audit_logs.findFirstOrThrow({ where: { entity_type: 'form_submission', entity_id: id, action: 'reject' } });
       expect(audit.user_id).toBe(approverOnly.id);
+    });
+  });
+
+  describe('office entry', () => {
+    let office: { id: string; cookie: string };
+
+    /** The office types in an application from the dashboard: logged in, CSRF, multipart. */
+    function enter(formKey: string, data: unknown, cookie: string, file?: { buffer: Buffer; name: string }) {
+      const req = send('post', `/forms/${formKey}`, cookie).field('data', JSON.stringify(data));
+      return file ? req.attach('file', file.buffer, file.name) : req;
+    }
+
+    beforeAll(async () => {
+      office = await makeUser([{ roleId: await makeRole(['forms:view', 'forms:create']), scope: tree.blockC.id }]);
+    });
+
+    it('saves it with who entered it, and has no daily limit per phone', async () => {
+      const phone = randomPhone();
+      const places = [tree.plot14.id, units.flat2A, units.flat2B, units.flat2C];
+      const ids: string[] = [];
+      // The website stops a phone after three a day; the office may type in more.
+      for (const place of places) {
+        const res = await enter('membership', membership(place, { phone }), office.cookie, deed()).expect(201);
+        ids.push(formEntrySchema.parse(res.body).id);
+      }
+      const saved = await detail(ids[0]!);
+      expect(saved.status).toBe('new');
+      expect(saved.enteredBy).toBe(`ব্যবহারকারী ${MARK}`);
+      expect(saved.files).toHaveLength(1);
+      const list = formListSchema.parse((await get('/forms?pageSize=100', admin.cookie).expect(200)).body);
+      expect(list.items.find((item) => item.id === ids[0])?.enteredBy).toBe(`ব্যবহারকারী ${MARK}`);
+      const audit = await prisma.audit_logs.findFirstOrThrow({ where: { entity_type: 'form_submission', entity_id: ids[0]! } });
+      expect(audit).toMatchObject({ action: 'enter', user_id: office.id });
+    });
+
+    it('a renter registration from the website has no one entered by', async () => {
+      const res = await submit('renter_registration', renter(units.flat2A)).expect(201);
+      const row = await submissionOf(receipt(res).reference);
+      expect((await detail(row.id)).enteredBy).toBeNull();
+    });
+
+    it('needs the deed, refuses the same open application and places outside the area', async () => {
+      const data = renter(units.flat2B);
+      const nodeed = await enter('membership', membership(tree.plot14.id), office.cookie).expect(400);
+      expect(nodeed.body.code).toBe('file_required');
+      await enter('renter_registration', data, office.cookie).expect(201);
+      const again = await enter('renter_registration', data, office.cookie).expect(409);
+      expect(again.body.code).toBe('already_submitted');
+      await enter('renter_registration', renter(units.shopD1), office.cookie).expect(403);
+    });
+
+    it('needs forms view and create', async () => {
+      const applicantOnly = await makeUser([{ roleId: await makeRole(['forms:create']) }]);
+      await enter('renter_registration', renter(units.flat2C), applicantOnly.cookie).expect(403);
+      const viewer = await makeUser([{ roleId: await makeRole(['forms:view']) }]);
+      await enter('renter_registration', renter(units.flat2C), viewer.cookie).expect(403);
     });
   });
 });

@@ -1396,6 +1396,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/forms/{formKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["FormsController_enter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/forms/{id}/files/{fileId}": {
         parameters: {
             query?: never;
@@ -6042,6 +6058,7 @@ export interface components {
                 /** Format: date-time */
                 submittedAt: string;
                 files: number;
+                enteredBy: string | null;
             }[];
             total: number;
             page: number;
@@ -6066,6 +6083,7 @@ export interface components {
             reviewedAt: string | null;
             reviewNote: string | null;
             reviewerName: string | null;
+            enteredBy: string | null;
             place: {
                 /** Format: uuid */
                 id: string;
@@ -6155,6 +6173,15 @@ export interface components {
                 reject: boolean;
                 addOwnership: boolean;
             };
+        };
+        FormEntryDto_Output: {
+            reference: string;
+            /** @enum {string} */
+            formKey: "membership" | "renter_registration";
+            /** Format: date-time */
+            submittedAt: string;
+            /** Format: uuid */
+            id: string;
         };
         FormReviewDto: {
             note?: string | null;
@@ -13851,6 +13878,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["FormDetailDto_Output"];
+                };
+            };
+        };
+    };
+    FormsController_enter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                formKey: "membership" | "renter_registration";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** @description The answers, as JSON */
+                    data: string;
+                    /** @description Leave empty */
+                    website?: string;
+                    /** Format: binary */
+                    file?: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FormEntryDto_Output"];
                 };
             };
         };

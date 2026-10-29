@@ -6,6 +6,7 @@ import {
   OPEN_FORM_STATUSES,
   renterFormNidSchema,
   SETTING_KEYS,
+  type FormEntry,
   type FormKey,
   type FormReceipt,
   type MembershipForm,
@@ -16,8 +17,9 @@ import { ZodValidationException } from 'nestjs-zod';
 import { randomInt } from 'node:crypto';
 import { AuditService } from '../audit/audit.service.js';
 import { isUniqueViolation } from '../common/prisma-errors.js';
+import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { TreeService } from '../property/tree.service.js';
+import { beyondPermissions, TreeService } from '../property/tree.service.js';
 import { PrivateFilesService } from '../storage/private-files.service.js';
 
 /** Most submissions one phone number may send in a day, over all forms. */
@@ -52,9 +54,11 @@ const factsOf = (parsed: ParsedForm) =>
     : { phone: parsed.form.renter.phone, locationId: parsed.form.unitId };
 
 /**
- * The public membership and renter forms (no login). Answers are checked against the shared
- * schemas (text NFC-normalised), the place must exist in the society, one phone may send a few
- * a day and never the same open application twice. Attachments go to private storage.
+ * The membership and renter forms, sent from the public website (no login) or typed in by the
+ * office from the dashboard. Answers are checked against the shared schemas (text
+ * NFC-normalised), the place must exist in the society and the same open application is never
+ * saved twice; from the website one phone may send only a few a day. Attachments go to private
+ * storage.
  */
 @Injectable()
 export class PublicFormsService {
@@ -107,14 +111,34 @@ export class PublicFormsService {
   }
 
   /**
-   * Saves a submission and returns its reference. `honeypot` filled in (a bot): a receipt
-   * comes back, nothing is saved.
+   * Saves a submission from the website and returns its reference. `honeypot` filled in (a bot):
+   * a receipt comes back, nothing is saved.
    */
   async submit(societyId: string, formKey: FormKey, data: unknown, upload: Buffer | undefined, honeypot: unknown, ip: string | null): Promise<FormReceipt> {
     if (typeof honeypot === 'string' && honeypot.trim() !== '') {
       this.logger.warn({ formKey, ip }, 'Form honeypot filled in; nothing saved');
       return { reference: newReference(formKey), formKey, submittedAt: new Date().toISOString() };
     }
+    const { reference, submittedAt } = await this.save(societyId, formKey, data, upload, { ip, office: null });
+    return { reference, formKey, submittedAt };
+  }
+
+  /**
+   * The office types in an application from the dashboard (paper forms, phone calls). The same
+   * checks as the website, without the daily limit per phone; the place must be in the caller's
+   * `forms` area (403 otherwise) and the caller is recorded as who entered it.
+   */
+  enter(actor: Actor, formKey: FormKey, data: unknown, upload: Buffer | undefined): Promise<FormEntry> {
+    return this.save(actor.societyId, formKey, data, upload, { ip: actor.ip, office: actor });
+  }
+
+  private async save(
+    societyId: string,
+    formKey: FormKey,
+    data: unknown,
+    upload: Buffer | undefined,
+    by: { ip: string | null; office: Actor | null },
+  ): Promise<FormEntry> {
     // A renter's NID is required while the society requires IDs of renters (the membership form always asks).
     const rule = await this.prisma.society_settings.findUnique({
       where: { society_id_key: { society_id: societyId, key: SETTING_KEYS.requireIdNumbers } },
@@ -128,10 +152,12 @@ export class PublicFormsService {
     if (!place || !place.isActive) throw invalidPlace();
     // A renter registers a flat; a member owns a plot, building or flat (not the whole society).
     if (formKey === 'renter_registration' ? !place.isUnit : place.parentId === null) throw invalidPlace();
+    const office = by.office;
+    if (office && !(office.access.can('view', 'forms', place) && office.access.can('create', 'forms', place))) throw beyondPermissions();
 
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const [recent, open] = await Promise.all([
-      this.prisma.form_submissions.count({ where: { society_id: societyId, phone, submitted_at: { gte: since } } }),
+      office ? 0 : this.prisma.form_submissions.count({ where: { society_id: societyId, phone, submitted_at: { gte: since } } }),
       this.prisma.form_submissions.findFirst({
         where: { society_id: societyId, phone, form_key: formKey, location_id: place.id, status: { in: [...OPEN_FORM_STATUSES] } },
         select: { id: true },
@@ -143,8 +169,8 @@ export class PublicFormsService {
     // The file is checked and written first; it is removed again if the rows can't be saved.
     const stored = upload?.length ? await this.files.saveDocument(societyId, 'forms', upload) : null;
     try {
-      const row = await this.insert(societyId, parsed, phone, place.id, stored, ip);
-      return { reference: row.reference, formKey, submittedAt: row.submitted_at.toISOString() };
+      const row = await this.insert(societyId, parsed, phone, place.id, stored, by.ip, office?.userId ?? null);
+      return { id: row.id, reference: row.reference, formKey, submittedAt: row.submitted_at.toISOString() };
     } catch (error) {
       if (stored) await this.files.removeQuietly(societyId, [stored.key]);
       throw error;
@@ -158,6 +184,7 @@ export class PublicFormsService {
     locationId: string,
     stored: { key: string; isImage: boolean } | null,
     ip: string | null,
+    enteredBy: string | null,
   ) {
     // A clash of random references is very unlikely; try a few before giving up.
     for (let attempt = 1; ; attempt++) {
@@ -171,6 +198,7 @@ export class PublicFormsService {
               reference: newReference(parsed.formKey),
               phone,
               location_id: locationId,
+              entered_by: enteredBy,
             },
             select: { id: true, reference: true, submitted_at: true },
           });
@@ -192,7 +220,8 @@ export class PublicFormsService {
           await this.audit.record(
             {
               societyId,
-              action: 'submit',
+              userId: enteredBy,
+              action: enteredBy ? 'enter' : 'submit',
               entityType: 'form_submission',
               entityId: row.id,
               after: { formKey: parsed.formKey, reference: row.reference, locationId, hasFile: stored !== null },

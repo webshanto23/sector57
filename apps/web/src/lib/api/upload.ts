@@ -4,16 +4,16 @@ import { csrfToken, refreshSession } from "./client";
 export type UploadResult<T> = { ok: true; data: T } | { ok: false; status: number; error: unknown };
 
 /**
- * Sends one file as multipart form data to an API path (`/committee/members/…/photo`)
+ * Sends one file (or none, `null`) as multipart form data to an API path (`/committee/members/…/photo`)
  * through the same-origin `/api` proxy, with the CSRF header. After a 401 it refreshes
  * the session once and retries, like the typed client. The browser sets the multipart
  * boundary itself, so no Content-Type is given.
  */
-export async function uploadFile<T>(path: string, file: File, fields: Record<string, string> = {}): Promise<UploadResult<T>> {
+export async function uploadFile<T>(path: string, file: File | null, fields: Record<string, string> = {}): Promise<UploadResult<T>> {
   const send = () => {
     const body = new FormData();
     for (const [name, value] of Object.entries(fields)) body.append(name, value);
-    body.append("file", file);
+    if (file) body.append("file", file);
     return fetch(`/api${path}`, { method: "POST", body, headers: { [CSRF_HEADER]: csrfToken() } });
   };
 

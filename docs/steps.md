@@ -1166,6 +1166,14 @@ Same branch, 2026-10-29. Anis found "Set type" in the building grid and "Covers 
 - **Slice C, combined bill:** "Print combined bill" on the bills print page (ticked bills): one A4 page to one payer name (first bill's bill-to, editable), a row per bill with amount, paid and due, one total payable. Print only (`bill-combined-a4.tsx`); no API or migration.
 - **Tests:** `combine.policy.spec.ts`, `grid-holders.policy.spec.ts`, `multi-storey.e2e-spec.ts` (10). Not clicked through in a browser; the combined bill's print preview is not checked yet.
 
+## Add application from the dashboard — Built, awaiting review
+
+Same branch, 2026-10-29. Anis asked for an "Add application" button on `/dashboard/forms`, like Add member, with the same fields as the public Membership Application and Renter Registration and a selector between them. He decided: the deed stays required, and the queue shows the name of the user who entered it.
+
+- **API:** `POST /forms/:formKey` (`forms.create`, plus `forms.view` and `forms.create` at the place, else 403), multipart like the public form. `PublicFormsService.save` is shared by both routes; the office route skips the honeypot and the daily limit per phone but keeps the duplicate check. Migration `32_form_entered_by` adds `form_submissions.entered_by`; rows and detail carry `enteredBy` (the user's name), audited as `enter`.
+- **Web:** `/dashboard/forms/new` (radio cards for the form type, then the public form components with `send={enterForm}`), opening the new application after saving; an "Entered by" column on the queue (else "Website") and on the detail page's subtitle.
+- **Tests:** `forms.e2e-spec.ts` "office entry" (4). Not clicked through in a browser.
+
 ## Later: beyond milestone 3
 
 These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.

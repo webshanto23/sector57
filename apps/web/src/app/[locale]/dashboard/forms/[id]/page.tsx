@@ -56,7 +56,7 @@ export default async function FormPage({ params }: PageProps<"/[locale]/dashboar
     <>
       <PageHeader
         title={`${tForms(`kinds.${form.formKey}`)} · ${form.reference}`}
-        sub={t("submittedOn", { date: formatDate(form.submittedAt, locale, "long") })}
+        sub={[t("submittedOn", { date: formatDate(form.submittedAt, locale, "long") }), ...(form.enteredBy ? [t("enteredBy", { name: form.enteredBy })] : [])].join(" · ")}
         actions={
           <Link href="/dashboard/forms" className={buttonVariants({ variant: "outline" })}>
             <ChevronLeft aria-hidden />

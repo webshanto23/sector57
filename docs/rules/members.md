@@ -21,6 +21,7 @@ Read `docs/glossary.md` for Person, Owner, Renter, Resident and Member.
 ## Public forms and office review
 
 - Form files (deeds, NID copies) are private files (`docs/rules/cms-storage.md`).
+- The office can type in an application (`POST /forms/:formKey`, 2026-10-29): it goes through `PublicFormsService.save` like a website one (same schemas, place, file rules and duplicate check), without the honeypot or the daily limit per phone, and needs `forms.view` and `forms.create` at the place (`forms.create` alone is the applicant grant of the seeded member role). `form_submissions.entered_by` records the user (null from the website); screens show their name as `enteredBy`. The deed stays required.
 - Approvals that create members data run in one transaction through `TenanciesService.insert` / `OwnershipsService.insert` and `PartiesService.resolvePerson`; change a submission's status only with a conditional update on the open statuses (`form_closed` otherwise).
 
 ## Moves and directory

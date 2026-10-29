@@ -8,6 +8,7 @@ import {
   PUBLIC_RENTER_TYPES,
   renterFormNidSchema,
   renterFormSchema,
+  type FormEntry,
   type FormReceipt,
   type Locale,
   type RenterForm,
@@ -23,10 +24,22 @@ import { Button } from "@/components/ui/button";
 import { FormError, useFormError } from "./form-error";
 import { DocumentField, Honeypot } from "./form-parts";
 import { PlacePicker } from "./place-picker";
-import { submitForm } from "./submit";
+import { submitForm, type FormSender } from "./submit";
 
-/** Renter registration: the renter, the flat, the move-in date, the flat's owner and the others in the household. */
-export function RenterRegistration({ onDone, nidRequired }: { onDone: (receipt: FormReceipt) => void; nidRequired: boolean }) {
+/**
+ * Renter registration: the renter, the flat, the move-in date, the flat's owner and the others in
+ * the household. `send`: how the answers go out; the public website by default, `enterForm` from
+ * the dashboard.
+ */
+export function RenterRegistration({
+  onDone,
+  nidRequired,
+  send = submitForm,
+}: {
+  onDone: (receipt: FormReceipt | FormEntry) => void;
+  nidRequired: boolean;
+  send?: FormSender;
+}) {
   const t = useTranslations("Forms");
   const tMembers = useTranslations("Members");
   const locale = useLocale() as Locale;
@@ -58,7 +71,7 @@ export function RenterRegistration({ onDone, nidRequired }: { onDone: (receipt: 
 
   async function onSubmit(values: RenterForm) {
     setFormError(null);
-    const result = await submitForm("renter_registration", values, file, honeypot);
+    const result = await send("renter_registration", values, file, honeypot);
     if (result.ok) return onDone(result.receipt);
     for (const issue of result.issues) setError(issue.path as FieldPath<RenterFormInput>, { message: issue.message });
     if (result.code === "unsupported_document" || result.code === "payload_too_large") setFileError(t(`errors.${result.code}`));

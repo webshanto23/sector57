@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { membershipFormSchema, type FormReceipt, type MembershipForm, type MembershipFormInput } from "@s57/shared";
+import { membershipFormSchema, type FormEntry, type FormReceipt, type MembershipForm, type MembershipFormInput } from "@s57/shared";
 import { CircleCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -12,14 +12,15 @@ import { Button } from "@/components/ui/button";
 import { DocumentField, Honeypot } from "./form-parts";
 import { PlacePicker } from "./place-picker";
 import { FormError, useFormError } from "./form-error";
-import { submitForm } from "./submit";
+import { submitForm, type FormSender } from "./submit";
 
 /**
  * The mockup's membership application: name, mobile, NID, the place owned, living there or not,
  * and the deed. An organisation applies with its name and trade licence; the applicant is its
- * contact person and their NID is optional.
+ * contact person and their NID is optional. `send`: how the answers go out; the public website
+ * by default, `enterForm` from the dashboard.
  */
-export function MembershipApplication({ onDone }: { onDone: (receipt: FormReceipt) => void }) {
+export function MembershipApplication({ onDone, send = submitForm }: { onDone: (receipt: FormReceipt | FormEntry) => void; send?: FormSender }) {
   const t = useTranslations("Forms");
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -43,7 +44,7 @@ export function MembershipApplication({ onDone }: { onDone: (receipt: FormReceip
   async function onSubmit(values: MembershipForm) {
     setFormError(null);
     if (!file) return setFileError(t("errors.file_required"));
-    const result = await submitForm("membership", values, file, honeypot);
+    const result = await send("membership", values, file, honeypot);
     if (result.ok) return onDone(result.receipt);
     for (const issue of result.issues) setError(issue.path as FieldPath<MembershipFormInput>, { message: issue.message });
     if (result.code === "file_required" || result.code === "unsupported_document" || result.code === "payload_too_large") {

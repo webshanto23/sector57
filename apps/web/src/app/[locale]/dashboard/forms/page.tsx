@@ -1,12 +1,12 @@
 import { canAnywhere, FORM_KEYS, FORM_STATUSES, formatDate, formatNumber, formListQuery, localDigits, type FormRow, type Locale } from "@s57/shared";
-import { CircleCheck, CircleX, Inbox, SearchCheck, X } from "lucide-react";
+import { CircleCheck, CircleX, Inbox, Plus, SearchCheck, X } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Pager } from "@/components/cms/pager";
 import { FormStatusChip } from "@/components/forms-admin/labels";
 import { Chip, DataTable, inputClass, PageHeader, SearchInput, StatCard, type Column } from "@/components/kit";
 import { placeText } from "@/components/members/labels";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getForms } from "@/lib/api/forms";
 import { getLocation } from "@/lib/api/property";
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/dashboar
   return { title: t("nav.forms") };
 }
 
-/** Applications from the public website, newest first: counts per status, filters, and a table that becomes cards on phones. */
+/** Applications from the public website or typed in by the office, newest first: counts per status, filters, and a table that becomes cards on phones. */
 export default async function FormsQueuePage({ params, searchParams }: PageProps<"/[locale]/dashboard/forms">) {
   const { locale: raw } = await params;
   const locale = raw as Locale;
@@ -70,12 +70,24 @@ export default async function FormsQueuePage({ params, searchParams }: PageProps
     { key: "place", header: t("col.place"), cell: (row) => (row.place ? <span className="whitespace-normal">{placeText(row.place)}</span> : "—") },
     { key: "phone", header: t("col.phone"), cell: (row) => (row.phone ? <span className="num">{localDigits(row.phone, locale)}</span> : "—") },
     { key: "submitted", header: t("col.submitted"), cell: (row) => formatDate(row.submittedAt, locale, "short") },
+    { key: "source", header: t("col.source"), cell: (row) => <span className="whitespace-normal">{row.enteredBy ?? t("website")}</span> },
     { key: "status", header: t("col.status"), cell: (row) => <FormStatusChip status={row.status} /> },
   ];
 
   return (
     <>
-      <PageHeader title={tNav("forms")} sub={t("sub")} />
+      <PageHeader
+        title={tNav("forms")}
+        sub={t("sub")}
+        actions={
+          canAnywhere(me.access, "forms", "create") ? (
+            <Link href="/dashboard/forms/new" className={buttonVariants()}>
+              <Plus aria-hidden />
+              {t("add")}
+            </Link>
+          ) : null
+        }
+      />
 
       <div className="mb-3.5 grid grid-cols-2 gap-2.5 min-[900px]:grid-cols-4">
         <StatCard icon={Inbox} label={t("status.new")} value={n(list.counts.new)} tone="info" />
