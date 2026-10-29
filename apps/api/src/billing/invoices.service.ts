@@ -258,11 +258,12 @@ export class InvoicesService {
                       ]),
                       { persons: { phone: { contains: asciiDigits(q) } } },
                       ...(/^\d{1,9}$/.test(asciiDigits(q)) ? [{ member_no: Number(asciiDigits(q)) }] : []),
+                      { membership_code: { equals: asciiDigits(q).trim(), mode: 'insensitive' as const } },
                     ],
                   }
                 : {}),
             },
-            select: { member_no: true, person_id: true },
+            select: { member_no: true, membership_code: true, person_id: true },
             orderBy: { member_no: 'asc' },
             take: 10,
           })
@@ -285,7 +286,7 @@ export class InvoicesService {
       }),
       members: members.flatMap((m) => {
         const party = memberParties.get(m.person_id);
-        return party ? [{ ...party, memberNo: m.member_no }] : [];
+        return party ? [{ ...party, memberNo: m.member_no, membershipCode: m.membership_code }] : [];
       }),
     };
   }
@@ -462,10 +463,10 @@ export class InvoicesService {
       if (actor.access.paths('create', 'billing') !== 'all') throw onlySocietyWide();
       const membership = await tx.memberships.findFirst({
         where: { society_id: actor.societyId, person_id: input.personId, status: 'active' },
-        select: { id: true, member_no: true },
+        select: { id: true, member_no: true, membership_code: true },
       });
       if (!membership) throw bad('no_membership', 'This person has no active membership');
-      const snapshot = await this.billTo.snapshot(tx, actor.societyId, { kind: 'person', id: input.personId }, 'member', null, membership.member_no);
+      const snapshot = await this.billTo.snapshot(tx, actor.societyId, { kind: 'person', id: input.personId }, 'member', null, { no: membership.member_no, code: membership.membership_code });
       return { unit: null, membershipId: membership.id, snapshot };
     }
 

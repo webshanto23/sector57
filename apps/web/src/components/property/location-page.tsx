@@ -1,6 +1,7 @@
 import {
   canAnywhere,
   localDigits,
+  pick,
   type LevelCounts,
   type Locale,
   type LocationLevel,
@@ -29,6 +30,7 @@ import { levelName, propertyTrail } from "./labels";
 import { LayoutForm } from "./layout-form";
 import { LevelBar } from "./level-bar";
 import { LocationEditor } from "./location-editor";
+import { unitTypeIcon } from "./unit-types";
 
 /** The level picker and search: what is chosen, the chip counts, and the results (null on the tree). */
 export type Finder = { levelId: string | null; q: string | null; page: number; counts: LevelCounts; result: LocationSearch | null };
@@ -77,10 +79,10 @@ async function ChildCard({
     <>
       <div className="flex items-start justify-between gap-2">
         <span className="min-w-0 font-semibold break-words">{node.name}</span>
-        <IconBox icon={node.isUnit ? Building2 : MapPin} size="sm" tone={node.isActive ? undefined : "warn"} />
+        <IconBox icon={node.isUnit ? unitTypeIcon(node.unitType?.code) : MapPin} size="sm" tone={node.isActive ? undefined : "warn"} />
       </div>
       <div className="flex flex-wrap gap-1.5">
-        <Chip plain>{levelName(node, locale)}</Chip>
+        <Chip plain>{node.unitType ? pick(node.unitType.nameBn, node.unitType.nameEn, locale) : levelName(node, locale)}</Chip>
         {home ? <Chip tone="info">{t("storeys.home", { name: home })}</Chip> : null}
         {!home && node.alsoOn.length > 0 ? <Chip tone="info">{t("storeys.alsoOn", { names: node.alsoOn.join(", ") })}</Chip> : null}
         {!node.isActive ? <Chip tone="warn">{t("inactive")}</Chip> : null}

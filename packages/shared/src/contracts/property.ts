@@ -135,6 +135,8 @@ export const locationNodeSchema = z.object({
   unitCount: z.number().int().min(0),
   /** A unit covering more storeys than its own (a duplex): the names of the others. Empty otherwise. */
   alsoOn: z.array(z.string()),
+  /** A unit's type (code and name); null for other locations. */
+  unitType: z.object({ code: z.string(), nameBn: z.string(), nameEn: z.string().nullable() }).nullable(),
 });
 export type LocationNode = z.infer<typeof locationNodeSchema>;
 

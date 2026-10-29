@@ -4376,6 +4376,11 @@ export interface components {
                 childCount: number;
                 unitCount: number;
                 alsoOn: string[];
+                unitType: {
+                    code: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                } | null;
             } | null;
             breadcrumb: {
                 /** Format: uuid */
@@ -4402,6 +4407,11 @@ export interface components {
                 childCount: number;
                 unitCount: number;
                 alsoOn: string[];
+                unitType: {
+                    code: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                } | null;
             }[];
             alsoHere: {
                 /** Format: uuid */
@@ -4420,6 +4430,11 @@ export interface components {
                 childCount: number;
                 unitCount: number;
                 alsoOn: string[];
+                unitType: {
+                    code: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                } | null;
                 homeName: string;
             }[];
             can: {
@@ -4447,6 +4462,11 @@ export interface components {
                 childCount: number;
                 unitCount: number;
                 alsoOn: string[];
+                unitType: {
+                    code: string;
+                    nameBn: string;
+                    nameEn: string | null;
+                } | null;
                 address: string[];
                 owners: {
                     name: string;
@@ -4982,6 +5002,15 @@ export interface components {
                         gender?: ("male" | "female" | "other") | null;
                     } | null;
                 };
+            } | {
+                /** @constant */
+                kind: "existing";
+                party: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
+                };
             };
             sharePercent?: string;
             /** Format: date */
@@ -5046,6 +5075,15 @@ export interface components {
                             dateOfBirth?: string | null;
                             gender?: ("male" | "female" | "other") | null;
                         } | null;
+                    };
+                } | {
+                    /** @constant */
+                    kind: "existing";
+                    party: {
+                        /** @enum {string} */
+                        kind: "person" | "organisation";
+                        /** Format: uuid */
+                        id: string;
                     };
                 };
                 sharePercent?: string;
@@ -5118,6 +5156,15 @@ export interface components {
                         dateOfBirth?: string | null;
                         gender?: ("male" | "female" | "other") | null;
                     } | null;
+                };
+            } | {
+                /** @constant */
+                kind: "existing";
+                party: {
+                    /** @enum {string} */
+                    kind: "person" | "organisation";
+                    /** Format: uuid */
+                    id: string;
                 };
             };
             /** @enum {string} */
@@ -5292,6 +5339,8 @@ export interface components {
                 /** Format: date */
                 startDate: string;
                 endDate: string | null;
+                levelBn: string;
+                levelEn: string | null;
             }[] | null;
             tenancies: {
                 /** Format: uuid */
@@ -5533,6 +5582,7 @@ export interface components {
                 household: "owner" | "renter";
                 isOwner: boolean;
                 memberNo: number | null;
+                membershipCode: string | null;
                 place: {
                     /** Format: uuid */
                     id: string;
@@ -5574,6 +5624,7 @@ export interface components {
                 household: "owner" | "renter";
                 isOwner: boolean;
                 memberNo: number | null;
+                membershipCode: string | null;
                 place: {
                     /** Format: uuid */
                     id: string;
@@ -5589,6 +5640,7 @@ export interface components {
         MemberRegisterDto_Output: {
             items: {
                 memberNo: number;
+                membershipCode: string;
                 /** @enum {string} */
                 status: "active" | "lapsed" | "cancelled";
                 /** Format: date */
@@ -5656,6 +5708,7 @@ export interface components {
                 otherPlaces: number;
                 livesHere: boolean | null;
                 memberNo: number | null;
+                membershipCode: string | null;
             }[];
             total: number;
             page: number;
@@ -5710,6 +5763,7 @@ export interface components {
                 };
                 residents: number;
                 memberNo: number | null;
+                membershipCode: string | null;
             }[];
             total: number;
             page: number;
@@ -5902,6 +5956,7 @@ export interface components {
                 verified: boolean | null;
             } | null;
             memberNo: number | null;
+            membershipCode: string | null;
             can: {
                 review: boolean;
                 approve: boolean;
@@ -6137,6 +6192,8 @@ export interface components {
                     /** @enum {string} */
                     role: "owner" | "renter" | "member";
                     memberNo: number | null;
+                    /** @default null */
+                    membershipCode: string | null;
                     unit: {
                         /** Format: uuid */
                         id: string;
@@ -6193,6 +6250,8 @@ export interface components {
                     /** @enum {string} */
                     role: "owner" | "renter" | "member";
                     memberNo: number | null;
+                    /** @default null */
+                    membershipCode: string | null;
                     unit: {
                         /** Format: uuid */
                         id: string;
@@ -6306,6 +6365,8 @@ export interface components {
                 /** @enum {string} */
                 role: "owner" | "renter" | "member";
                 memberNo: number | null;
+                /** @default null */
+                membershipCode: string | null;
                 unit: {
                     /** Format: uuid */
                     id: string;
@@ -6523,6 +6584,7 @@ export interface components {
                 photoUrl: string | null;
                 verified: boolean | null;
                 memberNo: number;
+                membershipCode: string;
             }[];
         };
         BillableUnitsDto_Output: {
@@ -6814,6 +6876,7 @@ export interface components {
                 code: string | null;
                 address: string[];
                 memberNo: number | null;
+                membershipCode: string | null;
                 bills: {
                     /** Format: uuid */
                     id: string;
@@ -6843,6 +6906,8 @@ export interface components {
                         /** @enum {string} */
                         role: "owner" | "renter" | "member";
                         memberNo: number | null;
+                        /** @default null */
+                        membershipCode: string | null;
                         unit: {
                             /** Format: uuid */
                             id: string;
@@ -6921,6 +6986,8 @@ export interface components {
                     nameEn: string | null;
                     phone: string | null;
                     memberNo: number | null;
+                    /** @default null */
+                    membershipCode: string | null;
                     unit: {
                         /** Format: uuid */
                         id: string;
@@ -6973,6 +7040,8 @@ export interface components {
                 nameEn: string | null;
                 phone: string | null;
                 memberNo: number | null;
+                /** @default null */
+                membershipCode: string | null;
                 unit: {
                     /** Format: uuid */
                     id: string;
@@ -7195,6 +7264,8 @@ export interface components {
                     nameEn: string | null;
                     phone: string | null;
                     memberNo: number | null;
+                    /** @default null */
+                    membershipCode: string | null;
                     unit: {
                         /** Format: uuid */
                         id: string;
@@ -7286,6 +7357,8 @@ export interface components {
                 nameEn: string | null;
                 phone: string | null;
                 memberNo: number | null;
+                /** @default null */
+                membershipCode: string | null;
                 unit: {
                     /** Format: uuid */
                     id: string;
@@ -7329,6 +7402,8 @@ export interface components {
                     nameEn: string | null;
                     phone: string | null;
                     memberNo: number | null;
+                    /** @default null */
+                    membershipCode: string | null;
                     unit: {
                         /** Format: uuid */
                         id: string;
@@ -8305,6 +8380,7 @@ export interface components {
             };
             joined: {
                 memberNo: number;
+                membershipCode: string;
                 /** Format: uuid */
                 personId: string;
                 name: string;

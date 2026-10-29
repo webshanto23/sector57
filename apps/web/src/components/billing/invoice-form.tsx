@@ -140,7 +140,7 @@ export function InvoiceForm({
             ) : (
               <div className="min-w-0">
                 <p className="font-semibold">{pick(target.member.name, target.member.nameEn, locale)}</p>
-                <p className="text-[13px] text-muted-foreground">{localDigits(t("memberNo", { no: target.member.memberNo }), locale)}</p>
+                <p className="text-[13px] text-muted-foreground">{t("memberNo", { no: target.member.membershipCode })}</p>
               </div>
             )}
             <Button type="button" variant="outline" onClick={() => setTarget(null)}>
@@ -209,7 +209,7 @@ export function InvoiceForm({
                         <li key={member.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
                           <div className="min-w-0">
                             <p className="font-semibold">{pick(member.name, member.nameEn, locale)}</p>
-                            <p className="text-[13px] text-muted-foreground">{localDigits(t("memberNo", { no: member.memberNo }), locale)}</p>
+                            <p className="text-[13px] text-muted-foreground">{t("memberNo", { no: member.membershipCode })}</p>
                           </div>
                           <Button type="button" variant="outline" size="sm" onClick={() => setTarget({ kind: "member", member })}>
                             {t("new.choose")}

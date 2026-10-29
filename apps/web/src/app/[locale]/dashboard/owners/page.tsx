@@ -65,11 +65,11 @@ export default async function OwnersPage({ params, searchParams }: PageProps<"/[
       cell: (row) => (
         <div className="flex items-center gap-2.5">
           {tickable(row) ? <TickBox personId={row.id} name={row.name} /> : null}
-          <Avatar name={row.name} />
+          <Avatar name={row.name} src={row.photoUrl} />
           <div className="grid justify-items-start gap-0.5">
             <PartyLink party={row} />
-            {row.memberNo !== null ? (
-              <Chip tone="good">{t("memberNo", { no: n(row.memberNo) })}</Chip>
+            {row.membershipCode ? (
+              <Chip tone="good">{t("memberNo", { no: row.membershipCode })}</Chip>
             ) : row.kind === "person" ? (
               <Chip tone="warn">{t("owners.notMember")}</Chip>
             ) : null}

@@ -79,9 +79,9 @@ export function DonationForm({
     mode === "anonymous"
       ? null
       : mode === "new"
-        ? { name: fresh.fullName.trim(), nameEn: fresh.fullNameEn.trim() || null, memberNo: null }
+        ? { name: fresh.fullName.trim(), nameEn: fresh.fullNameEn.trim() || null, membershipCode: null }
         : donor
-          ? { name: donor.name, nameEn: donor.nameEn, memberNo: null }
+          ? { name: donor.name, nameEn: donor.nameEn, membershipCode: null }
           : null;
   const problem = !donorInput ? t("needDonor") : amount !== "" && !parsed.success ? t("badAmount") : null;
   const purposeText = purpose.trim() || null;

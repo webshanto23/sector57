@@ -1,6 +1,6 @@
 "use client";
 
-import { amountInWords, formatDate, formatTaka, localDigits, pick, type InvoiceDetail, type Locale } from "@s57/shared";
+import { amountInWords, formatDate, formatTaka, pick, type InvoiceDetail, type Locale } from "@s57/shared";
 import { useLocale, useTranslations } from "next-intl";
 import { DocumentHead, Stamp } from "@/components/print/document-head";
 
@@ -32,8 +32,8 @@ export function BillA5Sheet({ invoice }: { invoice: InvoiceDetail }) {
           <dt className="text-muted-foreground">{t("billTo")}</dt>
           <dd className="font-medium">
             {pick(billTo.name, billTo.nameEn, locale)}
-            {billTo.memberNo !== null ? (
-              <span className="font-normal text-muted-foreground"> · {localDigits(tBilling("memberNo", { no: billTo.memberNo }), locale)}</span>
+            {billTo.membershipCode ? (
+              <span className="font-normal text-muted-foreground"> · {tBilling("memberNo", { no: billTo.membershipCode })}</span>
             ) : null}
           </dd>
           {unit ? (

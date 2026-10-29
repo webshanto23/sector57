@@ -5,17 +5,19 @@ import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { FormStatus } from "@/components/admin/form-status";
-import { Chip, inputClass } from "@/components/kit";
+import { Chip, IconBox, inputClass } from "@/components/kit";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api/client";
+import { unitTypeIcon } from "./unit-types";
 import { useSubmit } from "./use-submit";
 
-type Row = { key: string; id: string | null; nameBn: string; nameEn: string; unitCount: number; scheduleCount: number };
+type Row = { key: string; id: string | null; code: string | null; nameBn: string; nameEn: string; unitCount: number; scheduleCount: number };
 
 const toRows = (types: UnitTypeItem[]): Row[] =>
   types.map((type) => ({
     key: type.id,
     id: type.id,
+    code: type.code,
     nameBn: type.nameBn,
     nameEn: type.nameEn ?? "",
     unitCount: type.unitCount,
@@ -60,8 +62,11 @@ export function UnitTypesEditor({ types }: { types: UnitTypeItem[] }) {
           const used = row.unitCount > 0 || row.scheduleCount > 0;
           return (
             <li key={row.key} className="grid gap-2.5 rounded-[12px] border border-line bg-surface p-3 min-[700px]:grid-cols-[auto_1fr_1fr_auto] min-[700px]:items-center">
-              <span className="num flex size-7 items-center justify-center rounded-full bg-surface-2 text-[13px] font-semibold">
-                {localDigits(index + 1, locale)}
+              <span className="flex items-center gap-2">
+                <span className="num flex size-7 items-center justify-center rounded-full bg-surface-2 text-[13px] font-semibold">
+                  {localDigits(index + 1, locale)}
+                </span>
+                <IconBox icon={unitTypeIcon(row.code)} size="sm" />
               </span>
               <input
                 aria-label={t("nameBn")}
@@ -118,7 +123,7 @@ export function UnitTypesEditor({ types }: { types: UnitTypeItem[] }) {
           type="button"
           variant="outline"
           disabled={rows.length >= MAX_UNIT_TYPES}
-          onClick={() => setRows([...rows, { key: crypto.randomUUID(), id: null, nameBn: "", nameEn: "", unitCount: 0, scheduleCount: 0 }])}
+          onClick={() => setRows([...rows, { key: crypto.randomUUID(), id: null, code: null, nameBn: "", nameEn: "", unitCount: 0, scheduleCount: 0 }])}
         >
           <Plus aria-hidden />
           {t("add")}

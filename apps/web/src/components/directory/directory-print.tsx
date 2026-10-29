@@ -1,6 +1,6 @@
 "use client";
 
-import { formatDate, formatNumber, localDigits, type DirectoryPrint as Directory, type Locale } from "@s57/shared";
+import { formatDate, localDigits, type DirectoryPrint as Directory, type Locale } from "@s57/shared";
 import { Printer } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { PrintSheet } from "@/components/print/print-sheet";
@@ -54,7 +54,7 @@ export function DirectoryPrint({ list, society, today }: { list: Directory; soci
                     <span className="block text-[9pt]">{t(`household.${row.household}`)}</span>
                   </td>
                   <td className="num py-1.5 pr-2">{row.person.phone ? localDigits(row.person.phone, locale) : ""}</td>
-                  <td className="num py-1.5 pr-2">{row.memberNo !== null ? formatNumber(row.memberNo, locale) : ""}</td>
+                  <td className="num py-1.5 pr-2">{row.membershipCode ?? ""}</td>
                   <td className="py-1.5" />
                 </tr>
               ))}

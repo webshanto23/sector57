@@ -60,7 +60,14 @@ Keep each step small and cheap in tokens.
 - **Small slices.** One feature, one policy, one API path, one UI path per slice. Split a big step into parts (schema, API, UI, tests) that can each run in a fresh session.
 - **File size.** No service, controller or component grows past about 350 lines. Put rules and planning in pure helpers (`packages/shared` contracts or a `*.policy.ts` beside the service) and test those with unit tests. Split an existing large file only when real work touches it.
 - **Read narrowly.** Read only the needed part of a large file (offset and limit, or grep first). Don't re-read a file after editing it.
-- **Tests.** While working, run only the affected spec or e2e file. E2e tests cover the key rules (scope, grants, money, conflicts), not every path. Run `pnpm check` once, before handover.
+- **Verification.** Choose checks by what changed.
+  - Small UI-only changes (text, spacing, colours, CSS, layout): inspect the diff and run only the relevant frontend checks.
+  - Rebuild the API or regenerate API types only when contracts, schemas, backend code or generation inputs changed.
+  - Lint and typecheck the changed files or the affected package; no repository-wide checks for isolated changes.
+  - Behaviour changes: run the closest spec or e2e file. E2e tests cover the key rules (scope, grants, money, conflicts), not every path.
+  - Reuse checks that passed earlier in the task; repeat one only when later changes could break it.
+  - Run `pnpm check` once, before handing over a step (commit or PR), not after each small request.
+  - Keep output short: report failures with the relevant lines, summarise passing checks in one sentence. Don't re-inspect unchanged files or repeat the plan.
 - **Docs once.** Update `docs/steps.md`, `docs/rules/` and memory once, at the end of the step, not along the way.
 - **No subagents** unless Anis asks for them.
 

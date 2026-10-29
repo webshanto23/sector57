@@ -226,6 +226,7 @@ export const formDetailSchema = z.object({
   /** The person the approval created or reused. */
   person: partySchema.nullable(),
   memberNo: z.number().int().nullable(),
+  membershipCode: z.string().nullable(),
   can: z.object({
     review: z.boolean(),
     /** `forms.approve` here, plus what approving creates (a member or a tenancy). */

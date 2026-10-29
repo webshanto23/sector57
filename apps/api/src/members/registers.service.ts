@@ -23,14 +23,15 @@ import { inScope } from '../reports/area-tree.js';
 import { feeOf, holdingsOf, placesOf, type FeeRow, type OwnedRow } from './registers.policy.js';
 
 type PersonCols = { id: string; name: string; name_en: string | null; phone: string | null; photo_url: string | null; verified: boolean | null };
-type MemberRow = PersonCols & FeeRow & { member_no: number; status: string; joined_on: Date; total: number };
-type OwnerRow = PersonCols & { kind: 'person' | 'organisation'; lives_here: boolean | null; member_no: number | null; total: number };
+type MemberRow = PersonCols & FeeRow & { member_no: number; membership_code: string; status: string; joined_on: Date; total: number };
+type OwnerRow = PersonCols & { kind: 'person' | 'organisation'; lives_here: boolean | null; member_no: number | null; membership_code: string | null; total: number };
 type RenterRow = Omit<PersonCols, 'id'> & {
   id: string;
   party_id: string | null;
   kind: 'person' | 'organisation' | null;
   renter_type: string;
   member_no: number | null;
+  membership_code: string | null;
   status: string;
   start_date: Date;
   monthly_rent: string | null;
@@ -121,7 +122,7 @@ export class RegistersService {
     const [rows, counts] = await Promise.all([
       this.prisma.$queryRaw<MemberRow[]>`
         with ${linked}
-        select m.member_no, m.status, m.joined_on, p.id, p.full_name as name, p.full_name_en as name_en, p.phone, p.photo_url,
+        select m.member_no, m.membership_code, m.status, m.joined_on, p.id, p.full_name as name, p.full_name_en as name_en, p.phone, p.photo_url,
           p.verified_at is not null as verified, f.fee_bills, f.fee_open, f.fee_owed, f.fee_open_bill, count(*) over ()::int as total
         from memberships m join persons p on p.id = m.person_id left join locations l on l.id = m.location_id ${fees}
         where m.society_id = ${societyId}::uuid and ${visible} and ${Prisma.join(filters, ' and ')}
@@ -139,6 +140,7 @@ export class RegistersService {
     return {
       items: rows.map((row) => ({
         memberNo: row.member_no,
+        membershipCode: row.membership_code,
         status: toMembershipStatus(row.status),
         joinedOn: isoDate(row.joined_on),
         person: this.party('person', row),
@@ -176,10 +178,11 @@ export class RegistersService {
         p.verified_at is not null as verified,
         exists (select 1 from occupants oc join locations l on l.id = oc.unit_id
           where oc.person_id = p.id and oc.society_id = ${societyId}::uuid and oc.end_date is null and ${inScope(actor.access, 'members')}) as lives_here,
-        (select m.member_no from memberships m where m.person_id = p.id and m.society_id = ${societyId}::uuid and m.status = 'active') as member_no
+        (select m.member_no from memberships m where m.person_id = p.id and m.society_id = ${societyId}::uuid and m.status = 'active') as member_no,
+        (select m.membership_code from memberships m where m.person_id = p.id and m.society_id = ${societyId}::uuid and m.status = 'active') as membership_code
       from persons p where p.society_id = ${societyId}::uuid and p.id in (select party_id from owned)
       union all
-      select 'organisation', g.id, g.name, null, cp.phone, null, null, null, null
+      select 'organisation', g.id, g.name, null, cp.phone, null, null, null, null, null
       from organisations g left join persons cp on cp.id = g.contact_person_id
       where g.society_id = ${societyId}::uuid and g.id in (select party_id from owned)
     )`;
@@ -213,6 +216,7 @@ export class RegistersService {
             otherPlaces: own.length - 1,
             livesHere: row.kind === 'person' ? Boolean(row.lives_here) : null,
             memberNo: row.member_no,
+        membershipCode: row.membership_code,
           },
         ];
       }),
@@ -249,6 +253,7 @@ export class RegistersService {
           ut.code as ut_code, ut.name_bn as ut_bn, ut.name_en as ut_en,
           (select count(*) from occupants oc where oc.tenancy_id = t.id and oc.end_date is null)::int as residents,
           (select m.member_no from memberships m where m.person_id = p.id and m.status = 'active') as member_no,
+          (select m.membership_code from memberships m where m.person_id = p.id and m.status = 'active') as membership_code,
           mv.id as move_id, mv.kind as move_kind,
           count(*) over ()::int as total
         from tenancies t
@@ -284,6 +289,7 @@ export class RegistersService {
         unitType: { code: row.ut_code, nameBn: row.ut_bn, nameEn: row.ut_en },
         residents: row.residents,
         memberNo: row.member_no,
+        membershipCode: row.membership_code,
       })),
       total: rows[0]?.total ?? 0,
       page: query.page,

@@ -83,11 +83,11 @@ export default async function RentersPage({ params, searchParams }: PageProps<"/
         row.renter ? (
           <div className="flex items-center gap-2.5">
             {tickable(row) ? <TickBox personId={row.renter.id} name={row.renter.name} /> : null}
-            <Avatar name={row.renter.name} />
+            <Avatar name={row.renter.name} src={row.renter.photoUrl} />
             <div className="grid justify-items-start gap-0.5">
               <PartyLink party={row.renter} />
               <span className="text-[12.5px] text-muted-foreground">{tMembers(`renterType.${row.renterType}`)}</span>
-              {row.memberNo !== null ? <Chip tone="good">{t("memberNo", { no: n(row.memberNo) })}</Chip> : null}
+              {row.membershipCode ? <Chip tone="good">{t("memberNo", { no: row.membershipCode })}</Chip> : null}
             </div>
           </div>
         ) : (

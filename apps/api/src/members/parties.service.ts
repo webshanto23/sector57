@@ -90,6 +90,16 @@ export class PartiesService {
   }
 
   async resolve(tx: Tx, societyId: string, party: PartyInput): Promise<ResolvedParty> {
+    if (party.kind === 'existing') {
+      const { kind, id } = party.party;
+      const where = { id, society_id: societyId };
+      if (kind === 'person') {
+        if (!(await tx.persons.findFirst({ where, select: { id: true } }))) throw personNotFound();
+        return { personId: id, organisationId: null, reused: true };
+      }
+      if (!(await tx.organisations.findFirst({ where, select: { id: true } }))) throw organisationNotFound();
+      return { personId: null, organisationId: id, reused: true };
+    }
     if (party.kind === 'person') {
       const person = await this.resolvePerson(tx, societyId, party.person);
       return { personId: person.id, organisationId: null, reused: person.reused };

@@ -1215,6 +1215,11 @@
       "owners": "Owners",
       "ownersAbove": "Owners of the places above",
       "ownersAboveHint": "Without an owner of its own, this belongs to the owner of the place above.",
+      "showOwnersAbove": "See Property Owners",
+      "hideOwnersAbove": "Hide Property Owners",
+      "aboveOwner": "{level} Owner",
+      "aboveName": "{level} Name",
+      "aboveMap": "Property Map",
       "noOwner": "No current owner recorded.",
       "pastOwners": "Past owners",
       "tenancy": "Tenancy",
@@ -1255,6 +1260,9 @@
       "livesHere": "Lives here",
       "livesHereHint": "If an owner lives in this unit, press “Lives here” to add them as a resident.",
       "renterIsResident": "A renter who is a person is added as a resident (head of household) automatically.",
+      "pastRenter": "Past renter of this unit",
+      "pastRenterNew": "New renter (type below)",
+      "pastRenterHint": "Pick someone who rented here before to add them again with their record on file.",
       "startMoveIn": "Start move-in",
       "startMoveOut": "Start move-out",
       "moveUnderWay": {
@@ -1263,7 +1271,7 @@
       },
       "openMove": "Open checklist"
     },
-    "memberNo": "Society member · no. {no}",
+    "memberNo": "Membership ID {no}",
     "membershipStatus": {
       "active": "Membership active",
       "lapsed": "Membership lapsed",
@@ -1304,7 +1312,7 @@
     "inSomeArea": "Only one area",
     "clearArea": "Show all",
     "morePlaces": "+{count} more",
-    "memberNo": "Member no. {no}",
+    "memberNo": "Membership ID {no}",
     "call": "Call {name}",
     "whatsapp": "WhatsApp {name}",
     "col": {
@@ -1470,7 +1478,7 @@
     "tenancyStart": "Tenancy start date",
     "monthlyRent": "Monthly rent (optional)",
     "noApproveRight": "You don't have the permissions needed to approve in this area.",
-    "memberNo": "Member no. {no}",
+    "memberNo": "Membership ID {no}",
     "openPerson": "Person's page",
     "openPlace": "Address page"
   },
@@ -1641,7 +1649,7 @@
     "empty": "No bills yet.",
     "emptyFiltered": "No bills match this search.",
     "billToWithRole": "{name} ({role})",
-    "memberNo": "Member no. {no}",
+    "memberNo": "Membership ID {no}",
     "noUnit": "No unit",
     "periodRange": "{from} to {to}",
     "detail": {
@@ -1815,7 +1823,7 @@
     "printA4": {
       "billedTo": "Billed to",
       "details": "Bill details",
-      "memberNo": "Member no.",
+      "memberNo": "Membership ID",
       "phone": "Phone",
       "period": "Billing period",
       "dueDate": "Due date",
@@ -1981,7 +1989,7 @@
     "noMatch": "Nothing found in your area.",
     "choose": "Choose",
     "change": "Change",
-    "memberNo": "Member no. {no}",
+    "memberNo": "Membership ID {no}",
     "membershipFees": "Membership fees",
     "nothingDue": "Nothing is due.",
     "dueTotal": "Due: {amount}",
@@ -2727,7 +2735,7 @@
       "empty": "Nobody joined in this period.",
       "truncated": "Only the first {count} are listed. Choose a shorter period.",
       "col": {
-        "memberNo": "Member no.",
+        "memberNo": "Membership ID",
         "name": "Name",
         "address": "Address",
         "joinedOn": "Joined",
@@ -2967,7 +2975,7 @@
       "place": "Unit",
       "relation": "Relation",
       "phone": "Phone",
-      "member": "Member no.",
+      "member": "Membership ID",
       "checked": "Checked"
     },
     "household": {
@@ -2975,7 +2983,7 @@
       "renter": "Renter's household"
     },
     "owner": "Owner",
-    "memberNo": "No. {no}",
+    "memberNo": "Membership ID {no}",
     "csv": "Download CSV",
     "print": "Print list",
     "printTitle": "Resident directory",
@@ -4073,7 +4081,7 @@
         "society": "The society's name",
         "date": "The day it is issued",
         "certNo": "The certificate number",
-        "memberNo": "The person's member number",
+        "memberNo": "The person's membership ID",
         "purpose": "The subject, as typed",
         "addressee": "Who it is addressed to, as typed"
       },

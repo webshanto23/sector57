@@ -138,10 +138,14 @@ export const organisationInputSchema = z.object({
 });
 export type OrganisationInput = z.infer<typeof organisationInputSchema>;
 
-/** Who owns or rents: a person or an organisation, as typed (found or added by the API). */
+/**
+ * Who owns or rents: a person or an organisation, as typed (found or added by the API), or
+ * `existing`: one already on file, by id (such as a past renter picked on the form).
+ */
 export const partyInputSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('person'), person: personInputSchema }),
   z.object({ kind: z.literal('organisation'), organisation: organisationInputSchema }),
+  z.object({ kind: z.literal('existing'), party: z.object({ kind: z.enum(['person', 'organisation']), id: z.uuid() }) }),
 ]);
 export type PartyInput = z.infer<typeof partyInputSchema>;
 
@@ -307,7 +311,8 @@ export const endsBeforeStart = (startDate: string, endDate: string | null) => en
 export const locationPeopleSchema = z.object({
   location: z.object({ id: z.uuid(), name: z.string(), isUnit: z.boolean() }),
   owners: z.array(ownershipSchema).nullable(),
-  ownersAbove: z.array(ownershipSchema).nullable(),
+  /** With the level of the place owned ("Plot", "Building"), to label each line. */
+  ownersAbove: z.array(ownershipSchema.extend({ levelBn: z.string(), levelEn: z.string().nullable() })).nullable(),
   tenancies: z.array(tenancySchema).nullable(),
   occupants: z.array(occupantSchema).nullable(),
   can: z.object({

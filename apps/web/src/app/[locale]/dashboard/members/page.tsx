@@ -97,10 +97,10 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
       header: t("col.name"),
       cell: (row) => (
         <div className="flex items-center gap-2.5">
-          <Avatar name={row.person.name} />
+          <Avatar name={row.person.name} src={row.person.photoUrl} />
           <div className="grid">
             <PartyLink party={row.person} />
-            <span className="num text-[12.5px] text-muted-foreground">{t("memberNo", { no: n(row.memberNo) })}</span>
+            <span className="num text-[12.5px] text-muted-foreground">{t("memberNo", { no: row.membershipCode })}</span>
           </div>
         </div>
       ),

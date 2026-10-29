@@ -43,7 +43,7 @@ export default async function MembersReportPage({ params, searchParams }: PagePr
   const personLinks = canAnywhere(me.access, "members");
 
   const columns: Column<Joined>[] = [
-    { key: "memberNo", header: t("col.memberNo"), numeric: true, cell: (row) => count(row.memberNo) },
+    { key: "memberNo", header: t("col.memberNo"), cell: (row) => row.membershipCode },
     {
       key: "name",
       header: t("col.name"),

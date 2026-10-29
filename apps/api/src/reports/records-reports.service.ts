@@ -118,6 +118,7 @@ export class RecordsReportsService {
         where: { AND: [where, { joined_on: { gte: new Date(`${from}T00:00:00Z`), lte: new Date(`${to}T00:00:00Z`) } }] },
         select: {
           member_no: true,
+          membership_code: true,
           joined_on: true,
           status: true,
           persons: { select: { id: true, full_name: true, full_name_en: true, phone: true } },
@@ -137,6 +138,7 @@ export class RecordsReportsService {
       counts: { active: count('active'), lapsed: count('lapsed'), cancelled: count('cancelled') },
       joined: listed.map((row) => ({
         memberNo: row.member_no,
+        membershipCode: row.membership_code,
         personId: row.persons.id,
         name: row.persons.full_name,
         nameEn: row.persons.full_name_en,

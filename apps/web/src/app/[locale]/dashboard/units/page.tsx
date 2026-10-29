@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Pager } from "@/components/cms/pager";
 import { Chip, DataTable, PageHeader, StatCard, type Column } from "@/components/kit";
 import { OccupancyChip } from "@/components/property/labels";
+import { UnitTypeIcon } from "@/components/property/unit-type-icon";
 import { unitTypeName } from "@/components/property/unit-types";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
@@ -87,7 +88,13 @@ export default async function UnitsPage({ params, searchParams }: PageProps<"/[l
       cell: (unit) => <span className="whitespace-normal">{unit.address.join(" › ")}</span>,
     },
     { key: "code", header: t("code"), cell: (unit) => (unit.code ? <span className="num">{unit.code}</span> : "—") },
-    { key: "type", header: t("unitTypeLabel"), cell: (unit) => unitTypeName(unitTypes, unit.unitType, locale) },
+    { key: "type", header: t("unitTypeLabel"), cell: (unit) => (
+        <span className="inline-flex items-center gap-1.5">
+          <UnitTypeIcon code={unit.unitType} className="size-3.5 shrink-0 text-muted-foreground" />
+          {unitTypeName(unitTypes, unit.unitType, locale)}
+        </span>
+      ),
+    },
     ...(canAnywhere(me.access, "ownerships")
       ? [{ key: "owners", header: tUnits("owners"), cell: (unit: UnitListItem) => <OwnerLevels levels={unit.owners} locale={locale} /> }]
       : []),

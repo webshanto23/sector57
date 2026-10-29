@@ -108,7 +108,7 @@ export function BillA4Sheet({ invoice }: { invoice: InvoiceDetail }) {
             <Caption>{t("billedTo")}</Caption>
             <p className="mt-[1.5mm] text-[13pt] font-semibold">{name}</p>
             {facts([
-              ...(billTo.memberNo !== null ? [[t("memberNo"), <span key="m" className="num font-mono">{localDigits(String(billTo.memberNo), locale)}</span>] as [string, ReactNode]] : []),
+              ...(billTo.membershipCode ? [[t("memberNo"), <span key="m" className="num font-mono">{billTo.membershipCode}</span>] as [string, ReactNode]] : []),
               ...(unit ? [[tPrint("unit"), unit] as [string, ReactNode]] : []),
               ...(billTo.phone ? [[t("phone"), <span key="p" className="num">{billTo.phone}</span>] as [string, ReactNode]] : []),
             ])}

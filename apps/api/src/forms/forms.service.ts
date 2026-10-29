@@ -186,7 +186,7 @@ export class FormsService {
       }),
       this.matches(actor, row.phone, nid),
       row.person_id ? this.prisma.persons.findFirst({ where: { id: row.person_id, society_id: actor.societyId }, select: personPartySelect }) : null,
-      this.prisma.memberships.findFirst({ where: { submission_id: id, society_id: actor.societyId }, select: { member_no: true } }),
+      this.prisma.memberships.findFirst({ where: { submission_id: id, society_id: actor.societyId }, select: { member_no: true, membership_code: true } }),
     ]);
 
     // Stored answers are re-read through the office schemas; the NID is blanked for callers who can't edit.
@@ -216,6 +216,7 @@ export class FormsService {
       matches: mayEdit ? matches : matches.map((match) => ({ ...match, by: match.by.filter((by) => by === 'phone') })).filter((match) => match.by.length > 0),
       person: person ? this.rows.personParty(person) : null,
       memberNo: membership?.member_no ?? null,
+      membershipCode: membership?.membership_code ?? null,
       can: {
         review: status === 'new' && can('edit'),
         approve: open && can('approve') && can('create', approveNeeds(formKey)) && (row.locations?.is_active ?? false),

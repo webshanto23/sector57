@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { api } from "@/lib/api/client";
 import { OCCUPANCY_TONES } from "./occupancy";
+import { UnitTypeIcon } from "./unit-type-icon";
 import { unitTypeName } from "./unit-types";
 import { useSubmit } from "./use-submit";
 
@@ -128,7 +129,10 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
                             unit.name
                           )}
                         </span>
-                        <span className="text-muted-foreground">{unitTypeName(unitTypes, unit.unitType, locale)}</span>
+                        <span className="flex items-center gap-1.5 text-muted-foreground">
+                          <UnitTypeIcon code={unit.unitType} className="size-3.5 shrink-0" />
+                          {unitTypeName(unitTypes, unit.unitType, locale)}
+                        </span>
                         <span className="flex flex-wrap gap-1">
                           <Chip tone={OCCUPANCY_TONES[unit.occupancy]}>{tOcc(unit.occupancy)}</Chip>
                           {unit.alsoOn.length > 0 ? <Chip tone="info">{t("alsoOn", { names: unit.alsoOn.join(", ") })}</Chip> : null}

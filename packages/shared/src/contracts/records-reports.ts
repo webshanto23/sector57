@@ -79,6 +79,7 @@ export const membersReportSchema = z.object({
   joined: z.array(
     z.object({
       memberNo: z.number().int(),
+      membershipCode: z.string(),
       personId: z.uuid(),
       name: z.string(),
       nameEn: z.string().nullable(),

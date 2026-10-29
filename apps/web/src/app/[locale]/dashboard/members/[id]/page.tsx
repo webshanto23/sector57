@@ -8,7 +8,7 @@ import { BillsPanel } from "@/components/billing/bills-panel";
 import { CertificatesPanel } from "@/components/certificates/certificates-panel";
 import { DonationsPanel } from "@/components/donations/donations-panel";
 import { DocumentsPanel } from "@/components/documents/documents-panel";
-import { Chip, PageHeader } from "@/components/kit";
+import { Avatar, Chip, PageHeader } from "@/components/kit";
 import { MakeMemberButton } from "@/components/members/make-members";
 import { PersonEditor } from "@/components/members/person-editor";
 import { HouseholdTable, OwnershipTable, TenancyTable } from "@/components/members/record-tables";
@@ -45,6 +45,7 @@ export default async function PersonPage({ params }: PageProps<"/[locale]/dashbo
   return (
     <>
       <PageHeader
+        lead={<Avatar name={person.fullName} src={person.photoUrl} size="lg" />}
         title={person.fullName}
         sub={[person.fullNameEn, person.phone ? localDigits(person.phone, locale) : null].filter(Boolean).join(" · ") || undefined}
         actions={
@@ -58,9 +59,8 @@ export default async function PersonPage({ params }: PageProps<"/[locale]/dashbo
         {person.membership ? (
           <p className="flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
             <Chip tone={person.membership.status === "active" ? "good" : "neutral"}>
-              {localDigits(t("memberNo", { no: person.membership.memberNo }), locale)}
+              {t("membershipCode", { code: person.membership.membershipCode })}
             </Chip>
-            <span className="num">{t("membershipCode", { code: person.membership.membershipCode })}</span>
             {person.membership.status === "active"
               ? t("memberSince", { date: formatDate(person.membership.joinedOn, locale, "short") })
               : t(`membershipStatus.${person.membership.status}`)}

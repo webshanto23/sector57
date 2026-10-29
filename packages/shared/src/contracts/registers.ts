@@ -74,6 +74,7 @@ export type MemberRegisterQuery = z.infer<typeof memberRegisterQuery>;
 
 export const memberRegisterRowSchema = z.object({
   memberNo: z.number().int(),
+  membershipCode: z.string(),
   status: z.enum(MEMBERSHIP_STATUSES),
   joinedOn: isoDay,
   person: partySchema,
@@ -116,6 +117,7 @@ export const ownerRegisterRowSchema = partySchema.extend({
   livesHere: z.boolean().nullable(),
   /** The active membership number; null for a person who is not a member yet, and for an organisation. */
   memberNo: z.number().int().nullable(),
+  membershipCode: z.string().nullable(),
 });
 export type OwnerRegisterRow = z.infer<typeof ownerRegisterRowSchema>;
 
@@ -158,6 +160,7 @@ export const renterRegisterRowSchema = z.object({
   residents: z.number().int().min(0),
   /** The renter's active membership number; null when they aren't a member, and for an organisation. */
   memberNo: z.number().int().nullable(),
+  membershipCode: z.string().nullable(),
 });
 export type RenterRegisterRow = z.infer<typeof renterRegisterRowSchema>;
 

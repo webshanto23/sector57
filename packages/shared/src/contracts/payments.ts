@@ -92,6 +92,7 @@ export const collectAccountSchema = z.object({
   code: z.string().nullable(),
   address: z.array(z.string()),
   memberNo: z.number().int().nullable(),
+  membershipCode: z.string().nullable(),
   bills: z.array(invoiceRowSchema),
   due: z.string(),
   payers: z.array(payerOptionSchema),

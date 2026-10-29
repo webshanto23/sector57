@@ -5,7 +5,6 @@ import {
   allocate,
   formatDate,
   formatTaka,
-  localDigits,
   moneySchema,
   pick,
   subtractMoney,
@@ -110,7 +109,7 @@ export function CollectForm({
           header,
           receiptNo: null,
           date: today,
-          payer: { name: payer.name, nameEn: payer.nameEn, memberNo: account.memberNo },
+          payer: { name: payer.name, nameEn: payer.nameEn, membershipCode: account.membershipCode },
           unit: account.kind === "unit" ? { name: account.name, address: account.address } : null,
           items: result.allocations.map((allocation) => {
             const bill = bills.find((b) => b.id === allocation.invoiceId)!;
@@ -161,7 +160,7 @@ export function CollectForm({
               <div className="min-w-0">
                 <p className="font-semibold">{account.name}</p>
                 <p className="text-[13px] text-muted-foreground">
-                  {account.kind === "unit" ? account.address.join(", ") : localDigits(t("memberNo", { no: account.memberNo ?? 0 }), locale)}
+                  {account.kind === "unit" ? account.address.join(", ") : t("memberNo", { no: account.membershipCode ?? "" })}
                 </p>
               </div>
               <Button type="button" variant="outline" onClick={() => choose(null)}>
@@ -202,7 +201,7 @@ export function CollectForm({
                         <div className="min-w-0">
                           <p className="font-semibold">{hit.name}</p>
                           <p className="text-[13px] text-muted-foreground">
-                            {hit.kind === "unit" ? hit.address.join(", ") : `${t("membershipFees")} · ${localDigits(t("memberNo", { no: hit.memberNo ?? 0 }), locale)}`}
+                            {hit.kind === "unit" ? hit.address.join(", ") : `${t("membershipFees")} · ${t("memberNo", { no: hit.membershipCode ?? "" })}`}
                           </p>
                           <p className="num text-[13px]">{hit.bills.length ? t("dueTotal", { amount: formatTaka(hit.due, locale) }) : t("nothingDue")}</p>
                         </div>

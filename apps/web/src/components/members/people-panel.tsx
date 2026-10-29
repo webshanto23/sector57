@@ -23,7 +23,9 @@ import { useSubmit } from "@/components/property/use-submit";
 import { Button } from "@/components/ui/button";
 import { Link, useRouter } from "@/i18n/navigation";
 import { api } from "@/lib/api/client";
-import { DateRange, PartyLink, PlaceLink, TenancyStatusChip } from "./labels";
+import { DateRange, PartyLink, TenancyStatusChip } from "./labels";
+import { OwnersAbove } from "./owners-above";
+import { PastRenterSelect, pastRenters } from "./past-renter-select";
 import { DateField, emptyParty, PartyFields, partyBody, partyReady, RowActions, todayIso, type PartyValues } from "./party-fields";
 import { emptyPerson, PersonFields, personBody } from "./person-fields";
 
@@ -182,7 +184,6 @@ function OwnersSection({ people, submit }: { people: LocationPeople; submit: Sub
   const current = owners.filter((row) => row.endDate === null);
   const past = owners.filter((row) => row.endDate !== null);
   const can = people.can.ownerships;
-  const above = people.ownersAbove ?? [];
 
   return (
     <Block
@@ -226,22 +227,7 @@ function OwnersSection({ people, submit }: { people: LocationPeople; submit: Sub
           ))}
         </ul>
       )}
-      {above.length > 0 ? (
-        <div className="grid gap-1.5 rounded-[10px] bg-surface-2 p-3 text-[13px]">
-          <p className="font-semibold">{t("people.ownersAbove")}</p>
-          <p className="text-[12.5px] text-muted-foreground">{t("people.ownersAboveHint")}</p>
-          <ul className="grid gap-1">
-            {above.map((row) => (
-              <li key={row.id} className="flex flex-wrap items-center gap-x-2">
-                <PartyLink party={row.owner} />
-                <span className="text-muted-foreground">
-                  · <PlaceLink place={row.place} />
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      <OwnersAbove rows={people.ownersAbove ?? []} />
       <Past title={t("people.pastOwners")} count={past.length}>
         {past.map((row) => (
           <li key={row.id} className="flex flex-wrap items-start justify-between gap-2">
@@ -264,9 +250,11 @@ function OwnersSection({ people, submit }: { people: LocationPeople; submit: Sub
 // Tenancy
 // ---------------------------------------------------------------------------
 
-function AddTenancyForm({ unitId, submit, onDone }: { unitId: string; submit: Submit; onDone: () => void }) {
+function AddTenancyForm({ unitId, past, submit, onDone }: { unitId: string; past: Tenancy[]; submit: Submit; onDone: () => void }) {
   const t = useTranslations("Members");
   const [party, setParty] = useState<PartyValues>(emptyParty);
+  const renters = pastRenters(past);
+  const [picked, setPicked] = useState<(typeof renters)[number] | null>(null);
   const [values, setValues] = useState({
     renterType: "family" as RenterType,
     status: "active" as "pending" | "active",
@@ -280,12 +268,23 @@ function AddTenancyForm({ unitId, submit, onDone }: { unitId: string; submit: Su
       className="grid gap-3.5 rounded-[10px] border border-line p-3"
       onSubmit={async (e) => {
         e.preventDefault();
-        const done = await submit.run(() => api.POST("/tenancies", { body: { unitId, renter: partyBody(party), ...values } }), t("people.added"));
+        const renter = picked ? ({ kind: "existing", party: { kind: picked.renter.kind, id: picked.renter.id } } as const) : partyBody(party);
+        const done = await submit.run(() => api.POST("/tenancies", { body: { unitId, renter, ...values } }), t("people.added"));
         if (done) onDone();
       }}
     >
-      <PartyFields id="renter" values={party} onChange={setParty} />
-      {party.kind === "person" ? <p className="text-[12.5px] text-muted-foreground">{t("people.renterIsResident")}</p> : null}
+      {renters.length > 0 ? (
+        <PastRenterSelect
+          rows={renters}
+          value={picked?.id ?? ""}
+          onChange={(row) => {
+            setPicked(row);
+            if (row) setValues({ ...values, renterType: row.renterType, monthlyRent: row.monthlyRent ?? "" });
+          }}
+        />
+      ) : null}
+      {picked ? null : <PartyFields id="renter" values={party} onChange={setParty} />}
+      {(picked ? picked.renter.kind : party.kind) === "person" ? <p className="text-[12.5px] text-muted-foreground">{t("people.renterIsResident")}</p> : null}
       <div className="grid gap-3.5 min-[600px]:grid-cols-2">
         <Field label={t("col.role")} htmlFor="renter-type">
           <select
@@ -331,7 +330,7 @@ function AddTenancyForm({ unitId, submit, onDone }: { unitId: string; submit: Su
         checked={values.policeFormSubmitted}
         onChange={(e) => setValues({ ...values, policeFormSubmitted: e.target.checked })}
       />
-      <FormActions busy={submit.busy} ready={partyReady(party) && !!values.startDate} onCancel={onDone} />
+      <FormActions busy={submit.busy} ready={(picked !== null || partyReady(party)) && !!values.startDate} onCancel={onDone} />
     </form>
   );
 }
@@ -440,7 +439,7 @@ function TenancySection({ people, submit }: { people: LocationPeople; submit: Su
         ) : null
       }
     >
-      {adding ? <AddTenancyForm unitId={people.location.id} submit={submit} onDone={() => setAdding(false)} /> : null}
+      {adding ? <AddTenancyForm unitId={people.location.id} past={rows} submit={submit} onDone={() => setAdding(false)} /> : null}
       {open ? <OpenTenancy row={open} can={can} submit={submit} /> : adding ? null : <Empty>{t("people.noTenancy")}</Empty>}
       <Past title={t("people.pastTenancies")} count={past.length}>
         {past.map((row) => (

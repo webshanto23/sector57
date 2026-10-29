@@ -211,7 +211,7 @@ describe('Records reports (e2e)', () => {
 
     it('downloads as CSV with members.export only', async () => {
       const csv = await get('/reports/members/csv?from=2025-01-01&to=2026-12-31', users.membersC).expect(200);
-      expect(csv.text).toContain('সদস্য নম্বর,নাম,ফোন,ঠিকানা,যোগদান,অবস্থা');
+      expect(csv.text).toContain('সদস্যপদ আইডি,নাম,ফোন,ঠিকানা,যোগদান,অবস্থা');
       expect(csv.text).toContain('7,রহিম');
       expect(csv.text).not.toContain('জামাল');
       await get('/reports/members/csv', users.viewerC).expect(403);

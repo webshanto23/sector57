@@ -1,4 +1,4 @@
-import { amountInWords, formatDate, formatTaka, localDigits, pick, type DocumentHeader, type Locale, type PaymentDetail, type PaymentMethod } from "@s57/shared";
+import { amountInWords, formatDate, formatTaka, pick, type DocumentHeader, type Locale, type PaymentDetail, type PaymentMethod } from "@s57/shared";
 import { useTranslations } from "next-intl";
 import { DocumentHead, Stamp } from "@/components/print/document-head";
 
@@ -11,7 +11,7 @@ export type ReceiptData = {
   /** A day (`YYYY-MM-DD`) or an instant. */
   date: string;
   /** Null for an anonymous donor. */
-  payer: { name: string; nameEn: string | null; memberNo: number | null } | null;
+  payer: { name: string; nameEn: string | null; membershipCode: string | null } | null;
   unit: { name: string; address: string[] } | null;
   /** `invoiceNo` is null on a donation's line; `detail` (the fund) is printed under the label instead. */
   items: { key: string; label: string; invoiceNo: string | null; detail?: string | null; amount: string; total: string }[];
@@ -84,7 +84,7 @@ export function Receipt({ data, locale, print = false }: { data: ReceiptData; lo
   const day = formatDate(data.date, locale);
   const payer = data.payer ? pick(data.payer.name, data.payer.nameEn, locale) : t("anonymous");
   const unit = data.unit ? [data.unit.name, ...[...data.unit.address].reverse()].join(", ") : null;
-  const member = data.payer && data.payer.memberNo !== null ? localDigits(tc("memberNo", { no: data.payer.memberNo }), locale) : null;
+  const member = data.payer?.membershipCode ? tc("memberNo", { no: data.payer.membershipCode }) : null;
   const title = data.kind === "donation" ? t("donationTitle") : t("title");
   const words = amountInWords(data.amount, locale);
   const stamp = data.mark === "void" ? <Stamp text={t("void")} tone="bad" /> : data.mark === "duplicate" ? <Stamp text={t("duplicate")} tone="muted" /> : null;

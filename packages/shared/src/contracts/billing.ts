@@ -103,6 +103,8 @@ export const billToSnapshotSchema = z.object({
   phone: z.string().nullable(),
   role: z.enum(BILL_TO_ROLES),
   memberNo: z.number().int().nullable(),
+  /** Older bills were saved before membership IDs and read as null. */
+  membershipCode: z.string().nullable().default(null),
   unit: z
     .object({
       id: z.uuid(),
@@ -316,6 +318,6 @@ export const billingLookupSchema = z.object({
     }),
   ),
   /** People with an active membership; only for a society-wide billing role. */
-  members: z.array(partySchema.extend({ memberNo: z.number().int() })),
+  members: z.array(partySchema.extend({ memberNo: z.number().int(), membershipCode: z.string() })),
 });
 export type BillingLookup = z.infer<typeof billingLookupSchema>;
