@@ -9,11 +9,12 @@ import { DonationsPanel } from "@/components/donations/donations-panel";
 import { Card, PageHeader } from "@/components/kit";
 import { MembershipLine, PartyLink } from "@/components/members/labels";
 import { MakeMemberButton } from "@/components/members/make-members";
+import { LicencePagesCard } from "@/components/members/id-copies";
 import { OrganisationEditor } from "@/components/members/organisation-editor";
 import { OwnershipTable, TenancyTable } from "@/components/members/record-tables";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { getOrganisation } from "@/lib/api/members";
+import { getLicencePages, getOrganisation } from "@/lib/api/members";
 import { requirePermission } from "@/lib/api/session";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/dashboard/members/organisations/[id]">): Promise<Metadata> {
@@ -32,6 +33,7 @@ export default async function OrganisationPage({ params }: PageProps<"/[locale]/
   const me = await requirePermission("members");
   const [t, organisation] = await Promise.all([getTranslations("Members"), getOrganisation(id)]);
   if (!organisation) notFound();
+  const licencePages = organisation.can.edit ? await getLicencePages(organisation.id) : null;
   const open = { units: canAnywhere(me.access, "units"), locations: canAnywhere(me.access, "locations") };
   // Not an active member yet: whole-society roles can make it one, at a place it owns or rents now.
   const mayMakeMember = organisation.membership?.status !== "active" && canSocietyWide(me.access, "members", "create");
@@ -57,6 +59,7 @@ export default async function OrganisationPage({ params }: PageProps<"/[locale]/
         {mayMakeMember ? <MakeMemberButton member={{ kind: "organisation", id: organisation.id }} places={currentPlaces} /> : null}
         {!organisation.can.edit ? <Note>{t("readOnly")}</Note> : null}
         <OrganisationEditor key={organisation.id} organisation={organisation} />
+        {licencePages ? <LicencePagesCard organisationId={organisation.id} pages={licencePages} /> : null}
         <Card className="grid gap-1.5">
           <h2 className="text-[15px]">{t("contact")}</h2>
           {organisation.contact ? (

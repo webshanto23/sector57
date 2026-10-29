@@ -9,6 +9,7 @@ import { CertificatesPanel } from "@/components/certificates/certificates-panel"
 import { DonationsPanel } from "@/components/donations/donations-panel";
 import { DocumentsPanel } from "@/components/documents/documents-panel";
 import { Avatar, PageHeader } from "@/components/kit";
+import { NidCopiesCard } from "@/components/members/id-copies";
 import { MembershipLine } from "@/components/members/labels";
 import { MakeMemberButton } from "@/components/members/make-members";
 import { PersonEditor } from "@/components/members/person-editor";
@@ -16,7 +17,7 @@ import { HouseholdTable, OwnershipTable, TenancyTable } from "@/components/membe
 import { buttonVariants } from "@/components/ui/button";
 import { VehiclesPanel } from "@/components/vehicles/vehicles-panel";
 import { Link } from "@/i18n/navigation";
-import { getPerson } from "@/lib/api/members";
+import { getNidCopies, getPerson } from "@/lib/api/members";
 import { requirePermission } from "@/lib/api/session";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/dashboard/members/[id]">): Promise<Metadata> {
@@ -35,6 +36,7 @@ export default async function PersonPage({ params }: PageProps<"/[locale]/dashbo
   const me = await requirePermission("members");
   const [t, person] = await Promise.all([getTranslations("Members"), getPerson(id)]);
   if (!person) notFound();
+  const nidCopies = person.can.edit ? await getNidCopies(person.id) : null;
   const open = { units: canAnywhere(me.access, "units"), locations: canAnywhere(me.access, "locations") };
   // Not an active member yet: whole-society roles can make them one, at a place they own or rent now.
   const mayMakeMember = person.membership?.status !== "active" && canSocietyWide(me.access, "members", "create");
@@ -61,6 +63,7 @@ export default async function PersonPage({ params }: PageProps<"/[locale]/dashbo
         {mayMakeMember ? <MakeMemberButton member={{ kind: "person", id: person.id }} places={currentPlaces} /> : null}
         {!person.can.edit ? <Note>{t("readOnly")}</Note> : null}
         <PersonEditor key={person.id} person={person} />
+        {nidCopies ? <NidCopiesCard personId={person.id} copies={nidCopies} /> : null}
         <OwnershipTable rows={person.ownerships} locale={locale} open={open} />
         <TenancyTable rows={person.tenancies} locale={locale} open={open} />
         <HouseholdTable rows={person.households} open={open} />

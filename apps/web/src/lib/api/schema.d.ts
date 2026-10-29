@@ -1220,6 +1220,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/persons/{id}/nid-copy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PersonIdCopiesController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/persons/{id}/nid-copy/{side}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PersonIdCopiesController_set"];
+        delete: operations["PersonIdCopiesController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/persons/{id}/id-copies/{docId}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PersonIdCopiesController_file"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organisations/{id}/licence-pages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OrganisationIdCopiesController_list"];
+        put?: never;
+        post: operations["OrganisationIdCopiesController_add"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organisations/{id}/licence-pages/{docId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["OrganisationIdCopiesController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/organisations/{id}/licence-pages/{docId}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["OrganisationIdCopiesController_file"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/public/locations": {
         parameters: {
             query?: never;
@@ -5849,6 +5945,34 @@ export interface components {
         MembershipSettingsInputDto: {
             societyCode: string;
             firstMemberNo: number;
+        };
+        NidCopiesDto_Output: {
+            front: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "pdf" | "image";
+                /** Format: date-time */
+                uploadedAt: string;
+            } | null;
+            back: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "pdf" | "image";
+                /** Format: date-time */
+                uploadedAt: string;
+            } | null;
+        };
+        LicencePagesDto_Output: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "pdf" | "image";
+                /** Format: date-time */
+                uploadedAt: string;
+            }[];
         };
         PublicPlaceListDto_Output: {
             items: {
@@ -13397,6 +13521,189 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["MembershipSettingsDto_Output"];
                 };
+            };
+        };
+    };
+    PersonIdCopiesController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NidCopiesDto_Output"];
+                };
+            };
+        };
+    };
+    PersonIdCopiesController_set: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                side: "front" | "back";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NidCopiesDto_Output"];
+                };
+            };
+        };
+    };
+    PersonIdCopiesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                side: "front" | "back";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NidCopiesDto_Output"];
+                };
+            };
+        };
+    };
+    PersonIdCopiesController_file: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                docId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OrganisationIdCopiesController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LicencePagesDto_Output"];
+                };
+            };
+        };
+    };
+    OrganisationIdCopiesController_add: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LicencePagesDto_Output"];
+                };
+            };
+        };
+    };
+    OrganisationIdCopiesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                docId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LicencePagesDto_Output"];
+                };
+            };
+        };
+    };
+    OrganisationIdCopiesController_file: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                docId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

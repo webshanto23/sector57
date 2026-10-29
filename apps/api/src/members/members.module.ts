@@ -6,6 +6,8 @@ import { StorageModule } from '../storage/storage.module.js';
 import { LocationPeopleService } from './location-people.service.js';
 import { DirectoryController } from './directory.controller.js';
 import { DirectoryService } from './directory.service.js';
+import { OrganisationIdCopiesController, PersonIdCopiesController } from './id-copies.controller.js';
+import { IdCopiesService } from './id-copies.service.js';
 import { MemberRowsService } from './member-rows.service.js';
 import {
   LocationPeopleController,
@@ -29,7 +31,7 @@ import { RegistersController } from './registers.controller.js';
 import { RegistersService } from './registers.service.js';
 import { TenanciesService } from './tenancies.service.js';
 
-/** Step 10: people, organisations, ownerships, tenancies and households. Step 20: move-in and move-out checklists, the resident directory. Step 36: the members, owners and renters registers. */
+/** Step 10: people, organisations, ownerships, tenancies and households. Step 20: move-in and move-out checklists, the resident directory. Step 36: the members, owners and renters registers. NID and trade licence copies on the member pages. */
 @Module({
   imports: [PrismaModule, AuditModule, PropertyModule, StorageModule],
   controllers: [
@@ -44,6 +46,8 @@ import { TenanciesService } from './tenancies.service.js';
     RegistersController,
     MembershipsController,
     MembershipSettingsController,
+    PersonIdCopiesController,
+    OrganisationIdCopiesController,
   ],
   providers: [
     PartiesService,
@@ -59,6 +63,7 @@ import { TenanciesService } from './tenancies.service.js';
     RegistersService,
     MembershipsService,
     MembershipSettingsService,
+    IdCopiesService,
   ],
   // The office review (forms module) approves applications through these.
   exports: [PartiesService, MemberRowsService, TenanciesService, OwnershipsService, MembershipsService],

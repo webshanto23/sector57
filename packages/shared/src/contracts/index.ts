@@ -27,6 +27,7 @@ export * from './overview.js';
 export * from './moves.js';
 export * from './directory.js';
 export * from './documents.js';
+export * from './id-copies.js';
 export * from './staff.js';
 export * from './facilities.js';
 export * from './helpdesk.js';

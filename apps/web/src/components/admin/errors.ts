@@ -139,6 +139,8 @@ const KNOWN = [
   "document_archived",
   "document_not_archived",
   "too_many_documents",
+  "id_copy_not_found",
+  "too_many_licence_pages",
   "invalid_doc_type",
   "invalid_entity",
   "staff_not_found",

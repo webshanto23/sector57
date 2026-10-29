@@ -1137,6 +1137,15 @@ Branch `feat/people-display-and-membership-ids`, four slices (2026-10-29). Membe
 - **Slice 4 (web):** Add member has a Person / Organisation choice; the organisation page shows its membership and "Make member" (`GET /organisations/:id` returns `membership`); owners and renters lists tick organisations too; the public membership form has "Applying as" with the organisation's name and licence, and the review page shows them. The directory is unchanged (only people are residents); the members report CSV already lists organisations.
 - **Tests:** e2e in `memberships`, `billing` and `payments` specs. The new screens were typechecked and linted, not clicked through in a browser.
 
+## ID copies on the member pages — Built, awaiting review
+
+Same branch, 2026-10-29. Anis decided: the `members` edit right is enough (no `documents` grant); NID and licence copies are both seen only by those who may edit the record; NID sides are photos only; at most 10 licence pages.
+
+- **API:** `IdCopiesService` + `id-copies.controller.ts` (`GET|POST|DELETE /persons/:id/nid-copy(/:side)`, `GET /persons/:id/id-copies/:docId/file`, `GET|POST /organisations/:id/licence-pages`, `DELETE|GET …/:docId(/file)`). Private `documents` rows (no migration); a replaced or removed copy is archived. The documents library filters these types out.
+- **Web:** "NID copy" card (front and back slots) on the person page and "Trade licence copy" card (pages, multi-file upload) on the organisation page, shown only to editors.
+- **Tests:** `id-copies.policy.spec.ts`, `test/id-copies.e2e-spec.ts` (replace archives, editor-only access, out-of-area and other society 404, library never shows them, page limit); `documents.e2e-spec.ts` still passes. Not clicked through in a browser.
+- **Out:** requiring the copies under `requireIdNumbers`, reordering licence pages, copies on the public forms.
+
 ## Later: beyond milestone 3
 
 These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.
