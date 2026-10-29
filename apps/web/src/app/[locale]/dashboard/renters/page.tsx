@@ -72,7 +72,7 @@ export default async function RentersPage({ params, searchParams }: PageProps<"/
   const movesOpen = canAnywhere(me.access, "tenancies");
   // Whole-society roles can tick renters who aren't members yet and make them members in one go.
   const canTick = canSocietyWide(me.access, "members", "create");
-  const tickable = (row: RenterRegisterRow) => canTick && row.renter?.kind === "person" && row.memberNo === null;
+  const tickable = (row: RenterRegisterRow) => canTick && row.renter !== null && row.memberNo === null;
   const named = (item: { nameBn: string; nameEn: string | null }) => (locale === "en" ? (item.nameEn ?? item.nameBn) : item.nameBn);
 
   const columns: Column<RenterRegisterRow>[] = [
@@ -82,7 +82,7 @@ export default async function RentersPage({ params, searchParams }: PageProps<"/
       cell: (row) =>
         row.renter ? (
           <div className="flex items-center gap-2.5">
-            {tickable(row) ? <TickBox personId={row.renter.id} name={row.renter.name} /> : null}
+            {tickable(row) ? <TickBox id={row.renter.id} name={row.renter.name} /> : null}
             <Avatar name={row.renter.name} src={row.renter.photoUrl} />
             <div className="grid justify-items-start gap-0.5">
               <PartyLink party={row.renter} />
@@ -181,7 +181,10 @@ export default async function RentersPage({ params, searchParams }: PageProps<"/
       </form>
 
       {canTick ? (
-        <MemberTicks eligible={[...new Set(list.items.filter(tickable).map((row) => row.renter!.id))]}>{table}</MemberTicks>
+        <MemberTicks eligible={list.items
+            .filter(tickable)
+            .map((row) => ({ kind: row.renter!.kind, id: row.renter!.id }))
+            .filter((row, i, all) => all.findIndex((other) => other.id === row.id) === i)}>{table}</MemberTicks>
       ) : (
         table
       )}

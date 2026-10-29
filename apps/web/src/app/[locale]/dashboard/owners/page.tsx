@@ -56,7 +56,7 @@ export default async function OwnersPage({ params, searchParams }: PageProps<"/[
   const placesOpen = { units: canAnywhere(me.access, "units"), locations: canAnywhere(me.access, "locations") };
   // Whole-society roles can tick owners who aren't members yet and make them members in one go.
   const canTick = canSocietyWide(me.access, "members", "create");
-  const tickable = (row: OwnerRegisterRow) => canTick && row.kind === "person" && row.memberNo === null;
+  const tickable = (row: OwnerRegisterRow) => canTick && row.memberNo === null;
 
   const columns: Column<OwnerRegisterRow>[] = [
     {
@@ -64,7 +64,7 @@ export default async function OwnersPage({ params, searchParams }: PageProps<"/[
       header: t("col.name"),
       cell: (row) => (
         <div className="flex items-center gap-2.5">
-          {tickable(row) ? <TickBox personId={row.id} name={row.name} /> : null}
+          {tickable(row) ? <TickBox id={row.id} name={row.name} /> : null}
           <Avatar name={row.name} src={row.photoUrl} />
           <div className="grid justify-items-start gap-0.5">
             <PartyLink party={row} />
@@ -134,7 +134,7 @@ export default async function OwnersPage({ params, searchParams }: PageProps<"/[
       </form>
 
       {canTick ? (
-        <MemberTicks eligible={list.items.filter(tickable).map((row) => row.id)}>{table}</MemberTicks>
+        <MemberTicks eligible={list.items.filter(tickable).map((row) => ({ kind: row.kind, id: row.id }))}>{table}</MemberTicks>
       ) : (
         table
       )}

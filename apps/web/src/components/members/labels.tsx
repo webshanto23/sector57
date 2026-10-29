@@ -1,4 +1,4 @@
-import { formatDate, type Locale, type Party, type Place, type TenancyStatus } from "@s57/shared";
+import { formatDate, type Locale, type Membership, type Party, type Place, type TenancyStatus } from "@s57/shared";
 import { useLocale, useTranslations } from "next-intl";
 import { Chip, type Tone } from "@/components/kit";
 import { Link } from "@/i18n/navigation";
@@ -51,5 +51,19 @@ export function DateRange({ start, end }: { start: string; end: string | null })
     <span className="whitespace-nowrap">
       {formatDate(start, locale, "short")} – {end ? formatDate(end, locale, "short") : t("now")}
     </span>
+  );
+}
+
+/** The membership ID as a chip, with "member since" (active) or the status. */
+export function MembershipLine({ membership }: { membership: Membership }) {
+  const t = useTranslations("Members");
+  const locale = useLocale() as Locale;
+  return (
+    <p className="flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
+      <Chip tone={membership.status === "active" ? "good" : "neutral"}>{t("membershipCode", { code: membership.membershipCode })}</Chip>
+      {membership.status === "active"
+        ? t("memberSince", { date: formatDate(membership.joinedOn, locale, "short") })
+        : t(`membershipStatus.${membership.status}`)}
+    </p>
   );
 }

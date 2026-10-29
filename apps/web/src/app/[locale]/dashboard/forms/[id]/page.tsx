@@ -175,10 +175,17 @@ function Answers({
   tMembers: TMembers;
 }) {
   if (form.membership) {
-    const { applicant, livesHere } = form.membership;
+    const { applicantKind, applicant, organisation, livesHere } = form.membership;
     return (
       <Facts
         rows={[
+          [tForms("applyingAs"), tForms(`applicantKinds.${applicantKind}`)],
+          ...(applicantKind === "organisation" && organisation
+            ? ([
+                [tForms("orgName"), organisation.name],
+                [tForms("tradeLicence"), organisation.tradeLicence],
+              ] as [ReactNode, ReactNode][])
+            : []),
           [tForms("fullName"), applicant.fullName],
           ...(applicant.fullNameEn ? ([[tForms("fullNameEn"), applicant.fullNameEn]] as [ReactNode, ReactNode][]) : []),
           [tForms("phone"), digits(applicant.phone)],

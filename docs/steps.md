@@ -1127,6 +1127,16 @@ Asked for by Anis on 2026-10-28. Decided: `/dashboard/members/new` registers a m
   - The society code is still `SECTOR57` (from the slug); set it in Settings.
   - Adding a person with no unit and no membership is no longer offered on the web; `POST /persons` is still there.
 
+## Organisation members — Built, awaiting review
+
+Branch `feat/people-display-and-membership-ids`, four slices (2026-10-29). Member certificates for organisations are left out (Anis).
+
+- **Slice 1 (schema and API):** migration `29_organisation_members` (`memberships.organisation_id` beside `person_id`, exactly one); `POST /memberships` and bulk take organisations; the public membership form takes `applicantKind`; the records report lists organisation members.
+- **Slice 2 (registers):** the members register lists organisation members and finds them by membership ID; the owners and renters registers show an organisation's membership ID.
+- **Slice 3 (billing):** bills, the billing and collect lookups and payments take `organisationId` beside `personId`; collect accounts carry `memberKind`.
+- **Slice 4 (web):** Add member has a Person / Organisation choice; the organisation page shows its membership and "Make member" (`GET /organisations/:id` returns `membership`); owners and renters lists tick organisations too; the public membership form has "Applying as" with the organisation's name and licence, and the review page shows them. The directory is unchanged (only people are residents); the members report CSV already lists organisations.
+- **Tests:** e2e in `memberships`, `billing` and `payments` specs. The new screens were typechecked and linted, not clicked through in a browser.
+
 ## Later: beyond milestone 3
 
 These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.

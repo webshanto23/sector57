@@ -196,7 +196,15 @@
       "file_required": "দলিলের ছবি বা পিডিএফ যুক্ত করুন।",
       "payload_too_large": "ফাইলটি ৫ এমবির বেশি বড়।",
       "validation_failed": "লাল চিহ্নিত ঘরগুলো ঠিক করুন।"
-    }
+    },
+    "applyingAs": "আবেদনকারী",
+    "applicantKinds": {
+      "person": "ব্যক্তি",
+      "organisation": "প্রতিষ্ঠান"
+    },
+    "orgName": "প্রতিষ্ঠানের নাম",
+    "tradeLicence": "ট্রেড লাইসেন্স নম্বর",
+    "contactHint": "নিচে আপনার নিজের তথ্য দিন; আপনি প্রতিষ্ঠানের যোগাযোগকারী হবেন।"
   },
   "Auth": {
     "loginTitle": "লগইন",

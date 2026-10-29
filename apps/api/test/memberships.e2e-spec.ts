@@ -7,6 +7,7 @@ import {
   memberBulkResultSchema,
   memberCreatedSchema,
   memberRegisterSchema,
+  organisationDetailSchema,
   ownerRegisterSchema,
   personDetailSchema,
   renterRegisterSchema,
@@ -231,6 +232,8 @@ describe('Memberships: the office adds members with a global membership ID (e2e)
         person: { kind: 'organisation', phone: contact.phone, photoUrl: null, verified: null },
       });
     }
+    const detail = organisationDetailSchema.parse((await get(`/organisations/${org}`)).body);
+    expect(detail.membership).toMatchObject({ membershipCode: made.membershipCode, status: 'active' });
     const owners = ownerRegisterSchema.parse((await get(`/registers/owners?areaId=${tree.sector.id}&membership=member`)).body);
     expect(owners.items.find((row) => row.id === org)?.membershipCode).toBe(made.membershipCode);
 

@@ -1,4 +1,4 @@
-import { canAnywhere, canSocietyWide, formatDate, localDigits, type Locale, type Place } from "@s57/shared";
+import { canAnywhere, canSocietyWide, localDigits, type Locale, type Place } from "@s57/shared";
 import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -8,7 +8,8 @@ import { BillsPanel } from "@/components/billing/bills-panel";
 import { CertificatesPanel } from "@/components/certificates/certificates-panel";
 import { DonationsPanel } from "@/components/donations/donations-panel";
 import { DocumentsPanel } from "@/components/documents/documents-panel";
-import { Avatar, Chip, PageHeader } from "@/components/kit";
+import { Avatar, PageHeader } from "@/components/kit";
+import { MembershipLine } from "@/components/members/labels";
 import { MakeMemberButton } from "@/components/members/make-members";
 import { PersonEditor } from "@/components/members/person-editor";
 import { HouseholdTable, OwnershipTable, TenancyTable } from "@/components/members/record-tables";
@@ -56,17 +57,8 @@ export default async function PersonPage({ params }: PageProps<"/[locale]/dashbo
         }
       />
       <div className="grid gap-3.5">
-        {person.membership ? (
-          <p className="flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
-            <Chip tone={person.membership.status === "active" ? "good" : "neutral"}>
-              {t("membershipCode", { code: person.membership.membershipCode })}
-            </Chip>
-            {person.membership.status === "active"
-              ? t("memberSince", { date: formatDate(person.membership.joinedOn, locale, "short") })
-              : t(`membershipStatus.${person.membership.status}`)}
-          </p>
-        ) : null}
-        {mayMakeMember ? <MakeMemberButton personId={person.id} places={currentPlaces} /> : null}
+        {person.membership ? <MembershipLine membership={person.membership} /> : null}
+        {mayMakeMember ? <MakeMemberButton member={{ kind: "person", id: person.id }} places={currentPlaces} /> : null}
         {!person.can.edit ? <Note>{t("readOnly")}</Note> : null}
         <PersonEditor key={person.id} person={person} />
         <OwnershipTable rows={person.ownerships} locale={locale} open={open} />

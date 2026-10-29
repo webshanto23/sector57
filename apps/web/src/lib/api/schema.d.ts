@@ -4963,6 +4963,15 @@ export interface components {
                     kind: "move_in" | "move_out";
                 } | null;
             }[];
+            membership: {
+                memberNo: number;
+                membershipCode: string;
+                /** @enum {string} */
+                status: "active" | "lapsed" | "cancelled";
+                /** Format: date */
+                joinedOn: string;
+                endedOn: string | null;
+            } | null;
             can: {
                 edit: boolean;
                 delete: boolean;

@@ -1,4 +1,4 @@
-import { canAnywhere, localDigits, type Locale } from "@s57/shared";
+import { canAnywhere, canSocietyWide, localDigits, type Locale, type Place } from "@s57/shared";
 import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -7,7 +7,8 @@ import { Note } from "@/components/admin/form-status";
 import { BillsPanel } from "@/components/billing/bills-panel";
 import { DonationsPanel } from "@/components/donations/donations-panel";
 import { Card, PageHeader } from "@/components/kit";
-import { PartyLink } from "@/components/members/labels";
+import { MembershipLine, PartyLink } from "@/components/members/labels";
+import { MakeMemberButton } from "@/components/members/make-members";
 import { OrganisationEditor } from "@/components/members/organisation-editor";
 import { OwnershipTable, TenancyTable } from "@/components/members/record-tables";
 import { buttonVariants } from "@/components/ui/button";
@@ -32,6 +33,12 @@ export default async function OrganisationPage({ params }: PageProps<"/[locale]/
   const [t, organisation] = await Promise.all([getTranslations("Members"), getOrganisation(id)]);
   if (!organisation) notFound();
   const open = { units: canAnywhere(me.access, "units"), locations: canAnywhere(me.access, "locations") };
+  // Not an active member yet: whole-society roles can make it one, at a place it owns or rents now.
+  const mayMakeMember = organisation.membership?.status !== "active" && canSocietyWide(me.access, "members", "create");
+  const currentPlaces = [
+    ...organisation.ownerships.filter((row) => row.endDate === null).map((row) => row.place),
+    ...organisation.tenancies.filter((row) => row.status === "active" || row.status === "moving_out").map((row) => row.place),
+  ].filter((place, i, all) => all.findIndex((other) => other.id === place.id) === i) satisfies Place[];
 
   return (
     <>
@@ -46,6 +53,8 @@ export default async function OrganisationPage({ params }: PageProps<"/[locale]/
         }
       />
       <div className="grid gap-3.5">
+        {organisation.membership ? <MembershipLine membership={organisation.membership} /> : null}
+        {mayMakeMember ? <MakeMemberButton member={{ kind: "organisation", id: organisation.id }} places={currentPlaces} /> : null}
         {!organisation.can.edit ? <Note>{t("readOnly")}</Note> : null}
         <OrganisationEditor key={organisation.id} organisation={organisation} />
         <Card className="grid gap-1.5">

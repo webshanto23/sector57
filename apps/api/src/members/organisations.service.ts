@@ -36,9 +36,10 @@ export class OrganisationsService {
   async get(actor: Actor, id: string): Promise<OrganisationDetail> {
     const { row, paths } = await this.visible(actor, id);
     const at = (module: 'ownerships' | 'tenancies') => scopeWhere(actor.access, 'view', module, (prefix) => ({ path: { startsWith: prefix } }));
-    const [ownerships, tenancies] = await Promise.all([
+    const [ownerships, tenancies, membership] = await Promise.all([
       this.rows.ownerships(actor.societyId, { organisation_id: id, locations: at('ownerships') }),
       this.rows.tenancies(actor.societyId, { organisation_id: id, units: { locations: at('tenancies') } }),
+      this.rows.membership(actor.societyId, { organisation_id: id }),
     ]);
     return {
       id: row.id,
@@ -48,6 +49,7 @@ export class OrganisationsService {
       createdAt: row.created_at.toISOString(),
       ownerships,
       tenancies,
+      membership,
       can: { edit: canOnParty(actor.access, 'edit', paths), delete: canOnParty(actor.access, 'delete', paths) },
     };
   }

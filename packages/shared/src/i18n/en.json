@@ -196,7 +196,15 @@
       "file_required": "Attach a photo or PDF of the deed.",
       "payload_too_large": "The file is larger than 5 MB.",
       "validation_failed": "Please correct the fields marked in red."
-    }
+    },
+    "applyingAs": "Applying as",
+    "applicantKinds": {
+      "person": "A person",
+      "organisation": "An organisation"
+    },
+    "orgName": "Organisation name",
+    "tradeLicence": "Trade licence number",
+    "contactHint": "Give your own details below; you will be the organisation's contact person."
   },
   "Auth": {
     "loginTitle": "Log in",

@@ -333,7 +333,7 @@ export const MEMBERSHIP_STATUSES = ['active', 'lapsed', 'cancelled'] as const;
 export type MembershipStatus = (typeof MEMBERSHIP_STATUSES)[number];
 export const toMembershipStatus = oneOf(MEMBERSHIP_STATUSES, 'cancelled');
 
-/** A person's society membership, on their page. */
+/** A person's or organisation's society membership, on their page. */
 export const membershipSchema = z.object({
   memberNo: z.number().int(),
   /** Unique across all societies: the society code and the padded member number (`S15-000042`). */
@@ -487,6 +487,8 @@ export const organisationDetailSchema = z.object({
   createdAt: z.iso.datetime({ offset: true }),
   ownerships: z.array(ownershipSchema),
   tenancies: z.array(tenancySchema),
+  /** Its current or latest society membership, if any. */
+  membership: membershipSchema.nullable(),
   can: z.object({ edit: z.boolean(), delete: z.boolean() }),
 });
 export type OrganisationDetail = z.infer<typeof organisationDetailSchema>;
