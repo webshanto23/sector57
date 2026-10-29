@@ -18,7 +18,7 @@ import { unitTypeCode } from './property.js';
  * See docs/glossary.md: an owner is not a member until the office approves a membership.
  */
 
-/** `q` matches names (fuzzy) or phone, in either digit form; on the members register also the membership ID. */
+/** `q` matches names (fuzzy) or phone, in either digit form; on the members register also the membership ID. Organisations show with their contact person's phone. */
 const registerQuery = pagination.extend({
   q: z.string().transform(cleanText).pipe(z.string().max(100)).optional(),
   areaId: z.uuid().optional(),

@@ -70,7 +70,7 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
   // The fee shows only to society-wide billing viewers (the API sends null otherwise).
   const feeShown = list.counts.feeNotPaid !== null;
   const canBill = canSocietyWide(me.access, "billing", "create");
-  const feeCell = (fee: MemberFee, personId: string) => {
+  const feeCell = (fee: MemberFee, member: MemberRegisterRow["person"]) => {
     if (fee.state === "paid") return <Chip tone="good">{t("members.fee.paid")}</Chip>;
     if (fee.state === "unpaid") {
       return (
@@ -82,8 +82,8 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
     return (
       <span className="flex flex-wrap items-center gap-2">
         <Chip tone="bad">{t("members.fee.notBilled")}</Chip>
-        {canBill ? (
-          <Link href={{ pathname: "/dashboard/billing/new", query: { personId } }} className="text-[13px] font-semibold whitespace-nowrap text-primary">
+        {canBill && member.kind === "person" ? (
+          <Link href={{ pathname: "/dashboard/billing/new", query: { personId: member.id } }} className="text-[13px] font-semibold whitespace-nowrap text-primary">
             {t("members.fee.makeBill")}
           </Link>
         ) : null}
@@ -110,7 +110,7 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
     { key: "joined", header: t("members.col.joined"), cell: (row) => <span className="whitespace-nowrap">{formatDate(row.joinedOn, locale, "short")}</span> },
     { key: "status", header: t("col.status"), cell: (row) => <Chip tone={STATUS_TONES[row.status]}>{t(`members.status.${row.status}`)}</Chip> },
     ...(feeShown
-      ? [{ key: "fee", header: t("members.col.fee"), cell: (row: MemberRegisterRow) => (row.fee ? feeCell(row.fee, row.person.id) : "—") }]
+      ? [{ key: "fee", header: t("members.col.fee"), cell: (row: MemberRegisterRow) => (row.fee ? feeCell(row.fee, row.person) : "—") }]
       : []),
   ];
 

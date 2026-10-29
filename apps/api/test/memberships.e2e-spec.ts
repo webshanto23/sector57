@@ -7,6 +7,7 @@ import {
   memberBulkResultSchema,
   memberCreatedSchema,
   memberRegisterSchema,
+  ownerRegisterSchema,
   personDetailSchema,
   renterRegisterSchema,
   unitDetailSchema,
@@ -212,6 +213,36 @@ describe('Memberships: the office adds members with a global membership ID (e2e)
     const outsider = (await prisma.organisations.create({ data: { society_id: otherSocietyId, name: `বাইরের ${MARK}` } })).id;
     expect((await post('/memberships/bulk', admin.cookie).send({ organisationIds: [outsider] }).expect(404)).body.code).toBe('organisation_not_found');
     await post('/memberships/bulk', admin.cookie).send({}).expect(400);
+  });
+
+  it("lists an organisation member in the registers, found by its membership ID, within the caller's area", async () => {
+    const contact = await prisma.persons.create({ data: { society_id: societyId, full_name: `যোগাযোগ ${MARK}`, phone: randomPhone() } });
+    const org = (
+      await prisma.organisations.create({ data: { society_id: societyId, name: `আলো এন্টারপ্রাইজ ${MARK}`, contact_person_id: contact.id } })
+    ).id;
+    await prisma.ownerships.create({ data: { society_id: societyId, location_id: flat, organisation_id: org, share_percent: 100, start_date: new Date('2025-01-01') } });
+    const made = memberCreatedSchema.parse((await post('/memberships', admin.cookie).send({ organisationId: org }).expect(201)).body);
+    const get = (url: string, cookie = admin.cookie) => request(server()).get(url).set('Cookie', cookie).expect(200);
+
+    for (const q of [made.membershipCode, String(made.memberNo), 'আলো এন্টারপ্রাইজ']) {
+      const members = memberRegisterSchema.parse((await get(`/registers/members?q=${encodeURIComponent(q)}`)).body);
+      expect(members.items.find((row) => row.person.id === org)).toMatchObject({
+        membershipCode: made.membershipCode,
+        person: { kind: 'organisation', phone: contact.phone, photoUrl: null, verified: null },
+      });
+    }
+    const owners = ownerRegisterSchema.parse((await get(`/registers/owners?areaId=${tree.sector.id}&membership=member`)).body);
+    expect(owners.items.find((row) => row.id === org)?.membershipCode).toBe(made.membershipCode);
+
+    // A caller limited to the block sees it; one limited to another block doesn't.
+    const permission = await prisma.permissions.findFirstOrThrow({ where: { module: 'members', action: 'view' } });
+    const role = await prisma.roles.create({ data: { society_id: societyId, name: `${MARK}-viewer` } });
+    await prisma.role_permissions.create({ data: { role_id: role.id, permission_id: permission.id } });
+    const otherBlock = await addLocation('sector', 2, 'ব্লক ২');
+    const inside = memberRegisterSchema.parse((await get('/registers/members?q=আলো', (await makeUser(role.id, tree.block.id)).cookie)).body);
+    expect(inside.items.map((row) => row.person.id)).toContain(org);
+    const outside = memberRegisterSchema.parse((await get('/registers/members?q=আলো', (await makeUser(role.id, otherBlock.id)).cookie)).body);
+    expect(outside.items.map((row) => row.person.id)).not.toContain(org);
   });
 
   it('adds nobody when a ticked id is not a person of the society', async () => {

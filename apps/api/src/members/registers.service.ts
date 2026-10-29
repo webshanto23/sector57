@@ -23,7 +23,7 @@ import { inScope } from '../reports/area-tree.js';
 import { feeOf, holdingsOf, membershipIdTerm, placesOf, type FeeRow, type OwnedRow } from './registers.policy.js';
 
 type PersonCols = { id: string; name: string; name_en: string | null; phone: string | null; photo_url: string | null; verified: boolean | null };
-type MemberRow = PersonCols & FeeRow & { member_no: number; membership_code: string; status: string; joined_on: Date; total: number };
+type MemberRow = PersonCols & FeeRow & { kind: 'person' | 'organisation'; member_no: number; membership_code: string; status: string; joined_on: Date; total: number };
 type OwnerRow = PersonCols & { kind: 'person' | 'organisation'; lives_here: boolean | null; member_no: number | null; membership_code: string | null; total: number };
 type RenterRow = Omit<PersonCols, 'id'> & {
   id: string;
@@ -82,19 +82,20 @@ export class RegistersService {
     const { societyId } = actor;
     const scope = inScope(actor.access, 'members');
     const everyone = actor.access.paths('view', 'members') === 'all';
+    // A person or an organisation (`party_id`) owning, renting or living somewhere in the area.
     const linked = Prisma.sql`linked as (
-      select o.person_id, l.path from ownerships o join locations l on l.id = o.location_id
-      where o.society_id = ${societyId}::uuid and o.end_date is null and o.person_id is not null and ${scope}
+      select coalesce(o.person_id, o.organisation_id) as party_id, l.path from ownerships o join locations l on l.id = o.location_id
+      where o.society_id = ${societyId}::uuid and o.end_date is null and ${scope}
       union all
-      select t.primary_person_id, l.path from tenancies t join locations l on l.id = t.unit_id
-      where t.society_id = ${societyId}::uuid and t.status <> 'ended' and t.primary_person_id is not null and ${scope}
+      select coalesce(t.primary_person_id, t.organisation_id), l.path from tenancies t join locations l on l.id = t.unit_id
+      where t.society_id = ${societyId}::uuid and t.status <> 'ended' and coalesce(t.primary_person_id, t.organisation_id) is not null and ${scope}
       union all
       select oc.person_id, l.path from occupants oc join locations l on l.id = oc.unit_id
       where oc.society_id = ${societyId}::uuid and oc.end_date is null and ${scope}
     )`;
     const visible = everyone
       ? Prisma.sql`true`
-      : Prisma.sql`((m.location_id is not null and ${scope}) or m.person_id in (select person_id from linked))`;
+      : Prisma.sql`((m.location_id is not null and ${scope}) or coalesce(m.person_id, m.organisation_id) in (select party_id from linked))`;
 
     // The membership fee: its bills (void left out), shown only to society-wide billing viewers.
     const feesShown = actor.access.paths('view', 'billing') === 'all';
@@ -111,7 +112,7 @@ export class RegistersService {
     if (query.q) {
       // Names and phone, or the membership ID (the full code, part of it, or the bare number).
       const id = membershipIdTerm(query.q);
-      filters.push(Prisma.sql`(${searchSql(query.q, Prisma.sql`p.full_name`, Prisma.sql`p.full_name_en`, Prisma.sql`p.phone`)}
+      filters.push(Prisma.sql`(${searchSql(query.q, Prisma.sql`coalesce(p.full_name, g.name)`, Prisma.sql`p.full_name_en`, Prisma.sql`coalesce(p.phone, cp.phone)`)}
         or m.membership_code like ${`%${escapeLike(id.code)}%`}${id.number === null ? Prisma.empty : Prisma.sql` or m.member_no = ${id.number}`})`);
     }
     if (feesShown && query.fee) filters.push(query.fee === 'paid' ? feePaid : Prisma.sql`not ${feePaid}`);
@@ -120,16 +121,21 @@ export class RegistersService {
       filters.push(
         area === null
           ? Prisma.sql`false`
-          : Prisma.sql`(starts_with(l.path, ${area}) or exists (select 1 from linked k where k.person_id = m.person_id and starts_with(k.path, ${area})))`,
+          : Prisma.sql`(starts_with(l.path, ${area}) or exists (select 1 from linked k where k.party_id = coalesce(m.person_id, m.organisation_id) and starts_with(k.path, ${area})))`,
       );
     }
 
     const [rows, counts] = await Promise.all([
       this.prisma.$queryRaw<MemberRow[]>`
         with ${linked}
-        select m.member_no, m.membership_code, m.status, m.joined_on, p.id, p.full_name as name, p.full_name_en as name_en, p.phone, p.photo_url,
-          p.verified_at is not null as verified, f.fee_bills, f.fee_open, f.fee_owed, f.fee_open_bill, count(*) over ()::int as total
-        from memberships m join persons p on p.id = m.person_id left join locations l on l.id = m.location_id ${fees}
+        select m.member_no, m.membership_code, m.status, m.joined_on,
+          case when p.id is not null then 'person' else 'organisation' end as kind, coalesce(p.id, g.id) as id,
+          coalesce(p.full_name, g.name) as name, p.full_name_en as name_en, coalesce(p.phone, cp.phone) as phone, p.photo_url,
+          case when p.id is not null then p.verified_at is not null end as verified,
+          f.fee_bills, f.fee_open, f.fee_owed, f.fee_open_bill, count(*) over ()::int as total
+        from memberships m left join persons p on p.id = m.person_id
+          left join organisations g on g.id = m.organisation_id left join persons cp on cp.id = g.contact_person_id
+          left join locations l on l.id = m.location_id ${fees}
         where m.society_id = ${societyId}::uuid and ${visible} and ${Prisma.join(filters, ' and ')}
         order by m.member_no
         limit ${query.pageSize} offset ${(query.page - 1) * query.pageSize}`,
@@ -148,7 +154,7 @@ export class RegistersService {
         membershipCode: row.membership_code,
         status: toMembershipStatus(row.status),
         joinedOn: isoDate(row.joined_on),
-        person: this.party('person', row),
+        person: this.party(row.kind, row),
         holdings: holdingsOf(owned.filter((own) => own.party_id === row.id)),
         fee: feesShown ? feeOf(row) : null,
       })),
@@ -174,7 +180,7 @@ export class RegistersService {
       filters.push(area === null ? Prisma.sql`false` : Prisma.sql`exists (select 1 from owned k where k.party_id = p.id and starts_with(k.path, ${area}))`);
     }
     if (query.membership === 'member') filters.push(Prisma.sql`p.member_no is not null`);
-    if (query.membership === 'not_member') filters.push(Prisma.sql`p.kind = 'person' and p.member_no is null`);
+    if (query.membership === 'not_member') filters.push(Prisma.sql`p.member_no is null`);
     if (query.residence === 'here') filters.push(Prisma.sql`p.lives_here`);
     if (query.residence === 'elsewhere') filters.push(Prisma.sql`p.kind = 'person' and not p.lives_here`);
     const where = filters.length > 0 ? Prisma.join(filters, ' and ') : Prisma.sql`true`;
@@ -187,7 +193,9 @@ export class RegistersService {
         (select m.membership_code from memberships m where m.person_id = p.id and m.society_id = ${societyId}::uuid and m.status = 'active') as membership_code
       from persons p where p.society_id = ${societyId}::uuid and p.id in (select party_id from owned)
       union all
-      select 'organisation', g.id, g.name, null, cp.phone, null, null, null, null, null
+      select 'organisation', g.id, g.name, null, cp.phone, null, null, null,
+        (select m.member_no from memberships m where m.organisation_id = g.id and m.society_id = ${societyId}::uuid and m.status = 'active'),
+        (select m.membership_code from memberships m where m.organisation_id = g.id and m.society_id = ${societyId}::uuid and m.status = 'active')
       from organisations g left join persons cp on cp.id = g.contact_person_id
       where g.society_id = ${societyId}::uuid and g.id in (select party_id from owned)
     )`;
@@ -202,7 +210,7 @@ export class RegistersService {
       this.prisma.$queryRaw<{ owners: number; members: number; not_members: number; lives_here: number }[]>`
         with ${owned}, ${parties}
         select count(*)::int as owners, count(member_no)::int as members,
-          count(*) filter (where kind = 'person' and member_no is null)::int as not_members,
+          count(*) filter (where member_no is null)::int as not_members,
           count(*) filter (where lives_here)::int as lives_here
         from parties`,
     ]);
@@ -221,7 +229,7 @@ export class RegistersService {
             otherPlaces: own.length - 1,
             livesHere: row.kind === 'person' ? Boolean(row.lives_here) : null,
             memberNo: row.member_no,
-        membershipCode: row.membership_code,
+            membershipCode: row.membership_code,
           },
         ];
       }),
@@ -257,8 +265,8 @@ export class RegistersService {
           l.id as location_id, l.name as unit_name, l.path, lv.is_unit_level as is_unit,
           ut.code as ut_code, ut.name_bn as ut_bn, ut.name_en as ut_en,
           (select count(*) from occupants oc where oc.tenancy_id = t.id and oc.end_date is null)::int as residents,
-          (select m.member_no from memberships m where m.person_id = p.id and m.status = 'active') as member_no,
-          (select m.membership_code from memberships m where m.person_id = p.id and m.status = 'active') as membership_code,
+          (select m.member_no from memberships m where (m.person_id = p.id or m.organisation_id = g.id) and m.status = 'active') as member_no,
+          (select m.membership_code from memberships m where (m.person_id = p.id or m.organisation_id = g.id) and m.status = 'active') as membership_code,
           mv.id as move_id, mv.kind as move_kind,
           count(*) over ()::int as total
         from tenancies t

@@ -20,7 +20,7 @@ export const emptyParty: PartyValues = { kind: "person", person: emptyPerson, na
 /** The request body for an owner or renter. A picked member is linked by id, as on file. */
 export const partyBody = (values: PartyValues) =>
   values.member
-    ? ({ kind: "existing", party: { kind: "person", id: values.member.person.id } } as const)
+    ? ({ kind: "existing", party: { kind: values.member.person.kind, id: values.member.person.id } } as const)
     : values.kind === "person"
       ? ({ kind: "person", person: personBody(values.person) } as const)
       : ({ kind: "organisation", organisation: { name: values.name, tradeLicence: values.tradeLicence } } as const);
