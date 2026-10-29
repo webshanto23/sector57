@@ -16,7 +16,7 @@ export async function UserMenu({ me, locale }: { me: Me; locale: Locale }) {
         title={t("nav.account")}
         className="flex min-w-0 items-center gap-2 rounded-lg px-1.5 py-1 font-medium text-fg no-underline hover:bg-surface-2"
       >
-        <Avatar name={me.name ?? me.phone} className="size-8 text-[13px]" />
+        <Avatar name={me.name ?? me.phone} src={me.photoUrl} className="size-8 text-[13px]" />
         <span className="max-w-[160px] truncate max-[860px]:sr-only">{name}</span>
       </Link>
       <LogoutButton compact />

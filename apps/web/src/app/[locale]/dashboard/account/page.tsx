@@ -1,9 +1,10 @@
-import { localDigits, type Locale } from "@s57/shared";
+import type { Locale } from "@s57/shared";
 import { KeyRound, UserRound } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { AccountProfile } from "@/components/auth/account-profile";
 import { ChangePasswordForm } from "@/components/auth/change-password-form";
-import { Avatar, Card, Grid, IconBox, PageHeader } from "@/components/kit";
+import { Card, Grid, IconBox, PageHeader } from "@/components/kit";
 import { getMe } from "@/lib/api/session";
 
 export async function generateMetadata({ params }: PageProps<"/[locale]/dashboard/account">): Promise<Metadata> {
@@ -12,7 +13,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/dashboar
   return { title: t("nav.account") };
 }
 
-/** The user's own account: who is logged in, change password. Open to every logged-in user. */
+/** The user's own account: who is logged in (with their own name and photo), change password. Open to every logged-in user. */
 export default async function AccountPage({ params }: PageProps<"/[locale]/dashboard/account">) {
   const { locale: raw } = await params;
   const locale = raw as Locale;
@@ -21,7 +22,6 @@ export default async function AccountPage({ params }: PageProps<"/[locale]/dashb
   const [t, tDash, me] = await Promise.all([getTranslations("Account"), getTranslations("Dashboard"), getMe()]);
   // The layout has already sent a logged-out visitor to /login.
   if (!me) return null;
-  const name = (locale === "en" ? me.nameEn : null) ?? me.name ?? localDigits(me.phone, locale);
 
   return (
     <>
@@ -32,13 +32,7 @@ export default async function AccountPage({ params }: PageProps<"/[locale]/dashb
             <IconBox icon={UserRound} />
             <h2 className="text-[15px]">{t("signedInAs")}</h2>
           </div>
-          <div className="flex items-center gap-3">
-            <Avatar name={me.name ?? me.phone} />
-            <div className="min-w-0">
-              <p className="font-semibold">{name}</p>
-              <p className="text-[13px] text-muted-foreground">{localDigits(me.phone, locale)}</p>
-            </div>
-          </div>
+          <AccountProfile me={me} />
         </Card>
         <Card className="grid content-start gap-3.5">
           <div className="flex items-center gap-2.5">

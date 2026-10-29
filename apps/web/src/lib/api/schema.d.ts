@@ -369,7 +369,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        patch: operations["AccountController_update"];
         trace?: never;
     };
     "/me/password": {
@@ -1407,6 +1407,22 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AccountController_setPhoto"];
+        delete: operations["AccountController_removePhoto"];
         options?: never;
         head?: never;
         patch?: never;
@@ -4373,6 +4389,8 @@ export interface components {
             phone: string;
             name: string | null;
             nameEn: string | null;
+            photoUrl: string | null;
+            nameLocked: boolean;
             /** @enum {string} */
             language: "bn" | "en";
         };
@@ -4382,6 +4400,8 @@ export interface components {
             phone: string;
             name: string | null;
             nameEn: string | null;
+            photoUrl: string | null;
+            nameLocked: boolean;
             /** @enum {string} */
             language: "bn" | "en";
             access: {
@@ -6219,6 +6239,10 @@ export interface components {
                 /** Format: date-time */
                 uploadedAt: string;
             }[];
+        };
+        MeUpdateDto: {
+            name: string;
+            nameEn?: string | null;
         };
         SocietySettingsDto_Output: {
             shareRentersWithThana: boolean;
@@ -12034,6 +12058,29 @@ export interface operations {
             };
         };
     };
+    AccountController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MeUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeDto_Output"];
+                };
+            };
+        };
+    };
     MeController_changePassword: {
         parameters: {
             query?: never;
@@ -14110,6 +14157,51 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    AccountController_setPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeDto_Output"];
+                };
+            };
+        };
+    };
+    AccountController_removePhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeDto_Output"];
+                };
             };
         };
     };

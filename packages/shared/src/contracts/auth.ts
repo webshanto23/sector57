@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { bdPhone } from '../schemas.js';
+import { bdPhone, optionalText, text } from '../schemas.js';
 import { toNFC } from '../text.js';
 import { accessSchema } from './permissions.js';
 
@@ -50,9 +50,20 @@ export const meSchema = z.object({
   phone: z.string(),
   name: z.string().nullable(),
   nameEn: z.string().nullable(),
+  /** The linked person's photo; null without one. */
+  photoUrl: z.string().nullable(),
+  /** The linked person is verified, so only the office may change the name. */
+  nameLocked: z.boolean(),
   language: z.enum(['bn', 'en']),
 });
 export type Me = z.infer<typeof meSchema>;
+
+/** `PATCH /me`: the user's own name (as on their person record). */
+export const meUpdateSchema = z.object({
+  name: text(200),
+  nameEn: optionalText(200),
+});
+export type MeUpdateInput = z.infer<typeof meUpdateSchema>;
 
 /** `GET /me`: the account plus what it may do (filters the dashboard nav). */
 export const meWithAccessSchema = meSchema.extend({ access: accessSchema });
