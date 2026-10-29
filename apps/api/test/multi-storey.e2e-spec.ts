@@ -312,8 +312,7 @@ describe('Multi-storey buildings: duplexes and setting up floors (e2e)', () => {
       });
     });
 
-    it('refuses units on one floor, different owners, other buildings and a retired unit someone lives in', async () => {
-      expect((await combine(units['1A'], [units['1B']]).expect(409)).body.code).toBe('combine_same_floor');
+    it('refuses different owners, other buildings and a retired unit someone lives in', async () => {
       expect((await combine(units['1A'], [units['2B']]).expect(409)).body.code).toBe('combine_owners_differ');
       expect((await combine(units['1B'], [duplex.id]).expect(409)).body.code).toBe('combine_not_side_by_side');
       await send('post', '/occupants', admin.cookie)
@@ -372,6 +371,18 @@ describe('Multi-storey buildings: duplexes and setting up floors (e2e)', () => {
 
       const noPeople = await makeUser([{ roleId: await makeRole(['locations:view', 'units:view']) }]);
       expect([...(await grid(noPeople.cookie)).values()].every((holder) => holder === null)).toBe(true);
+    });
+
+    it('joins two flats on one floor into one', async () => {
+      const left = await addUnit(places.s5, 'ফ্ল্যাট ৫এ');
+      const right = await addUnit(places.s5, 'ফ্ল্যাট ৫বি');
+      expect((await combine(left.id, [right.id]).expect(200)).body).toEqual({ keptId: left.id, merged: 1 });
+      const kept = unitDetailSchema.parse((await get(`/units/${left.id}`, admin.cookie).expect(200)).body);
+      // Same floor: nothing new to cover.
+      expect(kept.covers).toEqual([]);
+      const floor = buildingGridSchema.parse((await get(`/locations/${places.buildingA}/grid`, admin.cookie).expect(200)).body).floors[2]!;
+      expect(floor.units.find((unit) => unit.id === left.id)).toMatchObject({ includes: ['ফ্ল্যাট ৫বি'], alsoOn: [] });
+      expect(floor.units.find((unit) => unit.id === right.id)).toMatchObject({ mergedInto: { id: left.id, name: 'ফ্ল্যাট ৫এ' } });
     });
   });
 });

@@ -1166,6 +1166,8 @@ Same branch, 2026-10-29. Anis found "Set type" in the building grid and "Covers 
 - **Slice C, combined bill:** "Print combined bill" on the bills print page (ticked bills): one A4 page to one payer name (first bill's bill-to, editable), a row per bill with amount, paid and due, one total payable. Print only (`bill-combined-a4.tsx`); no API or migration.
 - **Tests:** `combine.policy.spec.ts`, `grid-holders.policy.spec.ts`, `multi-storey.e2e-spec.ts` (10). Not clicked through in a browser; the combined bill's print preview is not checked yet.
 
+- **Join units on one floor (later the same day):** Anis asked to join two flats on one floor too, for flats made into one. The same-floor rule is gone (no `combine_same_floor`); the grid action is "Join units", the kept unit shows "Includes 5B". e2e "joins two flats on one floor into one".
+
 ## Add application from the dashboard — Built, awaiting review
 
 Same branch, 2026-10-29. Anis asked for an "Add application" button on `/dashboard/forms`, like Add member, with the same fields as the public Membership Application and Renter Registration and a selector between them. He decided: the deed stays required, and the queue shows the name of the user who entered it.

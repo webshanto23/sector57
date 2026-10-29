@@ -181,7 +181,6 @@ export type UnitCombineInput = z.infer<typeof unitCombineSchema>;
 export const COMBINE_PROBLEMS = [
   'unit_inactive',
   'not_side_by_side',
-  'same_floor',
   'owners_differ',
   'open_bills',
   'open_tenancy',

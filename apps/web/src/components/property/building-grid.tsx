@@ -15,8 +15,8 @@ import { useSubmit } from "./use-submit";
 
 /**
  * A building at a glance: one row per floor with its units. Editors tick units (or a whole
- * floor) and give them one type, such as shops on the ground floor, or tick one unit on each
- * of several floors to join them: the kept unit carries on and the others become history.
+ * floor) and give them one type, such as shops on the ground floor, or join units made into one
+ * (on one floor or over several): the kept unit carries on and the others become history.
  */
 export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitTypes: UnitTypeItem[]; unitsOpen: boolean }) {
   const t = useTranslations("Property.grid");
@@ -29,8 +29,6 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
   // Picked units, lowest floor first: the first one is kept unless the editor picks another.
   const picked = grid.floors.flatMap((floor) => floor.units.filter((unit) => chosen.has(unit.id)).map((unit) => ({ ...unit, floor: floor.name, floorId: floor.id })));
   const keep = picked.find((unit) => unit.id === keepId) ?? picked[0];
-  // Joining takes one unit from each floor; flats on one floor stay separate.
-  const joinReady = picked.length >= 2 && new Set(picked.map((unit) => unit.floorId)).size === picked.length;
   const holderName = (holder: { name: string; nameEn: string | null }) => (locale === "en" ? (holder.nameEn ?? holder.name) : holder.name);
   const unitName = (id: string, name: string, className?: string) =>
     unitsOpen ? (
@@ -147,6 +145,7 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
                         <span className="flex flex-wrap gap-1">
                           <Chip tone={OCCUPANCY_TONES[unit.occupancy]}>{tOcc(unit.occupancy)}</Chip>
                           {unit.alsoOn.length > 0 ? <Chip tone="info">{t("floors", { floors: [floor.name, ...unit.alsoOn].join(" + ") })}</Chip> : null}
+                          {unit.includes.length > 0 ? <Chip tone="info">{t("includes", { names: unit.includes.join(", ") })}</Chip> : null}
                           {unit.holder && unit.holder.units > 1 ? (
                             // Names stay as typed; only the count takes the page's digits.
                             <Chip tone="acc">{t("holderUnits", { name: holderName(unit.holder), count: localDigits(String(unit.holder.units), locale) })}</Chip>
@@ -171,7 +170,7 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
         })}
       </ol>
 
-      {grid.canEdit && joinReady && keep ? (
+      {grid.canEdit && picked.length >= 2 && keep ? (
         <div className="grid gap-2 rounded-[10px] border border-line bg-surface-2 p-3">
           <h4 className="text-[14px] font-semibold">{t("combineTitle")}</h4>
           <p className="text-[13px] text-muted-foreground">{t("combineHint")}</p>

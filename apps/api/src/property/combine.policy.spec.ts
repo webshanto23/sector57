@@ -14,16 +14,15 @@ const unit = (id: string, patch: Partial<CombineFacts> = {}): CombineFacts => ({
 });
 
 describe('combineProblem', () => {
-  it('allows one unit from each floor of one building', () => {
+  it('allows units on one floor or on floors of one building', () => {
+    expect(combineProblem(unit('a'), [unit('b')])).toBeNull();
     expect(combineProblem(unit('a'), [unit('b', { parentId: 's4' })])).toBeNull();
-    expect(combineProblem(unit('a'), [unit('b', { parentId: 's4' }), unit('c', { parentId: 's5' })])).toBeNull();
+    expect(combineProblem(unit('a'), [unit('b'), unit('c', { parentId: 's4' })])).toBeNull();
+    // Units straight under a place with no building above share their parent.
+    expect(combineProblem(unit('a', { parentId: 'b', grandparentId: null }), [unit('c', { parentId: 'b', grandparentId: null })])).toBeNull();
   });
 
-  it('refuses units on one floor, of different buildings, inactive ones and different owners', () => {
-    expect(combineProblem(unit('a'), [unit('b')])).toBe('same_floor');
-    expect(combineProblem(unit('a'), [unit('b', { parentId: 's4' }), unit('c', { parentId: 's4' })])).toBe('same_floor');
-    // Units straight under a place with no building above are on no floor.
-    expect(combineProblem(unit('a', { parentId: 'b', grandparentId: null }), [unit('c', { parentId: 'b', grandparentId: null })])).toBe('not_side_by_side');
+  it('refuses units of different buildings, inactive ones and different owners', () => {
     expect(combineProblem(unit('a'), [unit('b', { parentId: 'x3', grandparentId: 'other' })])).toBe('not_side_by_side');
     expect(combineProblem(unit('a'), [unit('b', { active: false })])).toBe('unit_inactive');
     expect(combineProblem(unit('a'), [unit('b', { parentId: 's4', owners: ['person:p2:100'] })])).toBe('owners_differ');

@@ -485,7 +485,7 @@
       "location_has_children": "Something is still inside this location. Remove that first, or make it inactive.",
       "location_in_use": "Other records still refer to this location. Make it inactive instead.",
       "remove_has_places": "A place you picked has other places inside. Remove those first.",
-      "remove_joined": "Units joined over floors are history and can't be removed.",
+      "remove_joined": "Joined units are history and can't be removed.",
       "remove_in_use": "Owners, renters, bills or other records still refer to some of these. Make them inactive instead.",
       "units_beside_floors": "This building has floors. Add units on a floor, or remove the floors and use \"Set up floors and units\".",
       "location_not_found": "This location no longer exists, or is outside your area. Reload the page.",
@@ -701,8 +701,7 @@
       "layout_not_empty": "Floors can only be set up in an empty building. Add more floors one by one instead.",
       "unit_merged": "This unit was combined into another one and is kept as history only.",
       "combine_unit_inactive": "An inactive or already combined unit can't be combined.",
-      "combine_not_side_by_side": "Floors can only be joined within one building.",
-      "combine_same_floor": "To join floors, pick one unit from each floor.",
+      "combine_not_side_by_side": "Only units on one floor, or on floors of one building, can be joined.",
       "combine_owners_differ": "These units have different owners. Fix the owners first so they match.",
       "combine_open_bills": "A unit being retired still has unpaid bills. Settle them first.",
       "combine_open_tenancy": "A unit being retired still has a renter. End the tenancy first.",
@@ -953,7 +952,7 @@
     },
     "layout": {
       "title": "Set up floors and units",
-      "hint": "For a new building: make all its floors and the units on each in one go. Set shop types or join floors afterwards.",
+      "hint": "For a new building: make all its floors and the units on each in one go. Set shop types or join units afterwards.",
       "open": "Set up",
       "floors": "Floors",
       "floorPattern": "Floor name",
@@ -975,7 +974,7 @@
     },
     "grid": {
       "title": "Floors and units",
-      "hint": "Tick units, or a whole floor, and give them one type, such as shops on the ground floor. Tick one unit on each of two floors to join them into one unit.",
+      "hint": "Tick units, or a whole floor, and give them one type, such as shops on the ground floor. Tick two or more units to join them into one, on one floor or over several floors.",
       "pickFloor": "Pick every unit on {name}",
       "noUnits": "No units on this floor.",
       "floors": "On {floors}",
@@ -992,11 +991,11 @@
       "clear": "Clear",
       "done": "{count, plural, one {# unit} other {# units}} updated.",
       "combine": "Combine",
-      "combineTitle": "Join floors",
-      "combineHint": "Pick the unit to keep. It covers the other floors and its size becomes the total; owners, renters and bills stay on it. The others become history: inactive, their owners ended, their bills and documents kept.",
+      "combineTitle": "Join units",
+      "combineHint": "Join only units made into one (a wall taken down, one door). Pick the unit to keep: it takes in the others, covers their floors and its size becomes the total; owners, renters and bills stay on it. The others become history: inactive, their owners ended, their bills and documents kept.",
       "keep": "Keep",
-      "confirmCombine": "Join floors",
-      "combined": "Floors joined."
+      "confirmCombine": "Join units",
+      "combined": "Units joined."
     },
     "remove": {
       "pick": "Select {name}",

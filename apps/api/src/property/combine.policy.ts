@@ -20,16 +20,17 @@ export type CombineFacts = {
 const sameOwners = (a: string[], b: string[]) => a.length === b.length && [...a].sort().join() === [...b].sort().join();
 
 /**
- * Why `keep` and `merge` can't be made a duplex, or null when they can. All must be active,
- * one per floor of one building, with the same owners; the retired ones must have no unpaid
- * bill, open tenancy, residents, vehicle or parking slot. Flats on one floor stay separate
- * units (an office over several flats is shown by its shared owner or renter instead).
+ * Why `keep` and `merge` can't be joined, or null when they can. All must be active, side by
+ * side (one floor, or floors of one building), with the same owners; the retired ones must
+ * have no unpaid bill, open tenancy, residents, vehicle or parking slot. Join only units made
+ * into one; an office that just uses several flats keeps them separate.
  */
 export function combineProblem(keep: CombineFacts, merge: CombineFacts[]): CombineProblem | null {
   const all = [keep, ...merge];
   if (all.some((unit) => !unit.active)) return 'unit_inactive';
-  if (keep.grandparentId === null || all.some((unit) => unit.grandparentId !== keep.grandparentId)) return 'not_side_by_side';
-  if (new Set(all.map((unit) => unit.parentId)).size < all.length) return 'same_floor';
+  const oneParent = all.every((unit) => unit.parentId === keep.parentId);
+  const oneBuilding = keep.grandparentId !== null && all.every((unit) => unit.grandparentId === keep.grandparentId);
+  if (!oneParent && !oneBuilding) return 'not_side_by_side';
   if (merge.some((unit) => !sameOwners(unit.owners, keep.owners))) return 'owners_differ';
   if (merge.some((unit) => unit.openBills > 0)) return 'open_bills';
   if (merge.some((unit) => unit.openTenancy)) return 'open_tenancy';
