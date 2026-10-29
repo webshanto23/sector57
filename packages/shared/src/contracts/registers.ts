@@ -73,8 +73,9 @@ export const memberRegisterQuery = registerQuery.extend({
 export type MemberRegisterQuery = z.infer<typeof memberRegisterQuery>;
 
 export const memberRegisterRowSchema = z.object({
-  memberNo: z.number().int(),
-  membershipCode: z.string(),
+  /** Null while the ID waits for verification. */
+  memberNo: z.number().int().nullable(),
+  membershipCode: z.string().nullable(),
   status: z.enum(MEMBERSHIP_STATUSES),
   joinedOn: isoDay,
   person: partySchema,
@@ -115,7 +116,9 @@ export const ownerRegisterRowSchema = partySchema.extend({
   otherPlaces: z.number().int().min(0),
   /** Lives in a unit in the caller's area now; null for an organisation. */
   livesHere: z.boolean().nullable(),
-  /** The active membership number; null for a person who is not a member yet, and for an organisation. */
+  /** Has an active membership (its ID may still wait for verification). */
+  isMember: z.boolean(),
+  /** The active membership's number; null when not a member or not verified yet. */
   memberNo: z.number().int().nullable(),
   membershipCode: z.string().nullable(),
 });
@@ -158,7 +161,9 @@ export const renterRegisterRowSchema = z.object({
   unitType: z.object({ code: unitTypeCode, nameBn: z.string(), nameEn: z.string().nullable() }),
   /** Current residents of the renter's household. */
   residents: z.number().int().min(0),
-  /** The renter's active membership number; null when they aren't a member, and for an organisation. */
+  /** The renter has an active membership (its ID may still wait for verification). */
+  isMember: z.boolean(),
+  /** The active membership's number; null when not a member or not verified yet. */
   memberNo: z.number().int().nullable(),
   membershipCode: z.string().nullable(),
 });

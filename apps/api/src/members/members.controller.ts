@@ -133,6 +133,14 @@ export class OrganisationsController {
     return this.organisations.update(actor, id, body);
   }
 
+  /** Verifying a member issues their membership ID. */
+  @Put(':id/verified')
+  @Can('members', 'approve')
+  @ZodResponse({ status: 200, type: OrganisationDetailDto })
+  verify(@CurrentActor() actor: Actor, @Param() { id }: IdParamDto, @Body() body: PersonVerifyDto) {
+    return this.organisations.setVerified(actor, id, body.verified);
+  }
+
   @Delete(':id')
   @HttpCode(204)
   @Can('members', 'delete')

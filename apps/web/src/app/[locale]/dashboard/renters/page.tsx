@@ -72,7 +72,7 @@ export default async function RentersPage({ params, searchParams }: PageProps<"/
   const movesOpen = canAnywhere(me.access, "tenancies");
   // Whole-society roles can tick renters who aren't members yet and make them members in one go.
   const canTick = canSocietyWide(me.access, "members", "create");
-  const tickable = (row: RenterRegisterRow) => canTick && row.renter !== null && row.memberNo === null;
+  const tickable = (row: RenterRegisterRow) => canTick && row.renter !== null && !row.isMember;
   const named = (item: { nameBn: string; nameEn: string | null }) => (locale === "en" ? (item.nameEn ?? item.nameBn) : item.nameBn);
 
   const columns: Column<RenterRegisterRow>[] = [
@@ -87,7 +87,11 @@ export default async function RentersPage({ params, searchParams }: PageProps<"/
             <div className="grid justify-items-start gap-0.5">
               <PartyLink party={row.renter} />
               <span className="text-[12.5px] text-muted-foreground">{tMembers(`renterType.${row.renterType}`)}</span>
-              {row.membershipCode ? <Chip tone="good">{t("memberNo", { no: row.membershipCode })}</Chip> : null}
+              {row.membershipCode ? (
+                <Chip tone="good">{t("memberNo", { no: row.membershipCode })}</Chip>
+              ) : row.isMember ? (
+                <Chip tone="warn">{t("idPending")}</Chip>
+              ) : null}
             </div>
           </div>
         ) : (

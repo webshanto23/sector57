@@ -160,7 +160,7 @@ export function CollectForm({
               <div className="min-w-0">
                 <p className="font-semibold">{account.name}</p>
                 <p className="text-[13px] text-muted-foreground">
-                  {account.kind === "unit" ? account.address.join(", ") : t("memberNo", { no: account.membershipCode ?? "" })}
+                  {account.kind === "unit" ? account.address.join(", ") : account.membershipCode ? t("memberNo", { no: account.membershipCode }) : tBilling("idPending")}
                 </p>
               </div>
               <Button type="button" variant="outline" onClick={() => choose(null)}>
@@ -201,7 +201,7 @@ export function CollectForm({
                         <div className="min-w-0">
                           <p className="font-semibold">{hit.name}</p>
                           <p className="text-[13px] text-muted-foreground">
-                            {hit.kind === "unit" ? hit.address.join(", ") : `${t("membershipFees")} · ${t("memberNo", { no: hit.membershipCode ?? "" })}`}
+                            {hit.kind === "unit" ? hit.address.join(", ") : `${t("membershipFees")} · ${hit.membershipCode ? t("memberNo", { no: hit.membershipCode }) : tBilling("idPending")}`}
                           </p>
                           <p className="num text-[13px]">{hit.bills.length ? t("dueTotal", { amount: formatTaka(hit.due, locale) }) : t("nothingDue")}</p>
                         </div>

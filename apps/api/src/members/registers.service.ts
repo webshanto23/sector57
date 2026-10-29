@@ -23,13 +23,14 @@ import { inScope } from '../reports/area-tree.js';
 import { feeOf, holdingsOf, membershipIdTerm, placesOf, type FeeRow, type OwnedRow } from './registers.policy.js';
 
 type PersonCols = { id: string; name: string; name_en: string | null; phone: string | null; photo_url: string | null; verified: boolean | null };
-type MemberRow = PersonCols & FeeRow & { kind: 'person' | 'organisation'; member_no: number; membership_code: string; status: string; joined_on: Date; total: number };
-type OwnerRow = PersonCols & { kind: 'person' | 'organisation'; lives_here: boolean | null; member_no: number | null; membership_code: string | null; total: number };
+type MemberRow = PersonCols & FeeRow & { kind: 'person' | 'organisation'; member_no: number | null; membership_code: string | null; status: string; joined_on: Date; total: number };
+type OwnerRow = PersonCols & { kind: 'person' | 'organisation'; lives_here: boolean | null; is_member: boolean; member_no: number | null; membership_code: string | null; total: number };
 type RenterRow = Omit<PersonCols, 'id'> & {
   id: string;
   party_id: string | null;
   kind: 'person' | 'organisation' | null;
   renter_type: string;
+  is_member: boolean;
   member_no: number | null;
   membership_code: string | null;
   status: string;
@@ -137,7 +138,7 @@ export class RegistersService {
           left join organisations g on g.id = m.organisation_id left join persons cp on cp.id = g.contact_person_id
           left join locations l on l.id = m.location_id ${fees}
         where m.society_id = ${societyId}::uuid and ${visible} and ${Prisma.join(filters, ' and ')}
-        order by m.member_no
+        order by m.member_no nulls last, m.created_at, m.id
         limit ${query.pageSize} offset ${(query.page - 1) * query.pageSize}`,
       this.prisma.$queryRaw<{ status: string; count: number; fee_not_paid: number }[]>`
         with ${linked}
@@ -179,8 +180,8 @@ export class RegistersService {
     if (area !== undefined) {
       filters.push(area === null ? Prisma.sql`false` : Prisma.sql`exists (select 1 from owned k where k.party_id = p.id and starts_with(k.path, ${area}))`);
     }
-    if (query.membership === 'member') filters.push(Prisma.sql`p.member_no is not null`);
-    if (query.membership === 'not_member') filters.push(Prisma.sql`p.member_no is null`);
+    if (query.membership === 'member') filters.push(Prisma.sql`p.is_member`);
+    if (query.membership === 'not_member') filters.push(Prisma.sql`not p.is_member`);
     if (query.residence === 'here') filters.push(Prisma.sql`p.lives_here`);
     if (query.residence === 'elsewhere') filters.push(Prisma.sql`p.kind = 'person' and not p.lives_here`);
     const where = filters.length > 0 ? Prisma.join(filters, ' and ') : Prisma.sql`true`;
@@ -189,11 +190,13 @@ export class RegistersService {
         p.verified_at is not null as verified,
         exists (select 1 from occupants oc join locations l on l.id = oc.unit_id
           where oc.person_id = p.id and oc.society_id = ${societyId}::uuid and oc.end_date is null and ${inScope(actor.access, 'members')}) as lives_here,
+        exists (select 1 from memberships m where m.person_id = p.id and m.society_id = ${societyId}::uuid and m.status = 'active') as is_member,
         (select m.member_no from memberships m where m.person_id = p.id and m.society_id = ${societyId}::uuid and m.status = 'active') as member_no,
         (select m.membership_code from memberships m where m.person_id = p.id and m.society_id = ${societyId}::uuid and m.status = 'active') as membership_code
       from persons p where p.society_id = ${societyId}::uuid and p.id in (select party_id from owned)
       union all
       select 'organisation', g.id, g.name, null, cp.phone, null, null, null,
+        exists (select 1 from memberships m where m.organisation_id = g.id and m.society_id = ${societyId}::uuid and m.status = 'active'),
         (select m.member_no from memberships m where m.organisation_id = g.id and m.society_id = ${societyId}::uuid and m.status = 'active'),
         (select m.membership_code from memberships m where m.organisation_id = g.id and m.society_id = ${societyId}::uuid and m.status = 'active')
       from organisations g left join persons cp on cp.id = g.contact_person_id
@@ -209,8 +212,8 @@ export class RegistersService {
         limit ${query.pageSize} offset ${(query.page - 1) * query.pageSize}`,
       this.prisma.$queryRaw<{ owners: number; members: number; not_members: number; lives_here: number }[]>`
         with ${owned}, ${parties}
-        select count(*)::int as owners, count(member_no)::int as members,
-          count(*) filter (where member_no is null)::int as not_members,
+        select count(*)::int as owners, count(*) filter (where is_member)::int as members,
+          count(*) filter (where not is_member)::int as not_members,
           count(*) filter (where lives_here)::int as lives_here
         from parties`,
     ]);
@@ -228,6 +231,7 @@ export class RegistersService {
             place: { id: first.location_id, name: first.name, address: addressOf(first.path, names), isUnit: first.is_unit },
             otherPlaces: own.length - 1,
             livesHere: row.kind === 'person' ? Boolean(row.lives_here) : null,
+            isMember: row.is_member,
             memberNo: row.member_no,
             membershipCode: row.membership_code,
           },
@@ -265,6 +269,7 @@ export class RegistersService {
           l.id as location_id, l.name as unit_name, l.path, lv.is_unit_level as is_unit,
           ut.code as ut_code, ut.name_bn as ut_bn, ut.name_en as ut_en,
           (select count(*) from occupants oc where oc.tenancy_id = t.id and oc.end_date is null)::int as residents,
+          exists (select 1 from memberships m where (m.person_id = p.id or m.organisation_id = g.id) and m.status = 'active') as is_member,
           (select m.member_no from memberships m where (m.person_id = p.id or m.organisation_id = g.id) and m.status = 'active') as member_no,
           (select m.membership_code from memberships m where (m.person_id = p.id or m.organisation_id = g.id) and m.status = 'active') as membership_code,
           mv.id as move_id, mv.kind as move_kind,
@@ -301,6 +306,7 @@ export class RegistersService {
         unit: { id: row.location_id, name: row.unit_name, address: addressOf(row.path, names), isUnit: row.is_unit },
         unitType: { code: row.ut_code, nameBn: row.ut_bn, nameEn: row.ut_en },
         residents: row.residents,
+        isMember: row.is_member,
         memberNo: row.member_no,
         membershipCode: row.membership_code,
       })),

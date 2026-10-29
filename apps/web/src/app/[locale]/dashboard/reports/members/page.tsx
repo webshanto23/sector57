@@ -43,7 +43,7 @@ export default async function MembersReportPage({ params, searchParams }: PagePr
   const personLinks = canAnywhere(me.access, "members");
 
   const columns: Column<Joined>[] = [
-    { key: "memberNo", header: t("col.memberNo"), cell: (row) => row.membershipCode },
+    { key: "memberNo", header: t("col.memberNo"), cell: (row) => row.membershipCode ?? t("idPending") },
     {
       key: "name",
       header: t("col.name"),
@@ -105,7 +105,7 @@ export default async function MembersReportPage({ params, searchParams }: PagePr
           <Note tone="warn">{t("truncated", { count: count(report.joined.length) })}</Note>
         </div>
       ) : null}
-      <DataTable columns={columns} rows={report.joined} rowKey={(row) => `${row.memberNo}`} caption={t("joinedTitle")} empty={t("empty")} />
+      <DataTable columns={columns} rows={report.joined} rowKey={(row) => row.personId ?? row.organisationId ?? ""} caption={t("joinedTitle")} empty={t("empty")} />
     </>
   );
 }

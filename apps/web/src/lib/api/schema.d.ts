@@ -836,6 +836,22 @@ export interface paths {
         patch: operations["OrganisationsController_update"];
         trace?: never;
     };
+    "/organisations/{id}/verified": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["OrganisationsController_verify"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ownerships": {
         parameters: {
             query?: never;
@@ -4952,8 +4968,8 @@ export interface components {
                 endDate: string | null;
             }[];
             membership: {
-                memberNo: number;
-                membershipCode: string;
+                memberNo: number | null;
+                membershipCode: string | null;
                 /** @enum {string} */
                 status: "active" | "lapsed" | "cancelled";
                 /** Format: date */
@@ -4994,6 +5010,7 @@ export interface components {
                 photoUrl: string | null;
                 verified: boolean | null;
             } | null;
+            verifiedAt: string | null;
             /** Format: date-time */
             createdAt: string;
             ownerships: {
@@ -5060,8 +5077,8 @@ export interface components {
                 } | null;
             }[];
             membership: {
-                memberNo: number;
-                membershipCode: string;
+                memberNo: number | null;
+                membershipCode: string | null;
                 /** @enum {string} */
                 status: "active" | "lapsed" | "cancelled";
                 /** Format: date */
@@ -5070,6 +5087,7 @@ export interface components {
             } | null;
             can: {
                 edit: boolean;
+                verify: boolean;
                 delete: boolean;
             };
         };
@@ -5747,8 +5765,8 @@ export interface components {
         };
         MemberRegisterDto_Output: {
             items: {
-                memberNo: number;
-                membershipCode: string;
+                memberNo: number | null;
+                membershipCode: string | null;
                 /** @enum {string} */
                 status: "active" | "lapsed" | "cancelled";
                 /** Format: date */
@@ -5815,6 +5833,7 @@ export interface components {
                 };
                 otherPlaces: number;
                 livesHere: boolean | null;
+                isMember: boolean;
                 memberNo: number | null;
                 membershipCode: string | null;
             }[];
@@ -5870,6 +5889,7 @@ export interface components {
                     nameEn: string | null;
                 };
                 residents: number;
+                isMember: boolean;
                 memberNo: number | null;
                 membershipCode: string | null;
             }[];
@@ -5914,8 +5934,8 @@ export interface components {
         MemberCreatedDto_Output: {
             personId: string | null;
             organisationId: string | null;
-            memberNo: number;
-            membershipCode: string;
+            memberNo: number | null;
+            membershipCode: string | null;
             reusedPerson: boolean;
         };
         MemberBulkDto: {
@@ -5929,8 +5949,8 @@ export interface components {
             created: {
                 personId: string | null;
                 organisationId: string | null;
-                memberNo: number;
-                membershipCode: string;
+                memberNo: number | null;
+                membershipCode: string | null;
             }[];
             skipped: number;
         };
@@ -6749,8 +6769,8 @@ export interface components {
                 phone: string | null;
                 photoUrl: string | null;
                 verified: boolean | null;
-                memberNo: number;
-                membershipCode: string;
+                memberNo: number | null;
+                membershipCode: string | null;
             }[];
         };
         BillableUnitsDto_Output: {
@@ -8547,8 +8567,8 @@ export interface components {
                 cancelled: number;
             };
             joined: {
-                memberNo: number;
-                membershipCode: string;
+                memberNo: number | null;
+                membershipCode: string | null;
                 personId: string | null;
                 organisationId: string | null;
                 name: string;
@@ -12816,6 +12836,31 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["OrganisationUpdateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrganisationDetailDto_Output"];
+                };
+            };
+        };
+    };
+    OrganisationsController_verify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonVerifyDto"];
             };
         };
         responses: {

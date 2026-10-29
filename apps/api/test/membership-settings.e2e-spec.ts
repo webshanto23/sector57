@@ -54,7 +54,8 @@ describe('Membership settings: society code and first member number (e2e)', () =
   // Only the settings service reads the actor, and only its society, user and ip.
   const ownActor = (): Actor => ({ societyId: ownId, userId: office.userId, ip: null, access: undefined as never });
   async function addMember(name: string) {
-    const person = await prisma.persons.create({ data: { society_id: ownId, full_name: `${name} ${MARK}` } });
+    // Verified, so the membership gets its number at once.
+    const person = await prisma.persons.create({ data: { society_id: ownId, full_name: `${name} ${MARK}`, verified_at: new Date() } });
     return prisma.$transaction((tx) =>
       app.get(MembershipsService).insert(tx, ownId, { personId: person.id, organisationId: null, locationId: null, joinedOn: new Date('2026-01-01'), submissionId: null }),
     );

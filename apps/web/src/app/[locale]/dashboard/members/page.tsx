@@ -100,7 +100,7 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
           <Avatar name={row.person.name} src={row.person.photoUrl} />
           <div className="grid">
             <PartyLink party={row.person} />
-            <span className="num text-[12.5px] text-muted-foreground">{t("memberNo", { no: row.membershipCode })}</span>
+            <span className="num text-[12.5px] text-muted-foreground">{row.membershipCode ? t("memberNo", { no: row.membershipCode }) : t("idPending")}</span>
           </div>
         </div>
       ),
@@ -168,7 +168,7 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
         </Button>
       </form>
 
-      <DataTable columns={columns} rows={list.items} rowKey={(row) => String(row.memberNo)} caption={tNav("members")} empty={t("members.empty")} />
+      <DataTable columns={columns} rows={list.items} rowKey={(row) => `${row.person.id}:${row.memberNo ?? row.joinedOn}`} caption={tNav("members")} empty={t("members.empty")} />
 
       <Pager
         locale={locale}

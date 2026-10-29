@@ -1146,6 +1146,16 @@ Same branch, 2026-10-29. Anis decided: the `members` edit right is enough (no `d
 - **Tests:** `id-copies.policy.spec.ts`, `test/id-copies.e2e-spec.ts` (replace archives, editor-only access, out-of-area and other society 404, library never shows them, page limit); `documents.e2e-spec.ts` still passes. Not clicked through in a browser.
 - **Out:** requiring the copies under `requireIdNumbers`, reordering licence pages, copies on the public forms.
 
+## Membership ID after verification — Built, awaiting review
+
+Same branch, 2026-10-29. Anis decided: the ID is issued only by "Mark as verified"; removing the mark keeps an issued ID; the migration takes the IDs back from current members who aren't verified (all organisation members, since organisations had no verification); membership fee bills are allowed while the ID waits.
+
+- **Schema:** migration `30_membership_verification`: `memberships.member_no` / `membership_code` nullable (the trigger leaves the code null without a number), `organisations.verified_at`, and the clean-up of unverified current members (ended memberships keep their IDs). Applied to the dev and test databases.
+- **API:** `MembershipsService.issueId` (from person and organisation verification), `insert` numbers only verified holders; `PUT /organisations/:id/verified` with `can.verify`; contracts make `memberNo` / `membershipCode` nullable; owners and renters rows carry `isMember` (filters and counts use it); members register sorts waiting members last; the settings' `issued` counts issued IDs only.
+- **Web:** `VerifyCard` (person and organisation pages) says verifying issues the ID; "ID pending verification" on the membership line, members register, owners and renters chips, member lookups, bill and collect forms, the form review and the members report.
+- **Tests:** `memberships.e2e-spec.ts` (pending on create, issued on verify and kept on unverify, already verified at once, concurrent verifications, organisation verification, pending owner counted as member); `forms`, `membership-settings`, `billing` and `registers` specs updated; full e2e passes (`overview` timed out once under load and passes alone). `moves.e2e-spec.ts` had a stale CSV header ("Member no." → "Membership ID") from Step 38, fixed. Not clicked through in a browser.
+- **Note:** numbers taken back by the migration can be issued again to someone else (the next number is one past the highest in use).
+
 ## Later: beyond milestone 3
 
 These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.

@@ -322,7 +322,7 @@ describe('Moves and resident directory (e2e)', () => {
       const csv = await get('/directory/csv?lang=en', users.exporter).expect(200);
       expect(csv.headers['content-type']).toContain('text/csv');
       const lines = csv.text.replace(/^﻿/, '').trim().split('\r\n');
-      expect(lines[0]).toBe('Address,Unit,Name,Name (English),Relation,Household,Owner,Phone,Member no.,Since');
+      expect(lines[0]).toBe('Address,Unit,Name,Name (English),Relation,Household,Owner,Phone,Membership ID,Since');
       expect(lines).toHaveLength(4);
       expect(lines[2]).toContain("মালিক সাহেব,,Head of household,Owner's,Yes");
       expect(csv.text).not.toContain('1234567890');

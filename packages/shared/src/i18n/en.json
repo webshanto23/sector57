@@ -1320,7 +1320,7 @@
     "cancel": "Cancel",
     "memberPlaceNone": "No place",
     "makeMember": "Make member",
-    "makeMemberHint": "They get the next member number and a membership ID.",
+    "makeMemberHint": "They get a membership ID once marked as verified.",
     "tickAll": "Tick all on this page",
     "tickPerson": "Tick {name}",
     "makeMembers": "{count, plural, =0 {Make members} other {Make members (#)}}",
@@ -1337,7 +1337,9 @@
       "issued": "{count, plural, =0 {No IDs given yet.} one {# ID given so far.} other {# IDs given so far.}}",
       "recodeWarning": "Saving a new code re-issues {count, plural, one {the # ID} other {all # IDs}} already given. Receipts, bills and certificates printed before keep the old ID.",
       "save": "Save"
-    }
+    },
+    "idPending": "Membership ID pending verification",
+    "verifyIssuesId": "Marking as verified gives this member their membership ID."
   },
   "Registers": {
     "add": "Add member",
@@ -1439,7 +1441,8 @@
       "openMove": "Open checklist",
       "noRenter": "Not recorded",
       "empty": "No renters match."
-    }
+    },
+    "idPending": "Member · ID pending"
   },
   "FormsAdmin": {
     "sub": "Check and approve applications sent from the website",
@@ -1891,7 +1894,8 @@
       "generated": "Computer-generated bill · Printed {at}",
       "page": "Page 1 of 1",
       "counterAmount": "Amount"
-    }
+    },
+    "idPending": "Membership ID pending"
   },
   "Recurring": {
     "sub": "Charges billed every month or every few months, and the history of billing runs.",
@@ -2782,7 +2786,8 @@
         "active": "Active",
         "lapsed": "Lapsed",
         "cancelled": "Cancelled"
-      }
+      },
+      "idPending": "Pending"
     },
     "renters": {
       "title": "Renter list for the police station",

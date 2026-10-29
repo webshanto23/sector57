@@ -60,7 +60,11 @@ export function MembershipLine({ membership }: { membership: Membership }) {
   const locale = useLocale() as Locale;
   return (
     <p className="flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
-      <Chip tone={membership.status === "active" ? "good" : "neutral"}>{t("membershipCode", { code: membership.membershipCode })}</Chip>
+      {membership.membershipCode ? (
+        <Chip tone={membership.status === "active" ? "good" : "neutral"}>{t("membershipCode", { code: membership.membershipCode })}</Chip>
+      ) : (
+        <Chip tone="warn">{t("idPending")}</Chip>
+      )}
       {membership.status === "active"
         ? t("memberSince", { date: formatDate(membership.joinedOn, locale, "short") })
         : t(`membershipStatus.${membership.status}`)}

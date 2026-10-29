@@ -128,7 +128,11 @@ export default async function FormPage({ params }: PageProps<"/[locale]/dashboar
             <h2 className="text-[15px]">{t("decision")}</h2>
             <div className="flex flex-wrap items-center gap-2">
               <FormStatusChip status={form.status} />
-              {form.membershipCode ? <Chip tone="good" plain>{t("memberNo", { no: form.membershipCode })}</Chip> : null}
+              {form.membershipCode ? (
+                <Chip tone="good" plain>{t("memberNo", { no: form.membershipCode })}</Chip>
+              ) : form.formKey === "membership" && form.status === "approved" ? (
+                <Chip tone="warn" plain>{tMembers("idPending")}</Chip>
+              ) : null}
             </div>
             {form.reviewedAt && form.reviewerName ? (
               <p className="text-[13px] text-muted-foreground">

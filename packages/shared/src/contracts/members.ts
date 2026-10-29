@@ -123,7 +123,10 @@ export type PersonInput = z.infer<typeof personInputSchema>;
 export const personUpdateSchema = personInputSchema;
 export type PersonUpdateInput = z.infer<typeof personUpdateSchema>;
 
-/** `PUT /persons/:id/verified`: mark the person's details as checked against their papers, or undo it. */
+/**
+ * `PUT /persons/:id/verified` and `PUT /organisations/:id/verified`: mark the details as checked
+ * against their papers, or undo it. Verifying a member issues their membership ID; undoing keeps it.
+ */
 export const personVerifySchema = z.object({ verified: z.boolean() });
 export type PersonVerifyInput = z.infer<typeof personVerifySchema>;
 
@@ -335,9 +338,10 @@ export const toMembershipStatus = oneOf(MEMBERSHIP_STATUSES, 'cancelled');
 
 /** A person's or organisation's society membership, on their page. */
 export const membershipSchema = z.object({
-  memberNo: z.number().int(),
-  /** Unique across all societies: the society code and the padded member number (`S15-000042`). */
-  membershipCode: z.string(),
+  /** Null until the person or organisation is verified; the ID is issued then and kept. */
+  memberNo: z.number().int().nullable(),
+  /** Unique across all societies: the society code and the padded member number (`S15-000042`); null while `memberNo` is. */
+  membershipCode: z.string().nullable(),
   status: z.enum(MEMBERSHIP_STATUSES),
   joinedOn: isoDay,
   endedOn: isoDay.nullable(),
@@ -389,7 +393,7 @@ export const societyCodeSchema = z
 export const membershipSettingsSchema = z.object({
   societyCode: z.string(),
   firstMemberNo: z.number().int().min(1),
-  /** Memberships the society has issued; changing the code re-issues all of them. */
+  /** Membership IDs the society has issued (members waiting for verification have none); changing the code re-issues all of them. */
   issued: z.number().int().min(0),
   /** The highest member number used so far; null before the first member. */
   highestMemberNo: z.number().int().nullable(),
@@ -436,7 +440,7 @@ export type MemberBulkInput = z.infer<typeof memberBulkSchema>;
 /** The new memberships, and how many were skipped because they already are members. */
 export const memberBulkResultSchema = z.object({
   created: z.array(
-    z.object({ personId: z.uuid().nullable(), organisationId: z.uuid().nullable(), memberNo: z.number().int(), membershipCode: z.string() }),
+    z.object({ personId: z.uuid().nullable(), organisationId: z.uuid().nullable(), memberNo: z.number().int().nullable(), membershipCode: z.string().nullable() }),
   ),
   skipped: z.number().int().min(0),
 });
@@ -446,8 +450,9 @@ export type MemberBulkResult = z.infer<typeof memberBulkResultSchema>;
 export const memberCreatedSchema = z.object({
   personId: z.uuid().nullable(),
   organisationId: z.uuid().nullable(),
-  memberNo: z.number().int(),
-  membershipCode: z.string(),
+  /** Null until they are verified (already verified: issued at once). */
+  memberNo: z.number().int().nullable(),
+  membershipCode: z.string().nullable(),
   reusedPerson: z.boolean(),
 });
 export type MemberCreated = z.infer<typeof memberCreatedSchema>;
@@ -484,12 +489,14 @@ export const organisationDetailSchema = z.object({
   name: z.string(),
   tradeLicence: z.string().nullable(),
   contact: partySchema.nullable(),
+  /** Checked against its papers (`members.approve`); a membership gets its ID then. */
+  verifiedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
   ownerships: z.array(ownershipSchema),
   tenancies: z.array(tenancySchema),
   /** Its current or latest society membership, if any. */
   membership: membershipSchema.nullable(),
-  can: z.object({ edit: z.boolean(), delete: z.boolean() }),
+  can: z.object({ edit: z.boolean(), verify: z.boolean(), delete: z.boolean() }),
 });
 export type OrganisationDetail = z.infer<typeof organisationDetailSchema>;
 

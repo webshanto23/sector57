@@ -12,6 +12,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { beyondPermissions } from '../property/tree.service.js';
 import { MediaService } from '../storage/media.service.js';
 import { MemberRowsService } from './member-rows.service.js';
+import { MembershipsService } from './memberships.service.js';
 import {
   auditOf,
   canOnParty,
@@ -65,6 +66,7 @@ export class PersonsService {
     private readonly audit: AuditService,
     private readonly parties: PartiesService,
     private readonly rows: MemberRowsService,
+    private readonly memberships: MembershipsService,
     private readonly media: MediaService,
     @Inject(ENV) private readonly env: Env,
   ) {}
@@ -148,7 +150,10 @@ export class PersonsService {
     return this.get(actor, id);
   }
 
-  /** Marks the details as checked against the person's papers (`members.approve`), or clears the mark. */
+  /**
+   * Marks the details as checked against the person's papers (`members.approve`), or clears the
+   * mark. Marking issues the membership ID of a member still waiting for one; clearing keeps it.
+   */
   async setVerified(actor: Actor, id: string, verified: boolean): Promise<PersonDetail> {
     const { row } = await this.allowed(actor, id, 'approve');
     const verifiedAt = verified ? (row.verified_at ?? new Date()) : null;
@@ -158,6 +163,7 @@ export class PersonsService {
         { ...auditOf(actor, 'person', verified ? 'verify' : 'unverify', id), before: { verified: row.verified_at !== null }, after: { verified } },
         tx,
       );
+      if (verified) await this.memberships.issueId(tx, actor, { personId: id, organisationId: null });
     });
     return this.get(actor, id);
   }

@@ -48,12 +48,18 @@ describe('Memberships: the office adds members with a global membership ID (e2e)
   }
 
   const post = (url: string, cookie: string) => request(server()).post(url).set('Cookie', cookie).set('Origin', ORIGIN).set(CSRF_HEADER, CSRF);
+  const put = (url: string, cookie: string) => request(server()).put(url).set('Cookie', cookie).set('Origin', ORIGIN).set(CSRF_HEADER, CSRF);
+  /** Marks a person as verified through the API, which issues a waiting membership ID; returns their membership. */
+  const verify = async (personId: string, verified = true) =>
+    personDetailSchema.parse((await put(`/persons/${personId}/verified`, admin.cookie).send({ verified }).expect(200)).body).membership;
   const member = (name: string, phone = randomPhone(), extra: Record<string, unknown> = {}) => ({
     person: { fullName: `${name} ${MARK}`, phone },
     ...extra,
   });
-  const addPerson = (name: string) =>
-    prisma.persons.create({ data: { society_id: societyId, full_name: `${name} ${MARK}`, phone: randomPhone() }, select: { id: true } }).then((p) => p.id);
+  const addPerson = (name: string, verified = false) =>
+    prisma.persons
+      .create({ data: { society_id: societyId, full_name: `${name} ${MARK}`, phone: randomPhone(), verified_at: verified ? new Date() : null }, select: { id: true } })
+      .then((p) => p.id);
   const membershipOf = (personId: string) => prisma.memberships.findFirstOrThrow({ where: { person_id: personId, status: 'active' } });
 
   async function addLocation(parent: keyof typeof tree | null, depth: number, name: string) {
@@ -118,14 +124,28 @@ describe('Memberships: the office adds members with a global membership ID (e2e)
     await app?.close();
   });
 
-  it('adds a person and a membership whose ID is the society code and the padded member number', async () => {
+  it('adds a member without an ID, issues it on verification and keeps it when the mark is removed', async () => {
     const res = await post('/memberships', admin.cookie).send(member('রহিম', randomPhone(), { joinedOn: '2026-01-15' })).expect(201);
     const created = memberCreatedSchema.parse(res.body);
-    expect(created.reusedPerson).toBe(false);
-    expect(created.membershipCode).toBe(codeOf(created.memberNo));
+    expect(created).toMatchObject({ reusedPerson: false, memberNo: null, membershipCode: null });
+    const pending = personDetailSchema.parse((await request(server()).get(`/persons/${created.personId}`).set('Cookie', admin.cookie).expect(200)).body);
+    expect(pending.membership).toMatchObject({ memberNo: null, membershipCode: null, status: 'active', joinedOn: '2026-01-15' });
 
-    const person = personDetailSchema.parse((await request(server()).get(`/persons/${created.personId}`).set('Cookie', admin.cookie).expect(200)).body);
-    expect(person.membership).toMatchObject({ memberNo: created.memberNo, membershipCode: created.membershipCode, status: 'active', joinedOn: '2026-01-15' });
+    const issued = await verify(created.personId!);
+    expect(issued?.memberNo).toEqual(expect.any(Number));
+    expect(issued?.membershipCode).toBe(codeOf(issued!.memberNo!));
+    const membershipId = (await membershipOf(created.personId!)).id;
+    expect(await prisma.audit_logs.count({ where: { entity_type: 'membership', action: 'issue_id', entity_id: membershipId } })).toBe(1);
+
+    // Removing the mark keeps the ID; verifying again issues nothing new.
+    expect(await verify(created.personId!, false)).toMatchObject({ memberNo: issued!.memberNo, membershipCode: issued!.membershipCode });
+    expect(await verify(created.personId!)).toMatchObject({ memberNo: issued!.memberNo });
+  });
+
+  it('gives a member who is verified already their ID at once', async () => {
+    const verified = await addPerson('যাচাই করা', true);
+    const created = memberCreatedSchema.parse((await post('/memberships', admin.cookie).send({ personId: verified }).expect(201)).body);
+    expect(created.membershipCode).toBe(codeOf(created.memberNo!));
   });
 
   it('reuses a person on file by phone, and refuses a second active membership', async () => {
@@ -138,9 +158,11 @@ describe('Memberships: the office adds members with a global membership ID (e2e)
     expect(again.body.code).toBe('already_member');
   });
 
-  it('numbers members added at the same moment one after another, without clashes', async () => {
-    const results = await Promise.all([1, 2, 3, 4].map((i) => post('/memberships', admin.cookie).send(member(`একসাথে ${i}`))));
-    const codes = results.map((res) => memberCreatedSchema.parse(res.body).membershipCode);
+  it('numbers members verified at the same moment one after another, without clashes', async () => {
+    const people = await Promise.all([1, 2, 3, 4].map((i) => addPerson(`একসাথে ${i}`)));
+    for (const personId of people) await post('/memberships', admin.cookie).send({ personId }).expect(201);
+    const codes = (await Promise.all(people.map((personId) => verify(personId)))).map((m) => m?.membershipCode);
+    expect(codes.every(Boolean)).toBe(true);
     expect(new Set(codes).size).toBe(4);
   });
 
@@ -156,7 +178,7 @@ describe('Memberships: the office adds members with a global membership ID (e2e)
     const owner = await addPerson('মালিক');
     await prisma.ownerships.create({ data: { society_id: societyId, location_id: tree.plot.id, person_id: owner, start_date: new Date('2020-01-01') } });
     const created = memberCreatedSchema.parse((await post('/memberships', admin.cookie).send({ personId: owner }).expect(201)).body);
-    expect(created).toMatchObject({ personId: owner, reusedPerson: true, membershipCode: codeOf(created.memberNo) });
+    expect(created).toMatchObject({ personId: owner, reusedPerson: true, membershipCode: null });
     expect((await membershipOf(owner)).location_id).toBe(tree.plot.id);
 
     await post('/memberships', admin.cookie).send({ personId: randomUUID() }).expect(404);
@@ -164,7 +186,7 @@ describe('Memberships: the office adds members with a global membership ID (e2e)
   });
 
   it('makes ticked people members in order, skipping members, and shows renters as members', async () => {
-    const [renter, plain, member] = [await addPerson('ভাড়াটিয়া'), await addPerson('সাধারণ'), await addPerson('আগের সদস্য')];
+    const [renter, plain, member] = [await addPerson('ভাড়াটিয়া', true), await addPerson('সাধারণ', true), await addPerson('আগের সদস্য')];
     await prisma.tenancies.create({
       data: { society_id: societyId, unit_id: flat, renter_type: 'family', primary_person_id: renter, start_date: new Date('2025-01-01'), status: 'active' },
     });
@@ -174,8 +196,8 @@ describe('Memberships: the office adds members with a global membership ID (e2e)
     const result = memberBulkResultSchema.parse(res.body);
     expect(result.skipped).toBe(1);
     expect(result.created.map((row) => row.personId)).toEqual([renter, plain]);
-    expect(result.created[1]!.memberNo).toBe(result.created[0]!.memberNo + 1);
-    expect(result.created[0]!.membershipCode).toBe(codeOf(result.created[0]!.memberNo));
+    expect(result.created[1]!.memberNo).toBe(result.created[0]!.memberNo! + 1);
+    expect(result.created[0]!.membershipCode).toBe(codeOf(result.created[0]!.memberNo!));
     const renterMembership = await membershipOf(renter);
     expect(renterMembership.location_id).toBe(flat);
     expect(renterMembership.joined_on.toISOString().slice(0, 10)).toBe('2026-03-01');
@@ -184,30 +206,45 @@ describe('Memberships: the office adds members with a global membership ID (e2e)
     const register = renterRegisterSchema.parse(
       (await request(server()).get(`/registers/renters?areaId=${tree.sector.id}`).set('Cookie', admin.cookie).expect(200)).body,
     );
-    expect(register.items.find((row) => row.renter?.id === renter)?.memberNo).toBe(result.created[0]!.memberNo);
+    expect(register.items.find((row) => row.renter?.id === renter)).toMatchObject({ isMember: true, memberNo: result.created[0]!.memberNo });
+    // A member still waiting for verification is a member without an ID.
+    const unverified = await addPerson('অপেক্ষমাণ মালিক');
+    await prisma.ownerships.create({ data: { society_id: societyId, location_id: tree.road.id, person_id: unverified, start_date: new Date('2020-01-01') } });
+    await post('/memberships', admin.cookie).send({ personId: unverified }).expect(201);
+    const owners = ownerRegisterSchema.parse(
+      (await request(server()).get(`/registers/owners?areaId=${tree.sector.id}&membership=member`).set('Cookie', admin.cookie).expect(200)).body,
+    );
+    expect(owners.items.find((row) => row.id === unverified)).toMatchObject({ isMember: true, memberNo: null, membershipCode: null });
   });
 
   it('makes an organisation a member: typed, on file or ticked, once, in the same numbering', async () => {
     const typed = memberCreatedSchema.parse(
       (await post('/memberships', admin.cookie).send({ organisation: { name: `নূর ট্রেডার্স ${MARK}`, tradeLicence: `TL-1-${MARK}` } }).expect(201)).body,
     );
-    expect(typed).toMatchObject({ personId: null, reusedPerson: false, membershipCode: codeOf(typed.memberNo) });
+    expect(typed).toMatchObject({ personId: null, reusedPerson: false, membershipCode: null });
+    const verified = organisationDetailSchema.parse(
+      (await put(`/organisations/${typed.organisationId}/verified`, admin.cookie).send({ verified: true }).expect(200)).body,
+    );
+    expect(verified.verifiedAt).not.toBeNull();
+    expect(verified.membership?.membershipCode).toBe(codeOf(verified.membership!.memberNo!));
     expect((await post('/memberships', admin.cookie).send({ organisationId: typed.organisationId }).expect(409)).body.code).toBe('already_member');
     // The same licence again finds the same organisation, already a member.
     expect((await post('/memberships', admin.cookie).send({ organisation: { name: 'অন্য নাম', tradeLicence: `TL-1-${MARK}` } }).expect(409)).body.code).toBe(
       'already_member',
     );
 
-    const owner = (await prisma.organisations.create({ data: { society_id: societyId, name: `রহিম স্টোর ${MARK}`, trade_licence: `TL-2-${MARK}` } })).id;
+    const owner = (
+      await prisma.organisations.create({ data: { society_id: societyId, name: `রহিম স্টোর ${MARK}`, trade_licence: `TL-2-${MARK}`, verified_at: new Date() } })
+    ).id;
     await prisma.ownerships.create({ data: { society_id: societyId, location_id: tree.plot.id, organisation_id: owner, share_percent: 100, start_date: new Date('2025-01-01') } });
-    const person = await addPerson('সঙ্গে');
+    const person = await addPerson('সঙ্গে', true);
     const res = await post('/memberships/bulk', admin.cookie).send({ personIds: [person], organisationIds: [owner] }).expect(201);
     const result = memberBulkResultSchema.parse(res.body);
     expect(result.created.map((row) => [row.personId, row.organisationId])).toEqual([
       [person, null],
       [null, owner],
     ]);
-    expect(result.created[1]!.memberNo).toBe(result.created[0]!.memberNo + 1);
+    expect(result.created[1]!.memberNo).toBe(result.created[0]!.memberNo! + 1);
     // Its place is the plot it owns.
     expect((await prisma.memberships.findFirstOrThrow({ where: { organisation_id: owner } })).location_id).toBe(tree.plot.id);
 
@@ -219,13 +256,13 @@ describe('Memberships: the office adds members with a global membership ID (e2e)
   it("lists an organisation member in the registers, found by its membership ID, within the caller's area", async () => {
     const contact = await prisma.persons.create({ data: { society_id: societyId, full_name: `যোগাযোগ ${MARK}`, phone: randomPhone() } });
     const org = (
-      await prisma.organisations.create({ data: { society_id: societyId, name: `আলো এন্টারপ্রাইজ ${MARK}`, contact_person_id: contact.id } })
+      await prisma.organisations.create({ data: { society_id: societyId, name: `আলো এন্টারপ্রাইজ ${MARK}`, contact_person_id: contact.id, verified_at: new Date() } })
     ).id;
     await prisma.ownerships.create({ data: { society_id: societyId, location_id: flat, organisation_id: org, share_percent: 100, start_date: new Date('2025-01-01') } });
     const made = memberCreatedSchema.parse((await post('/memberships', admin.cookie).send({ organisationId: org }).expect(201)).body);
     const get = (url: string, cookie = admin.cookie) => request(server()).get(url).set('Cookie', cookie).expect(200);
 
-    for (const q of [made.membershipCode, String(made.memberNo), 'আলো এন্টারপ্রাইজ']) {
+    for (const q of [made.membershipCode!, String(made.memberNo), 'আলো এন্টারপ্রাইজ']) {
       const members = memberRegisterSchema.parse((await get(`/registers/members?q=${encodeURIComponent(q)}`)).body);
       expect(members.items.find((row) => row.person.id === org)).toMatchObject({
         membershipCode: made.membershipCode,

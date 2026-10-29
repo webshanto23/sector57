@@ -284,7 +284,7 @@ describe('Bills (e2e)', () => {
       const { membership_code: code } = await prisma.memberships.create({
         data: { society_id: societyId, organisation_id: org, member_no: 8, joined_on: new Date('2025-01-01') },
       });
-      for (const q of ['নূর', code, '৮']) {
+      for (const q of ['নূর', code!, '৮']) {
         const lookup = billingLookupSchema.parse((await get(`/billing/lookup?q=${encodeURIComponent(q)}`).expect(200)).body);
         expect(lookup.members).toContainEqual(expect.objectContaining({ kind: 'organisation', id: org, memberNo: 8, membershipCode: code }));
       }

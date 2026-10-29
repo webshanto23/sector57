@@ -173,7 +173,7 @@ export class PaymentsService {
       : [];
 
     // Members, for membership fees: only a society-wide collector takes those.
-    let members: { member: Payer; member_no: number; membership_code: string; name: string }[] = [];
+    let members: { member: Payer; member_no: number | null; membership_code: string | null; name: string }[] = [];
     if (scope === 'all' && (member || (q && !unitId))) {
       const rows = await this.prisma.memberships.findMany({
         where: {
@@ -602,14 +602,14 @@ export class PaymentsService {
     tx: Tx,
     actor: Actor,
     input: Pick<PaymentCreate, 'unitId' | 'personId' | 'organisationId'>,
-  ): Promise<{ unit: BillableUnit | null; membershipIds: Set<string>; member: { no: number; code: string } | null }> {
+  ): Promise<{ unit: BillableUnit | null; membershipIds: Set<string>; member: { no: number | null; code: string | null } | null }> {
     const payee = memberOf(input);
     if (payee) {
       if (actor.access.paths('create', 'payments') !== 'all') throw onlySocietyWide();
       const memberships = await tx.memberships.findMany({
         where: { society_id: actor.societyId, ...membershipsOf(payee) },
         select: { id: true, member_no: true, membership_code: true, status: true },
-        orderBy: { member_no: 'desc' },
+        orderBy: [{ joined_on: 'desc' }, { created_at: 'desc' }],
       });
       if (memberships.length === 0) throw bad('no_membership', 'This member has no membership');
       const current = memberships.find((m) => m.status === 'active') ?? memberships[0]!;

@@ -78,8 +78,8 @@ export const membersReportSchema = z.object({
   counts: z.object({ active: z.number().int().min(0), lapsed: z.number().int().min(0), cancelled: z.number().int().min(0) }),
   joined: z.array(
     z.object({
-      memberNo: z.number().int(),
-      membershipCode: z.string(),
+      memberNo: z.number().int().nullable(),
+      membershipCode: z.string().nullable(),
       /** The member: a person or an organisation (exactly one is set). */
       personId: z.uuid().nullable(),
       organisationId: z.uuid().nullable(),

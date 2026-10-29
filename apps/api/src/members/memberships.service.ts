@@ -18,8 +18,10 @@ const keyOf = (holder: Holder) => (holder.personId ? `p:${holder.personId}` : `o
 const placeNotFound = () => new NotFoundException({ code: 'location_not_found', message: 'Place not found' });
 
 /**
- * Society memberships. Member numbers count up per society; the database turns each into the
- * global membership ID (`memberships_set_code` trigger), so every path that adds a member gets one.
+ * Society memberships. A membership gets its member number only once its person or organisation
+ * is verified (at once when they already are, else through `issueId` when they are marked as
+ * verified); numbers count up per society in that order. The database turns each number into
+ * the global membership ID (`memberships_set_code` trigger). An issued ID is never taken back.
  * Adding members directly is for whole-society callers only.
  */
 @Injectable()
@@ -82,7 +84,7 @@ export class MembershipsService {
   }
 
   /**
-   * People and organisations on file made members in one go, numbered in the order given (people
+   * People and organisations on file made members in one go; the verified ones are numbered in the order given (people
    * first), all or none. Those who already are members are skipped. 404 when any id isn't in the society.
    */
   async bulk(actor: Actor, input: MemberBulkInput): Promise<MemberBulkResult> {
@@ -116,7 +118,10 @@ export class MembershipsService {
     });
   }
 
-  /** A new active membership with the next member number. 409 `already_member` when the person or organisation has one. */
+  /**
+   * A new active membership; it gets the next member number when the person or organisation is
+   * verified already, else none yet. 409 `already_member` when they have one.
+   */
   async insert(tx: Tx, societyId: string, input: Holder & { locationId: string | null; joinedOn: Date; submissionId: string | null }) {
     const active = await tx.memberships.findFirst({
       where: input.personId ? { person_id: input.personId, status: 'active' } : { organisation_id: input.organisationId, status: 'active' },
@@ -130,7 +135,7 @@ export class MembershipsService {
         person_id: input.personId,
         organisation_id: input.organisationId,
         location_id: input.locationId,
-        member_no: await this.nextMemberNo(tx, societyId),
+        member_no: (await this.isVerified(tx, input)) ? await this.nextMemberNo(tx, societyId) : null,
         joined_on: input.joinedOn,
         submission_id: input.submissionId,
       },
@@ -169,7 +174,32 @@ export class MembershipsService {
     return places;
   }
 
-  private recordCreate(tx: Tx, actor: Actor, holder: Holder, row: { id: string; member_no: number; membership_code: string; joined_on: Date }) {
+  /**
+   * Gives the person's or organisation's active membership its number (and ID) if it has none
+   * yet; call it in the transaction that marks them as verified. Returns the ID issued, or null.
+   */
+  async issueId(tx: Tx, actor: Actor, holder: Holder): Promise<string | null> {
+    const pending = await tx.memberships.findFirst({
+      where: { society_id: actor.societyId, status: 'active', member_no: null, ...(holder.personId ? { person_id: holder.personId } : { organisation_id: holder.organisationId }) },
+      select: { id: true },
+    });
+    if (!pending) return null;
+    const row = await tx.memberships.update({
+      where: { id: pending.id },
+      data: { member_no: await this.nextMemberNo(tx, actor.societyId) },
+      select: { member_no: true, membership_code: true },
+    });
+    await this.audit.record({ ...auditOf(actor, 'membership', 'issue_id', pending.id), after: { memberNo: row.member_no, membershipCode: row.membership_code } }, tx);
+    return row.membership_code;
+  }
+
+  private async isVerified(tx: Tx, holder: Holder): Promise<boolean> {
+    const where = { id: (holder.personId ?? holder.organisationId)!, verified_at: { not: null } };
+    const found = holder.personId ? await tx.persons.findFirst({ where, select: { id: true } }) : await tx.organisations.findFirst({ where, select: { id: true } });
+    return found !== null;
+  }
+
+  private recordCreate(tx: Tx, actor: Actor, holder: Holder, row: { id: string; member_no: number | null; membership_code: string | null; joined_on: Date }) {
     return this.audit.record(
       {
         ...auditOf(actor, 'membership', 'create', row.id),

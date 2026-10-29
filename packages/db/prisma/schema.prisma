@@ -302,9 +302,10 @@ model memberships {
   person_id        String?           @db.Uuid
   organisation_id  String?           @db.Uuid
   location_id      String?           @db.Uuid
-  member_no        Int
-  /// Global ID (`S15-000042`), filled by the `memberships_set_code` trigger.
-  membership_code  String            @unique(map: "memberships_membership_code_uq") @default(dbgenerated())
+  /// Null until the person or organisation is verified (migration `30_membership_verification`).
+  member_no        Int?
+  /// Global ID (`S15-000042`), filled by the `memberships_set_code` trigger; null while `member_no` is.
+  membership_code  String?           @unique(map: "memberships_membership_code_uq")
   status           String            @default("active")
   joined_on        DateTime          @db.Date
   ended_on         DateTime?         @db.Date
@@ -635,6 +636,7 @@ model organisations {
   name              String
   trade_licence     String?
   contact_person_id String?      @db.Uuid
+  verified_at       DateTime?    @db.Timestamptz(6)
   created_at        DateTime     @default(now()) @db.Timestamptz(6)
   donations         donations[]
   invoices          invoices[]

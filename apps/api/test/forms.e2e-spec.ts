@@ -420,12 +420,13 @@ describe('Public forms and the office review (e2e)', () => {
       await send('post', `/forms/${cMembership.id}/review`, blockCViewer.cookie).send({}).expect(403);
     });
 
-    it('approves a membership: the person, the next member number and the owner record', async () => {
+    it('approves a membership: the person, a membership waiting for its ID and the owner record', async () => {
       const res = formDetailSchema.parse(
         (await send('post', `/forms/${cMembership.id}/approve`, blockCOffice.cookie).send({ addOwnership: true, sharePercent: '১০০' }).expect(200)).body,
       );
       expect(res.status).toBe('approved');
-      expect(res.memberNo).toBeGreaterThan(0);
+      // A member at once, but the membership ID waits until the person is verified.
+      expect(res).toMatchObject({ memberNo: null, membershipCode: null });
       expect(res.reviewerName).toContain('ব্যবহারকারী');
       expect(res.person).toMatchObject({ kind: 'person', phone: cMembership.phone });
 
@@ -439,7 +440,7 @@ describe('Public forms and the office review (e2e)', () => {
       await send('post', `/forms/${cMembership.id}/reject`, blockCOffice.cookie).send({ note: 'না' }).expect(409);
     });
 
-    it('numbers members one after another and refuses a second membership, keeping the application open', async () => {
+    it('makes approved applicants members without an ID until verified, and refuses a second membership, keeping the application open', async () => {
       const first = await prisma.memberships.findFirstOrThrow({ where: { submission_id: cMembership.id } });
       // The same phone applies again for another flat: they are already a member.
       const again = receipt(await submit('membership', membership(units.flat2B, { phone: cMembership.phone, nid: cMembership.nid }), deed()).expect(201));
@@ -451,7 +452,9 @@ describe('Public forms and the office review (e2e)', () => {
       const next = receipt(await submit('membership', membership(units.flat2C), deed()).expect(201));
       const nextId = (await submissionOf(next.reference)).id;
       const approved = formDetailSchema.parse((await send('post', `/forms/${nextId}/approve`, admin.cookie).send({}).expect(200)).body);
-      expect(approved.memberNo).toBe(first.member_no + 1);
+      // Applicants aren't verified yet: the ID waits for "Mark as verified".
+      expect(first.member_no).toBeNull();
+      expect(approved).toMatchObject({ memberNo: null, membershipCode: null });
     });
 
     it("approves an organisation's application: the organisation is the member and owner, the applicant its contact", async () => {

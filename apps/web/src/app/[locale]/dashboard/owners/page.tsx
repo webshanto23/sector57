@@ -56,7 +56,7 @@ export default async function OwnersPage({ params, searchParams }: PageProps<"/[
   const placesOpen = { units: canAnywhere(me.access, "units"), locations: canAnywhere(me.access, "locations") };
   // Whole-society roles can tick owners who aren't members yet and make them members in one go.
   const canTick = canSocietyWide(me.access, "members", "create");
-  const tickable = (row: OwnerRegisterRow) => canTick && row.memberNo === null;
+  const tickable = (row: OwnerRegisterRow) => canTick && !row.isMember;
 
   const columns: Column<OwnerRegisterRow>[] = [
     {
@@ -70,6 +70,8 @@ export default async function OwnersPage({ params, searchParams }: PageProps<"/[
             <PartyLink party={row} />
             {row.membershipCode ? (
               <Chip tone="good">{t("memberNo", { no: row.membershipCode })}</Chip>
+            ) : row.isMember ? (
+              <Chip tone="warn">{t("idPending")}</Chip>
             ) : row.kind === "person" ? (
               <Chip tone="warn">{t("owners.notMember")}</Chip>
             ) : null}

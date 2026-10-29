@@ -11,6 +11,7 @@ import { MembershipLine, PartyLink } from "@/components/members/labels";
 import { MakeMemberButton } from "@/components/members/make-members";
 import { LicencePagesCard } from "@/components/members/id-copies";
 import { OrganisationEditor } from "@/components/members/organisation-editor";
+import { VerifyCard } from "@/components/members/verify-card";
 import { OwnershipTable, TenancyTable } from "@/components/members/record-tables";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
@@ -59,6 +60,12 @@ export default async function OrganisationPage({ params }: PageProps<"/[locale]/
         {mayMakeMember ? <MakeMemberButton member={{ kind: "organisation", id: organisation.id }} places={currentPlaces} /> : null}
         {!organisation.can.edit ? <Note>{t("readOnly")}</Note> : null}
         <OrganisationEditor key={organisation.id} organisation={organisation} />
+        <VerifyCard
+          party={{ kind: "organisation", id: organisation.id }}
+          verifiedAt={organisation.verifiedAt}
+          canVerify={organisation.can.verify}
+          idPending={organisation.membership?.status === "active" && organisation.membership.membershipCode === null}
+        />
         {licencePages ? <LicencePagesCard organisationId={organisation.id} pages={licencePages} /> : null}
         <Card className="grid gap-1.5">
           <h2 className="text-[15px]">{t("contact")}</h2>

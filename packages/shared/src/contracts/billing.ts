@@ -324,6 +324,6 @@ export const billingLookupSchema = z.object({
     }),
   ),
   /** People and organisations with an active membership; only for a society-wide billing role. */
-  members: z.array(partySchema.extend({ memberNo: z.number().int(), membershipCode: z.string() })),
+  members: z.array(partySchema.extend({ memberNo: z.number().int().nullable(), membershipCode: z.string().nullable() })),
 });
 export type BillingLookup = z.infer<typeof billingLookupSchema>;

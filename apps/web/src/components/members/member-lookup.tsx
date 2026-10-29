@@ -60,7 +60,7 @@ export function MemberLookup({ id, onPick }: { id: string; onPick: (member: Pick
         ) : (
           <ul className="grid gap-1.5">
             {hits.map((row) => (
-              <li key={row.membershipCode}>
+              <li key={row.person.id}>
                 <button
                   type="button"
                   className="flex w-full items-center gap-2.5 rounded-[10px] border border-line bg-surface p-2 text-left hover:bg-surface-2"
@@ -79,6 +79,7 @@ export function MemberLookup({ id, onPick }: { id: string; onPick: (member: Pick
 }
 
 function MemberLine({ member, locale }: { member: PickedMember; locale: Locale }) {
+  const tMembers = useTranslations("Members");
   const name = pick(member.person.name, member.person.nameEn, locale);
   return (
     <>
@@ -86,7 +87,7 @@ function MemberLine({ member, locale }: { member: PickedMember; locale: Locale }
       <span className="grid min-w-0 gap-0.5">
         <span className="truncate font-semibold">{name}</span>
         <span className="num truncate text-[12.5px] text-muted-foreground">
-          {localDigits(member.membershipCode, locale)}
+          {member.membershipCode ? localDigits(member.membershipCode, locale) : tMembers("idPending")}
           {member.person.phone ? ` · ${localDigits(member.person.phone, locale)}` : ""}
         </span>
       </span>
