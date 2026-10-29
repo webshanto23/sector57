@@ -32,14 +32,17 @@ import { Receipt, type ReceiptData } from "./receipt";
  */
 export function CollectForm({
   initial,
-  startBillId,
+  openAccounts,
+  startBillIds,
   header,
   collector,
   today,
 }: {
   initial: CollectAccount | null;
-  /** From a bill page: only this bill starts ticked; the account's other open bills stay listed, unticked. */
-  startBillId?: string;
+  /** Before any search: the accounts whose open bills are newest. */
+  openAccounts: CollectAccount[];
+  /** From a bill page or the bills list: only these bills start ticked; the account's other open bills stay listed, unticked. */
+  startBillIds?: string[];
   header: DocumentHeader;
   collector: string;
   /** `YYYY-MM-DD` in Dhaka, from the server. */
@@ -55,9 +58,11 @@ export function CollectForm({
   const [hits, setHits] = useState<CollectAccount[] | null>(null);
   const [searching, setSearching] = useState(false);
   const [account, setAccount] = useState<CollectAccount | null>(initial);
-  const startBill = initial?.bills.find((bill) => bill.id === startBillId) ?? null;
-  const [ticked, setTicked] = useState<Set<string>>(() => new Set(startBill ? [startBill.id] : initial?.bills.map((bill) => bill.id)));
-  const [amount, setAmount] = useState(startBill?.due ?? initial?.due ?? "");
+  const startBills = initial?.bills.filter((bill) => startBillIds?.includes(bill.id)) ?? [];
+  const [ticked, setTicked] = useState<Set<string>>(
+    () => new Set(startBills.length ? startBills.map((bill) => bill.id) : initial?.bills.map((bill) => bill.id)),
+  );
+  const [amount, setAmount] = useState(startBills.length ? addMoney("0", ...startBills.map((bill) => bill.due)) : (initial?.due ?? ""));
   const [touched, setTouched] = useState(false);
   const [payerId, setPayerId] = useState(initial?.payers[0]?.id ?? "");
   const [note, setNote] = useState("");
@@ -144,7 +149,7 @@ export function CollectForm({
   }
 
   return (
-    <div className="grid gap-3.5 min-[860px]:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] min-[860px]:items-start">
+    <div className={`grid gap-3.5 ${account ? "min-[860px]:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] min-[860px]:items-start" : ""}`}>
       <form
         noValidate
         className="grid gap-3.5"
@@ -195,23 +200,13 @@ export function CollectForm({
                 hits.length === 0 ? (
                   <p className="text-[13.5px] text-muted-foreground">{t("noMatch")}</p>
                 ) : (
-                  <ul className="divide-y divide-line">
-                    {hits.map((hit) => (
-                      <li key={`${hit.kind}-${hit.id}`} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                        <div className="min-w-0">
-                          <p className="font-semibold">{hit.name}</p>
-                          <p className="text-[13px] text-muted-foreground">
-                            {hit.kind === "unit" ? hit.address.join(", ") : `${t("membershipFees")} · ${hit.membershipCode ? t("memberNo", { no: hit.membershipCode }) : tBilling("idPending")}`}
-                          </p>
-                          <p className="num text-[13px]">{hit.bills.length ? t("dueTotal", { amount: formatTaka(hit.due, locale) }) : t("nothingDue")}</p>
-                        </div>
-                        <Button type="button" variant="outline" size="sm" disabled={hit.bills.length === 0} onClick={() => choose(hit)}>
-                          {t("choose")}
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
+                  <AccountList accounts={hits} onChoose={choose} />
                 )
+              ) : openAccounts.length ? (
+                <div className="grid gap-1">
+                  <h3 className="text-[13.5px] font-semibold text-muted-foreground">{t("openBills")}</h3>
+                  <AccountList accounts={openAccounts} onChoose={choose} />
+                </div>
               ) : null}
             </>
           )}
@@ -303,15 +298,43 @@ export function CollectForm({
         ) : null}
       </form>
 
-      <section aria-label={t("receipt.preview")} className="grid gap-2">
-        {preview ? (
-          <Receipt data={preview} locale={locale} />
-        ) : (
-          <div className="rounded-[var(--radius)] border border-dashed border-line p-6 text-center text-[13.5px] text-muted-foreground">
-            {t("receipt.previewEmpty")}
-          </div>
-        )}
-      </section>
+      {/* The receipt column shows once an account is chosen. */}
+      {account ? (
+        <section aria-label={t("receipt.preview")} className="grid gap-2">
+          {preview ? (
+            <Receipt data={preview} locale={locale} />
+          ) : (
+            <div className="rounded-[var(--radius)] border border-dashed border-line p-6 text-center text-[13.5px] text-muted-foreground">
+              {t("receipt.previewEmpty")}
+            </div>
+          )}
+        </section>
+      ) : null}
     </div>
+  );
+}
+
+/** Accounts to choose from: search hits, or the open list before any search. */
+function AccountList({ accounts, onChoose }: { accounts: CollectAccount[]; onChoose: (account: CollectAccount) => void }) {
+  const t = useTranslations("Collect");
+  const tBilling = useTranslations("Billing");
+  const locale = useLocale() as Locale;
+  return (
+    <ul className="divide-y divide-line">
+      {accounts.map((hit) => (
+        <li key={`${hit.kind}-${hit.id}`} className="flex flex-wrap items-center justify-between gap-2 py-2">
+          <div className="min-w-0">
+            <p className="font-semibold">{hit.name}</p>
+            <p className="text-[13px] text-muted-foreground">
+              {hit.kind === "unit" ? hit.address.join(", ") : `${t("membershipFees")} · ${hit.membershipCode ? t("memberNo", { no: hit.membershipCode }) : tBilling("idPending")}`}
+            </p>
+            <p className="num text-[13px]">{hit.bills.length ? t("dueTotal", { amount: formatTaka(hit.due, locale) }) : t("nothingDue")}</p>
+          </div>
+          <Button type="button" variant="outline" size="sm" disabled={hit.bills.length === 0} onClick={() => onChoose(hit)}>
+            {t("choose")}
+          </Button>
+        </li>
+      ))}
+    </ul>
   );
 }

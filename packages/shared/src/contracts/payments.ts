@@ -62,9 +62,13 @@ export const collectorMayVoid = (facts: { receivedBy: string; userId: string; re
 // Finding what to collect
 // ---------------------------------------------------------------------------
 
-/** `GET /collect/lookup`: by search (unit name or code, member name, phone or number), or one unit or member. */
+/**
+ * `GET /collect/lookup`: by search (unit name or code, member name, phone or number), or one
+ * unit or member, or with `open` alone the accounts in the caller's area whose open bills are newest.
+ */
 export const collectLookupQuery = z.object({
   q: z.string().transform(cleanText).pipe(z.string().max(100)).optional(),
+  open: z.stringbool().optional(),
   unitId: z.uuid().optional(),
   personId: z.uuid().optional(),
   organisationId: z.uuid().optional(),

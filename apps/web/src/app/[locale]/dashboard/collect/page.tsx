@@ -24,7 +24,8 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/dashboar
 /**
  * The mockup's cash collection page: take a payment beside the live receipt, the caller's
  * figures for today, and "close day and hand over". `?unitId=`, `?personId=` or `?organisationId=`
- * starts with that unit or member; `?invoiceId=` (from a bill page) ticks only that bill.
+ * starts with that unit or member; `?invoiceId=` (from a bill page or the bills list, repeatable)
+ * ticks only those bills.
  */
 export default async function CollectPage({ params, searchParams }: PageProps<"/[locale]/dashboard/collect">) {
   const { locale: raw } = await params;
@@ -38,17 +39,20 @@ export default async function CollectPage({ params, searchParams }: PageProps<"/
   const unitId = id("unitId");
   const personId = unitId ? undefined : id("personId");
   const organisationId = unitId || personId ? undefined : id("organisationId");
-  const invoiceId = id("invoiceId");
+  const invoiceIds = [search["invoiceId"] ?? []].flat().filter((value) => UUID.test(value));
   const today = todayInDhaka();
 
+  const chosen = Boolean(unitId || personId || organisationId);
   const [t, tNav, summary, start, receipts] = await Promise.all([
     getTranslations("Collect"),
     getTranslations("Dashboard.nav"),
     canCollect ? getCollectSummary() : Promise.resolve(null),
-    canCollect && (unitId || personId || organisationId) ? lookupCollect({ unitId, personId, organisationId }) : Promise.resolve(null),
+    // No account chosen: the accounts whose open bills are newest, to pick from.
+    canCollect ? lookupCollect(chosen ? { unitId, personId, organisationId } : { open: true }) : Promise.resolve(null),
     canCollect ? getPayments({ collectorId: "me", from: today, to: today, pageSize: 20 }) : Promise.resolve(null),
   ]);
-  const initial = start?.accounts.find((account) => (unitId ? account.kind === "unit" : account.kind === "member")) ?? null;
+  const initial = chosen ? (start?.accounts.find((account) => (unitId ? account.kind === "unit" : account.kind === "member")) ?? null) : null;
+  const openAccounts = chosen ? [] : (start?.accounts ?? []);
   const n = (value: number) => formatNumber(value, locale);
 
   return (
@@ -72,7 +76,7 @@ export default async function CollectPage({ params, searchParams }: PageProps<"/
 
       {summary && receipts ? (
         <div className="grid gap-3.5">
-          <CollectForm initial={initial} startBillId={invoiceId} header={summary.header} collector={me.name ?? me.phone} today={today} />
+          <CollectForm initial={initial} openAccounts={openAccounts} startBillIds={invoiceIds} header={summary.header} collector={me.name ?? me.phone} today={today} />
 
           <div className="grid gap-2.5 min-[600px]:grid-cols-3">
             <StatCard

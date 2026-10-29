@@ -206,6 +206,16 @@ describe('Cash collection, receipts and handover (e2e)', () => {
       await get('/collect/lookup?q=x', users.nobody).expect(403);
       await get('/collect/lookup?q=x', users.treasurer).expect(403);
     });
+
+    it('lists accounts with open bills before any search, newest bill first, within the area', async () => {
+      const scoped = collectLookupSchema.parse((await get('/collect/lookup?open=true', users.collectorC).expect(200)).body);
+      expect(scoped.accounts.map((a) => [a.kind, a.name])).toEqual([['unit', 'সি-১']]);
+      const wide = collectLookupSchema.parse((await get('/collect/lookup?open=true').expect(200)).body);
+      expect(wide.accounts.filter((a) => a.kind === 'unit').map((a) => a.name)).toEqual(['ডি-১', 'সি-১']);
+      expect(wide.accounts.some((a) => a.kind === 'member' && a.name === 'করিম মিয়া')).toBe(true);
+      // Nothing asked, nothing listed.
+      expect(collectLookupSchema.parse((await get('/collect/lookup').expect(200)).body).accounts).toEqual([]);
+    });
   });
 
   describe('taking a payment', () => {

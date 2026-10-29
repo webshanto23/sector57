@@ -15176,6 +15176,7 @@ export interface operations {
         parameters: {
             query?: {
                 q?: string;
+                open?: string;
                 unitId?: string;
                 personId?: string;
                 organisationId?: string;

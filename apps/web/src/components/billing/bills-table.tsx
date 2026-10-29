@@ -19,7 +19,10 @@ export async function BillsTable({
   locale: Locale;
   empty: string;
   hide?: ("unit" | "billTo")[];
-  /** With a form id, each bill gets a tick box that joins that form (printing several bills). */
+  /**
+   * With a form id, each bill gets a tick box that joins that form (printing several bills,
+   * or taking payment for them). The box carries the bill's account and whether it is open.
+   */
   selectForm?: string;
 }) {
   const t = await getTranslations("Billing");
@@ -37,6 +40,8 @@ export async function BillsTable({
               form={selectForm}
               name="id"
               value={row.id}
+              data-account={row.billTo.unit ? `unitId:${row.billTo.unit.id}` : `${row.billTo.kind}Id:${row.billTo.id}`}
+              data-open={row.status === "unpaid" || row.status === "partial" ? "1" : undefined}
               aria-label={tPrint("select", { no: row.invoiceNo })}
               className="mt-1 size-4 accent-primary"
             />

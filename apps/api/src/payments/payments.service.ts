@@ -102,6 +102,9 @@ const likeTerm = (term: string) => `%${term.replace(/[\\%_]/g, '\\$&')}%`;
 /** A payment's Dhaka day, in SQL. */
 const dhakaDay = Prisma.sql`(p.received_at AT TIME ZONE ${TIME_ZONE})::date`;
 
+/** How many accounts the collect page lists before any search. */
+const OPEN_ACCOUNTS = 20;
+
 /**
  * Cash taken at the office (`payments`): one receipt settles open bills of one unit, or one
  * member's membership bills, oldest first. Area-scoped through the payment's unit; a payment
@@ -127,7 +130,9 @@ export class PaymentsService {
   async lookup(actor: Actor, query: CollectLookupQuery): Promise<CollectLookup> {
     const { q, unitId } = query;
     const member = memberOf(query);
-    if (!q && !unitId && !member) return { accounts: [] };
+    // `open` only counts on its own: a search or a chosen account wins.
+    const open = Boolean(query.open && !q && !unitId && !member);
+    if (!q && !unitId && !member && !open) return { accounts: [] };
     const scope = actor.access.paths('create', 'payments');
     const today = isoDate(todayDate());
 
@@ -158,8 +163,23 @@ export class PaymentsService {
           LIMIT 25`,
       ]);
       unitIds = [...new Set([...byName.map((row) => row.location_id), ...byPayer.map((row) => row.unit_id)])];
+    } else if (open) {
+      // Units whose open bills were made most recently, in the caller's area.
+      const rows = await this.prisma.invoices.groupBy({
+        by: ['unit_id'],
+        where: {
+          society_id: actor.societyId,
+          unit_id: { not: null },
+          status: { in: [...OPEN_INVOICE_STATUSES] },
+          ...(scope === 'all' ? {} : { units: { OR: scope.map((prefix) => ({ locations: { path: { startsWith: prefix } } })) } }),
+        },
+        _max: { created_at: true },
+        orderBy: { _max: { created_at: 'desc' } },
+        take: OPEN_ACCOUNTS,
+      });
+      unitIds = rows.flatMap((row) => (row.unit_id ? [row.unit_id] : []));
     }
-    const units = unitIds.length
+    const found = unitIds.length
       ? await this.prisma.units.findMany({
           where: {
             society_id: actor.societyId,
@@ -168,17 +188,19 @@ export class PaymentsService {
           },
           select: { location_id: true, locations: { select: { name: true, code: true, path: true } } },
           orderBy: [{ locations: { name: 'asc' } }, { location_id: 'asc' }],
-          take: 10,
+          take: open ? OPEN_ACCOUNTS : 10,
         })
       : [];
+    // The open list keeps the newest-bill order.
+    const units = open ? [...found].sort((a, b) => unitIds.indexOf(a.location_id) - unitIds.indexOf(b.location_id)) : found;
 
     // Members, for membership fees: only a society-wide collector takes those.
     let members: { member: Payer; member_no: number | null; membership_code: string | null; name: string }[] = [];
-    if (scope === 'all' && (member || (q && !unitId))) {
+    if (scope === 'all' && (member || (q && !unitId) || open)) {
       const rows = await this.prisma.memberships.findMany({
         where: {
           society_id: actor.societyId,
-          ...(member ? membershipsOf(member) : memberSearch(q!)),
+          ...(member ? membershipsOf(member) : q ? memberSearch(q) : {}),
           invoices: { some: { status: { in: [...OPEN_INVOICE_STATUSES] } } },
         },
         select: {
@@ -190,7 +212,7 @@ export class PaymentsService {
           organisations: { select: { name: true } },
         },
         orderBy: { member_no: 'asc' },
-        take: 10,
+        take: open ? OPEN_ACCOUNTS : 10,
       });
       members = rows.map((row) => ({
         member: memberOfRow(row),
