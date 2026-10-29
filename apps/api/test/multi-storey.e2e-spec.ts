@@ -294,5 +294,27 @@ describe('Multi-storey buildings: duplexes and setting up floors (e2e)', () => {
       expect((await combine(units['1A'], [units['2A']]).expect(409)).body.code).toBe('combine_unit_inactive');
       expect((await view(floors.two)).alsoHere.map((unit) => unit.id)).toEqual([units['1A']]);
     });
+
+    it("shows each unit's owner or renter and how many units they hold in the building", async () => {
+      const grid = async (cookie = admin.cookie) => {
+        const body = buildingGridSchema.parse((await get(`/locations/${building}/grid`, cookie).expect(200)).body);
+        return new Map(body.floors.flatMap((floor) => floor.units).map((unit) => [unit.id, unit.holder]));
+      };
+      const before = await grid();
+      expect(before.get(units['1A'])).toEqual({ name: `মালিক ${MARK}`, nameEn: null, role: 'owner', more: 0, units: 1 });
+      expect(before.get(units['1B'])).toBeNull();
+      // Retired into the duplex: history, holding nobody.
+      expect(before.get(units['2A'])).toBeNull();
+
+      // One company over two flats on different floors.
+      const other = (await prisma.persons.findFirstOrThrow({ where: { full_name: `অন্য মালিক ${MARK}` } })).id;
+      await prisma.ownerships.create({ data: { society_id: societyId, location_id: units['1B'], person_id: other, start_date: new Date('2026-01-01') } });
+      const after = await grid();
+      expect(after.get(units['1B'])).toMatchObject({ name: `অন্য মালিক ${MARK}`, role: 'owner', units: 2 });
+      expect(after.get(units['2B'])).toMatchObject({ name: `অন্য মালিক ${MARK}`, role: 'owner', units: 2 });
+
+      const noPeople = await makeUser([{ roleId: await makeRole(['locations:view', 'units:view']) }]);
+      expect([...(await grid(noPeople.cookie)).values()].every((holder) => holder === null)).toBe(true);
+    });
   });
 });

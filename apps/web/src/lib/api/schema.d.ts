@@ -4633,6 +4633,14 @@ export interface components {
                         name: string;
                     } | null;
                     includes: string[];
+                    holder: {
+                        name: string;
+                        nameEn: string | null;
+                        /** @enum {string} */
+                        role: "renter" | "owner";
+                        more: number;
+                        units: number;
+                    } | null;
                 }[];
                 coveredBy: {
                     /** Format: uuid */

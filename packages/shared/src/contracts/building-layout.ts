@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { bnDigits } from '../format.js';
 import { optionalText, text } from '../schemas.js';
 import { cleanText } from '../text.js';
-import { BILL_TO, graphemes, MAX_BULK_NAMES, OCCUPANCIES, sizeSqftSchema, unitTypeCode } from './property.js';
+import { BILL_TO, graphemes, MAX_BULK_NAMES, OCCUPANCIES, partyNameSchema, sizeSqftSchema, unitTypeCode } from './property.js';
 
 /*
  * "Set up floors and units" (Step 37): a new building's floors and the units on each, from
@@ -93,6 +93,21 @@ export function expandLayout(input: LayoutShape): { number: number; name: string
 // The building grid: floors as rows, their units as cells
 // ---------------------------------------------------------------------------
 
+export const UNIT_HOLDER_ROLES = ['renter', 'owner'] as const;
+
+/**
+ * Who holds a unit, for the grid: its renter, else its own owner (owners higher up the tree
+ * are left out). `units` counts the units in the building the same person or organisation
+ * holds, this one included, so an office over several flats shows on each of them.
+ */
+export const unitHolderSchema = partyNameSchema.extend({
+  role: z.enum(UNIT_HOLDER_ROLES),
+  /** Others beside this one: joint owners, or a second renter. */
+  more: z.number().int().min(0),
+  units: z.number().int().min(1),
+});
+export type UnitHolder = z.infer<typeof unitHolderSchema>;
+
 export const buildingGridUnitSchema = z.object({
   id: z.uuid(),
   name: z.string(),
@@ -105,6 +120,8 @@ export const buildingGridUnitSchema = z.object({
   mergedInto: z.object({ id: z.uuid(), name: z.string() }).nullable(),
   /** Names of the units combined into this one. */
   includes: z.array(z.string()),
+  /** Null when nobody is recorded or the caller may not view owners or renters there. */
+  holder: unitHolderSchema.nullable(),
 });
 export type BuildingGridUnit = z.infer<typeof buildingGridUnitSchema>;
 

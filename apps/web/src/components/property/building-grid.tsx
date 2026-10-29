@@ -31,6 +31,7 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
   const keep = picked.find((unit) => unit.id === keepId) ?? picked[0];
   // A duplex takes one unit from each floor; flats on one floor stay separate.
   const duplexReady = picked.length >= 2 && new Set(picked.map((unit) => unit.floorId)).size === picked.length;
+  const holderName = (holder: { name: string; nameEn: string | null }) => (locale === "en" ? (holder.nameEn ?? holder.name) : holder.name);
   const homeFloor = (unitId: string) => grid.floors.find((floor) => floor.units.some((unit) => unit.id === unitId))?.name ?? "";
   const unitName = (id: string, name: string, className?: string) =>
     unitsOpen ? (
@@ -138,9 +139,19 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
                           <UnitTypeIcon code={unit.unitType} className="size-3.5 shrink-0" />
                           {unitTypeName(unitTypes, unit.unitType, locale)}
                         </span>
+                        {unit.holder ? (
+                          <span className="truncate" title={holderName(unit.holder)}>
+                            {t(unit.holder.role === "renter" ? "renterName" : "ownerName", { name: holderName(unit.holder) })}
+                            {unit.holder.more > 0 ? <span className="text-muted-foreground"> {localDigits(t("holderMore", { count: unit.holder.more }), locale)}</span> : null}
+                          </span>
+                        ) : null}
                         <span className="flex flex-wrap gap-1">
                           <Chip tone={OCCUPANCY_TONES[unit.occupancy]}>{tOcc(unit.occupancy)}</Chip>
                           {unit.alsoOn.length > 0 ? <Chip tone="info">{t("alsoOn", { names: unit.alsoOn.join(", ") })}</Chip> : null}
+                          {unit.holder && unit.holder.units > 1 ? (
+                            // Names stay as typed; only the count takes the page's digits.
+                            <Chip tone="acc">{t("holderUnits", { name: holderName(unit.holder), count: localDigits(String(unit.holder.units), locale) })}</Chip>
+                          ) : null}
                           {!unit.isActive ? <Chip tone="warn">{t("inactive")}</Chip> : null}
                         </span>
                       </label>
