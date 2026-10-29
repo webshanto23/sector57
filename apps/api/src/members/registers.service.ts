@@ -20,7 +20,7 @@ import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { addressOf, TreeService } from '../property/tree.service.js';
 import { inScope } from '../reports/area-tree.js';
-import { feeOf, holdingsOf, placesOf, type FeeRow, type OwnedRow } from './registers.policy.js';
+import { feeOf, holdingsOf, membershipIdTerm, placesOf, type FeeRow, type OwnedRow } from './registers.policy.js';
 
 type PersonCols = { id: string; name: string; name_en: string | null; phone: string | null; photo_url: string | null; verified: boolean | null };
 type MemberRow = PersonCols & FeeRow & { member_no: number; membership_code: string; status: string; joined_on: Date; total: number };
@@ -108,7 +108,12 @@ export class RegistersService {
     const feePaid = Prisma.sql`(f.fee_bills > 0 and f.fee_open = 0)`;
 
     const filters: Prisma.Sql[] = [Prisma.sql`m.status = ${query.status}`];
-    if (query.q) filters.push(searchSql(query.q, Prisma.sql`p.full_name`, Prisma.sql`p.full_name_en`, Prisma.sql`p.phone`));
+    if (query.q) {
+      // Names and phone, or the membership ID (the full code, part of it, or the bare number).
+      const id = membershipIdTerm(query.q);
+      filters.push(Prisma.sql`(${searchSql(query.q, Prisma.sql`p.full_name`, Prisma.sql`p.full_name_en`, Prisma.sql`p.phone`)}
+        or m.membership_code like ${`%${escapeLike(id.code)}%`}${id.number === null ? Prisma.empty : Prisma.sql` or m.member_no = ${id.number}`})`);
+    }
     if (feesShown && query.fee) filters.push(query.fee === 'paid' ? feePaid : Prisma.sql`not ${feePaid}`);
     const area = await this.areaPath(societyId, query.areaId);
     if (area !== undefined) {

@@ -142,6 +142,15 @@ describe('Registers: members, owners and renters (e2e)', () => {
     expect(lapsed.items).toHaveLength(0);
   });
 
+  it('finds a member by membership ID: the full code, its number, or Bangla digits', async () => {
+    const { membership_code: code } = await prisma.memberships.findFirstOrThrow({ where: { member_no: memberNo, society_id: societyId } });
+    const banglaNo = String(memberNo).replace(/\d/g, (digit) => '০১২৩৪৫৬৭৮৯'[Number(digit)]!);
+    for (const q of [code.toLowerCase(), String(memberNo), banglaNo]) {
+      const list = memberRegisterSchema.parse((await get(`/registers/members?q=${encodeURIComponent(q)}&areaId=${tree.sector.id}`)).body);
+      expect(list.items.map((row) => row.person.id)).toEqual([ids.plotOwner]);
+    }
+  });
+
   it('lists owners with membership and where they live, and filters non-members', async () => {
     const list = ownerRegisterSchema.parse((await get(`/registers/owners?areaId=${tree.sector.id}`)).body);
     const plot = list.items.find((row) => row.id === ids.plotOwner)!;

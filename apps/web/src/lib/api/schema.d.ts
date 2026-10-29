@@ -5287,6 +5287,8 @@ export interface components {
                 id: string;
                 name: string;
                 isUnit: boolean;
+                levelBn: string;
+                levelEn: string | null;
             };
             owners: {
                 /** Format: uuid */

@@ -5,6 +5,7 @@ import {
   OPEN_TENANCY_STATUSES,
   RENTER_TYPES,
   localDigits,
+  pick,
   type Locale,
   type LocationPeople,
   type Occupant,
@@ -104,7 +105,7 @@ function AddOwnerForm({ locationId, submit, onDone }: { locationId: string; subm
         if (done) onDone();
       }}
     >
-      <PartyFields id="owner" values={party} onChange={setParty} />
+      <PartyFields id="owner" values={party} onChange={setParty} memberLookup />
       <div className="grid gap-3.5 min-[600px]:grid-cols-2">
         <TextField id="owner-share" label={t("share")} inputMode="decimal" value={share} onChange={(e) => setShare(e.target.value)} />
         <DateField id="owner-start" label={t("people.startDate")} value={startDate} onChange={setStartDate} />
@@ -143,7 +144,7 @@ function TransferForm({ locationId, submit, onDone }: { locationId: string; subm
       {owners.map((owner, index) => (
         <fieldset key={index} className="grid gap-3 rounded-[10px] border border-line p-3">
           <legend className="px-1 text-[13px] font-semibold">{t("people.newOwnerN", { n: localDigits(index + 1, locale) })}</legend>
-          <PartyFields id={`transfer-${index}`} values={owner.party} onChange={(party) => change(index, { party })} />
+          <PartyFields id={`transfer-${index}`} values={owner.party} onChange={(party) => change(index, { party })} memberLookup />
           <div className="flex flex-wrap items-end gap-2">
             <TextField
               id={`transfer-${index}-share`}
@@ -179,6 +180,7 @@ function TransferForm({ locationId, submit, onDone }: { locationId: string; subm
 
 function OwnersSection({ people, submit }: { people: LocationPeople; submit: Submit }) {
   const t = useTranslations("Members");
+  const locale = useLocale() as Locale;
   const [adding, setAdding] = useState<"owner" | "transfer" | null>(null);
   const owners = people.owners ?? [];
   const current = owners.filter((row) => row.endDate === null);
@@ -187,7 +189,7 @@ function OwnersSection({ people, submit }: { people: LocationPeople; submit: Sub
 
   return (
     <Block
-      title={t("people.owners")}
+      title={people.location.levelBn ? t("people.ownersOf", { level: pick(people.location.levelBn, people.location.levelEn, locale) }) : t("people.owners")}
       actions={
         adding ? null : (
           <>

@@ -292,6 +292,9 @@ describe('Members: people, owners, renters and households (e2e)', () => {
       expect(people.owners!.filter((row) => row.endDate === null)).toHaveLength(1);
       expect(people.owners!.find((row) => row.id === ownershipId)).toMatchObject({ endDate: '2026-10-01' });
       expect(people.tenancies).toBeNull();
+      // The place's own level titles its owners ("Owners of this Plot").
+      const plotLevel = await prisma.locations.findUniqueOrThrow({ where: { id: tree.plot14.id }, select: { location_levels: { select: { name_bn: true } } } });
+      expect(people.location.levelBn).toBe(plotLevel.location_levels.name_bn);
 
       const flat = locationPeopleSchema.parse((await get(`/locations/${units.flat1A}/people`, admin.cookie).expect(200)).body);
       expect(flat.ownersAbove!.map((row) => row.place.id)).toEqual([tree.plot14.id]);

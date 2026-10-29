@@ -1,4 +1,4 @@
-import type { HoldingCount, MemberFee } from '@s57/shared';
+import { asciiDigits, type HoldingCount, type MemberFee } from '@s57/shared';
 
 /** One current ownership with its place and level, as the registers read it. */
 export type OwnedRow = {
@@ -32,6 +32,15 @@ export function holdingsOf(rows: readonly OwnedRow[]): HoldingCount[] {
 /** The distinct places of one party, in the order given (the first is shown, the rest counted). */
 export function placesOf(rows: readonly OwnedRow[]): OwnedRow[] {
   return [...new Map(rows.map((row) => [row.location_id, row])).values()];
+}
+
+/**
+ * A search read as a membership ID: the code part in ASCII digits, upper case (`S15-000123`,
+ * or any piece of it), and the member number when the search is only digits (`123`, `০০১২৩`).
+ */
+export function membershipIdTerm(q: string): { code: string; number: number | null } {
+  const code = asciiDigits(q).trim().toUpperCase();
+  return { code, number: /^\d{1,9}$/.test(code) ? Number(code) : null };
 }
 
 /** A membership's bills as the members register reads them (void bills left out). */

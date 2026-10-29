@@ -309,7 +309,8 @@ export const endsBeforeStart = (startDate: string, endDate: string | null) => en
  * locations above (a plot's owner owns its flats unless the flat has its own).
  */
 export const locationPeopleSchema = z.object({
-  location: z.object({ id: z.uuid(), name: z.string(), isUnit: z.boolean() }),
+  /** With its level ("Plot", "Unit"), to title its owners. */
+  location: z.object({ id: z.uuid(), name: z.string(), isUnit: z.boolean(), levelBn: z.string(), levelEn: z.string().nullable() }),
   owners: z.array(ownershipSchema).nullable(),
   /** With the level of the place owned ("Plot", "Building"), to label each line. */
   ownersAbove: z.array(ownershipSchema.extend({ levelBn: z.string(), levelEn: z.string().nullable() })).nullable(),
