@@ -9,11 +9,10 @@ import { CertificatesPanel } from "@/components/certificates/certificates-panel"
 import { DocumentsPanel } from "@/components/documents/documents-panel";
 import { DashboardBreadcrumb } from "@/components/dashboard/dashboard-breadcrumb";
 import { visibleNavKeys } from "@/components/dashboard/nav";
-import { PageHeader } from "@/components/kit";
+import { Chip, PageHeader } from "@/components/kit";
 import { PeoplePanel } from "@/components/members/people-panel";
 import { OccupancyChip, propertyTrail } from "@/components/property/labels";
 import { UnitForm } from "@/components/property/unit-form";
-import { UnitStoreysCard } from "@/components/property/unit-storeys-card";
 import { unitTypeName } from "@/components/property/unit-types";
 import { VehiclesPanel } from "@/components/vehicles/vehicles-panel";
 import { buttonVariants } from "@/components/ui/button";
@@ -54,6 +53,7 @@ export default async function UnitPage({ params }: PageProps<"/[locale]/dashboar
           <span className="inline-flex flex-wrap items-center gap-2">
             {unitTypeName(unitTypes, unit.unitType, locale as Locale)}
             <OccupancyChip occupancy={unit.occupancy} />
+            {unit.covers.length > 0 ? <Chip tone="info">{t("storeys.alsoOn", { names: unit.covers.map((storey) => storey.name).join(", ") })}</Chip> : null}
           </span>
         }
         actions={
@@ -74,7 +74,6 @@ export default async function UnitPage({ params }: PageProps<"/[locale]/dashboar
           <Note>{t("readOnly")}</Note>
         ) : null}
         <UnitForm key={unit.id} unit={unit} unitTypes={unitTypes} />
-        <UnitStoreysCard key={`storeys-${unit.id}`} unit={unit} />
         {people ? <PeoplePanel key={`people-${unit.id}`} people={people} idsRequired={society?.requireIdNumbers ?? false} /> : null}
         <BillsPanel access={me.access} locale={locale as Locale} unitId={unit.id} />
         <VehiclesPanel access={me.access} locale={locale as Locale} unitId={unit.id} />

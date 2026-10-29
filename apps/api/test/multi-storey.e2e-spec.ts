@@ -14,7 +14,7 @@ const CSRF = 'csrf-token-for-tests';
 
 const randomPhone = () => `017${String(Math.floor(Math.random() * 1e8)).padStart(8, '0')}`;
 
-describe('Multi-storey buildings: covering storeys and setting up floors (e2e)', () => {
+describe('Multi-storey buildings: duplexes and setting up floors (e2e)', () => {
   let app: INestApplication<App>;
   let prisma: PrismaService;
   let societyId: string;
@@ -50,7 +50,11 @@ describe('Multi-storey buildings: covering storeys and setting up floors (e2e)',
   const get = (url: string, cookie: string) => request(server()).get(url).set('Cookie', cookie);
   const level = (depth: number) => levels.find((l) => l.depth === depth)!.id;
   const view = async (id: string): Promise<LocationView> => locationViewSchema.parse((await get(`/locations/${id}`, admin.cookie).expect(200)).body);
-  const cover = (unitId: string, storeyIds: string[], cookie = admin.cookie) => send('put', `/units/${unitId}/storeys`, cookie).send({ storeyIds });
+  // Only combining units writes these links now; older duplexes kept theirs, so set them straight.
+  async function cover(unitId: string, storeyIds: string[]) {
+    await prisma.unit_storeys.deleteMany({ where: { unit_id: unitId } });
+    await prisma.unit_storeys.createMany({ data: storeyIds.map((storeyId) => ({ unit_id: unitId, storey_id: storeyId, society_id: societyId })) });
+  }
 
   async function addLocation(parentId: string | null, depth: number, name: string) {
     const res = await send('post', '/locations', admin.cookie).send({ parentId, levelId: level(depth), name, code: null }).expect(201);
@@ -112,10 +116,9 @@ describe('Multi-storey buildings: covering storeys and setting up floors (e2e)',
     await app?.close();
   });
 
-  it('covers storeys beside its own, shows on each and counts once', async () => {
-    expect(duplex.coverOptions.map((option) => option.id).sort()).toEqual([places.s4, places.s5].sort());
-
-    const saved = unitDetailSchema.parse((await cover(duplex.id, [places.s4]).expect(200)).body);
+  it('shows a duplex on each floor it covers and counts it once', async () => {
+    await cover(duplex.id, [places.s4]);
+    const saved = unitDetailSchema.parse((await get(`/units/${duplex.id}`, admin.cookie).expect(200)).body);
     expect(saved.covers).toEqual([{ id: places.s4, name: '৪ তলা' }]);
 
     const home = await view(places.s3);
@@ -128,47 +131,19 @@ describe('Multi-storey buildings: covering storeys and setting up floors (e2e)',
     const building = await view(places.buildingA);
     expect(building.location!.unitCount).toBe(1);
     expect(building.children.find((child) => child.id === places.s4)!.unitCount).toBe(0);
-
-    const log = await prisma.audit_logs.findFirstOrThrow({ where: { entity_id: duplex.id, entity_type: 'unit', action: 'update' } });
-    expect(log.after_data).toEqual({ covers: [places.s4] });
   });
 
-  it('refuses storeys that are not beside its own', async () => {
-    for (const id of [places.b3, places.s3, places.buildingA]) {
-      const res = await cover(duplex.id, [id]).expect(400);
-      expect(res.body.code).toBe('invalid_storey');
-    }
-    const other = await addUnit(places.s4, 'ফ্ল্যাট ৪বি');
-    expect((await cover(duplex.id, [other.id]).expect(400)).body.code).toBe('invalid_storey');
-    await cover(duplex.id, [places.s4, places.s4]).expect(400);
+  it('no longer sets covered floors by hand', async () => {
+    await addUnit(places.s4, 'ফ্ল্যাট ৪বি');
+    await send('put', `/units/${duplex.id}/storeys`, admin.cookie).send({ storeyIds: [] }).expect(404);
   });
 
   it('keeps a covered storey from being deleted until the link is gone', async () => {
     const empty = await addLocation(places.buildingA, 6, '৬ তলা');
-    await cover(duplex.id, [places.s4, empty]).expect(200);
+    await cover(duplex.id, [places.s4, empty]);
     expect((await send('delete', `/locations/${empty}`, admin.cookie).expect(409)).body.code).toBe('location_in_use');
-    await cover(duplex.id, [places.s4]).expect(200);
+    await cover(duplex.id, [places.s4]);
     await send('delete', `/locations/${empty}`, admin.cookie).expect(204);
-  });
-
-  it('keeps to the caller\'s units area and permission', async () => {
-    const editor = await makeRole(['units:view', 'units:edit']);
-    const inB = await makeUser([{ roleId: editor, scope: places.buildingB }]);
-    await cover(duplex.id, [], inB.cookie).expect(404);
-
-    // Allowed on the unit's own storey only: the storey above is outside the area.
-    const onS3 = await makeUser([{ roleId: editor, scope: places.s3 }]);
-    const seen = unitDetailSchema.parse((await get(`/units/${duplex.id}`, onS3.cookie).expect(200)).body);
-    expect(seen.coverOptions).toEqual([]);
-    expect((await cover(duplex.id, [places.s5], onS3.cookie).expect(403)).body.code).toBe('beyond_your_permissions');
-    // The link to storey 4 (outside the area) can be kept, not removed.
-    expect(seen.covers.map((storey) => storey.id)).toEqual([places.s4]);
-    await cover(duplex.id, [places.s4], onS3.cookie).expect(200);
-    await cover(duplex.id, [], onS3.cookie).expect(403);
-
-    const viewer = await makeUser([{ roleId: await makeRole(['units:view']) }]);
-    expect(unitDetailSchema.parse((await get(`/units/${duplex.id}`, viewer.cookie).expect(200)).body).coverOptions).toEqual([]);
-    await cover(duplex.id, [], viewer.cookie).expect(403);
   });
 
   describe('set up floors and units', () => {
@@ -218,7 +193,10 @@ describe('Multi-storey buildings: covering storeys and setting up floors (e2e)',
       expect(grid.canEdit).toBe(true);
       expect(grid.floors.map((floor) => floor.name)).toEqual(['৩ তলা', '৪ তলা', '৫ তলা']);
       expect(grid.floors[0]!.units).toMatchObject([{ id: duplex.id, unitType: 'residential', occupancy: 'vacant', alsoOn: ['৪ তলা'] }]);
+      expect(grid.floors[0]!.coveredBy).toEqual([]);
       expect(grid.floors[1]!.units.map((unit) => unit.name)).toEqual(['ফ্ল্যাট ৪বি']);
+      expect(grid.floors[1]!.coveredBy).toEqual([{ id: duplex.id, name: 'ফ্ল্যাট ৩এ' }]);
+      expect(grid.floors[2]!.coveredBy).toEqual([]);
     });
 
     it('sets one type on many units, all or none', async () => {
@@ -236,7 +214,7 @@ describe('Multi-storey buildings: covering storeys and setting up floors (e2e)',
     });
   });
 
-  describe('combining units', () => {
+  describe('making a duplex', () => {
     const combine = (keepId: string, mergeIds: string[], cookie = admin.cookie) => send('post', '/units/combine', cookie).send({ keepId, mergeIds });
     const unitAt = async (floor: string, name: string) =>
       (await prisma.locations.findFirstOrThrow({ where: { parent_id: floor, name }, select: { id: true } })).id;
@@ -277,7 +255,8 @@ describe('Multi-storey buildings: covering storeys and setting up floors (e2e)',
       });
     });
 
-    it('refuses different owners, other buildings and a retired unit someone lives in', async () => {
+    it('refuses units on one floor, different owners, other buildings and a retired unit someone lives in', async () => {
+      expect((await combine(units['1A'], [units['1B']]).expect(409)).body.code).toBe('combine_same_floor');
       expect((await combine(units['1A'], [units['2B']]).expect(409)).body.code).toBe('combine_owners_differ');
       expect((await combine(units['1B'], [duplex.id]).expect(409)).body.code).toBe('combine_not_side_by_side');
       await send('post', '/occupants', admin.cookie)
@@ -300,6 +279,8 @@ describe('Multi-storey buildings: covering storeys and setting up floors (e2e)',
       const grid = buildingGridSchema.parse((await get(`/locations/${building}/grid`, admin.cookie).expect(200)).body);
       expect(grid.floors[0]!.units.find((unit) => unit.id === units['1A'])).toMatchObject({ mergedInto: null, includes: ['2A'] });
       expect(grid.floors[1]!.units.find((unit) => unit.id === units['2A'])).toMatchObject({ mergedInto: { id: units['1A'], name: '1A' }, includes: [] });
+      // Floor 2 already shows the duplex through the retired 2A, so not twice.
+      expect(grid.floors[1]!.coveredBy).toEqual([]);
       const list = unitListSchema.parse((await get(`/units?areaId=${building}`, admin.cookie).expect(200)).body);
       expect(list.items.find((unit) => unit.id === units['1A'])).toMatchObject({ mergedInto: null, includes: ['2A'] });
       expect(list.items.find((unit) => unit.id === units['2A'])).toMatchObject({ mergedInto: { id: units['1A'], name: '1A' } });

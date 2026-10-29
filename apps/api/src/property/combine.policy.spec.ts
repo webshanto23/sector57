@@ -14,28 +14,31 @@ const unit = (id: string, patch: Partial<CombineFacts> = {}): CombineFacts => ({
 });
 
 describe('combineProblem', () => {
-  it('allows units on one floor or on floors of one building', () => {
-    expect(combineProblem(unit('a'), [unit('b')])).toBeNull();
+  it('allows one unit from each floor of one building', () => {
     expect(combineProblem(unit('a'), [unit('b', { parentId: 's4' })])).toBeNull();
-    // Units straight under a place with no building above share their parent.
-    expect(combineProblem(unit('a', { parentId: 'b', grandparentId: null }), [unit('c', { parentId: 'b', grandparentId: null })])).toBeNull();
+    expect(combineProblem(unit('a'), [unit('b', { parentId: 's4' }), unit('c', { parentId: 's5' })])).toBeNull();
   });
 
-  it('refuses units of different buildings, inactive ones and different owners', () => {
+  it('refuses units on one floor, of different buildings, inactive ones and different owners', () => {
+    expect(combineProblem(unit('a'), [unit('b')])).toBe('same_floor');
+    expect(combineProblem(unit('a'), [unit('b', { parentId: 's4' }), unit('c', { parentId: 's4' })])).toBe('same_floor');
+    // Units straight under a place with no building above are on no floor.
+    expect(combineProblem(unit('a', { parentId: 'b', grandparentId: null }), [unit('c', { parentId: 'b', grandparentId: null })])).toBe('not_side_by_side');
     expect(combineProblem(unit('a'), [unit('b', { parentId: 'x3', grandparentId: 'other' })])).toBe('not_side_by_side');
     expect(combineProblem(unit('a'), [unit('b', { active: false })])).toBe('unit_inactive');
-    expect(combineProblem(unit('a'), [unit('b', { owners: ['person:p2:100'] })])).toBe('owners_differ');
-    expect(combineProblem(unit('a'), [unit('b', { owners: ['person:p1:50', 'person:p2:50'] })])).toBe('owners_differ');
-    expect(combineProblem(unit('a', { owners: [] }), [unit('b', { owners: [] })])).toBeNull();
+    expect(combineProblem(unit('a'), [unit('b', { parentId: 's4', owners: ['person:p2:100'] })])).toBe('owners_differ');
+    expect(combineProblem(unit('a'), [unit('b', { parentId: 's4', owners: ['person:p1:50', 'person:p2:50'] })])).toBe('owners_differ');
+    expect(combineProblem(unit('a', { owners: [] }), [unit('b', { parentId: 's4', owners: [] })])).toBeNull();
   });
 
   it('refuses while a retired unit still has bills, a tenancy, residents or vehicles, in that order', () => {
-    expect(combineProblem(unit('a'), [unit('b', { openBills: 1, occupants: 2 })])).toBe('open_bills');
-    expect(combineProblem(unit('a'), [unit('b', { openTenancy: true })])).toBe('open_tenancy');
-    expect(combineProblem(unit('a'), [unit('b', { occupants: 1 })])).toBe('occupants');
-    expect(combineProblem(unit('a'), [unit('b', { vehicles: 1 })])).toBe('vehicles');
+    const upper = (patch: Partial<CombineFacts>) => unit('b', { parentId: 's4', ...patch });
+    expect(combineProblem(unit('a'), [upper({ openBills: 1, occupants: 2 })])).toBe('open_bills');
+    expect(combineProblem(unit('a'), [upper({ openTenancy: true })])).toBe('open_tenancy');
+    expect(combineProblem(unit('a'), [upper({ occupants: 1 })])).toBe('occupants');
+    expect(combineProblem(unit('a'), [upper({ vehicles: 1 })])).toBe('vehicles');
     // The kept unit's own residents and bills don't matter.
-    expect(combineProblem(unit('a', { openBills: 3, occupants: 4, openTenancy: true }), [unit('b')])).toBeNull();
+    expect(combineProblem(unit('a', { openBills: 3, occupants: 4, openTenancy: true }), [upper({})])).toBeNull();
   });
 });
 

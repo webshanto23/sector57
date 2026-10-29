@@ -105,13 +105,22 @@ export class LayoutService {
         occupancy: true,
         merged: { select: { location_id: true, locations: { select: { name: true } } } },
         merged_units: { select: { locations: { select: { name: true } } }, orderBy: { locations: { name: 'asc' } } },
+        unit_storeys: { select: { storey_id: true } },
       },
     });
     const byId = new Map(facts.map((row) => [row.location_id, row]));
+    // A duplex shows on each floor it covers, unless a unit retired into it already stands there.
+    const coveredBy = (floorId: string) =>
+      units.filter((unit) => {
+        const row = byId.get(unit.id)!;
+        if (!row.unit_storeys.some((link) => link.storey_id === floorId)) return false;
+        return !units.some((other) => other.parentId === floorId && byId.get(other.id)!.merged?.location_id === unit.id);
+      });
     return {
       floors: floors.map((floor) => ({
         id: floor.id,
         name: floor.name,
+        coveredBy: coveredBy(floor.id).map(({ id, name }) => ({ id, name })),
         units: units
           .filter((unit) => unit.parentId === floor.id)
           .map((unit) => {

@@ -99,7 +99,7 @@ export const buildingGridUnitSchema = z.object({
   unitType: unitTypeCode,
   occupancy: z.enum(OCCUPANCIES),
   isActive: z.boolean(),
-  /** Other storeys it covers (a duplex). */
+  /** Other storeys it covers: a duplex. */
   alsoOn: z.array(z.string()),
   /** Set when it was combined into another unit: shown as part of that one, not as its own flat. */
   mergedInto: z.object({ id: z.uuid(), name: z.string() }).nullable(),
@@ -108,9 +108,19 @@ export const buildingGridUnitSchema = z.object({
 });
 export type BuildingGridUnit = z.infer<typeof buildingGridUnitSchema>;
 
-/** `GET /locations/:id/grid`: a building's floors in name order, each with its own units. */
+/**
+ * `GET /locations/:id/grid`: a building's floors in name order, each with its own units and
+ * the duplexes from other floors that cover it (unless a retired unit there already shows one).
+ */
 export const buildingGridSchema = z.object({
-  floors: z.array(z.object({ id: z.uuid(), name: z.string(), units: z.array(buildingGridUnitSchema) })),
+  floors: z.array(
+    z.object({
+      id: z.uuid(),
+      name: z.string(),
+      units: z.array(buildingGridUnitSchema),
+      coveredBy: z.array(z.object({ id: z.uuid(), name: z.string() })),
+    }),
+  ),
   /** The caller may change the units' type here. */
   canEdit: z.boolean(),
 });
@@ -154,6 +164,7 @@ export type UnitCombineInput = z.infer<typeof unitCombineSchema>;
 export const COMBINE_PROBLEMS = [
   'unit_inactive',
   'not_side_by_side',
+  'same_floor',
   'owners_differ',
   'open_bills',
   'open_tenancy',

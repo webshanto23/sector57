@@ -15,8 +15,8 @@ import { useSubmit } from "./use-submit";
 
 /**
  * A building at a glance: one row per floor with its units. Editors tick units (or a whole
- * floor) and give them one type, such as shops on the ground floor, or combine them into one
- * unit (a duplex): the kept unit carries on and the others become history.
+ * floor) and give them one type, such as shops on the ground floor, or tick one unit on each
+ * of several floors to make a duplex: the kept unit carries on and the others become history.
  */
 export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitTypes: UnitTypeItem[]; unitsOpen: boolean }) {
   const t = useTranslations("Property.grid");
@@ -27,8 +27,19 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
   const [unitType, setUnitType] = useState(unitTypes[0]?.code ?? "");
   const [keepId, setKeepId] = useState<string | null>(null);
   // Picked units, lowest floor first: the first one is kept unless the editor picks another.
-  const picked = grid.floors.flatMap((floor) => floor.units.filter((unit) => chosen.has(unit.id)).map((unit) => ({ ...unit, floor: floor.name })));
+  const picked = grid.floors.flatMap((floor) => floor.units.filter((unit) => chosen.has(unit.id)).map((unit) => ({ ...unit, floor: floor.name, floorId: floor.id })));
   const keep = picked.find((unit) => unit.id === keepId) ?? picked[0];
+  // A duplex takes one unit from each floor; flats on one floor stay separate.
+  const duplexReady = picked.length >= 2 && new Set(picked.map((unit) => unit.floorId)).size === picked.length;
+  const homeFloor = (unitId: string) => grid.floors.find((floor) => floor.units.some((unit) => unit.id === unitId))?.name ?? "";
+  const unitName = (id: string, name: string, className?: string) =>
+    unitsOpen ? (
+      <Link href={`/dashboard/units/${id}`} className={className}>
+        {name}
+      </Link>
+    ) : (
+      name
+    );
 
   const toggle = (ids: string[], on: boolean) => {
     const next = new Set(chosen);
@@ -83,7 +94,7 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
                 ) : null}
                 {floor.name}
               </div>
-              {floor.units.length === 0 ? (
+              {floor.units.length === 0 && floor.coveredBy.length === 0 ? (
                 <p className="text-[13px] text-muted-foreground">{t("noUnits")}</p>
               ) : (
                 <ul className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">
@@ -121,13 +132,7 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
                               onChange={(e) => toggle([unit.id], e.target.checked)}
                             />
                           ) : null}
-                          {unitsOpen ? (
-                            <Link href={`/dashboard/units/${unit.id}`} className="underline-offset-2 hover:underline">
-                              {unit.name}
-                            </Link>
-                          ) : (
-                            unit.name
-                          )}
+                          {unitName(unit.id, unit.name, "underline-offset-2 hover:underline")}
                         </span>
                         <span className="flex items-center gap-1.5 text-muted-foreground">
                           <UnitTypeIcon code={unit.unitType} className="size-3.5 shrink-0" />
@@ -136,13 +141,20 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
                         <span className="flex flex-wrap gap-1">
                           <Chip tone={OCCUPANCY_TONES[unit.occupancy]}>{tOcc(unit.occupancy)}</Chip>
                           {unit.alsoOn.length > 0 ? <Chip tone="info">{t("alsoOn", { names: unit.alsoOn.join(", ") })}</Chip> : null}
-                          {unit.includes.length > 0 ? <Chip tone="info">{t("includes", { names: unit.includes.join(", ") })}</Chip> : null}
                           {!unit.isActive ? <Chip tone="warn">{t("inactive")}</Chip> : null}
                         </span>
                       </label>
                     </li>
                     ),
                   )}
+                  {floor.coveredBy.map((duplex) => (
+                    <li key={`covered-${duplex.id}`}>
+                      <div className="grid gap-1 rounded-[8px] border border-dashed border-line bg-surface-2 p-2 text-[13px] text-muted-foreground">
+                        <span className="font-semibold">{unitName(duplex.id, duplex.name, "underline underline-offset-2")}</span>
+                        <span>{t("duplexPart", { floor: homeFloor(duplex.id) })}</span>
+                      </div>
+                    </li>
+                  ))}
                 </ul>
               )}
             </li>
@@ -150,7 +162,7 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
         })}
       </ol>
 
-      {grid.canEdit && picked.length >= 2 && keep ? (
+      {grid.canEdit && duplexReady && keep ? (
         <div className="grid gap-2 rounded-[10px] border border-line bg-surface-2 p-3">
           <h4 className="text-[14px] font-semibold">{t("combineTitle")}</h4>
           <p className="text-[13px] text-muted-foreground">{t("combineHint")}</p>

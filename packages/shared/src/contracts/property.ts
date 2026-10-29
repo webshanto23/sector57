@@ -359,32 +359,15 @@ export const unitSummarySchema = z.object({
 });
 export type UnitSummary = z.infer<typeof unitSummarySchema>;
 
-/** A storey a unit covers, or could cover. */
+/** A storey a unit covers. */
 export const storeyRefSchema = z.object({ id: z.uuid(), name: z.string() });
 export type StoreyRef = z.infer<typeof storeyRefSchema>;
-
-/** Most storeys one unit can cover besides its own. */
-export const MAX_UNIT_STOREYS = 20;
-
-/**
- * `PUT /units/:id/storeys`: the whole list of other storeys the unit covers. Each must sit
- * beside the unit's own storey (same parent) and not be a unit. Empty: just its own storey.
- */
-export const unitStoreysInputSchema = z.object({
-  storeyIds: z
-    .array(z.uuid())
-    .max(MAX_UNIT_STOREYS)
-    .refine((ids) => new Set(ids).size === ids.length, 'duplicate_storey'),
-});
-export type UnitStoreysInput = z.infer<typeof unitStoreysInputSchema>;
 
 /** `GET /units/:id`. */
 export const unitDetailSchema = unitSummarySchema.extend({
   breadcrumb: z.array(crumbSchema),
-  /** The other storeys it covers, besides its own. */
+  /** The other storeys it covers, besides its own: a duplex, made by combining units. */
   covers: z.array(storeyRefSchema),
-  /** Storeys it could cover (beside its own); empty when the caller may not edit it. */
-  coverOptions: z.array(storeyRefSchema),
   /** Combined into another unit (Step 37): that unit and the date. Such a unit is history only. */
   mergedInto: z.object({ id: z.uuid(), name: z.string(), on: z.iso.date() }).nullable(),
   can: z.object({ edit: z.boolean(), delete: z.boolean() }),

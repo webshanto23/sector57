@@ -16,7 +16,6 @@ import {
   type UnitDetail,
   type UnitList,
   type UnitListQuery,
-  type UnitStoreysInput,
   type UnitSummary,
   type UnitUpdateInput,
 } from '@s57/shared';
@@ -165,28 +164,18 @@ export class UnitsService {
     const row = await this.visibleRow(actor, id);
     const located = { path: row.locations.path };
     const edit = actor.access.can('edit', 'units', located) && row.merged === null;
-    const [names, breadcrumb, covers, options] = await Promise.all([
+    const [names, breadcrumb, covers] = await Promise.all([
       this.tree.addressNames(actor.societyId, [row.locations.path]),
       this.tree.breadcrumb(actor.access, actor.societyId, row.locations.path, 'locations'),
       this.storeys.covers(actor.societyId, id),
-      edit ? this.storeys.options(actor.societyId, row.locations.parent_id!) : Promise.resolve([]),
     ]);
     return {
       ...toSummary(row, names),
       breadcrumb,
       covers,
-      coverOptions: options.filter((option) => actor.access.can('view', 'units', { path: option.path })).map(({ id, name }) => ({ id, name })),
       mergedInto: row.merged ? { id: row.merged.location_id, name: row.merged.locations.name, on: row.merged_on!.toISOString().slice(0, 10) } : null,
       can: { edit, delete: actor.access.can('delete', 'units', located) && row.merged === null },
     };
-  }
-
-  /** Sets the other storeys a unit covers (`UnitStoreysService`). */
-  async setStoreys(actor: Actor, id: string, input: UnitStoreysInput): Promise<UnitDetail> {
-    const row = await this.visibleRow(actor, id);
-    if (row.merged) throw unitMerged();
-    await this.storeys.replace(actor, { id, parentId: row.locations.parent_id!, path: row.locations.path }, input);
-    return this.get(actor, id);
   }
 
   async create(actor: Actor, input: UnitCreateInput): Promise<UnitDetail> {

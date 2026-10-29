@@ -740,22 +740,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/units/{id}/storeys": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["UnitsController_setStoreys"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/persons": {
         parameters: {
             query?: never;
@@ -4650,6 +4634,11 @@ export interface components {
                     } | null;
                     includes: string[];
                 }[];
+                coveredBy: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                }[];
             }[];
             canEdit: boolean;
         };
@@ -4803,11 +4792,6 @@ export interface components {
                 id: string;
                 name: string;
             }[];
-            coverOptions: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-            }[];
             mergedInto: {
                 /** Format: uuid */
                 id: string;
@@ -4864,9 +4848,6 @@ export interface components {
             sizeSqft?: string | null;
             /** @enum {string} */
             billTo?: "owner" | "renter";
-        };
-        UnitStoreysDto: {
-            storeyIds: string[];
         };
         PersonInputDto: {
             fullName: string;
@@ -12613,31 +12594,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UnitTypeBulkResultDto_Output"];
-                };
-            };
-        };
-    };
-    UnitsController_setStoreys: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UnitStoreysDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UnitDetailDto_Output"];
                 };
             };
         };
