@@ -73,6 +73,7 @@ export const memberRegisterQuery = registerQuery.extend({
 export type MemberRegisterQuery = z.infer<typeof memberRegisterQuery>;
 
 export const memberRegisterRowSchema = z.object({
+  membershipId: z.uuid(),
   /** Null while the ID waits for verification. */
   memberNo: z.number().int().nullable(),
   membershipCode: z.string().nullable(),

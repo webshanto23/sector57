@@ -1388,7 +1388,20 @@
       "pdfName": "সদস্য কার্ড {code}",
       "downloadPdf": "PDF ডাউনলোড",
       "pdfBusy": "PDF তৈরি হচ্ছে…",
-      "pdfFailed": "PDF তৈরি করা গেল না। আবার চেষ্টা করুন, না হলে প্রিন্ট বোতাম ব্যবহার করুন।"
+      "pdfFailed": "PDF তৈরি করা গেল না। আবার চেষ্টা করুন, না হলে প্রিন্ট বোতাম ব্যবহার করুন।",
+      "tickAll": "এই পাতার সবাই",
+      "tickMember": "{name}-এর কার্ড",
+      "printSheets": "{count}টি কার্ড A4-এ প্রিন্ট",
+      "sheetsHint": "A4 পাতায় ৯টি করে কার্ড: এক পাতায় সামনের দিক, পরের পাতায় পেছনের দিক, দুই পাশে প্রিন্টের জন্য মিলিয়ে সাজানো (লম্বা প্রান্তে উল্টাবে)।",
+      "tooManyCards": "একবারে সর্বোচ্চ {max}টি কার্ড।",
+      "batchDone": "{count}টি কার্ড তৈরি।",
+      "batchPdfName": "সদস্য কার্ড ({count}টি)",
+      "skip": {
+        "membership_not_found": "{count}টি আপনার এলাকার বাইরে।",
+        "beyond_your_permissions": "{count}টি সম্পাদনার অনুমতি নেই।",
+        "membership_id_pending": "{count}টির আইডি এখনো দেওয়া হয়নি।",
+        "membership_not_active": "{count}টি সদস্যপদ সক্রিয় নয়।"
+      }
     },
     "cardSettings": {
       "title": "সদস্য পরিচয়পত্র",

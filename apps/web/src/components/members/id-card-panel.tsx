@@ -8,15 +8,11 @@ import { flushSync } from "react-dom";
 import { Card } from "@/components/kit";
 import { PrintSheet } from "@/components/print/print-sheet";
 import { Button } from "@/components/ui/button";
+import { downloadCardPdf } from "./card-pdf";
 import { IdCardBack, IdCardFront } from "./id-card";
 
 /** `card`: one CR80 card per page, front then back (a card printer). `a4`: front and back side by side with cut lines. */
 type Layout = "card" | "a4";
-
-/** A CR80 card standing up, in millimetres. */
-const CARD_MM = [54, 85.6] as const;
-/** Pixels per CSS pixel for the PDF's pictures: about 575 dpi at card size, sharp for text and the photo. */
-const PDF_SCALE = 6;
 
 /**
  * The member page's ID card: both faces at their real size, two ways to print them (RGB from the
@@ -40,15 +36,7 @@ export function IdCardPanel({ card }: { card: MemberCard }) {
     if (!front.current || !back.current) return;
     setPdf("busy");
     try {
-      // Loaded only when asked for, so the member page stays light.
-      const [{ toPng }, { jsPDF }] = await Promise.all([import("html-to-image"), import("jspdf")]);
-      const doc = new jsPDF({ unit: "mm", format: [...CARD_MM], orientation: "portrait", compress: true });
-      for (const [i, face] of [front.current, back.current].entries()) {
-        const png = await toPng(face, { pixelRatio: PDF_SCALE, cacheBust: true });
-        if (i > 0) doc.addPage([...CARD_MM], "portrait");
-        doc.addImage(png, "PNG", 0, 0, CARD_MM[0], CARD_MM[1]);
-      }
-      doc.save(`${t("pdfName", { code: card.membershipCode })}.pdf`);
+      await downloadCardPdf([front.current, back.current], t("pdfName", { code: card.membershipCode }));
       setPdf("idle");
     } catch {
       setPdf("failed");

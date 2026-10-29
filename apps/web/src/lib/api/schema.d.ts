@@ -1252,6 +1252,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/memberships/cards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MembershipsController_batchCards"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/memberships/{id}": {
         parameters: {
             query?: never;
@@ -5868,6 +5884,8 @@ export interface components {
         };
         MemberRegisterDto_Output: {
             items: {
+                /** Format: uuid */
+                membershipId: string;
                 memberNo: number | null;
                 membershipCode: string | null;
                 /** @enum {string} */
@@ -6096,6 +6114,57 @@ export interface components {
                 signatureBn: string | null;
                 signatureEn: string | null;
             };
+        };
+        MemberCardsInputDto: {
+            membershipIds: string[];
+        };
+        MemberCardsDto_Output: {
+            items: {
+                /** Format: uuid */
+                membershipId: string;
+                membershipCode: string;
+                /** @enum {string} */
+                kind: "person" | "organisation";
+                name: string;
+                nameEn: string | null;
+                photoUrl: string | null;
+                phone: string | null;
+                email: string | null;
+                /** Format: date */
+                joinedOn: string;
+                validTill: string | null;
+                /** @enum {string} */
+                status: "active" | "lapsed" | "cancelled";
+                header: {
+                    nameBn: string;
+                    nameEn: string | null;
+                    addressBn: string | null;
+                    addressEn: string | null;
+                    phone: string | null;
+                    /** @default null */
+                    email: string | null;
+                    /** @default null */
+                    regNo: string | null;
+                    /** @default null */
+                    officeHoursBn: string | null;
+                    /** @default null */
+                    officeHoursEn: string | null;
+                    mark: string;
+                };
+                settings: {
+                    termsBn: string[];
+                    termsEn: string[];
+                    validYears: number | null;
+                    signatureBn: string | null;
+                    signatureEn: string | null;
+                };
+            }[];
+            skipped: {
+                /** Format: uuid */
+                membershipId: string;
+                /** @enum {string} */
+                code: "membership_not_found" | "beyond_your_permissions" | "membership_id_pending" | "membership_not_active";
+            }[];
         };
         MembershipSettingsDto_Output: {
             societyCode: string;
@@ -13731,6 +13800,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MemberCardDto_Output"];
+                };
+            };
+        };
+    };
+    MembershipsController_batchCards: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberCardsInputDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberCardsDto_Output"];
                 };
             };
         };

@@ -1388,7 +1388,20 @@
       "pdfName": "Member card {code}",
       "downloadPdf": "Download PDF",
       "pdfBusy": "Making the PDF…",
-      "pdfFailed": "Could not make the PDF. Try again, or use a print button."
+      "pdfFailed": "Could not make the PDF. Try again, or use a print button.",
+      "tickAll": "Everyone on this page",
+      "tickMember": "Card for {name}",
+      "printSheets": "{count, plural, one {Print # card on A4} other {Print # cards on A4}}",
+      "sheetsHint": "Nine cards to an A4 page: fronts on one page and backs on the next, lined up for double-sided printing (flip on the long edge).",
+      "tooManyCards": "At most {max} cards at a time.",
+      "batchDone": "{count, plural, one {# card made.} other {# cards made.}}",
+      "batchPdfName": "Member cards ({count})",
+      "skip": {
+        "membership_not_found": "{count} outside your area.",
+        "beyond_your_permissions": "{count} you may not edit.",
+        "membership_id_pending": "{count} still waiting for an ID.",
+        "membership_not_active": "{count} not active."
+      }
     },
     "cardSettings": {
       "title": "Membership ID card",

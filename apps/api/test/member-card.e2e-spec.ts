@@ -5,6 +5,7 @@ import {
   cardValidTill,
   locationViewSchema,
   memberCardSchema,
+  memberCardsSchema,
   memberCardSettingsSchema,
   memberCreatedSchema,
   MEMBER_CARD_KEY,
@@ -167,5 +168,37 @@ describe('Membership ID cards (e2e)', () => {
     const viewerA = await makeUser(await makeRole(['members:view']), tree.blockA.id);
     await get(`/memberships/${membershipId}/card`, viewerA.cookie).expect(403);
     await get(`/memberships/${randomUUID()}/card`, admin.cookie).expect(404);
+  });
+
+  it('prints a batch in the order ticked and lists the ones left out with why', async () => {
+    const first = await personMember('blockA');
+    const pending = await personMember('blockA', false);
+    const second = await personMember('blockB');
+    const missing = randomUUID();
+    const res = await post('/memberships/cards', admin.cookie)
+      .send({ membershipIds: [second.membershipId, pending.membershipId, first.membershipId, missing] })
+      .expect(200);
+    const batch = memberCardsSchema.parse(res.body);
+    expect(batch.items.map((card) => card.membershipId)).toEqual([second.membershipId, first.membershipId]);
+    expect(batch.skipped).toEqual([
+      { membershipId: pending.membershipId, code: 'membership_id_pending' },
+      { membershipId: missing, code: 'membership_not_found' },
+    ]);
+
+    // A block A editor gets block A's card only; block B is outside their area.
+    const editorA = await makeUser(await makeRole(['members:view', 'members:edit']), tree.blockA.id);
+    const scoped = memberCardsSchema.parse(
+      (await post('/memberships/cards', editorA.cookie).send({ membershipIds: [first.membershipId, second.membershipId] }).expect(200)).body,
+    );
+    expect(scoped.items.map((card) => card.membershipId)).toEqual([first.membershipId]);
+    expect(scoped.skipped).toEqual([{ membershipId: second.membershipId, code: 'membership_not_found' }]);
+  });
+
+  it('refuses an empty or repeated batch, and callers without members.edit', async () => {
+    const { membershipId } = await personMember('blockA');
+    await post('/memberships/cards', admin.cookie).send({ membershipIds: [] }).expect(400);
+    await post('/memberships/cards', admin.cookie).send({ membershipIds: [membershipId, membershipId] }).expect(400);
+    const viewer = await makeUser(await makeRole(['members:view']));
+    await post('/memberships/cards', viewer.cookie).send({ membershipIds: [membershipId] }).expect(403);
   });
 });

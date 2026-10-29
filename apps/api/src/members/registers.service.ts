@@ -23,7 +23,7 @@ import { inScope } from '../reports/area-tree.js';
 import { feeOf, holdingsOf, membershipIdTerm, placesOf, type FeeRow, type OwnedRow } from './registers.policy.js';
 
 type PersonCols = { id: string; name: string; name_en: string | null; phone: string | null; photo_url: string | null; verified: boolean | null };
-type MemberRow = PersonCols & FeeRow & { kind: 'person' | 'organisation'; member_no: number | null; membership_code: string | null; status: string; joined_on: Date; total: number };
+type MemberRow = PersonCols & FeeRow & { kind: 'person' | 'organisation'; membership_id: string; member_no: number | null; membership_code: string | null; status: string; joined_on: Date; total: number };
 type OwnerRow = PersonCols & { kind: 'person' | 'organisation'; lives_here: boolean | null; is_member: boolean; member_no: number | null; membership_code: string | null; total: number };
 type RenterRow = Omit<PersonCols, 'id'> & {
   id: string;
@@ -129,7 +129,7 @@ export class RegistersService {
     const [rows, counts] = await Promise.all([
       this.prisma.$queryRaw<MemberRow[]>`
         with ${linked}
-        select m.member_no, m.membership_code, m.status, m.joined_on,
+        select m.id as membership_id, m.member_no, m.membership_code, m.status, m.joined_on,
           case when p.id is not null then 'person' else 'organisation' end as kind, coalesce(p.id, g.id) as id,
           coalesce(p.full_name, g.name) as name, p.full_name_en as name_en, coalesce(p.phone, cp.phone) as phone, p.photo_url,
           case when p.id is not null then p.verified_at is not null end as verified,
@@ -151,6 +151,7 @@ export class RegistersService {
     const count = (status: string) => counts.find((row) => row.status === status)?.count ?? 0;
     return {
       items: rows.map((row) => ({
+        membershipId: row.membership_id,
         memberNo: row.member_no,
         membershipCode: row.membership_code,
         status: toMembershipStatus(row.status),

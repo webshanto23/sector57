@@ -5,6 +5,8 @@ import {
   memberCreatedSchema,
   memberCreateSchema,
   memberCardSchema,
+  memberCardsInputSchema,
+  memberCardsSchema,
   memberCardSettingsInputSchema,
   memberCardSettingsSchema,
   membershipSettingsInputSchema,
@@ -26,6 +28,8 @@ export class MemberBulkResultDto extends createDto(memberBulkResultSchema) {}
 export class MembershipSettingsDto extends createDto(membershipSettingsSchema) {}
 export class MembershipSettingsInputDto extends createDto(membershipSettingsInputSchema) {}
 export class MemberCardDto extends createDto(memberCardSchema) {}
+export class MemberCardsDto extends createDto(memberCardsSchema) {}
+export class MemberCardsInputDto extends createDto(memberCardsInputSchema) {}
 export class MemberCardSettingsDto extends createDto(memberCardSettingsSchema) {}
 export class MemberCardSettingsInputDto extends createDto(memberCardSettingsInputSchema) {}
 
@@ -68,6 +72,18 @@ export class MembershipsController {
   @ZodResponse({ status: 200, type: MemberCardDto })
   card(@CurrentActor() actor: Actor, @Param() { id }: IdParamDto) {
     return this.cards.card(actor, id);
+  }
+
+  /**
+   * Cards for memberships ticked on the members list (at most `MAX_CARD_BATCH`), in that order.
+   * Ones the caller gets no card for are listed in `skipped` with the reason instead of failing the batch.
+   */
+  @Post('cards')
+  @HttpCode(200)
+  @Can('members', 'edit')
+  @ZodResponse({ status: 200, type: MemberCardsDto })
+  batchCards(@CurrentActor() actor: Actor, @Body() body: MemberCardsInputDto) {
+    return this.cards.cards(actor, body.membershipIds);
   }
 
   /** A membership made by mistake, while it has no ID. 409 `membership_has_id` or `membership_has_bills` (not void); whole-society callers only. */

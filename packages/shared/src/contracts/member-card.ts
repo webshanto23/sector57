@@ -82,3 +82,47 @@ export const memberCardSchema = z.object({
   settings: memberCardSettingsSchema,
 });
 export type MemberCard = z.infer<typeof memberCardSchema>;
+
+/** Most cards one batch prints (ten A4 sheets of nine). */
+export const MAX_CARD_BATCH = 90;
+
+/** Why a ticked member got no card: outside the caller's area or rights, ID pending, not active. */
+export const CARD_SKIP_CODES = ['membership_not_found', 'beyond_your_permissions', 'membership_id_pending', 'membership_not_active'] as const;
+export type CardSkipCode = (typeof CARD_SKIP_CODES)[number];
+
+/** `POST /memberships/cards`: memberships ticked on the members list, each once. */
+export const memberCardsInputSchema = z.object({
+  membershipIds: z
+    .array(z.uuid())
+    .min(1)
+    .max(MAX_CARD_BATCH)
+    .refine((ids) => new Set(ids).size === ids.length, { message: 'Each one once' }),
+});
+export type MemberCardsInput = z.infer<typeof memberCardsInputSchema>;
+
+/** The cards in the order asked for, and the memberships left out with why. */
+export const memberCardsSchema = z.object({
+  items: z.array(memberCardSchema),
+  skipped: z.array(z.object({ membershipId: z.uuid(), code: z.enum(CARD_SKIP_CODES) })),
+});
+export type MemberCards = z.infer<typeof memberCardsSchema>;
+
+/**
+ * Where each card goes on the A4 sheets: `perSheet` cards a page, fronts on one page and backs
+ * on the next. A back sits in the same row but mirrored left to right, so it lands behind its
+ * front when the sheet is printed on both sides (flipped on the long edge).
+ */
+export function cardSheets<T>(cards: readonly T[], columns: number, rows: number): { fronts: (T | null)[]; backs: (T | null)[] }[] {
+  const perSheet = columns * rows;
+  const sheets: { fronts: (T | null)[]; backs: (T | null)[] }[] = [];
+  for (let start = 0; start < cards.length; start += perSheet) {
+    const fronts: (T | null)[] = Array.from({ length: perSheet }, (_, i) => cards[start + i] ?? null);
+    const backs = fronts.map((_, i) => {
+      const row = Math.floor(i / columns);
+      const column = i % columns;
+      return fronts[row * columns + (columns - 1 - column)] ?? null;
+    });
+    sheets.push({ fronts, backs });
+  }
+  return sheets;
+}

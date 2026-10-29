@@ -17,6 +17,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Pager } from "@/components/cms/pager";
 import { Avatar, Chip, DataTable, inputClass, PageHeader, SearchInput, StatCard, type Column, type Tone } from "@/components/kit";
+import { CardTickBox, CardTicks } from "@/components/members/card-batch";
 import { PartyLink } from "@/components/members/labels";
 import { AreaNote, HoldingChips, PhoneActions, searchText } from "@/components/members/register-parts";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -91,12 +92,17 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
     );
   };
 
+  // ID cards: active members with an ID, ticked by callers who may edit members (the API checks each one's area).
+  const cardable = (row: MemberRegisterRow) => row.status === "active" && row.membershipCode !== null;
+  const canPrintCards = canAnywhere(me.access, "members", "edit");
+
   const columns: Column<MemberRegisterRow>[] = [
     {
       key: "name",
       header: t("col.name"),
       cell: (row) => (
         <div className="flex items-center gap-2.5">
+          {canPrintCards && cardable(row) ? <CardTickBox id={row.membershipId} name={row.person.name} /> : null}
           <Avatar name={row.person.name} src={row.person.photoUrl} />
           <div className="grid">
             <PartyLink party={row.person} />
@@ -168,7 +174,13 @@ export default async function MembersPage({ params, searchParams }: PageProps<"/
         </Button>
       </form>
 
-      <DataTable columns={columns} rows={list.items} rowKey={(row) => `${row.person.id}:${row.memberNo ?? row.joinedOn}`} caption={tNav("members")} empty={t("members.empty")} />
+      {canPrintCards ? (
+        <CardTicks eligible={list.items.filter(cardable).map((row) => row.membershipId)}>
+          <DataTable columns={columns} rows={list.items} rowKey={(row) => row.membershipId} caption={tNav("members")} empty={t("members.empty")} />
+        </CardTicks>
+      ) : (
+        <DataTable columns={columns} rows={list.items} rowKey={(row) => row.membershipId} caption={tNav("members")} empty={t("members.empty")} />
+      )}
 
       <Pager
         locale={locale}

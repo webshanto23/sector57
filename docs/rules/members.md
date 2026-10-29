@@ -23,6 +23,7 @@ Read `docs/glossary.md` for Person, Owner, Renter, Resident and Member.
 - A card is for an active membership with an ID only, read through `MemberCardService.card` (`GET /memberships/:id/card`): `members.edit` where the member owns, rents, lives or holds the membership; every read is audited (`card`). The card's band and contact line are the receipt header with the badge (data, never code); its terms, validity and signature label are the `member_card` setting (`memberCardSettingsSchema`); blank terms print the standard terms from i18n.
 - "Valid till" is counted from the day the card is printed (`cardValidTill`), not from joining; no setting means no line.
 - Printing is RGB from the browser (Anis, 2026-10-29: no CMYK for now). Card faces are sized in millimetres (CR80 standing, 54 × 85.6 mm) and keep the flag colours like the logo; the card printer layout uses the named page `id-card`.
+- Many cards at once go through `MemberCardService.cards` (`POST /memberships/cards`): one check per membership (`refusal`), shared with the single card; a refused membership is listed in `skipped` with its code, never fails the batch. A4 sheets put nine cards a page with the backs mirrored per row (`cardSheets`), so double-sided printing flipped on the long edge lines them up.
 - The membership ID is sequential, so any future public verify page must look a card up by a random token, never by the ID.
 
 ## Public forms and office review
