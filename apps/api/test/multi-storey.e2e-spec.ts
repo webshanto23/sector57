@@ -384,5 +384,31 @@ describe('Multi-storey buildings: duplexes and setting up floors (e2e)', () => {
       expect(floor.units.find((unit) => unit.id === left.id)).toMatchObject({ includes: ['ফ্ল্যাট ৫বি'], alsoOn: [] });
       expect(floor.units.find((unit) => unit.id === right.id)).toMatchObject({ mergedInto: { id: left.id, name: 'ফ্ল্যাট ৫এ' } });
     });
+
+    it('separates a joined part with its own owners, size and floor', async () => {
+      const separate = (id: string, cookie = admin.cookie) => send('post', `/units/${id}/separate`, cookie);
+      const onFloorOne = await makeUser([{ roleId: await makeRole(['units:view', 'units:edit']), scope: floors.one }]);
+      await separate(units['2A'], onFloorOne.cookie).expect(404);
+      expect(unitDetailSchema.parse((await get(`/units/${units['2A']}`, admin.cookie).expect(200)).body).can.separate).toBe(true);
+
+      expect((await separate(units['2A']).expect(200)).body).toEqual({ keptId: units['1A'], separatedId: units['2A'] });
+      const kept = unitDetailSchema.parse((await get(`/units/${units['1A']}`, admin.cookie).expect(200)).body);
+      expect(kept).toMatchObject({ sizeSqft: '1000', covers: [] });
+      const part = unitDetailSchema.parse((await get(`/units/${units['2A']}`, admin.cookie).expect(200)).body);
+      expect(part).toMatchObject({ isActive: true, mergedInto: null, can: { edit: true, separate: false } });
+
+      // Its own owners now, so either part can be sold or rented on its own.
+      const open = (id: string) => prisma.ownerships.findMany({ where: { location_id: id, end_date: null }, select: { id: true, person_id: true } });
+      const [keptOwners, partOwners] = await Promise.all([open(units['1A']), open(units['2A'])]);
+      expect(partOwners.map((row) => row.person_id)).toEqual(keptOwners.map((row) => row.person_id));
+      expect(partOwners[0]!.id).not.toBe(keptOwners[0]!.id);
+
+      const grid = buildingGridSchema.parse((await get(`/locations/${building}/grid`, admin.cookie).expect(200)).body);
+      expect(grid.floors[0]!.units.find((unit) => unit.id === units['1A'])).toMatchObject({ includes: [], alsoOn: [] });
+      expect(grid.floors[1]!.units.find((unit) => unit.id === units['2A'])).toMatchObject({ mergedInto: null });
+      expect(grid.floors[1]!.coveredBy).toEqual([]);
+      expect((await separate(units['2A']).expect(409)).body.code).toBe('unit_not_joined');
+      expect(await prisma.audit_logs.count({ where: { entity_id: { in: [units['1A'], units['2A']] }, action: 'separate' } })).toBe(2);
+    });
   });
 });

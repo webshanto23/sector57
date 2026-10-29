@@ -174,7 +174,11 @@ export class UnitsService {
       breadcrumb,
       covers,
       mergedInto: row.merged ? { id: row.merged.location_id, name: row.merged.locations.name, on: row.merged_on!.toISOString().slice(0, 10) } : null,
-      can: { edit, delete: actor.access.can('delete', 'units', located) && row.merged === null },
+      can: {
+        edit,
+        delete: actor.access.can('delete', 'units', located) && row.merged === null,
+        separate: row.merged !== null && actor.access.can('edit', 'units', located),
+      },
     };
   }
 

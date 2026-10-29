@@ -12,6 +12,7 @@ import { visibleNavKeys } from "@/components/dashboard/nav";
 import { Chip, PageHeader } from "@/components/kit";
 import { PeoplePanel } from "@/components/members/people-panel";
 import { OccupancyChip, propertyTrail } from "@/components/property/labels";
+import { SeparateButton } from "@/components/property/separate-button";
 import { UnitForm } from "@/components/property/unit-form";
 import { unitTypeName } from "@/components/property/unit-types";
 import { VehiclesPanel } from "@/components/vehicles/vehicles-panel";
@@ -67,11 +68,14 @@ export default async function UnitPage({ params }: PageProps<"/[locale]/dashboar
       />
       <div className="grid gap-3.5">
         {unit.mergedInto ? (
-          <Note>
-            <Link href={`/dashboard/units/${unit.mergedInto.id}`} className="font-semibold underline-offset-2 hover:underline">
-              {t("storeys.mergedInto", { name: unit.mergedInto.name, date: formatDate(unit.mergedInto.on, locale as Locale, "short") })}
-            </Link>
-          </Note>
+          <>
+            <Note>
+              <Link href={`/dashboard/units/${unit.mergedInto.id}`} className="font-semibold underline-offset-2 hover:underline">
+                {t("storeys.mergedInto", { name: unit.mergedInto.name, date: formatDate(unit.mergedInto.on, locale as Locale, "short") })}
+              </Link>
+            </Note>
+            {unit.can.separate ? <SeparateButton key={unit.id} id={unit.id} name={unit.name} from={unit.mergedInto.name} /> : null}
+          </>
         ) : !unit.can.edit ? (
           <Note>{t("readOnly")}</Note>
         ) : null}

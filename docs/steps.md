@@ -1167,6 +1167,7 @@ Same branch, 2026-10-29. Anis found "Set type" in the building grid and "Covers 
 - **Tests:** `combine.policy.spec.ts`, `grid-holders.policy.spec.ts`, `multi-storey.e2e-spec.ts` (10). Not clicked through in a browser; the combined bill's print preview is not checked yet.
 
 - **Join units on one floor (later the same day):** Anis asked to join two flats on one floor too, for flats made into one. The same-floor rule is gone (no `combine_same_floor`); the grid action is "Join units", the kept unit shows "Includes 5B". e2e "joins two flats on one floor into one".
+- **Separate (unjoin):** "Separate" on a retired part's grid tile and unit page (`POST /units/:id/separate`): the part is active again with its own copy of the current owners, the kept unit gives back its size and floor; bills already issued stay on the kept unit. e2e "separates a joined part with its own owners, size and floor".
 
 ## Add application from the dashboard — Built, awaiting review
 

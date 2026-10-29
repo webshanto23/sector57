@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { api } from "@/lib/api/client";
 import { OCCUPANCY_TONES } from "./occupancy";
+import { SeparateButton } from "./separate-button";
 import { UnitTypeIcon } from "./unit-type-icon";
 import { unitTypeName } from "./unit-types";
 import { useSubmit } from "./use-submit";
@@ -114,6 +115,7 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
                                 ),
                             })}
                           </span>
+                          {grid.canEdit ? <SeparateButton id={unit.id} name={unit.name} from={unit.mergedInto.name} /> : null}
                         </div>
                       </li>
                     ) : (

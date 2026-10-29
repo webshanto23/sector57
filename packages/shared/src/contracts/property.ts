@@ -390,7 +390,8 @@ export const unitDetailSchema = unitSummarySchema.extend({
   covers: z.array(storeyRefSchema),
   /** Combined into another unit (Step 37): that unit and the date. Such a unit is history only. */
   mergedInto: z.object({ id: z.uuid(), name: z.string(), on: z.iso.date() }).nullable(),
-  can: z.object({ edit: z.boolean(), delete: z.boolean() }),
+  /** `separate`: take this part back out of the unit it was joined into. */
+  can: z.object({ edit: z.boolean(), delete: z.boolean(), separate: z.boolean() }),
 });
 export type UnitDetail = z.infer<typeof unitDetailSchema>;
 

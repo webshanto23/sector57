@@ -28,6 +28,7 @@ const KNOWN = [
   "unit_merged",
   "combine_unit_inactive",
   "combine_not_side_by_side",
+  "unit_not_joined",
   "combine_owners_differ",
   "combine_open_bills",
   "combine_open_tenancy",

@@ -1,4 +1,4 @@
-import { combinedSize, combineProblem, coveredAfter, type CombineFacts } from './combine.policy.js';
+import { combinedSize, combineProblem, coveredAfter, coversAfterSeparate, separatedSize, type CombineFacts } from './combine.policy.js';
 
 const unit = (id: string, patch: Partial<CombineFacts> = {}): CombineFacts => ({
   id,
@@ -38,6 +38,22 @@ describe('combineProblem', () => {
     expect(combineProblem(unit('a'), [upper({ vehicles: 1 })])).toBe('vehicles');
     // The kept unit's own residents and bills don't matter.
     expect(combineProblem(unit('a', { openBills: 3, occupants: 4, openTenancy: true }), [upper({})])).toBeNull();
+  });
+});
+
+describe('separating a part', () => {
+  it('gives back the part\'s size only when both are known and something is left', () => {
+    expect(separatedSize('2100.75', '800.25')).toBe('1300.50');
+    expect(separatedSize('2000', null)).toBe('2000');
+    expect(separatedSize(null, '800')).toBeNull();
+    expect(separatedSize('800', '800')).toBe('800');
+  });
+
+  it('stops covering the part\'s floor unless another part is still there', () => {
+    expect(coversAfterSeparate(['s4', 's5'], 's4', ['s5'])).toEqual(['s5']);
+    expect(coversAfterSeparate(['s4'], 's4', ['s4'])).toEqual(['s4']);
+    // A part on the kept unit's own floor: nothing to give back.
+    expect(coversAfterSeparate(['s4'], 's3', [])).toEqual(['s4']);
   });
 });
 

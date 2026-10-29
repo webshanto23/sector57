@@ -740,6 +740,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/units/{id}/separate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UnitsController_separate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/units/bulk-type": {
         parameters: {
             query?: never;
@@ -4849,6 +4865,7 @@ export interface components {
             can: {
                 edit: boolean;
                 delete: boolean;
+                separate: boolean;
             };
         };
         UnitCreateDto: {
@@ -4879,6 +4896,12 @@ export interface components {
             /** Format: uuid */
             keptId: string;
             merged: number;
+        };
+        UnitSeparateResultDto_Output: {
+            /** Format: uuid */
+            keptId: string;
+            /** Format: uuid */
+            separatedId: string;
         };
         UnitTypeBulkDto: {
             unitIds: string[];
@@ -12652,6 +12675,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UnitCombineResultDto_Output"];
+                };
+            };
+        };
+    };
+    UnitsController_separate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnitSeparateResultDto_Output"];
                 };
             };
         };

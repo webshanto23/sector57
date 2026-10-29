@@ -47,6 +47,18 @@ export function combinedSize(keep: string | null, merge: (string | null)[]): str
   return (hundredths / 100).toFixed(2);
 }
 
+/** The kept unit's size after a part is separated: less the part's when both are known (and something is left), else unchanged. */
+export function separatedSize(keep: string | null, part: string | null): string | null {
+  if (keep === null || part === null) return keep;
+  const hundredths = Math.round(Number(keep) * 100) - Math.round(Number(part) * 100);
+  return hundredths > 0 ? (hundredths / 100).toFixed(2) : keep;
+}
+
+/** The storeys the kept unit still covers once a part goes: all but the part's floor, unless another part still sits there. */
+export function coversAfterSeparate(covers: string[], partFloor: string, otherFloors: string[]): string[] {
+  return otherFloors.includes(partFloor) ? covers : covers.filter((id) => id !== partFloor);
+}
+
 /** The storeys the kept unit covers after the combine: its own links plus the others' places and links, minus its own place. */
 export function coveredAfter(keep: { parentId: string; covers: string[] }, merge: { parentId: string; covers: string[] }[]): string[] {
   const ids = new Set([...keep.covers, ...merge.flatMap((unit) => [unit.parentId, ...unit.covers])]);

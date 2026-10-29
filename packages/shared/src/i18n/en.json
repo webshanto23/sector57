@@ -702,6 +702,7 @@
       "unit_merged": "This unit was combined into another one and is kept as history only.",
       "combine_unit_inactive": "An inactive or already combined unit can't be combined.",
       "combine_not_side_by_side": "Only units on one floor, or on floors of one building, can be joined.",
+      "unit_not_joined": "This unit is not part of a joined unit.",
       "combine_owners_differ": "These units have different owners. Fix the owners first so they match.",
       "combine_open_bills": "A unit being retired still has unpaid bills. Settle them first.",
       "combine_open_tenancy": "A unit being retired still has a renter. End the tenancy first.",
@@ -995,7 +996,10 @@
       "combineHint": "Join only units made into one (a wall taken down, one door). Pick the unit to keep: it takes in the others, covers their floors and its size becomes the total; owners, renters and bills stay on it. The others become history: inactive, their owners ended, their bills and documents kept.",
       "keep": "Keep",
       "confirmCombine": "Join units",
-      "combined": "Units joined."
+      "combined": "Units joined.",
+      "separate": "Separate",
+      "separateConfirm": "Take {name} back out of {from}? It gets its own copy of the current owners from today; bills already issued stay on {from}.",
+      "separated": "{name} is a unit of its own again."
     },
     "remove": {
       "pick": "Select {name}",
