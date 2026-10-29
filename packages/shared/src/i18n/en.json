@@ -1857,7 +1857,7 @@
     },
     "printMany": {
       "title": "Print bills",
-      "sub": "{count} bills. Print each on a page of its own, or all of them as one list.",
+      "sub": "{count} bills. Print each on a page of its own, all of them as one list, or as one combined bill for one payer.",
       "print": "Print all",
       "selected": "Print selected",
       "select": "Select bill {no}",
@@ -1867,7 +1867,11 @@
       "printList": "Print as a list",
       "listTitle": "List of bills",
       "listDate": "Printed on {date}",
-      "listCount": "{count} bills"
+      "listCount": "{count} bills",
+      "printCombined": "Print combined bill",
+      "combinedTo": "Combined bill to",
+      "combinedTitle": "Combined bill",
+      "combinedNote": "Each bill keeps its own number. Payments are recorded against each bill, so quote the bill numbers when paying."
     },
     "printA4": {
       "billedTo": "Billed to",

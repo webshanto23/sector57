@@ -1157,6 +1157,15 @@ Same branch, 2026-10-29. Anis decided: the ID is issued only by "Mark as verifie
 - **Note:** numbers taken back by the migration can be issued again to someone else (the next number is one past the highest in use).
 - **Remove a member made by mistake** (Anis: allowed when every membership bill is void, society-wide `members.delete`): `DELETE /memberships/:id` refuses an issued ID or a bill that isn't void, detaches voided bills (migration `31_membership_removal` relaxes `invoices_kind_fields_check` for void membership bills; applied to dev and test), deletes the row and audits it. The person and organisation pages show "Remove from members" (confirm) while the ID is pending; `membershipSchema` carries the membership `id`. e2e in `memberships.e2e-spec.ts`.
 
+## Duplexes, offices over several flats, combined bill — Built, awaiting review
+
+Same branch, 2026-10-29. Anis found "Set type" in the building grid and "Covers floors" on the unit page confusing and asked for only two cases: a duplex, and an office taking several flats or floors, with the duplex label and the shared owner or renter visible. He decided: an office keeps separate units and separate bills, with an optional combined printout.
+
+- **Slice A, duplex (35cea75):** "Make a duplex" in the grid (the old Combine) takes one unit from each floor of one building (`combine_same_floor`); "Duplex · also on …" on the tile, unit page and storey page; floors it covers show a "main part on …" tile (`coveredBy` on grid floors). The unit page's "Covers floors" card and `PUT /units/:id/storeys` are gone; existing `unit_storeys` links stay.
+- **Slice B, office (cbd9ea0):** each grid tile shows its renter, else its own owner, and "Name · N units" when one person or organisation holds several units in the building (`grid-holders.policy.ts`, `UnitPeopleService.partiesOf`; names need `ownerships.view` / `tenancies.view`).
+- **Slice C, combined bill:** "Print combined bill" on the bills print page (ticked bills): one A4 page to one payer name (first bill's bill-to, editable), a row per bill with amount, paid and due, one total payable. Print only (`bill-combined-a4.tsx`); no API or migration.
+- **Tests:** `combine.policy.spec.ts`, `grid-holders.policy.spec.ts`, `multi-storey.e2e-spec.ts` (10). Not clicked through in a browser; the combined bill's print preview is not checked yet.
+
 ## Later: beyond milestone 3
 
 These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.
