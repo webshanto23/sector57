@@ -10,3 +10,4 @@ allowBuilds:
   prisma: true
   unrs-resolver: true
   workerd: true
+  core-js: false
