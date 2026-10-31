@@ -2004,6 +2004,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/collect/areas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CollectController_areas"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/collect/summary": {
         parameters: {
             query?: never;
@@ -7388,6 +7404,13 @@ export interface components {
                     nameEn: string | null;
                     phone: string | null;
                 }[];
+            }[];
+        };
+        CollectAreasDto_Output: {
+            children: {
+                /** Format: uuid */
+                id: string;
+                name: string;
             }[];
         };
         CollectSummaryDto_Output: {
@@ -15209,6 +15232,7 @@ export interface operations {
                 unitId?: string;
                 personId?: string;
                 organisationId?: string;
+                areaId?: string;
             };
             header?: never;
             path?: never;
@@ -15222,6 +15246,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CollectLookupDto_Output"];
+                };
+            };
+        };
+    };
+    CollectController_areas: {
+        parameters: {
+            query?: {
+                parentId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectAreasDto_Output"];
                 };
             };
         };

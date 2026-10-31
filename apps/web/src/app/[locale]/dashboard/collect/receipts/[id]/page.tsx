@@ -85,6 +85,15 @@ export default async function ReceiptPage({ params, searchParams }: PageProps<"/
 
       <div className="grid gap-3.5 min-[900px]:grid-cols-[minmax(0,1fr)_340px] min-[900px]:items-start">
         <div className="grid gap-3.5">
+          {print === "1" && !payment.voided && canAnywhere(me.access, "payments", "create") ? (
+            <Card className="flex flex-wrap items-center justify-between gap-3">
+              <p className="num font-semibold text-good">{t("detail.taken", { amount: formatTaka(payment.amount, locale) })}</p>
+              <Link href="/dashboard/collect" className={buttonVariants()}>
+                <Plus aria-hidden />
+                {t("detail.another")}
+              </Link>
+            </Card>
+          ) : null}
           {payment.void ? (
             <Note tone="warn">
               {t("detail.voided", {

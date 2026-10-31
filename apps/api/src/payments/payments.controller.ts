@@ -1,5 +1,7 @@
 import { Body, Controller, ForbiddenException, Get, HttpCode, Param, Post, Query } from '@nestjs/common';
 import {
+  collectAreasQuery,
+  collectAreasSchema,
   collectLookupQuery,
   collectLookupSchema,
   collectSummarySchema,
@@ -23,6 +25,8 @@ import { Authenticated, Can, CurrentActor, type Actor } from '../permissions/per
 import { HandoversService } from './handovers.service.js';
 import { PaymentsService } from './payments.service.js';
 
+export class CollectAreasDto extends createDto(collectAreasSchema) {}
+export class CollectAreasQueryDto extends createDto(collectAreasQuery) {}
 export class CollectLookupDto extends createDto(collectLookupSchema) {}
 export class CollectLookupQueryDto extends createDto(collectLookupQuery) {}
 export class CollectSummaryDto extends createDto(collectSummarySchema) {}
@@ -48,6 +52,14 @@ export class CollectController {
   @ZodResponse({ status: 200, type: CollectLookupDto })
   lookup(@CurrentActor() actor: Actor, @Query() query: CollectLookupQueryDto) {
     return this.payments.lookup(actor, query);
+  }
+
+  /** The area filter: places under `parentId` in the caller's collect area, with no `units` grant needed. */
+  @Get('areas')
+  @Can('payments', 'create')
+  @ZodResponse({ status: 200, type: CollectAreasDto })
+  areas(@CurrentActor() actor: Actor, @Query() { parentId }: CollectAreasQueryDto) {
+    return this.payments.areas(actor, parentId);
   }
 
   /** Receipts today, cash in hand and pending handovers, for the caller. */
