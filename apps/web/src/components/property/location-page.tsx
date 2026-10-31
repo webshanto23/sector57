@@ -16,12 +16,11 @@ import {
 } from "@s57/shared";
 import { Building2, Layers, Shapes, ArrowRightLeft } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import { Note } from "@/components/admin/form-status";
 import { DashboardBreadcrumb } from "@/components/dashboard/dashboard-breadcrumb";
 import { visibleNavKeys } from "@/components/dashboard/nav";
-import { Card, Chip, PageHeader } from "@/components/kit";
+import { Chip, PageHeader } from "@/components/kit";
 import { DocumentsPanel } from "@/components/documents/documents-panel";
-import { PeoplePanel } from "@/components/members/people-panel";
+import { OwnersPanel } from "@/components/members/owners-section";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { getDocuments } from "@/lib/api/documents";
@@ -167,15 +166,11 @@ export async function LocationPage({
           </>
         ) : null}
         {active === "owners" && people ? (
-          <PeoplePanel key={`people-${people.location.id}-${transfer}`} people={people} idsRequired={society?.requireIdNumbers ?? false} transfer={transfer} />
+          <OwnersPanel key={people.location.id} people={people} idsRequired={society?.requireIdNumbers ?? false} transfer={transfer} />
         ) : null}
-        {active === "documents" ? <DocumentsPanel access={me.access} entityType="location" entityId={location.id} /> : null}
+        {active === "documents" ? <DocumentsPanel access={me.access} entityType="location" entityId={location.id} split /> : null}
         {active === "details" ? (
-          <Card className="grid gap-3.5">
-            <h2 className="text-[15px]">{t("details")}</h2>
-            {!can.edit && !can.delete ? <Note>{t("readOnly")}</Note> : null}
-            <LocationEditor key={location.id} location={location} canEdit={can.edit} canDelete={can.delete} />
-          </Card>
+          <LocationEditor key={location.id} location={location} canEdit={can.edit} canDelete={can.delete} />
         ) : null}
       </div>
     </>
