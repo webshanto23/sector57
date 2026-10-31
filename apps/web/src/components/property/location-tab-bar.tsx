@@ -1,9 +1,9 @@
-import { localDigits, type Locale, type LocationTab } from "@s57/shared";
+import { localDigits, type Locale } from "@s57/shared";
 import { cn } from "cn";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 
-/** The tabs of one place; the choice lives in the URL, and the first tab needs no `tab` at all. */
+/** The tabs of one place or unit; the choice lives in the URL, and the first tab needs no `tab` at all. */
 export async function LocationTabBar({
   pathname,
   tabs,
@@ -11,8 +11,8 @@ export async function LocationTabBar({
   locale,
 }: {
   pathname: string;
-  tabs: { id: LocationTab; label: string; count?: number }[];
-  active: LocationTab;
+  tabs: { id: string; label: string; count?: number }[];
+  active: string;
   locale: Locale;
 }) {
   const t = await getTranslations("Property.pageTabs");

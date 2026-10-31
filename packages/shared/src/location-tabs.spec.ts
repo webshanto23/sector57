@@ -1,5 +1,5 @@
 import type { LocationLevel } from './contracts/index.js';
-import { holdsFloors, insideContent, levelCountCards, locationTabs, pickLocationTab } from './location-tabs.js';
+import { holdsFloors, insideContent, levelCountCards, locationTabs, pickLocationTab, unitTabs } from './location-tabs.js';
 
 const level = (depth: number, nameEn: string, extra: Partial<LocationLevel> = {}): LocationLevel => ({
   id: `level-${depth}`,
@@ -34,6 +34,23 @@ describe('locationTabs', () => {
 
   it('has no inside tab on a unit', () => {
     expect(locationTabs({ isUnit: true, canOwn: true }, see)[0]).toBe('owners');
+  });
+});
+
+describe('unitTabs', () => {
+  it('puts people first and keeps details last', () => {
+    expect(unitTabs({ people: true, bills: true, vehicles: true, certificates: true, documents: true })).toEqual([
+      'people',
+      'bills',
+      'vehicles',
+      'certificates',
+      'documents',
+      'details',
+    ]);
+  });
+
+  it('leaves out what the caller may not see', () => {
+    expect(unitTabs({ bills: true })).toEqual(['bills', 'details']);
   });
 });
 

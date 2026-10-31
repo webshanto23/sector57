@@ -956,6 +956,7 @@
     "pageTabs": {
       "label": "এই জায়গার অংশগুলো",
       "floors": "তলা ও ইউনিট",
+      "people": "মানুষজন",
       "inside": "ভেতরে",
       "owners": "মালিক",
       "documents": "ডকুমেন্ট",
@@ -964,6 +965,11 @@
     "pageStats": {
       "currentOwner": "বর্তমান মালিক",
       "ownerSince": "মালিক হওয়ার তারিখ",
+      "owner": "মালিক",
+      "renter": "ভাড়াটিয়া",
+      "occupancy": "বসবাসের অবস্থা",
+      "dueNow": "এখন বাকি",
+      "since": "{date} থেকে",
       "pastOwners": "আগের মালিক",
       "documents": "ডকুমেন্ট"
     },

@@ -12,6 +12,7 @@ import { OCCUPANCY_TONES } from "./occupancy";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
 import { api } from "@/lib/api/client";
+import { unitTypeName } from "./unit-types";
 import { useSubmit } from "./use-submit";
 
 /** One unit's facts: name, holding number, type, size, who is billed, active. Occupancy is shown, not edited (it is derived). */
@@ -97,8 +98,9 @@ export function UnitForm({ unit, unitTypes }: { unit: UnitDetail; unitTypes: Uni
       </Card>
 
       {unit.can.delete ? (
-        <Card className="grid content-start gap-2">
-          <p className="text-[12.5px] text-muted-foreground">{t("deleteHint")}</p>
+        <Card className="grid content-start gap-2.5 border-bad/30">
+          <h2 className="text-[15px] text-bad">{t("deleteTitle", { level: unitTypeName(unitTypes, unit.unitType, locale) })}</h2>
+          <p className="text-[13px] text-muted-foreground">{t("deleteHint")}</p>
           <div>
             <ConfirmButton
               label={t("delete")}

@@ -5554,6 +5554,7 @@ export interface components {
                 id: string;
                 name: string;
                 isUnit: boolean;
+                canOwn: boolean;
                 levelBn: string;
                 levelEn: string | null;
             };

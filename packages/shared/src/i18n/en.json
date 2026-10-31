@@ -956,6 +956,7 @@
     "pageTabs": {
       "label": "Sections of this place",
       "floors": "Floors & units",
+      "people": "People",
       "inside": "Inside",
       "owners": "Owners",
       "documents": "Documents",
@@ -964,6 +965,11 @@
     "pageStats": {
       "currentOwner": "Current owner",
       "ownerSince": "Owner since",
+      "owner": "Owner",
+      "renter": "Renter",
+      "occupancy": "Occupancy",
+      "dueNow": "Due now",
+      "since": "from {date}",
       "pastOwners": "Past owners",
       "documents": "Documents"
     },

@@ -1209,6 +1209,10 @@ Same branch, 2026-10-29, to the mock `docs/mocks/sector57-member-id-card-gradien
 Same branch, 2026-10-29. Anis found no way to take payment after ticking bills, and new bills not showing on the collect page until searched. Built (feb9935): "Take payment for ticked" on the bills list (one account per receipt), several `invoiceId`s on the collect page, and an "Open bills, newest first" list there before any search (`GET /collect/lookup?open=true`); the receipt column shows once an account is chosen. `payments.e2e-spec.ts` (20). Not clicked through in a browser.
 - **Open:** bulk collection across units (one receipt per account, one transaction) was offered; Anis has not decided, nor whether a unit's row takes only the ticked bills or all its open bills. Also offered: a "Membership fees" tag so membership bills are not mistaken for duplicate unit bills.
 
+## Place and unit page tabs — built, awaiting review
+
+One layout for every level of the property map and the unit page: summary cards and tabs chosen from the level settings (rule in `docs/rules/property.md`). Branch `feat/location-tabs`, built on `aws-fix`. Mocks are in `docs/mocks/sector57-level-*.png` (not committed). Not yet clicked through in a browser.
+
 ## Later: beyond milestone 3
 
 These are in the mockup's dashboard nav but not in milestones 1 to 3. Each needs its own plan.

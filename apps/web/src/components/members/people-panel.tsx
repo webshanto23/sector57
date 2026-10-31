@@ -400,9 +400,38 @@ function HouseholdSection({ people, submit }: { people: LocationPeople; submit: 
  * Units get all three blocks; other locations only the owners. Each block shows only
  * when the caller may view it there.
  */
-export function PeoplePanel({ people, idsRequired }: { people: LocationPeople; idsRequired: boolean }) {
+export function PeoplePanel({
+  people,
+  idsRequired,
+  tab = false,
+  transfer = false,
+}: {
+  people: LocationPeople;
+  idsRequired: boolean;
+  /** The People tab of a unit: each block its own card, owners only where the level can have them. */
+  tab?: boolean;
+  transfer?: boolean;
+}) {
   const t = useTranslations("Members.people");
   const submit = useSubmit();
+  if (tab) {
+    return (
+      <IdsRequired value={idsRequired}>
+        <FormStatus status={submit.status} />
+        {people.location.canOwn && people.owners !== null ? <OwnersSection key={String(transfer)} people={people} submit={submit} transfer={transfer} cards /> : null}
+        {people.tenancies !== null ? (
+          <Card>
+            <TenancySection people={people} submit={submit} />
+          </Card>
+        ) : null}
+        {people.occupants !== null ? (
+          <Card>
+            <HouseholdSection people={people} submit={submit} />
+          </Card>
+        ) : null}
+      </IdsRequired>
+    );
+  }
   return (
     <IdsRequired value={idsRequired}>
       <Card className="grid gap-4">

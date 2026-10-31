@@ -38,7 +38,7 @@ export class LocationPeopleService {
       // The levels of the places above (to label their owners) and of this one (to title its own).
       this.prisma.locations.findMany({
         where: { society_id: actor.societyId, id: { in: sees.ownerships ? [...above, id] : [id] } },
-        select: { id: true, location_levels: { select: { name_bn: true, name_en: true } } },
+        select: { id: true, location_levels: { select: { name_bn: true, name_en: true, can_own: true } } },
       }),
       unit && sees.tenancies ? this.rows.tenancies(actor.societyId, { unit_id: id }) : null,
       unit && sees.members ? this.rows.occupants(actor.societyId, { unit_id: id }) : null,
@@ -53,7 +53,7 @@ export class LocationPeopleService {
     });
     const none = { create: false, edit: false, delete: false };
     return {
-      location: { id: location.id, name: location.name, isUnit: unit, levelBn: levels.get(id)?.name_bn ?? '', levelEn: levels.get(id)?.name_en ?? null },
+      location: { id: location.id, name: location.name, isUnit: unit, canOwn: levels.get(id)?.can_own ?? false, levelBn: levels.get(id)?.name_bn ?? '', levelEn: levels.get(id)?.name_en ?? null },
       owners,
       ownersAbove,
       tenancies,

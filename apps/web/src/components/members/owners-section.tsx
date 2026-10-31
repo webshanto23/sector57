@@ -144,7 +144,8 @@ export function OwnersSection({ people, submit, transfer = false, cards = false 
   // The transfer form opened from the page header lives in the URL: leave it, so the button opens it again.
   function close() {
     setAdding(null);
-    if (transfer) router.replace(`/dashboard/property/${people.location.id}?tab=owners`, { scroll: false });
+    const page = people.location.isUnit ? `/dashboard/units/${people.location.id}?tab=people` : `/dashboard/property/${people.location.id}?tab=owners`;
+    if (transfer) router.replace(page, { scroll: false });
   }
 
   const actions = adding ? null : (

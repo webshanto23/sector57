@@ -11,12 +11,12 @@ import {
 } from "@s57/shared";
 import { cn } from "cn";
 import { getTranslations } from "next-intl/server";
-import type { ReactNode } from "react";
+import { Children, type ReactNode } from "react";
 import { Card } from "@/components/kit";
 
 const COLUMNS: Record<number, string> = { 4: "min-[861px]:grid-cols-4", 5: "min-[861px]:grid-cols-5", 6: "min-[861px]:grid-cols-6" };
 
-function Stat({ label, value, note }: { label: string; value: ReactNode; note?: string }) {
+export function Stat({ label, value, note }: { label: string; value: ReactNode; note?: string }) {
   return (
     <Card className="grid content-start gap-0.5 rounded-[10px] px-3.5 py-2.5 min-[600px]:px-3.5 min-[600px]:py-2.5">
       <span className="text-[12px] text-muted-foreground">{label}</span>
@@ -26,6 +26,11 @@ function Stat({ label, value, note }: { label: string; value: ReactNode; note?: 
       </span>
     </Card>
   );
+}
+
+/** The summary cards: four across, up to six when there are more. */
+export function StatGrid({ children }: { children: ReactNode }) {
+  return <div className={cn("grid grid-cols-2 gap-2.5", COLUMNS[Math.min(6, Math.max(4, Children.toArray(children).length))])}>{children}</div>;
 }
 
 /**
@@ -72,5 +77,5 @@ export async function LocationStats({
   }
   if (cards.length === 0) return null;
 
-  return <div className={cn("grid grid-cols-2 gap-2.5", COLUMNS[Math.min(6, Math.max(4, cards.length))])}>{cards}</div>;
+  return <StatGrid>{cards}</StatGrid>;
 }

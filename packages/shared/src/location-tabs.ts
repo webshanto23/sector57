@@ -31,8 +31,17 @@ export function locationTabs(
   ];
 }
 
+/** The tabs of a unit: it holds nothing below it, so the people come first. */
+export type UnitTab = 'people' | 'bills' | 'vehicles' | 'certificates' | 'documents' | 'details';
+
+/** The tabs a unit shows; each one but details only for a caller who may see it. */
+export function unitTabs(see: Partial<Record<Exclude<UnitTab, 'details'>, boolean>>): UnitTab[] {
+  const order = ['people', 'bills', 'vehicles', 'certificates', 'documents'] as const;
+  return [...order.filter((tab) => see[tab]), 'details'];
+}
+
 /** The tab named in the URL, or the first one when this place does not have it. */
-export function pickLocationTab(tabs: LocationTab[], requested: unknown): LocationTab {
+export function pickLocationTab<Tab extends string>(tabs: Tab[], requested: unknown): Tab {
   return tabs.find((tab) => tab === requested) ?? tabs[0]!;
 }
 
