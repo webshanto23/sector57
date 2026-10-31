@@ -15,3 +15,9 @@ export function PublishedChip({ published }: { published: boolean }) {
   const t = useTranslations("Cms");
   return <Chip tone={published ? "good" : "neutral"}>{published ? t("published") : t("draft")}</Chip>;
 }
+
+/** A published album that is left out of the public gallery page. */
+export function HiddenFromGalleryChip() {
+  const t = useTranslations("Cms.gallery");
+  return <Chip tone="neutral">{t("hiddenChip")}</Chip>;
+}

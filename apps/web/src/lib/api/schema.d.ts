@@ -4335,6 +4335,7 @@ export interface components {
                 photoCount: number;
                 coverUrl: string | null;
                 isPublished: boolean;
+                hideFromGallery: boolean;
             }[];
             total: number;
             page: number;
@@ -4349,6 +4350,7 @@ export interface components {
             photoCount: number;
             coverUrl: string | null;
             isPublished: boolean;
+            hideFromGallery: boolean;
             photos: {
                 /** Format: uuid */
                 id: string;
@@ -4363,6 +4365,8 @@ export interface components {
             titleEn?: string | null;
             eventDate?: string | null;
             isPublished: boolean;
+            /** @default false */
+            hideFromGallery: boolean;
         };
         PhotoAdminDto_Output: {
             /** Format: uuid */
