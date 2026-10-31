@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: PageProps<"/[locale]/dashboar
   return view?.location ? { title: view.location.name } : {};
 }
 
-/** One location on the map: its details, its owners, what is inside, and adding more. */
+/** One location on the map: its summary and its tabs (`tab` in the URL). */
 export default async function LocationRoute({ params, searchParams }: PageProps<"/[locale]/dashboard/property/[id]">) {
   const { locale: raw, id } = await params;
   const locale = raw as Locale;
@@ -24,6 +24,7 @@ export default async function LocationRoute({ params, searchParams }: PageProps<
   const me = await requirePermission("locations");
   const [view, levels, people] = await Promise.all([getLocation(id), getLevels(), getLocationPeople(id)]);
   if (!view?.location) notFound();
-  const finder = await loadFinder(await searchParams, id);
-  return <LocationPage view={view} levels={levels} people={people} finder={finder} me={me} locale={locale} />;
+  const search = await searchParams;
+  const finder = await loadFinder(search, id);
+  return <LocationPage view={view} levels={levels} people={people} finder={finder} tab={search["tab"]} transfer={search["transfer"] === "1"} me={me} locale={locale} />;
 }

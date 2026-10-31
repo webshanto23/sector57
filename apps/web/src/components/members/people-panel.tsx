@@ -180,10 +180,10 @@ function TransferForm({ locationId, submit, onDone }: { locationId: string; subm
   );
 }
 
-function OwnersSection({ people, submit }: { people: LocationPeople; submit: Submit }) {
+function OwnersSection({ people, submit, transfer }: { people: LocationPeople; submit: Submit; transfer: boolean }) {
   const t = useTranslations("Members");
   const locale = useLocale() as Locale;
-  const [adding, setAdding] = useState<"owner" | "transfer" | null>(null);
+  const [adding, setAdding] = useState<"owner" | "transfer" | null>(transfer ? "transfer" : null);
   const owners = people.owners ?? [];
   const current = owners.filter((row) => row.endDate === null);
   const past = owners.filter((row) => row.endDate !== null);
@@ -632,7 +632,7 @@ function FormActions({ busy, ready, onCancel }: { busy: boolean; ready: boolean;
  * Units get all three blocks; other locations only the owners. Each block shows only
  * when the caller may view it there.
  */
-export function PeoplePanel({ people, idsRequired }: { people: LocationPeople; idsRequired: boolean }) {
+export function PeoplePanel({ people, idsRequired, transfer = false }: { people: LocationPeople; idsRequired: boolean; transfer?: boolean }) {
   const t = useTranslations("Members.people");
   const submit = useSubmit();
   return (
@@ -640,7 +640,7 @@ export function PeoplePanel({ people, idsRequired }: { people: LocationPeople; i
       <Card className="grid gap-4">
         <h2 className="text-[15px]">{t("title")}</h2>
         <FormStatus status={submit.status} />
-        {people.owners !== null ? <OwnersSection people={people} submit={submit} /> : null}
+        {people.owners !== null ? <OwnersSection people={people} submit={submit} transfer={transfer} /> : null}
         {people.location.isUnit && people.tenancies !== null ? <TenancySection people={people} submit={submit} /> : null}
         {people.location.isUnit && people.occupants !== null ? <HouseholdSection people={people} submit={submit} /> : null}
       </Card>

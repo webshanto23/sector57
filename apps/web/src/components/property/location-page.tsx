@@ -1,156 +1,53 @@
 import {
   canAnywhere,
-  localDigits,
+  holdsFloors,
+  insideContent,
+  locationTabs,
   pick,
+  pickLocationTab,
   type LevelCounts,
   type Locale,
   type LocationLevel,
-  type LocationNode,
   type LocationSearch,
   type LocationPeople,
+  type LocationTab,
   type LocationView,
   type MeWithAccess,
-  type PartyName,
 } from "@s57/shared";
-import { Building2, Layers, MapPin, Shapes, UserRound } from "lucide-react";
+import { Building2, Layers, Shapes, ArrowRightLeft } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Note } from "@/components/admin/form-status";
-import { Pager } from "@/components/cms/pager";
 import { DashboardBreadcrumb } from "@/components/dashboard/dashboard-breadcrumb";
 import { visibleNavKeys } from "@/components/dashboard/nav";
-import { Card, Chip, IconBox, PageHeader } from "@/components/kit";
+import { Card, Chip, PageHeader } from "@/components/kit";
 import { DocumentsPanel } from "@/components/documents/documents-panel";
 import { PeoplePanel } from "@/components/members/people-panel";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { getDocuments } from "@/lib/api/documents";
 import { getBuildingGrid, getUnitTypes } from "@/lib/api/property";
 import { getSociety } from "@/lib/api/public";
-import { AddPanel } from "./add-panel";
 import { BuildingGrid } from "./building-grid";
+import { InsideSection } from "./inside-section";
 import { levelName, propertyTrail } from "./labels";
-import { LayoutForm } from "./layout-form";
-import { LevelBar } from "./level-bar";
 import { LocationEditor } from "./location-editor";
-import { RemoveSelected } from "./remove-selected";
-import { unitTypeIcon } from "./unit-types";
+import { LocationStats } from "./location-stats";
+import { LocationTabBar } from "./location-tab-bar";
 
 /** The level picker and search: what is chosen, the chip counts, and the results (null on the tree). */
 export type Finder = { levelId: string | null; q: string | null; page: number; counts: LevelCounts; result: LocationSearch | null };
 
 /**
- * "Set up floors and units" fits an empty place whose next level is the one right above
- * the units (a building over storeys), for callers who may add both. The API checks again.
- */
-function canSetUp(location: LocationNode, levels: LocationLevel[], childCount: number, can: LocationView["can"]): boolean {
-  return holdsFloors(location, levels) && childCount === 0 && can.create && can.createUnit;
-}
-
-/** A building over floors: the level right below it is the one right above the units. */
-function holdsFloors(location: LocationNode, levels: LocationLevel[]): boolean {
-  const below = levels.filter((level) => level.depth > location.depth).sort((a, b) => a.depth - b.depth);
-  return !location.isUnit && below[0]?.isUnitLevel === false && below[1]?.isUnitLevel === true;
-}
-
-/** Show at most this many owner names on a card; the rest become "+N more". */
-const CARD_OWNERS = 2;
-
-/**
- * One child in the grid: a link to its own page (units go to the units pages). Search results
- * add the address and the owners (null: the caller may not view them, so the line is left out).
- */
-async function ChildCard({
-  node,
-  locale,
-  unitsOpen,
-  address,
-  owners,
-  home,
-  pickGroup,
-}: {
-  node: LocationNode;
-  locale: Locale;
-  unitsOpen: boolean;
-  address?: string[];
-  owners?: PartyName[] | null;
-  /** For a unit over several storeys: the name of its own storey, listed first. */
-  home?: string;
-  /** Adds a tick box for "Remove selected" (`RemoveSelected` with this group). */
-  pickGroup?: string;
-}) {
-  const t = await getTranslations("Property");
-  const ownerNames = (owners ?? []).slice(0, CARD_OWNERS).map((owner) => (locale === "en" ? (owner.nameEn ?? owner.name) : owner.name));
-  const href = node.isUnit ? (unitsOpen ? `/dashboard/units/${node.id}` : null) : `/dashboard/property/${node.id}`;
-  const body = (
-    <>
-      <div className="flex items-start justify-between gap-2">
-        <span className="min-w-0 font-semibold break-words">{node.name}</span>
-        <IconBox icon={node.isUnit ? unitTypeIcon(node.unitType?.code) : MapPin} size="sm" tone={node.isActive ? undefined : "warn"} />
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        <Chip plain>{node.unitType ? pick(node.unitType.nameBn, node.unitType.nameEn, locale) : levelName(node, locale)}</Chip>
-        {node.alsoOn.length > 0 ? <Chip tone="info">{t("storeys.floors", { floors: [home, ...node.alsoOn].filter(Boolean).join(" + ") })}</Chip> : null}
-        {!node.isActive ? <Chip tone="warn">{t("inactive")}</Chip> : null}
-      </div>
-      {address?.length ? <p className="text-[12.5px] break-words text-muted-foreground">{address.join(" › ")}</p> : null}
-      {owners ? (
-        <p className="flex items-start gap-1.5 text-[13px]">
-          <UserRound className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden />
-          <span className="min-w-0 break-words">
-            <span className="text-muted-foreground">{t("levelOwner", { level: levelName(node, locale) })}: </span>
-            {owners.length === 0 ? (
-              <span className="text-muted-foreground">{t("ownerNone")}</span>
-            ) : (
-              <>
-                <span className="font-medium">{ownerNames.join(", ")}</span>
-                {owners.length > CARD_OWNERS ? (
-                  <span className="text-muted-foreground"> {localDigits(t("ownerMore", { count: owners.length - CARD_OWNERS }), locale)}</span>
-                ) : null}
-              </>
-            )}
-          </span>
-        </p>
-      ) : null}
-      {node.code ? <p className="num text-[12.5px] text-muted-foreground">{t("cardCode", { code: node.code })}</p> : null}
-      {!node.isUnit ? (
-        <p className="text-[12.5px] text-muted-foreground">
-          {localDigits(t("childCount", { count: node.childCount }), locale)} · {localDigits(t("unitCount", { count: node.unitCount }), locale)}
-        </p>
-      ) : null}
-    </>
-  );
-  const className = "grid content-start gap-2 rounded-[12px] border border-line bg-surface p-3.5";
-  const card = href ? (
-    <Link href={href} className={`${className} transition-colors hover:border-muted-foreground`}>
-      {body}
-    </Link>
-  ) : (
-    <div className={className}>{body}</div>
-  );
-  if (!pickGroup) return card;
-  // The tick box sits on the card, outside the link, so ticking never opens the place.
-  return (
-    <div className="relative grid">
-      {card}
-      <input
-        type="checkbox"
-        data-pick={pickGroup}
-        value={node.id}
-        aria-label={t("remove.pick", { name: node.name })}
-        className="absolute right-3 bottom-3 size-4 accent-primary"
-      />
-    </div>
-  );
-}
-
-/**
- * The property map at one place: where it sits, its details, its owners (when the caller
- * may see them), what is inside, and adding more.
+ * The property map. At the top: the first places and the level picker. At one place: its
+ * summary, then tabs chosen from the level settings, what is inside it first.
  */
 export async function LocationPage({
   view,
   levels,
   people = null,
   finder,
+  tab,
+  transfer = false,
   me,
   locale,
 }: {
@@ -158,158 +55,128 @@ export async function LocationPage({
   levels: LocationLevel[];
   people?: LocationPeople | null;
   finder: Finder;
+  /** The `tab` from the URL; anything this place lacks opens its first tab. */
+  tab?: unknown;
+  /** Opens the owners tab with the transfer form showing. */
+  transfer?: boolean;
   me: MeWithAccess;
   locale: Locale;
 }) {
-  const { location, children, alsoHere, can } = view;
-  const withGrid = location !== null && holdsFloors(location, levels) && children.some((child) => !child.isUnit);
-  const [t, tNav, unitTypes, grid, society] = await Promise.all([
+  const { location, children, can } = view;
+  const canEditLevels = canAnywhere(me.access, "settings", "edit");
+  const [t, tNav, tMembers, documents] = await Promise.all([
     getTranslations("Property"),
     getTranslations("Dashboard.nav"),
-    can.createUnit || withGrid ? getUnitTypes() : Promise.resolve([]),
-    withGrid ? getBuildingGrid(location.id) : Promise.resolve(null),
-    people ? getSociety() : Promise.resolve(null),
+    getTranslations("Members"),
+    location && canAnywhere(me.access, "documents")
+      ? getDocuments({ entityType: "location", entityId: location.id, pageSize: 1 })
+      : Promise.resolve(null),
   ]);
+
+  if (!location) {
+    const unitTypes = can.createUnit ? await getUnitTypes() : [];
+    return (
+      <>
+        <PageHeader
+          title={tNav("property")}
+          sub={t("sub")}
+          actions={
+            canEditLevels ? (
+              <>
+                <Link href="/dashboard/property/unit-types" className={buttonVariants({ variant: "outline" })}>
+                  <Shapes aria-hidden />
+                  {t("unitTypes")}
+                </Link>
+                <Link href="/dashboard/property/levels" className={buttonVariants({ variant: "outline" })}>
+                  <Layers aria-hidden />
+                  {t("levels")}
+                </Link>
+              </>
+            ) : null
+          }
+        />
+        <InsideSection view={view} levels={levels} finder={finder} unitTypes={unitTypes} me={me} locale={locale} />
+      </>
+    );
+  }
+
+  const owners = people?.owners ?? null;
+  const tabs = locationTabs(location, { canSeeOwners: owners !== null, canSeeDocuments: documents !== null });
+  const active = pickLocationTab(tabs, transfer ? "owners" : tab);
+  const showGrid = active === "inside" && holdsFloors(location, levels) && children.some((child) => !child.isUnit);
+  const [unitTypes, grid, society] = await Promise.all([
+    active === "inside" && (can.createUnit || showGrid) ? getUnitTypes() : Promise.resolve([]),
+    showGrid ? getBuildingGrid(location.id) : Promise.resolve(null),
+    active === "owners" ? getSociety() : Promise.resolve(null),
+  ]);
+
+  const pathname = `/dashboard/property/${location.id}`;
   const unitsOpen = canAnywhere(me.access, "units");
-  const canEditLevels = canAnywhere(me.access, "settings", "edit");
-  const pathname = location ? `/dashboard/property/${location.id}` : "/dashboard/property";
-  const result = finder.result;
+  const canTransfer = tabs.includes("owners") && people !== null && people.can.ownerships.create && people.can.ownerships.edit;
+  const inside = insideContent(location, children, levels);
+  const insideLabel =
+    inside.kind === "floors"
+      ? t("pageTabs.floors")
+      : inside.kind === "level"
+        ? pick(inside.level.nameBn, inside.level.nameEn, locale)
+        : t("pageTabs.inside");
+  const tabItems: Record<LocationTab, { label: string; count?: number }> = {
+    inside: { label: insideLabel, count: inside.kind === "floors" ? location.unitCount : location.childCount },
+    owners: { label: t("pageTabs.owners"), count: owners?.length },
+    documents: { label: t("pageTabs.documents"), count: documents?.total },
+    details: { label: t("pageTabs.details") },
+  };
 
   return (
     <>
-      {location ? <DashboardBreadcrumb visible={visibleNavKeys(me.access)} tail={propertyTrail(view.breadcrumb, location.name)} /> : null}
+      <DashboardBreadcrumb visible={visibleNavKeys(me.access)} tail={propertyTrail(view.breadcrumb, location.name)} />
       <PageHeader
-        title={location ? location.name : tNav("property")}
-        sub={location ? [levelName(location, locale), location.code].filter(Boolean).join(" · ") : t("sub")}
+        title={location.name}
+        sub={
+          <span className="inline-flex flex-wrap items-center gap-2">
+            {[levelName(location, locale), location.code].filter(Boolean).join(" · ")}
+            <Chip tone={location.isActive ? "good" : "warn"}>{location.isActive ? t("active") : t("inactive")}</Chip>
+          </span>
+        }
         actions={
           <>
-            {location && unitsOpen && location.unitCount > 0 ? (
+            {unitsOpen && location.unitCount > 0 ? (
               <Link href={{ pathname: "/dashboard/units", query: { areaId: location.id } }} className={buttonVariants({ variant: "outline" })}>
                 <Building2 aria-hidden />
                 {t("seeUnits")}
               </Link>
             ) : null}
-            {!location && canEditLevels ? (
-              <Link href="/dashboard/property/unit-types" className={buttonVariants({ variant: "outline" })}>
-                <Shapes aria-hidden />
-                {t("unitTypes")}
-              </Link>
-            ) : null}
-            {!location && canEditLevels ? (
-              <Link href="/dashboard/property/levels" className={buttonVariants({ variant: "outline" })}>
-                <Layers aria-hidden />
-                {t("levels")}
+            {canTransfer ? (
+              <Link href={{ pathname, query: { tab: "owners", transfer: "1" } }} className={buttonVariants({ variant: "outline" })}>
+                <ArrowRightLeft aria-hidden />
+                {tMembers("people.transfer")}
               </Link>
             ) : null}
           </>
         }
       />
 
+      <LocationStats location={location} levels={levels} counts={finder.counts} owners={owners} documentCount={documents?.total ?? null} locale={locale} />
+      <LocationTabBar pathname={pathname} tabs={tabs.map((id) => ({ id, ...tabItems[id] }))} active={active} locale={locale} />
+
       <div className="grid gap-3.5">
-        {location ? (
+        {active === "inside" ? (
+          <>
+            {grid ? <BuildingGrid grid={grid} unitTypes={unitTypes} unitsOpen={unitsOpen} /> : null}
+            <InsideSection view={view} levels={levels} finder={finder} unitTypes={unitTypes} me={me} locale={locale} />
+          </>
+        ) : null}
+        {active === "owners" && people ? (
+          <PeoplePanel key={`people-${people.location.id}-${transfer}`} people={people} idsRequired={society?.requireIdNumbers ?? false} transfer={transfer} />
+        ) : null}
+        {active === "documents" ? <DocumentsPanel access={me.access} entityType="location" entityId={location.id} /> : null}
+        {active === "details" ? (
           <Card className="grid gap-3.5">
             <h2 className="text-[15px]">{t("details")}</h2>
             {!can.edit && !can.delete ? <Note>{t("readOnly")}</Note> : null}
             <LocationEditor key={location.id} location={location} canEdit={can.edit} canDelete={can.delete} />
           </Card>
         ) : null}
-
-        {people ? <PeoplePanel key={`people-${people.location.id}`} people={people} idsRequired={society?.requireIdNumbers ?? false} /> : null}
-        {view.location ? <DocumentsPanel access={me.access} entityType="location" entityId={view.location.id} /> : null}
-
-        {grid ? <BuildingGrid grid={grid} unitTypes={unitTypes} unitsOpen={unitsOpen} /> : null}
-        <section className="grid gap-3" aria-labelledby="children-title">
-          <LevelBar
-            locale={locale}
-            levels={levels}
-            counts={finder.counts}
-            depth={location?.depth ?? 0}
-            pathname={pathname}
-            levelId={finder.levelId}
-            q={finder.q}
-          />
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 id="children-title" className="text-[15px]">
-              {result ? localDigits(t("found", { count: result.total }), locale) : location ? t("inside", { name: location.name }) : t("topLevel")}
-            </h2>
-          </div>
-          {result ? (
-            result.items.length === 0 ? (
-              <div className="rounded-[12px] border border-line bg-surface p-4 text-muted-foreground">{t("noMatch")}</div>
-            ) : (
-              <>
-                <ul className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-2.5">
-                  {result.items.map((hit) => (
-                    <li key={hit.id} className="grid">
-                      <ChildCard node={hit} locale={locale} unitsOpen={unitsOpen} address={hit.address} owners={hit.owners} />
-                    </li>
-                  ))}
-                </ul>
-                <Pager
-                  locale={locale}
-                  page={result.page}
-                  pages={Math.max(1, Math.ceil(result.total / result.pageSize))}
-                  href={(target) => ({
-                    pathname,
-                    query: {
-                      ...(finder.levelId ? { level: finder.levelId } : {}),
-                      ...(finder.q ? { q: finder.q } : {}),
-                      ...(target > 1 ? { page: String(target) } : {}),
-                    },
-                  })}
-                />
-              </>
-            )
-          ) : (
-            <>
-              {location && canSetUp(location, levels, children.length, can) ? <LayoutForm locationId={location.id} unitTypes={unitTypes} /> : null}
-              <AddPanel
-                key={location?.id ?? "top"}
-                parentId={location?.id ?? null}
-                parentDepth={location?.depth ?? 0}
-                levels={levels}
-                unitTypes={unitTypes}
-                canCreate={can.create}
-                canCreateUnit={can.createUnit}
-                existingNames={children.map((child) => child.name)}
-              />
-              {children.length === 0 ? (
-                <div className="rounded-[12px] border border-line bg-surface p-4 text-muted-foreground">
-                  {location ? t("empty") : can.create ? t("emptyTop") : t("noAccess")}
-                </div>
-              ) : (
-                <>
-                  {location && (can.delete || can.deleteUnit) ? <RemoveSelected group={`remove-${location.id}`} /> : null}
-                  <ul className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-2.5">
-                    {children.map((child) => (
-                      <li key={child.id} className="grid">
-                        <ChildCard
-                          node={child}
-                          locale={locale}
-                          unitsOpen={unitsOpen}
-                          home={child.isUnit ? location?.name : undefined}
-                          pickGroup={location && (child.isUnit ? can.deleteUnit : can.delete) ? `remove-${location.id}` : undefined}
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-              {alsoHere.length > 0 ? (
-                <>
-                  <h3 className="text-[14px] font-semibold">{t("storeys.alsoHere")}</h3>
-                  <ul className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-2.5">
-                    {alsoHere.map((unit) => (
-                      <li key={unit.id} className="grid">
-                        <ChildCard node={unit} locale={locale} unitsOpen={unitsOpen} home={unit.homeName} />
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              ) : null}
-            </>
-          )}
-        </section>
       </div>
     </>
   );

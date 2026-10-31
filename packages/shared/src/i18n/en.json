@@ -952,6 +952,20 @@
     "unitTypes": "Unit types",
     "topLevel": "Top level",
     "inside": "Inside {name}",
+    "pageTabs": {
+      "label": "Sections of this place",
+      "floors": "Floors & units",
+      "inside": "Inside",
+      "owners": "Owners",
+      "documents": "Documents",
+      "details": "Details"
+    },
+    "pageStats": {
+      "currentOwner": "Current owner",
+      "ownerSince": "Owner since",
+      "pastOwners": "Past owners",
+      "documents": "Documents"
+    },
     "empty": "Nothing has been added here yet.",
     "emptyTop": "The map is empty. Start by adding the sector (or the blocks) at the top level.",
     "noAccess": "No area of the map is open to you.",
