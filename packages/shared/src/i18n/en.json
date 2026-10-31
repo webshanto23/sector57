@@ -952,6 +952,7 @@
     "unitTypes": "Unit types",
     "topLevel": "Top level",
     "inside": "Inside {name}",
+    "manageFloors": "Manage floors ({count})",
     "pageTabs": {
       "label": "Sections of this place",
       "floors": "Floors & units",

@@ -952,6 +952,7 @@
     "unitTypes": "ইউনিটের ধরন",
     "topLevel": "সবার উপরের স্তর",
     "inside": "{name}-এর ভেতরে",
+    "manageFloors": "তলাগুলো সামলান ({count})",
     "pageTabs": {
       "label": "এই জায়গার অংশগুলো",
       "floors": "তলা ও ইউনিট",

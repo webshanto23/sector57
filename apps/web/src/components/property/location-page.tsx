@@ -160,10 +160,15 @@ export async function LocationPage({
 
       <div className="grid gap-3.5">
         {active === "inside" ? (
-          <>
-            {grid ? <BuildingGrid grid={grid} unitTypes={unitTypes} unitsOpen={unitsOpen} /> : null}
-            <InsideSection view={view} levels={levels} finder={finder} unitTypes={unitTypes} me={me} locale={locale} />
-          </>
+          <InsideSection
+            view={view}
+            levels={levels}
+            finder={finder}
+            unitTypes={unitTypes}
+            grid={grid ? <BuildingGrid grid={grid} unitTypes={unitTypes} unitsOpen={unitsOpen} /> : null}
+            me={me}
+            locale={locale}
+          />
         ) : null}
         {active === "owners" && people ? (
           <OwnersPanel key={people.location.id} people={people} idsRequired={society?.requireIdNumbers ?? false} transfer={transfer} />

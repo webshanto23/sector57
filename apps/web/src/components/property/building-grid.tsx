@@ -1,6 +1,6 @@
 "use client";
 
-import { localDigits, pick, type BuildingGrid as Grid, type Locale, type UnitTypeItem } from "@s57/shared";
+import { localDigits, OCCUPANCIES, pick, type BuildingGrid as Grid, type Locale, type Occupancy, type UnitTypeItem } from "@s57/shared";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { FormStatus } from "@/components/admin/form-status";
@@ -30,6 +30,10 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
   // Picked units, lowest floor first: the first one is kept unless the editor picks another.
   const picked = grid.floors.flatMap((floor) => floor.units.filter((unit) => chosen.has(unit.id)).map((unit) => ({ ...unit, floor: floor.name, floorId: floor.id })));
   const keep = picked.find((unit) => unit.id === keepId) ?? picked[0];
+  const occupancyCounts: Partial<Record<Occupancy, number>> = {};
+  for (const unit of grid.floors.flatMap((floor) => floor.units).filter((unit) => !unit.mergedInto)) {
+    occupancyCounts[unit.occupancy] = (occupancyCounts[unit.occupancy] ?? 0) + 1;
+  }
   const holderName = (holder: { name: string; nameEn: string | null }) => (locale === "en" ? (holder.nameEn ?? holder.name) : holder.name);
   const unitName = (id: string, name: string, className?: string) =>
     unitsOpen ? (
@@ -69,9 +73,15 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
 
   return (
     <Card className="grid gap-3">
-      <div className="grid gap-0.5">
-        <h3 className="font-semibold">{t("title")}</h3>
-        {grid.canEdit ? <p className="text-[13px] text-muted-foreground">{t("hint")}</p> : null}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {grid.canEdit ? <p className="text-[13px] text-muted-foreground">{t("hint")}</p> : <span />}
+        <span className="flex flex-wrap gap-1.5">
+          {OCCUPANCIES.map((value) => (
+            <Chip key={value} tone={OCCUPANCY_TONES[value]}>
+              {tOcc(value)} {localDigits(occupancyCounts[value] ?? 0, locale)}
+            </Chip>
+          ))}
+        </span>
       </div>
 
       <ol className="grid gap-2">
@@ -91,7 +101,9 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
                     onChange={(e) => toggle(ids, e.target.checked)}
                   />
                 ) : null}
-                {floor.name}
+                <Link href={`/dashboard/property/${floor.id}`} className="text-fg underline-offset-2 hover:underline">
+                  {floor.name}
+                </Link>
               </div>
               {floor.units.length === 0 && floor.coveredBy.length === 0 ? (
                 <p className="text-[13px] text-muted-foreground">{t("noUnits")}</p>

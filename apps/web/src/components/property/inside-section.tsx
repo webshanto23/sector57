@@ -10,6 +10,7 @@ import {
   type UnitTypeItem,
 } from "@s57/shared";
 import { getTranslations } from "next-intl/server";
+import type { ReactNode } from "react";
 import { Pager } from "@/components/cms/pager";
 import { AddPanel } from "./add-panel";
 import { ChildCard } from "./child-card";
@@ -26,12 +27,16 @@ function canSetUp(location: LocationNode, levels: LocationLevel[], childCount: n
   return holdsFloors(location, levels) && childCount === 0 && can.create && can.createUnit;
 }
 
-/** What sits in a place (or at the top): the level picker and search, adding more, and the cards. */
+/**
+ * What sits in a place (or at the top): the level picker and search, adding more, and the cards.
+ * With `grid` (a building over floors) the grid leads and the floor cards fold away below it.
+ */
 export async function InsideSection({
   view,
   levels,
   finder,
   unitTypes,
+  grid = null,
   me,
   locale,
 }: {
@@ -39,6 +44,7 @@ export async function InsideSection({
   levels: LocationLevel[];
   finder: Finder;
   unitTypes: UnitTypeItem[];
+  grid?: ReactNode;
   me: MeWithAccess;
   locale: Locale;
 }) {
@@ -47,23 +53,45 @@ export async function InsideSection({
   const unitsOpen = canAnywhere(me.access, "units");
   const pathname = location ? `/dashboard/property/${location.id}` : "/dashboard/property";
   const result = finder.result;
+  const heading = (
+    <h2 id="children-title" className="text-[15px]">
+      {result ? localDigits(t("found", { count: result.total }), locale) : grid ? t("pageTabs.floors") : location ? t("inside", { name: location.name }) : t("topLevel")}
+    </h2>
+  );
+
+  const cards = (
+    <>
+      {location && (can.delete || can.deleteUnit) ? <RemoveSelected group={`remove-${location.id}`} /> : null}
+      <ul className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-2.5">
+        {children.map((child) => (
+          <li key={child.id} className="grid">
+            <ChildCard
+              node={child}
+              locale={locale}
+              unitsOpen={unitsOpen}
+              home={child.isUnit ? location?.name : undefined}
+              pickGroup={location && (child.isUnit ? can.deleteUnit : can.delete) ? `remove-${location.id}` : undefined}
+            />
+          </li>
+        ))}
+      </ul>
+    </>
+  );
 
   return (
     <section className="grid gap-3" aria-labelledby="children-title">
-      <LevelBar
-        locale={locale}
-        levels={levels}
-        counts={finder.counts}
-        depth={location?.depth ?? 0}
-        pathname={pathname}
-        levelId={finder.levelId}
-        q={finder.q}
-      />
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h2 id="children-title" className="text-[15px]">
-          {result ? localDigits(t("found", { count: result.total }), locale) : location ? t("inside", { name: location.name }) : t("topLevel")}
-        </h2>
-      </div>
+      {grid && !result ? null : (
+        <LevelBar
+          locale={locale}
+          levels={levels}
+          counts={finder.counts}
+          depth={location?.depth ?? 0}
+          pathname={pathname}
+          levelId={finder.levelId}
+          q={finder.q}
+        />
+      )}
+      {result ? heading : null}
       {result ? (
         result.items.length === 0 ? (
           <div className="rounded-[12px] border border-line bg-surface p-4 text-muted-foreground">{t("noMatch")}</div>
@@ -103,29 +131,21 @@ export async function InsideSection({
             canCreate={can.create}
             canCreateUnit={can.createUnit}
             existingNames={children.map((child) => child.name)}
+            heading={heading}
           />
-          {children.length === 0 ? (
-            <div className="rounded-[12px] border border-line bg-surface p-4 text-muted-foreground">
-              {location ? t("empty") : can.create ? t("emptyTop") : t("noAccess")}
-            </div>
-          ) : (
-            <>
-              {location && (can.delete || can.deleteUnit) ? <RemoveSelected group={`remove-${location.id}`} /> : null}
-              <ul className="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-2.5">
-                {children.map((child) => (
-                  <li key={child.id} className="grid">
-                    <ChildCard
-                      node={child}
-                      locale={locale}
-                      unitsOpen={unitsOpen}
-                      home={child.isUnit ? location?.name : undefined}
-                      pickGroup={location && (child.isUnit ? can.deleteUnit : can.delete) ? `remove-${location.id}` : undefined}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
+              {grid}
+              {children.length === 0 ? (
+                <div className="rounded-[12px] border border-line bg-surface p-4 text-muted-foreground">
+                  {location ? t("empty") : can.create ? t("emptyTop") : t("noAccess")}
+                </div>
+              ) : grid ? (
+                <details className="grid gap-3 rounded-[12px] border border-line bg-surface p-3.5">
+                  <summary className="cursor-pointer font-semibold">{localDigits(t("manageFloors", { count: children.length }), locale)}</summary>
+                  <div className="mt-3 grid gap-3">{cards}</div>
+                </details>
+              ) : (
+                cards
+              )}
           {alsoHere.length > 0 ? (
             <>
               <h3 className="text-[14px] font-semibold">{t("storeys.alsoHere")}</h3>
