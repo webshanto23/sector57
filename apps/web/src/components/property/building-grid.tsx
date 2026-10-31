@@ -112,7 +112,7 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
                   {floor.units.map((unit) =>
                     unit.mergedInto ? (
                       <li key={unit.id}>
-                        <div className="grid gap-1 rounded-[8px] border border-dashed border-line bg-surface-2 p-2 text-[13px] text-muted-foreground">
+                        <div className="grid h-full content-start gap-1 rounded-[8px] border border-dashed border-line bg-surface-2 p-2 text-[13px] text-muted-foreground">
                           <span className="font-semibold">{unit.name}</span>
                           <span>
                             {t.rich("partOf", {
@@ -133,7 +133,7 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
                     ) : (
                     <li key={unit.id}>
                       <label
-                        className={`grid gap-1 rounded-[8px] border p-2 text-[13px] ${chosen.has(unit.id) ? "border-primary bg-surface-2" : "border-line bg-surface"}`}
+                        className={`grid h-full grid-cols-[minmax(0,1fr)] content-start gap-1 rounded-[8px] border p-2 text-[13px] ${chosen.has(unit.id) ? "border-primary bg-surface-2" : "border-line bg-surface"}`}
                       >
                         <span className="flex items-center gap-2 font-semibold">
                           {grid.canEdit ? (
@@ -158,11 +158,11 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
                         ) : null}
                         <span className="flex flex-wrap gap-1">
                           <Chip tone={OCCUPANCY_TONES[unit.occupancy]}>{tOcc(unit.occupancy)}</Chip>
-                          {unit.alsoOn.length > 0 ? <Chip tone="info">{t("floors", { floors: [floor.name, ...unit.alsoOn].join(" + ") })}</Chip> : null}
-                          {unit.includes.length > 0 ? <Chip tone="info">{t("includes", { names: unit.includes.join(", ") })}</Chip> : null}
+                          {unit.alsoOn.length > 0 ? <Chip tone="info" className="rounded-[8px] whitespace-normal">{t("floors", { floors: [floor.name, ...unit.alsoOn].join(" + ") })}</Chip> : null}
+                          {unit.includes.length > 0 ? <Chip tone="info" className="rounded-[8px] whitespace-normal">{t("includes", { names: unit.includes.join(", ") })}</Chip> : null}
                           {unit.holder && unit.holder.units > 1 ? (
                             // Names stay as typed; only the count takes the page's digits.
-                            <Chip tone="acc">{t("holderUnits", { name: holderName(unit.holder), count: localDigits(String(unit.holder.units), locale) })}</Chip>
+                            <Chip tone="acc" className="rounded-[8px] whitespace-normal">{t("holderUnits", { name: holderName(unit.holder), count: localDigits(String(unit.holder.units), locale) })}</Chip>
                           ) : null}
                           {!unit.isActive ? <Chip tone="warn">{t("inactive")}</Chip> : null}
                         </span>
@@ -172,7 +172,7 @@ export function BuildingGrid({ grid, unitTypes, unitsOpen }: { grid: Grid; unitT
                   )}
                   {floor.coveredBy.map((joined) => (
                     <li key={`covered-${joined.id}`}>
-                      <div className="grid gap-1 rounded-[8px] border border-dashed border-line bg-surface-2 p-2 text-[13px] text-muted-foreground">
+                      <div className="grid h-full content-start gap-1 rounded-[8px] border border-dashed border-line bg-surface-2 p-2 text-[13px] text-muted-foreground">
                         <span>{t.rich("partOf", { name: joined.name, link: () => unitName(joined.id, joined.name, "font-semibold underline underline-offset-2") })}</span>
                       </div>
                     </li>

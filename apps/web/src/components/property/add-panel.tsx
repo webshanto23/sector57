@@ -85,6 +85,10 @@ export function AddPanel({
 
   if (kinds.length === 0) return heading;
 
+  // Examples in the hints follow the level being added; level names are society data.
+  const adding = kind === "unit" ? levels.find((level) => level.isUnitLevel) : levelsBelow.find((level) => level.id === levelId);
+  const example = { bn: adding?.nameBn ?? "", en: adding?.nameEn ?? adding?.nameBn ?? "" };
+
   function open(next: Mode) {
     setStatus(null);
     setMode(next);
@@ -226,7 +230,7 @@ export function AddPanel({
               }}
             >
               <div className="grid gap-3.5 min-[600px]:grid-cols-2">
-                <TextField id="add-name" label={t("name")} hint={t("nameHint")} value={name} onChange={(e) => setName(e.target.value)} required />
+                <TextField id="add-name" label={t("name")} hint={t("addNameHint", example)} value={name} onChange={(e) => setName(e.target.value)} required />
                 <TextField id="add-code" label={t("code")} hint={t("codeHint")} value={code} onChange={(e) => setCode(e.target.value)} />
               </div>
               {kind === "unit" ? unitFields(true) : null}
@@ -248,7 +252,7 @@ export function AddPanel({
                 <TextField
                   id="add-prefix"
                   label={t("prefix")}
-                  hint={t("prefixHint")}
+                  hint={t("addPrefixHint", example)}
                   value={range.prefix}
                   onChange={(e) => setRange({ ...range, prefix: e.target.value })}
                 />
