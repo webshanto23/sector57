@@ -4840,6 +4840,7 @@ export interface components {
                 billTo: "owner" | "renter";
                 /** @enum {string} */
                 occupancy: "owner_occupied" | "rented" | "vacant";
+                ownerUses: boolean;
                 isActive: boolean;
                 owners: {
                     /** Format: uuid */
@@ -4913,6 +4914,7 @@ export interface components {
             billTo: "owner" | "renter";
             /** @enum {string} */
             occupancy: "owner_occupied" | "rented" | "vacant";
+            ownerUses: boolean;
             isActive: boolean;
             breadcrumb: {
                 /** Format: uuid */
@@ -4938,6 +4940,7 @@ export interface components {
                 edit: boolean;
                 delete: boolean;
                 separate: boolean;
+                ownerUse: boolean;
             };
         };
         UnitCreateDto: {
@@ -4990,6 +4993,7 @@ export interface components {
             sizeSqft?: string | null;
             /** @enum {string} */
             billTo?: "owner" | "renter";
+            ownerUses?: boolean;
         };
         PersonInputDto: {
             fullName: string;

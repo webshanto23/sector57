@@ -56,7 +56,8 @@ const sameParty = (row: { person_id: string | null; organisation_id: string | nu
  * Owners of plots, buildings and units (`ownerships` permission, checked at the location).
  * Co-owners hold one row each; current shares add up to at most 100%. A transfer ends the
  * current rows and starts new ones, so the history stays. Every change re-derives the
- * occupancy of the units at and below the location.
+ * occupancy of the units at and below the location. When the owner changes, "Owner uses this"
+ * is cleared on the units that owner held, so it never outlives a sale.
  */
 @Injectable()
 export class OwnershipsService {
@@ -107,6 +108,8 @@ export class OwnershipsService {
       },
       select: rowSelect,
     });
+    // A first owner here becomes the nearest owner of what is below; a co-owner changes nobody's.
+    if (current.length === 0) await this.clearOwnerUse(tx, actor, location);
     await this.occupancy.refresh(actor.societyId, location.path, tx);
     await this.audit.record({ ...auditOf(actor, 'ownership', 'create', row.id), after: { ...snapshot(row), reusedParty: party.reused } }, tx);
     return row.id;
@@ -145,6 +148,7 @@ export class OwnershipsService {
           start_date: date,
         })),
       });
+      await this.clearOwnerUse(tx, actor, location);
       await this.occupancy.refresh(actor.societyId, location.path, tx);
       await this.audit.record(
         {
@@ -190,6 +194,7 @@ export class OwnershipsService {
     if (endsBeforeStart(isoDate(before.start_date), input.endDate)) throw endBeforeStart();
     await this.prisma.$transaction(async (tx) => {
       const after = await tx.ownerships.update({ where: { id }, data: { end_date: dayOf(input.endDate) }, select: rowSelect });
+      await this.clearOwnerUse(tx, actor, { id: before.location_id, path: before.locations.path });
       await this.occupancy.refresh(actor.societyId, before.locations.path, tx);
       await this.audit.record({ ...auditOf(actor, 'ownership', 'end', id), before: snapshot(before), after: snapshot(after) }, tx);
     });
@@ -201,9 +206,32 @@ export class OwnershipsService {
     const before = await this.row(actor, id, 'delete');
     await this.prisma.$transaction(async (tx) => {
       await tx.ownerships.delete({ where: { id } });
+      if (before.end_date === null) await this.clearOwnerUse(tx, actor, { id: before.location_id, path: before.locations.path });
       await this.occupancy.refresh(actor.societyId, before.locations.path, tx);
       await this.audit.record({ ...auditOf(actor, 'ownership', 'delete', id), before: snapshot(before) }, tx);
     });
+  }
+
+  /**
+   * Clears "Owner uses this" at and below a location whose owner changed. A unit under a nearer
+   * owner stays ticked: selling the building does not change who holds a floor sold before.
+   * Call it before the occupancy refresh.
+   */
+  private async clearOwnerUse(tx: Tx, actor: Actor, location: { id: string; path: string }): Promise<void> {
+    const cleared = await tx.$queryRaw<{ location_id: string }[]>`
+      update units u set owner_uses = false
+      from locations l
+      where l.id = u.location_id and u.society_id = ${actor.societyId}::uuid and u.owner_uses
+        and starts_with(l.path, ${location.path})
+        and not exists (
+          select 1 from ownerships o
+          join locations ol on ol.id = o.location_id
+          where o.society_id = u.society_id and o.end_date is null and ol.id <> ${location.id}::uuid
+            and starts_with(ol.path, ${location.path}) and starts_with(l.path, ol.path)
+        )
+      returning u.location_id`;
+    if (cleared.length === 0) return;
+    await this.audit.record({ ...auditOf(actor, 'location', 'owner_use_cleared', location.id), after: { units: cleared.map((row) => row.location_id) } }, tx);
   }
 
   /** A location the caller sees on `ownerships` (else 404) and may `action` on there (else 403). */

@@ -27,6 +27,7 @@ export function UnitForm({ unit, unitTypes }: { unit: UnitDetail; unitTypes: Uni
     unitType: unit.unitType,
     sizeSqft: unit.sizeSqft ?? "",
     billTo: unit.billTo as BillTo,
+    ownerUses: unit.ownerUses,
     isActive: unit.isActive,
   });
   const set = <K extends keyof typeof values>(key: K, value: (typeof values)[K]) => setValues({ ...values, [key]: value });
@@ -80,6 +81,15 @@ export function UnitForm({ unit, unitTypes }: { unit: UnitDetail; unitTypes: Uni
                 <p className="text-[12.5px] text-muted-foreground">{t("occupancyHint")}</p>
               </div>
             </div>
+            {unit.can.ownerUse || unit.ownerUses ? (
+              <CheckField
+                id="unit-owner-uses"
+                label={t("ownerUses")}
+                hint={t("ownerUsesHint")}
+                checked={values.ownerUses}
+                onChange={(e) => set("ownerUses", e.target.checked)}
+              />
+            ) : null}
             <CheckField
               id="unit-active"
               label={t("active")}

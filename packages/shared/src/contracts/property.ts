@@ -351,6 +351,8 @@ export const unitUpdateSchema = z.object({
   unitType: unitFields.unitType.optional(),
   sizeSqft: sizeSqftSchema.optional(),
   billTo: unitFields.billTo.optional(),
+  /** "Owner uses this": needs a current owner at the unit or above (409 `no_owner`). */
+  ownerUses: z.boolean().optional(),
 });
 export type UnitUpdateInput = z.infer<typeof unitUpdateSchema>;
 
@@ -375,6 +377,8 @@ export const unitSummarySchema = z.object({
   sizeSqft: z.string().nullable(),
   billTo: z.enum(BILL_TO),
   occupancy: z.enum(OCCUPANCIES),
+  /** The owner uses it themselves with nobody living there; cleared when the owner changes. */
+  ownerUses: z.boolean(),
   isActive: z.boolean(),
 });
 export type UnitSummary = z.infer<typeof unitSummarySchema>;
@@ -390,8 +394,8 @@ export const unitDetailSchema = unitSummarySchema.extend({
   covers: z.array(storeyRefSchema),
   /** Combined into another unit (Step 37): that unit and the date. Such a unit is history only. */
   mergedInto: z.object({ id: z.uuid(), name: z.string(), on: z.iso.date() }).nullable(),
-  /** `separate`: take this part back out of the unit it was joined into. */
-  can: z.object({ edit: z.boolean(), delete: z.boolean(), separate: z.boolean() }),
+  /** `separate`: take this part back out of the unit it was joined into. `ownerUse`: may tick "Owner uses this" (it has an owner). */
+  can: z.object({ edit: z.boolean(), delete: z.boolean(), separate: z.boolean(), ownerUse: z.boolean() }),
 });
 export type UnitDetail = z.infer<typeof unitDetailSchema>;
 

@@ -179,7 +179,7 @@ describe('Records reports (e2e)', () => {
     it('downloads as CSV with units.export only', async () => {
       const csv = await get(`/reports/occupancy/csv?parentId=${ids.blockC}&lang=en`, users.unitsC).expect(200);
       expect(csv.headers['content-type']).toContain('text/csv');
-      expect(csv.text).toContain('Area,Units,Owner lives there,Rented,Vacant,Occupied %');
+      expect(csv.text).toContain('Area,Units,Owner occupied,Rented,Vacant,Occupied %');
       expect(csv.text).toContain('Total,3,1,1,1,66');
       await get('/reports/occupancy/csv', users.viewerC).expect(403);
     });

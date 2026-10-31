@@ -948,6 +948,7 @@ model units {
   size_sqft     Decimal?        @db.Decimal(10, 2)
   bill_to       String          @default("owner")
   occupancy     String          @default("vacant")
+  owner_uses    Boolean         @default(false)
   merged_into   String?         @db.Uuid
   merged_on     DateTime?       @db.Date
   invoice_lines invoice_lines[]

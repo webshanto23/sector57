@@ -713,6 +713,7 @@
       "floor_token_missing": "Put '{n}' where the floor number goes.",
       "letter_token_missing": "Put '{letter}' where each unit's letter goes.",
       "layout_not_empty": "Floors can only be set up in an empty building. Add more floors one by one instead.",
+      "no_owner": "This unit has no current owner.",
       "unit_merged": "This unit was combined into another one and is kept as history only.",
       "combine_unit_inactive": "An inactive or already combined unit can't be combined.",
       "combine_not_side_by_side": "Only units on one floor, or on floors of one building, can be joined.",
@@ -1117,13 +1118,15 @@
       "renter": "Renter"
     },
     "billToLabel": "Bills go to",
+    "ownerUses": "Owner uses this",
+    "ownerUsesHint": "For an owner who uses the unit with nobody living there, such as an office. It counts as owner occupied and clears when the owner changes.",
     "occupancy": {
-      "owner_occupied": "Owner lives here",
+      "owner_occupied": "Owner occupied",
       "rented": "Rented",
       "vacant": "Vacant"
     },
     "occupancyLabel": "Occupancy",
-    "occupancyHint": "Follows the records: rented while a tenancy runs; owner lives here while someone of the owner's household is a resident (press “Lives here” on the owner); otherwise vacant, even when owned.",
+    "occupancyHint": "Follows the records: rented while a tenancy runs; owner occupied while someone of the owner's household is a resident (press “Lives here” on the owner) or “Owner uses this” is ticked; otherwise vacant, even when owned.",
     "unitTypeLabel": "Type",
     "size": "Size (sq ft)",
     "sizeHint": "Optional.",
@@ -2913,7 +2916,7 @@
         "percent": "Occupied"
       },
       "occupancy": {
-        "owner_occupied": "Owner lives there",
+        "owner_occupied": "Owner occupied",
         "rented": "Rented",
         "vacant": "Vacant"
       }
