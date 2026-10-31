@@ -43,6 +43,7 @@ export function AlbumForm({
       titleEn: album?.titleEn ?? "",
       eventDate: album?.eventDate ?? null,
       isPublished: album?.isPublished ?? false,
+      hideFromGallery: album?.hideFromGallery ?? false,
     },
   });
   const errors = form.formState.errors;
@@ -71,6 +72,14 @@ export function AlbumForm({
         />
         <div className="self-end pb-2">
           <CheckField id={id("isPublished")} label={t("isPublished")} hint={t("isPublishedHint")} {...form.register("isPublished")} />
+        </div>
+        <div className="min-[701px]:col-span-2">
+          <CheckField
+            id={id("hideFromGallery")}
+            label={t("hideFromGallery")}
+            hint={t("hideFromGalleryHint")}
+            {...form.register("hideFromGallery")}
+          />
         </div>
       </fieldset>
       <FormStatus status={status} />

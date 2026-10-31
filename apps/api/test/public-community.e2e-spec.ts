@@ -19,7 +19,7 @@ describe('Public committee and gallery API (e2e)', () => {
   let prisma: PrismaService;
   let homeId: string;
   let otherId: string;
-  const ids = { current: '', ended: '', future: '', borrowed: '', otherMember: '', published: '', draft: '', otherAlbum: '' };
+  const ids = { current: '', ended: '', future: '', borrowed: '', otherMember: '', published: '', draft: '', otherAlbum: '', hiddenAlbum: '' };
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -67,6 +67,8 @@ describe('Public committee and gallery API (e2e)', () => {
     ids.published = await album(homeId, 'প্রকাশিত', true);
     ids.draft = await album(homeId, 'খসড়া', false);
     ids.otherAlbum = await album(otherId, 'অন্যের', true);
+    ids.hiddenAlbum = await album(homeId, 'লুকানো', true);
+    await prisma.gallery_albums.update({ where: { id: ids.hiddenAlbum }, data: { hide_from_gallery: true } });
   });
 
   afterAll(async () => {
@@ -100,6 +102,12 @@ describe('Public committee and gallery API (e2e)', () => {
   });
 
   describe('GET /public/gallery', () => {
+    it('leaves a hidden album off the list but still serves it to the home slider', async () => {
+      const res = await request(server()).get('/public/gallery').query({ pageSize: 100 }).expect(200);
+      expect(albumListSchema.parse(res.body).items.map((a) => a.id)).not.toContain(ids.hiddenAlbum);
+      await request(server()).get(`/public/gallery/${ids.hiddenAlbum}`).expect(200);
+    });
+
     it('lists only published albums of this society', async () => {
       const res = await request(server()).get('/public/gallery').query({ pageSize: 100 }).expect(200);
       const list = albumListSchema.parse(res.body);

@@ -10,7 +10,7 @@ import {
   vehicleLookupSchema,
   vehicleRemoveSchema,
   vehicleUnitPeopleQuery,
-  vehicleUnitPeopleSchema,
+  vehicleUnitHoldersSchema,
   vehicleUpdateSchema,
 } from '@s57/shared';
 import { ZodResponse } from 'nestjs-zod';
@@ -30,7 +30,7 @@ export class VehicleRemoveDto extends createDto(vehicleRemoveSchema) {}
 export class VehicleLookupQueryDto extends createDto(vehicleLookupQuery) {}
 export class VehicleLookupDto extends createDto(vehicleLookupSchema) {}
 export class VehicleUnitPeopleQueryDto extends createDto(vehicleUnitPeopleQuery) {}
-export class VehicleUnitPeopleDto extends createDto(vehicleUnitPeopleSchema) {}
+export class VehicleUnitPeopleDto extends createDto(vehicleUnitHoldersSchema) {}
 export class StickerSettingsDto extends createDto(stickerSettingsSchema) {}
 export class StickerSettingsViewDto extends createDto(stickerSettingsViewSchema) {}
 
@@ -89,7 +89,7 @@ export class VehiclesController {
     return this.vehicles.get(actor, id);
   }
 
-  /** 404 `unit_not_found`, `person_not_found`; 409 `vehicle_person_not_at_unit`, `vehicle_exists`. */
+  /** 404 `unit_not_found`, `person_not_found`, `organisation_not_found`; 409 `vehicle_person_not_at_unit`, `vehicle_exists`. */
   @Post()
   @Can('vehicles', 'create')
   @ZodResponse({ status: 201, type: VehicleDetailDto })

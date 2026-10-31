@@ -33,6 +33,7 @@ export default async function VehiclesPage({ params, searchParams }: PageProps<"
     kind: text("kind"),
     unitId: text("unitId"),
     personId: text("personId"),
+    organisationId: text("organisationId"),
     page: search["page"] ?? 1,
     pageSize: PAGE_SIZE,
   });
@@ -45,6 +46,7 @@ export default async function VehiclesPage({ params, searchParams }: PageProps<"
     ...(query.kind ? { kind: query.kind } : {}),
     ...(query.unitId ? { unitId: query.unitId } : {}),
     ...(query.personId ? { personId: query.personId } : {}),
+    ...(query.organisationId ? { organisationId: query.organisationId } : {}),
   };
 
   return (
@@ -70,6 +72,7 @@ export default async function VehiclesPage({ params, searchParams }: PageProps<"
       <form method="get" role="search" className="mb-3.5 flex flex-wrap items-center gap-2.5">
         {query.unitId ? <input type="hidden" name="unitId" value={query.unitId} /> : null}
         {query.personId ? <input type="hidden" name="personId" value={query.personId} /> : null}
+        {query.organisationId ? <input type="hidden" name="organisationId" value={query.organisationId} /> : null}
         <SearchInput name="q" defaultValue={query.q ?? ""} placeholder={t("searchPlaceholder")} aria-label={t("searchLabel")} />
         <select name="kind" defaultValue={query.kind ?? ""} aria-label={t("kindLabel")} className={`${inputClass} sm:w-auto!`}>
           <option value="">{t("allKinds")}</option>

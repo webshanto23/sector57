@@ -4,10 +4,22 @@ import { Chip, DataTable, type Column } from "@/components/kit";
 import { Link } from "@/i18n/navigation";
 import { StickerCell } from "./vehicle-chips";
 
-/** A column a host page already shows and can leave out: the unit (on a unit page) or the person (on a person's). */
+/** A column a host page already shows and can leave out: the unit (on a unit page) or the holder (on a person's or organisation's). */
 type Hidden = "unit" | "person";
 
-/** Vehicles as a table (cards on phones): number and kind, unit, person, latest sticker. */
+/** The person or organisation a vehicle belongs to, linked to their page for those who may see members. */
+export function VehicleHolder({ vehicle, locale, link, className }: { vehicle: VehicleRow; locale: Locale; link: boolean; className?: string }) {
+  const name = vehicle.organisation?.name ?? pick(vehicle.person!.name, vehicle.person!.nameEn, locale);
+  if (!link) return name;
+  const href = vehicle.organisation ? (`/dashboard/members/organisations/${vehicle.organisation.id}` as const) : (`/dashboard/members/${vehicle.person!.id}` as const);
+  return (
+    <Link href={href} className={className}>
+      {name}
+    </Link>
+  );
+}
+
+/** Vehicles as a table (cards on phones): number and kind, unit, holder, latest sticker. */
 export function VehiclesTable({
   rows,
   locale,
@@ -19,7 +31,7 @@ export function VehiclesTable({
   locale: Locale;
   empty: string;
   hide?: Hidden[];
-  /** Link names to the person's page (for those who may see members). */
+  /** Link names to the person's or organisation's page (for those who may see members). */
   personLinks?: boolean;
 }) {
   const t = useTranslations("Vehicles");
@@ -45,14 +57,7 @@ export function VehiclesTable({
     {
       key: "person",
       header: t("col.person"),
-      cell: (row) =>
-        personLinks ? (
-          <Link href={`/dashboard/members/${row.person.id}`} className="text-fg">
-            {pick(row.person.name, row.person.nameEn, locale)}
-          </Link>
-        ) : (
-          pick(row.person.name, row.person.nameEn, locale)
-        ),
+      cell: (row) => <VehicleHolder vehicle={row} locale={locale} link={personLinks} className="text-fg" />,
     },
     { key: "sticker", header: t("col.sticker"), cell: (row) => <StickerCell sticker={row.sticker} /> },
   ];

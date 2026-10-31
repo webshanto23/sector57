@@ -5,18 +5,16 @@ import {
   OPEN_TENANCY_STATUSES,
   RENTER_TYPES,
   localDigits,
-  pick,
   type Locale,
   type LocationPeople,
   type Occupant,
   type OccupantRelation,
-  type Ownership,
   type RenterType,
   type Tenancy,
 } from "@s57/shared";
-import { ArrowRightLeft, House, Plus, UserPlus, X } from "lucide-react";
+import { ArrowRightLeft, House, UserPlus } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useContext, useState, type ReactNode } from "react";
+import { useContext, useState } from "react";
 import { FormStatus } from "@/components/admin/form-status";
 import { CheckField, TextField } from "@/components/cms/fields";
 import { Card, Chip, Field, inputClass } from "@/components/kit";
@@ -25,230 +23,14 @@ import { Button } from "@/components/ui/button";
 import { Link, useRouter } from "@/i18n/navigation";
 import { api } from "@/lib/api/client";
 import { DateRange, PartyLink, TenancyStatusChip } from "./labels";
-import { OwnersAbove } from "./owners-above";
+import { OwnersSection } from "./owners-section";
+import { Block, Empty, FormActions, Past, rowClass } from "./people-blocks";
 import { PastRenterSelect, pastRenters } from "./past-renter-select";
 import { DateField, emptyParty, IdsRequired, PartyFields, partyBody, partyReady, RowActions, todayIso, type PartyValues } from "./party-fields";
 import { emptyPerson, PersonFields, personBody } from "./person-fields";
 
 type Submit = ReturnType<typeof useSubmit>;
 type OpenStatus = (typeof OPEN_TENANCY_STATUSES)[number];
-
-/** A titled block with its add buttons on the right. */
-function Block({ title, actions, children }: { title: string; actions?: ReactNode; children: ReactNode }) {
-  return (
-    <section className="grid content-start gap-2.5">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-[14px] font-semibold">{title}</h3>
-        {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function Empty({ children }: { children: ReactNode }) {
-  return <p className="rounded-[10px] border border-dashed border-line p-3 text-[13px] text-muted-foreground">{children}</p>;
-}
-
-/** Older rows, folded away. */
-function Past({ title, count, children }: { title: string; count: number; children: ReactNode }) {
-  const locale = useLocale() as Locale;
-  if (count === 0) return null;
-  return (
-    <details className="rounded-[10px] border border-line p-2.5 text-[13px]">
-      <summary className="cursor-pointer font-semibold">
-        {title} ({localDigits(count, locale)})
-      </summary>
-      <ul className="mt-2 grid gap-2">{children}</ul>
-    </details>
-  );
-}
-
-const rowClass = "grid gap-2 rounded-[10px] border border-line bg-surface p-3 min-[700px]:grid-cols-[minmax(0,1fr)_auto] min-[700px]:items-center";
-
-// ---------------------------------------------------------------------------
-// Owners
-// ---------------------------------------------------------------------------
-
-function OwnerLine({ row }: { row: Ownership }) {
-  const t = useTranslations("Members");
-  const locale = useLocale() as Locale;
-  return (
-    <div className="grid gap-0.5">
-      <span className="flex flex-wrap items-center gap-x-2">
-        <PartyLink party={row.owner} />
-        <span className="num text-[12.5px] text-muted-foreground">{localDigits(t("sharePercent", { share: row.sharePercent }), locale)}</span>
-      </span>
-      <span className="text-[12.5px] text-muted-foreground">
-        <DateRange start={row.startDate} end={row.endDate} />
-        {row.owner.phone ? <span className="num"> · {localDigits(row.owner.phone, locale)}</span> : null}
-      </span>
-    </div>
-  );
-}
-
-function AddOwnerForm({ locationId, submit, onDone }: { locationId: string; submit: Submit; onDone: () => void }) {
-  const t = useTranslations("Members");
-  const ids = useContext(IdsRequired);
-  const [party, setParty] = useState<PartyValues>(emptyParty);
-  const [share, setShare] = useState("100");
-  const [startDate, setStartDate] = useState(todayIso);
-  return (
-    <form
-      noValidate
-      className="grid gap-3.5 rounded-[10px] border border-line p-3"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        const done = await submit.run(
-          () => api.POST("/ownerships", { body: { locationId, owner: partyBody(party), sharePercent: share, startDate } }),
-          t("people.added"),
-        );
-        if (done) onDone();
-      }}
-    >
-      <PartyFields id="owner" values={party} onChange={setParty} memberLookup />
-      <div className="grid gap-3.5 min-[600px]:grid-cols-2">
-        <TextField id="owner-share" label={t("share")} inputMode="decimal" value={share} onChange={(e) => setShare(e.target.value)} />
-        <DateField id="owner-start" label={t("people.startDate")} value={startDate} onChange={setStartDate} />
-      </div>
-      <FormActions busy={submit.busy} ready={partyReady(party, ids) && !!startDate} onCancel={onDone} />
-    </form>
-  );
-}
-
-function TransferForm({ locationId, submit, onDone }: { locationId: string; submit: Submit; onDone: () => void }) {
-  const t = useTranslations("Members");
-  const ids = useContext(IdsRequired);
-  const locale = useLocale() as Locale;
-  const [date, setDate] = useState(todayIso);
-  const [owners, setOwners] = useState<{ party: PartyValues; share: string }[]>([{ party: emptyParty, share: "100" }]);
-  const change = (index: number, next: Partial<{ party: PartyValues; share: string }>) =>
-    setOwners(owners.map((owner, i) => (i === index ? { ...owner, ...next } : owner)));
-
-  return (
-    <form
-      noValidate
-      className="grid gap-3.5 rounded-[10px] border border-line p-3"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        const done = await submit.run(
-          () =>
-            api.POST("/ownerships/transfer", {
-              body: { locationId, date, owners: owners.map((owner) => ({ owner: partyBody(owner.party), sharePercent: owner.share })) },
-            }),
-          t("people.transferred"),
-        );
-        if (done) onDone();
-      }}
-    >
-      <p className="text-[12.5px] text-muted-foreground">{t("people.transferHint")}</p>
-      <DateField id="transfer-date" label={t("people.transferDate")} value={date} onChange={setDate} />
-      {owners.map((owner, index) => (
-        <fieldset key={index} className="grid gap-3 rounded-[10px] border border-line p-3">
-          <legend className="px-1 text-[13px] font-semibold">{t("people.newOwnerN", { n: localDigits(index + 1, locale) })}</legend>
-          <PartyFields id={`transfer-${index}`} values={owner.party} onChange={(party) => change(index, { party })} memberLookup />
-          <div className="flex flex-wrap items-end gap-2">
-            <TextField
-              id={`transfer-${index}-share`}
-              label={t("share")}
-              inputMode="decimal"
-              value={owner.share}
-              onChange={(e) => change(index, { share: e.target.value })}
-            />
-            {owners.length > 1 ? (
-              <Button type="button" variant="outline" size="sm" onClick={() => setOwners(owners.filter((_, i) => i !== index))}>
-                <X aria-hidden />
-                {t("people.removeOwner")}
-              </Button>
-            ) : null}
-          </div>
-        </fieldset>
-      ))}
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="justify-self-start"
-        disabled={owners.length >= 20}
-        onClick={() => setOwners([...owners, { party: emptyParty, share: "" }])}
-      >
-        <Plus aria-hidden />
-        {t("people.addAnother")}
-      </Button>
-      <FormActions busy={submit.busy} ready={!!date && owners.every((owner) => partyReady(owner.party, ids))} onCancel={onDone} />
-    </form>
-  );
-}
-
-function OwnersSection({ people, submit }: { people: LocationPeople; submit: Submit }) {
-  const t = useTranslations("Members");
-  const locale = useLocale() as Locale;
-  const [adding, setAdding] = useState<"owner" | "transfer" | null>(null);
-  const owners = people.owners ?? [];
-  const current = owners.filter((row) => row.endDate === null);
-  const past = owners.filter((row) => row.endDate !== null);
-  const can = people.can.ownerships;
-
-  return (
-    <Block
-      title={people.location.levelBn ? t("people.ownersOf", { level: pick(people.location.levelBn, people.location.levelEn, locale) }) : t("people.owners")}
-      actions={
-        adding ? null : (
-          <>
-            {can.create ? (
-              <Button type="button" size="sm" variant="outline" onClick={() => setAdding("owner")}>
-                <UserPlus aria-hidden />
-                {t("people.addOwner")}
-              </Button>
-            ) : null}
-            {can.create && can.edit ? (
-              <Button type="button" size="sm" variant="outline" onClick={() => setAdding("transfer")}>
-                <ArrowRightLeft aria-hidden />
-                {t("people.transfer")}
-              </Button>
-            ) : null}
-          </>
-        )
-      }
-    >
-      {adding === "owner" ? <AddOwnerForm locationId={people.location.id} submit={submit} onDone={() => setAdding(null)} /> : null}
-      {adding === "transfer" ? <TransferForm locationId={people.location.id} submit={submit} onDone={() => setAdding(null)} /> : null}
-      {current.length === 0 ? (
-        <Empty>{t("people.noOwner")}</Empty>
-      ) : (
-        <ul className="grid gap-2">
-          {current.map((row) => (
-            <li key={row.id} className={rowClass}>
-              <OwnerLine row={row} />
-              <RowActions
-                canEnd={can.edit}
-                canDelete={can.delete}
-                disabled={submit.busy}
-                onEnd={(endDate) => submit.run(() => api.POST("/ownerships/{id}/end", { params: { path: { id: row.id } }, body: { endDate } }), t("people.ended"))}
-                onDelete={() => submit.run(() => api.DELETE("/ownerships/{id}", { params: { path: { id: row.id } } }))}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
-      <OwnersAbove rows={people.ownersAbove ?? []} />
-      <Past title={t("people.pastOwners")} count={past.length}>
-        {past.map((row) => (
-          <li key={row.id} className="flex flex-wrap items-start justify-between gap-2">
-            <OwnerLine row={row} />
-            <RowActions
-              canEnd={false}
-              canDelete={can.delete}
-              disabled={submit.busy}
-              onEnd={async () => undefined}
-              onDelete={() => submit.run(() => api.DELETE("/ownerships/{id}", { params: { path: { id: row.id } } }))}
-            />
-          </li>
-        ))}
-      </Past>
-    </Block>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Tenancy
@@ -613,28 +395,43 @@ function HouseholdSection({ people, submit }: { people: LocationPeople; submit: 
   );
 }
 
-function FormActions({ busy, ready, onCancel }: { busy: boolean; ready: boolean; onCancel: () => void }) {
-  const t = useTranslations("Members.people");
-  return (
-    <div className="flex flex-wrap gap-2">
-      <Button type="submit" disabled={busy || !ready}>
-        {t("add")}
-      </Button>
-      <Button type="button" variant="outline" onClick={onCancel}>
-        {t("cancel")}
-      </Button>
-    </div>
-  );
-}
-
 /**
  * Who owns, rents and lives at a location, with the changes the caller may make.
  * Units get all three blocks; other locations only the owners. Each block shows only
  * when the caller may view it there.
  */
-export function PeoplePanel({ people, idsRequired }: { people: LocationPeople; idsRequired: boolean }) {
+export function PeoplePanel({
+  people,
+  idsRequired,
+  tab = false,
+  transfer = false,
+}: {
+  people: LocationPeople;
+  idsRequired: boolean;
+  /** The People tab of a unit: each block its own card, owners only where the level can have them. */
+  tab?: boolean;
+  transfer?: boolean;
+}) {
   const t = useTranslations("Members.people");
   const submit = useSubmit();
+  if (tab) {
+    return (
+      <IdsRequired value={idsRequired}>
+        <FormStatus status={submit.status} />
+        {people.location.canOwn && people.owners !== null ? <OwnersSection key={String(transfer)} people={people} submit={submit} transfer={transfer} cards /> : null}
+        {people.tenancies !== null ? (
+          <Card>
+            <TenancySection people={people} submit={submit} />
+          </Card>
+        ) : null}
+        {people.occupants !== null ? (
+          <Card>
+            <HouseholdSection people={people} submit={submit} />
+          </Card>
+        ) : null}
+      </IdsRequired>
+    );
+  }
   return (
     <IdsRequired value={idsRequired}>
       <Card className="grid gap-4">

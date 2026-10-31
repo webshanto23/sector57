@@ -13,6 +13,7 @@ import {
   storedMethod,
   TIME_ZONE,
   type CollectAccount,
+  type CollectAreas,
   type CollectLookup,
   type CollectLookupQuery,
   type CollectSummary,
@@ -41,6 +42,7 @@ import type { CallerAccess } from '../permissions/caller-access.js';
 import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { addressOf, beyondPermissions, TreeService } from '../property/tree.service.js';
+import { AreaTree } from '../reports/area-tree.js';
 
 type Tx = Prisma.TransactionClient;
 
@@ -104,6 +106,8 @@ const dhakaDay = Prisma.sql`(p.received_at AT TIME ZONE ${TIME_ZONE})::date`;
 
 /** How many accounts the collect page lists before any search. */
 const OPEN_ACCOUNTS = 20;
+/** The same list narrowed to one area, which is meant to show the whole area. */
+const OPEN_IN_AREA = 100;
 
 /**
  * Cash taken at the office (`payments`): one receipt settles open bills of one unit, or one
@@ -113,6 +117,8 @@ const OPEN_ACCOUNTS = 20;
  */
 @Injectable()
 export class PaymentsService {
+  private readonly collectAreas: AreaTree;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
@@ -120,11 +126,20 @@ export class PaymentsService {
     private readonly billTo: BillToService,
     private readonly numbering: NumberingService,
     private readonly settings: SettingsService,
-  ) {}
+  ) {
+    this.collectAreas = new AreaTree(prisma, tree, 'payments', 'create');
+  }
 
   // -------------------------------------------------------------------------
   // Finding what to collect
   // -------------------------------------------------------------------------
+
+  /** Places directly under `parentId` for the area filter. 404 `location_not_found` for a place out of reach. */
+  async areas(actor: Actor, parentId: string | undefined): Promise<CollectAreas> {
+    const parent = await this.collectAreas.parent(actor.access, actor.societyId, parentId);
+    const children = await this.collectAreas.children(actor.access, actor.societyId, parent);
+    return { children: children.filter((child) => !child.isUnit).map(({ id, name }) => ({ id, name })) };
+  }
 
   /** Units (and, for society-wide collectors, members) with their open bills, oldest first. */
   async lookup(actor: Actor, query: CollectLookupQuery): Promise<CollectLookup> {
@@ -135,6 +150,8 @@ export class PaymentsService {
     if (!q && !unitId && !member && !open) return { accounts: [] };
     const scope = actor.access.paths('create', 'payments');
     const today = isoDate(todayDate());
+    const area = query.areaId ? await this.collectAreas.parent(actor.access, actor.societyId, query.areaId) : null;
+    const inArea = area ? { locations: { path: { startsWith: area.path } } } : {};
 
     // Units by name or code, or by who their open bills went to.
     let unitIds: string[] = [];
@@ -145,6 +162,7 @@ export class PaymentsService {
         this.prisma.units.findMany({
           where: {
             society_id: actor.societyId,
+            ...inArea,
             OR: terms.flatMap((term) => [
               { locations: { name: { contains: term, mode: 'insensitive' as const } } },
               { locations: { code: { contains: term, mode: 'insensitive' as const } } },
@@ -160,6 +178,7 @@ export class PaymentsService {
               terms.map((term) => Prisma.sql`i.bill_to_snapshot->>'name' ILIKE ${likeTerm(term)} OR i.bill_to_snapshot->>'nameEn' ILIKE ${likeTerm(term)}`),
               ' OR ',
             )} OR i.bill_to_snapshot->>'phone' LIKE ${likeTerm(asciiDigits(q))})
+            ${area ? Prisma.sql`AND EXISTS (SELECT 1 FROM locations l WHERE l.id = i.unit_id AND starts_with(l.path, ${area.path}))` : Prisma.empty}
           LIMIT 25`,
       ]);
       unitIds = [...new Set([...byName.map((row) => row.location_id), ...byPayer.map((row) => row.unit_id)])];
@@ -171,11 +190,11 @@ export class PaymentsService {
           society_id: actor.societyId,
           unit_id: { not: null },
           status: { in: [...OPEN_INVOICE_STATUSES] },
-          ...(scope === 'all' ? {} : { units: { OR: scope.map((prefix) => ({ locations: { path: { startsWith: prefix } } })) } }),
+          units: { ...inArea, ...(scope === 'all' ? {} : { OR: scope.map((prefix) => ({ locations: { path: { startsWith: prefix } } })) }) },
         },
         _max: { created_at: true },
         orderBy: { _max: { created_at: 'desc' } },
-        take: OPEN_ACCOUNTS,
+        take: area ? OPEN_IN_AREA : OPEN_ACCOUNTS,
       });
       unitIds = rows.flatMap((row) => (row.unit_id ? [row.unit_id] : []));
     }
@@ -188,7 +207,7 @@ export class PaymentsService {
           },
           select: { location_id: true, locations: { select: { name: true, code: true, path: true } } },
           orderBy: [{ locations: { name: 'asc' } }, { location_id: 'asc' }],
-          take: open ? OPEN_ACCOUNTS : 10,
+          take: open ? (area ? OPEN_IN_AREA : OPEN_ACCOUNTS) : 10,
         })
       : [];
     // The open list keeps the newest-bill order.
@@ -196,7 +215,7 @@ export class PaymentsService {
 
     // Members, for membership fees: only a society-wide collector takes those.
     let members: { member: Payer; member_no: number | null; membership_code: string | null; name: string }[] = [];
-    if (scope === 'all' && (member || (q && !unitId) || open)) {
+    if (scope === 'all' && !area && (member || (q && !unitId) || open)) {
       const rows = await this.prisma.memberships.findMany({
         where: {
           society_id: actor.societyId,

@@ -27,30 +27,37 @@ export const regNoKey = (regNo: string): string =>
 const regNo = text(40).refine((value) => regNoKey(value).length >= 2, 'invalid_reg_no');
 
 /**
- * `POST /vehicles`. The person must currently own, rent or live in the unit (409
- * `vehicle_person_not_at_unit`); the number must not be on file already (409 `vehicle_exists`).
+ * `POST /vehicles`, for a person or an organisation (exactly one). The person must currently own,
+ * rent or live in the unit, the organisation own or rent it (409 `vehicle_person_not_at_unit`);
+ * the number must not be on file already (409 `vehicle_exists`).
  */
-export const vehicleCreateSchema = z.object({
-  regNo,
-  kind: z.enum(VEHICLE_KINDS),
-  make: optionalText(60),
-  colour: optionalText(40),
-  unitId: z.uuid(),
-  personId: z.uuid(),
-  note: optionalText(500),
-});
+export const vehicleCreateSchema = z
+  .object({
+    regNo,
+    kind: z.enum(VEHICLE_KINDS),
+    make: optionalText(60),
+    colour: optionalText(40),
+    unitId: z.uuid(),
+    personId: z.uuid().optional(),
+    organisationId: z.uuid().optional(),
+    note: optionalText(500),
+  })
+  .refine((input) => !input.personId !== !input.organisationId, { message: 'one_holder', path: ['personId'] });
 export type VehicleCreateInput = z.infer<typeof vehicleCreateSchema>;
 
-/** `PATCH /vehicles/:id` (not once removed). Moving to another unit needs `vehicles.edit` there too. */
-export const vehicleUpdateSchema = z.object({
-  regNo: regNo.optional(),
-  kind: z.enum(VEHICLE_KINDS).optional(),
-  make: optionalText(60).optional(),
-  colour: optionalText(40).optional(),
-  unitId: z.uuid().optional(),
-  personId: z.uuid().optional(),
-  note: optionalText(500).optional(),
-});
+/** `PATCH /vehicles/:id` (not once removed). Moving to another unit needs `vehicles.edit` there too. A new person or organisation replaces the other. */
+export const vehicleUpdateSchema = z
+  .object({
+    regNo: regNo.optional(),
+    kind: z.enum(VEHICLE_KINDS).optional(),
+    make: optionalText(60).optional(),
+    colour: optionalText(40).optional(),
+    unitId: z.uuid().optional(),
+    personId: z.uuid().optional(),
+    organisationId: z.uuid().optional(),
+    note: optionalText(500).optional(),
+  })
+  .refine((input) => !(input.personId && input.organisationId), { message: 'one_holder', path: ['personId'] });
 export type VehicleUpdateInput = z.infer<typeof vehicleUpdateSchema>;
 
 /** `POST /vehicles/:id/remove`: sold, gone, or entered by mistake. Revokes its sticker and frees its slot. */
@@ -63,13 +70,14 @@ export type VehicleView = (typeof VEHICLE_VIEWS)[number];
 
 /** `GET /vehicles`: in the caller's `vehicles.view` area. */
 export const vehicleListQuery = pagination.extend({
-  /** Registration number (either digit form, spaces and dashes ignored), make, or the person's name. */
+  /** Registration number (either digit form, spaces and dashes ignored), make, or the person's or organisation's name. */
   q: z.string().transform(cleanText).pipe(z.string().max(100)).optional(),
   view: z.enum(VEHICLE_VIEWS).default('active'),
   kind: z.enum(VEHICLE_KINDS).optional(),
   locationId: z.uuid().optional(),
   unitId: z.uuid().optional(),
   personId: z.uuid().optional(),
+  organisationId: z.uuid().optional(),
 });
 export type VehicleListQuery = z.infer<typeof vehicleListQuery>;
 
@@ -239,7 +247,9 @@ export const vehicleRowSchema = z.object({
   colour: z.string().nullable(),
   /** The unit it belongs to. */
   place: placeSchema,
-  person: z.object({ id: z.uuid(), name: z.string(), nameEn: z.string().nullable() }),
+  /** Who it belongs to: a person or an organisation, never both. */
+  person: z.object({ id: z.uuid(), name: z.string(), nameEn: z.string().nullable() }).nullable(),
+  organisation: z.object({ id: z.uuid(), name: z.string() }).nullable(),
   /** The latest sticker (in force, expired, revoked or replaced); null when it never had one. */
   sticker: stickerRefSchema.nullable(),
   removedAt: instant.nullable(),
@@ -282,6 +292,12 @@ export const vehicleUnitPeopleSchema = z.object({
   items: z.array(z.object({ id: z.uuid(), name: z.string(), nameEn: z.string().nullable(), ties: z.array(z.enum(UNIT_TIES)) })),
 });
 export type VehicleUnitPeople = z.infer<typeof vehicleUnitPeopleSchema>;
+
+/** Who a vehicle at the unit may belong to: the people, and the organisations that own or rent it. */
+export const vehicleUnitHoldersSchema = vehicleUnitPeopleSchema.extend({
+  organisations: z.array(z.object({ id: z.uuid(), name: z.string(), ties: z.array(z.enum(UNIT_TIES)) })),
+});
+export type VehicleUnitHolders = z.infer<typeof vehicleUnitHoldersSchema>;
 
 // ---------------------------------------------------------------------------
 // Parking slots

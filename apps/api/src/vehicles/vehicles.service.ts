@@ -11,20 +11,20 @@ import {
   type VehicleListQuery,
   type VehicleLookup,
   type VehicleRemoveInput,
-  type VehicleUnitPeople,
+  type VehicleUnitHolders,
   type VehicleUpdateInput,
 } from '@s57/shared';
 import { AuditService } from '../audit/audit.service.js';
 import { isoDate, todayDate } from '../common/dates.js';
 import { isUniqueViolation } from '../common/prisma-errors.js';
 import { MemberRowsService, placeSelect } from '../members/member-rows.service.js';
-import { auditOf, personNotFound } from '../members/parties.service.js';
-import { unitTies } from '../members/unit-ties.js';
+import { auditOf, organisationNotFound, personNotFound } from '../members/parties.service.js';
+import { unitOrganisationTies, unitTies } from '../members/unit-ties.js';
 import { scopeWhere } from '../permissions/caller-access.js';
 import type { Actor } from '../permissions/permissions.decorators.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { beyondPermissions } from '../property/tree.service.js';
-import { stickerRefOf, vehicleRowOf, vehicleSelect, vehicleSnapshot, type VehicleSelected } from './vehicle-rows.js';
+import { holderOf, stickerRefOf, vehicleRowOf, vehicleSelect, vehicleSnapshot, type VehicleHolder, type VehicleSelected } from './vehicle-rows.js';
 
 type Unit = { id: string; path: string };
 
@@ -33,11 +33,12 @@ export const vehicleRemoved = () => new ConflictException({ code: 'vehicle_remov
 const unitNotFound = () => new NotFoundException({ code: 'unit_not_found', message: 'Unit not found' });
 const vehicleExists = () => new ConflictException({ code: 'vehicle_exists', message: 'A vehicle with this registration number is already on file' });
 const personNotAtUnit = () =>
-  new ConflictException({ code: 'vehicle_person_not_at_unit', message: 'This person does not own, rent or live in this unit now' });
+  new ConflictException({ code: 'vehicle_person_not_at_unit', message: 'This person or organisation does not own, rent or live in this unit now' });
 
 /**
  * Vehicles (যানবাহন), under the `vehicles` permission where their unit is. Each belongs to a
- * person who owns, rents or lives in the unit when it is added; never deleted, only removed
+ * person who owns, rents or lives in the unit when it is added, or an organisation that owns or
+ * rents it; never deleted, only removed
  * (which revokes its sticker and frees its parking slot). The services write their own audit rows.
  */
 @Injectable()
@@ -84,10 +85,11 @@ export class VehiclesService {
     };
   }
 
-  /** 404 `unit_not_found`, `person_not_found`; 409 `vehicle_person_not_at_unit`, `vehicle_exists`. */
+  /** 404 `unit_not_found`, `person_not_found`, `organisation_not_found`; 409 `vehicle_person_not_at_unit`, `vehicle_exists`. */
   async create(actor: Actor, input: VehicleCreateInput): Promise<VehicleDetail> {
     const unit = await this.unitAt(actor, input.unitId, 'create');
-    await this.checkPerson(actor.societyId, unit, input.personId);
+    const holder = { personId: input.personId ?? null, organisationId: input.organisationId ?? null };
+    await this.checkHolder(actor.societyId, unit, holder);
     const id = await this.unique(() =>
       this.prisma.$transaction(async (tx) => {
         const made = await tx.vehicles.create({
@@ -99,7 +101,8 @@ export class VehiclesService {
             make: input.make,
             colour: input.colour,
             unit_id: unit.id,
-            person_id: input.personId,
+            person_id: holder.personId,
+            organisation_id: holder.organisationId,
             note: input.note,
             created_by: actor.userId,
           },
@@ -114,16 +117,21 @@ export class VehiclesService {
 
   /**
    * Not once removed (409 `vehicle_removed`). A new unit needs `vehicles.edit` there too; a new
-   * unit or person is checked again (409 `vehicle_person_not_at_unit`).
+   * unit, person or organisation is checked again (409 `vehicle_person_not_at_unit`).
    */
   async update(actor: Actor, id: string, input: VehicleUpdateInput): Promise<VehicleDetail> {
     const before = await this.changeable(actor, id, 'edit');
     const unitId = input.unitId ?? before.units.locations.id;
-    const personId = input.personId ?? before.persons.id;
+    const held = holderOf(before);
+    const holder: VehicleHolder = input.personId
+      ? { personId: input.personId, organisationId: null }
+      : input.organisationId
+        ? { personId: null, organisationId: input.organisationId }
+        : held;
     const moved = unitId !== before.units.locations.id;
-    if (moved || personId !== before.persons.id) {
+    if (moved || holder.personId !== held.personId || holder.organisationId !== held.organisationId) {
       const unit = moved ? await this.unitAt(actor, unitId, 'edit') : before.units.locations;
-      await this.checkPerson(actor.societyId, unit, personId);
+      await this.checkHolder(actor.societyId, unit, holder);
     }
     await this.unique(() =>
       this.prisma.$transaction(async (tx) => {
@@ -136,7 +144,8 @@ export class VehiclesService {
             make: input.make,
             colour: input.colour,
             unit_id: unitId,
-            person_id: personId,
+            person_id: holder.personId,
+            organisation_id: holder.organisationId,
             note: input.note,
           },
         });
@@ -206,16 +215,31 @@ export class VehiclesService {
     };
   }
 
-  /** Who owns (at or above), rents or lives in a unit the caller sees vehicles at (404 `unit_not_found`). */
-  async unitPeople(actor: Actor, unitId: string): Promise<VehicleUnitPeople> {
+  /** Who owns (at or above), rents or lives in a unit the caller sees vehicles at, people and organisations (404 `unit_not_found`). */
+  async unitPeople(actor: Actor, unitId: string): Promise<VehicleUnitHolders> {
     const unit = await this.unitAt(actor, unitId, 'view');
-    const ties = await unitTies(this.prisma, actor.societyId, unit, null);
-    const people = await this.prisma.persons.findMany({
-      where: { id: { in: [...new Set(ties.map((tie) => tie.person_id))] }, society_id: actor.societyId },
-      select: { id: true, full_name: true, full_name_en: true },
-      orderBy: [{ full_name: 'asc' }, { id: 'asc' }],
-    });
+    const [ties, organisationTies] = await Promise.all([
+      unitTies(this.prisma, actor.societyId, unit, null),
+      unitOrganisationTies(this.prisma, actor.societyId, unit, null),
+    ]);
+    const [people, organisations] = await Promise.all([
+      this.prisma.persons.findMany({
+        where: { id: { in: [...new Set(ties.map((tie) => tie.person_id))] }, society_id: actor.societyId },
+        select: { id: true, full_name: true, full_name_en: true },
+        orderBy: [{ full_name: 'asc' }, { id: 'asc' }],
+      }),
+      this.prisma.organisations.findMany({
+        where: { id: { in: [...new Set(organisationTies.map((tie) => tie.organisation_id))] }, society_id: actor.societyId },
+        select: { id: true, name: true },
+        orderBy: [{ name: 'asc' }, { id: 'asc' }],
+      }),
+    ]);
     return {
+      organisations: organisations.map((organisation) => ({
+        id: organisation.id,
+        name: organisation.name,
+        ties: organisationTies.filter((tie) => tie.organisation_id === organisation.id).map((tie) => tie.tie),
+      })),
       items: people.map((person) => ({
         id: person.id,
         name: person.full_name,
@@ -257,9 +281,15 @@ export class VehiclesService {
     return row.locations;
   }
 
-  /** The person is in this society (404) and owns, rents or lives in the unit now (409). */
-  async checkPerson(societyId: string, unit: Unit, personId: string): Promise<void> {
-    const person = await this.prisma.persons.findFirst({ where: { id: personId, society_id: societyId }, select: { id: true } });
+  /** The person or organisation is in this society (404) and owns, rents or lives in the unit now (409). */
+  async checkHolder(societyId: string, unit: Unit, { personId, organisationId }: VehicleHolder): Promise<void> {
+    if (organisationId) {
+      const organisation = await this.prisma.organisations.findFirst({ where: { id: organisationId, society_id: societyId }, select: { id: true } });
+      if (!organisation) throw organisationNotFound();
+      if ((await unitOrganisationTies(this.prisma, societyId, unit, organisationId)).length === 0) throw personNotAtUnit();
+      return;
+    }
+    const person = await this.prisma.persons.findFirst({ where: { id: personId!, society_id: societyId }, select: { id: true } });
     if (!person) throw personNotFound();
     if ((await unitTies(this.prisma, societyId, unit, personId)).length === 0) throw personNotAtUnit();
   }
@@ -281,6 +311,7 @@ export class VehiclesService {
     if (query.kind) filters.push({ kind: query.kind });
     if (query.unitId) filters.push({ unit_id: query.unitId });
     if (query.personId) filters.push({ person_id: query.personId });
+    if (query.organisationId) filters.push({ organisation_id: query.organisationId });
     if (query.locationId) filters.push({ units: { locations: { path: { contains: `/${query.locationId}/` } } } });
     if (query.q) {
       const key = regNoKey(query.q);
@@ -291,6 +322,7 @@ export class VehiclesService {
             { make: { contains: term, mode: 'insensitive' as const } },
             { persons: { full_name: { contains: term, mode: 'insensitive' as const } } },
             { persons: { full_name_en: { contains: term, mode: 'insensitive' as const } } },
+            { organisations: { name: { contains: term, mode: 'insensitive' as const } } },
           ]),
         ],
       });

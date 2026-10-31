@@ -10,14 +10,20 @@ import { getBrand } from "@/lib/brand";
 import "../globals.css";
 
 // next/font sets the font tokens that globals.css reads (--font-sans, --font-display, --font-geist-mono).
+// The woff2 files are subsets of Noto (Bengali + Latin, wdth 100, wght 400-800). Keep filenames free of commas:
+// the preload link escapes them and the CSS does not, so the browser downloads the font twice.
 const sans = localFont({
-  src: "../fonts/NotoSansBengali-VariableFont_wdth,wght.ttf",
+  src: "../fonts/NotoSansBengali-Variable.woff2",
+  weight: "400 800",
   variable: "--font-sans",
   display: "swap",
 });
 const display = localFont({
-  src: "../fonts/NotoSerifBengali-VariableFont_wdth,wght.ttf",
+  src: "../fonts/NotoSerifBengali-Variable.woff2",
+  weight: "400 800",
   variable: "--font-display",
+  // Only public site headings use it, so the dashboard should not fetch it up front.
+  preload: false,
   display: "swap",
 });
 const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono", display: "swap" });

@@ -1,15 +1,15 @@
 import { canAnywhere, formatNumber, formatTaka, type Locale } from "@s57/shared";
-import { HandCoins, ListChecks, Receipt, Wallet } from "lucide-react";
+import { HandCoins, ListChecks } from "lucide-react";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Note } from "@/components/admin/form-status";
 import { CollectForm } from "@/components/collect/collect-form";
 import { HandoverButton } from "@/components/collect/handover-button";
 import { ReceiptsTable } from "@/components/collect/receipts-table";
-import { Card, PageHeader, StatCard } from "@/components/kit";
+import { Card, PageHeader } from "@/components/kit";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
-import { getCollectSummary, getPayments, lookupCollect } from "@/lib/api/payments";
+import { getCollectAreas, getCollectSummary, getPayments, lookupCollect } from "@/lib/api/payments";
 import { requirePermission } from "@/lib/api/session";
 import { todayInDhaka } from "@/lib/dhaka-time";
 
@@ -43,13 +43,14 @@ export default async function CollectPage({ params, searchParams }: PageProps<"/
   const today = todayInDhaka();
 
   const chosen = Boolean(unitId || personId || organisationId);
-  const [t, tNav, summary, start, receipts] = await Promise.all([
+  const [t, tNav, summary, start, receipts, areas] = await Promise.all([
     getTranslations("Collect"),
     getTranslations("Dashboard.nav"),
     canCollect ? getCollectSummary() : Promise.resolve(null),
     // No account chosen: the accounts whose open bills are newest, to pick from.
     canCollect ? lookupCollect(chosen ? { unitId, personId, organisationId } : { open: true }) : Promise.resolve(null),
     canCollect ? getPayments({ collectorId: "me", from: today, to: today, pageSize: 20 }) : Promise.resolve(null),
+    canCollect ? getCollectAreas() : Promise.resolve([]),
   ]);
   const initial = chosen ? (start?.accounts.find((account) => (unitId ? account.kind === "unit" : account.kind === "member")) ?? null) : null;
   const openAccounts = chosen ? [] : (start?.accounts ?? []);
@@ -76,36 +77,51 @@ export default async function CollectPage({ params, searchParams }: PageProps<"/
 
       {summary && receipts ? (
         <div className="grid gap-3.5">
-          <CollectForm initial={initial} openAccounts={openAccounts} startBillIds={invoiceIds} header={summary.header} collector={me.name ?? me.phone} today={today} />
-
-          <div className="grid gap-2.5 min-[600px]:grid-cols-3">
-            <StatCard
-              icon={Receipt}
-              label={t("stat.today")}
-              value={n(summary.today.count)}
-              note={formatTaka(summary.today.amount, locale)}
-            />
-            <StatCard
-              icon={Wallet}
-              label={t("stat.inHand")}
-              value={formatTaka(summary.inHand.amount, locale)}
-              note={summary.pending.count ? `${t("stat.pending")}: ${formatTaka(summary.pending.amount, locale)}` : t("stat.inHandNote")}
-              tone="warn"
-            />
-            <Card className="grid content-start gap-2">
-              <span className="text-[13px] font-medium text-muted-foreground">{t("endOfDay")}</span>
-              {summary.inHand.count ? (
-                <HandoverButton amount={formatTaka(summary.inHand.amount, locale)} disabled={false} />
-              ) : (
-                <p className="text-[13.5px] text-muted-foreground">{t("nothingInHand")}</p>
-              )}
-            </Card>
-          </div>
-
-          <section className="grid gap-2">
-            <h2>{t("todayReceipts")}</h2>
-            <ReceiptsTable rows={receipts.items} locale={locale} empty={t("noReceipts")} hide={["by"]} />
-          </section>
+          <CollectForm
+            initial={initial}
+            openAccounts={openAccounts}
+            areas={areas}
+            startBillIds={invoiceIds}
+            header={summary.header}
+            collector={me.name ?? me.phone}
+            today={today}
+            summary={
+              <Card className="flex flex-wrap items-center gap-x-7 gap-y-2.5">
+                <div>
+                  <p className="text-[13px] text-muted-foreground">{t("stat.today")}</p>
+                  <p className="num font-bold">
+                    {n(summary.today.count)} · {formatTaka(summary.today.amount, locale)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[13px] text-muted-foreground">{t("stat.inHand")}</p>
+                  <p className="num font-bold text-warn">{formatTaka(summary.inHand.amount, locale)}</p>
+                </div>
+                {summary.pending.count ? (
+                  <div>
+                    <p className="text-[13px] text-muted-foreground">{t("stat.pending")}</p>
+                    <p className="num font-bold">{formatTaka(summary.pending.amount, locale)}</p>
+                  </div>
+                ) : null}
+                {summary.inHand.count ? (
+                  <div className="min-w-full min-[600px]:ml-auto min-[600px]:min-w-0">
+                    <HandoverButton amount={formatTaka(summary.inHand.amount, locale)} disabled={false} />
+                  </div>
+                ) : null}
+              </Card>
+            }
+            summaryLine={
+              <p className="num text-[13px] text-muted-foreground">
+                {t("stat.today")} {n(summary.today.count)} · {t("stat.inHand")} <b className="text-warn">{formatTaka(summary.inHand.amount, locale)}</b>
+              </p>
+            }
+            after={
+              <section className="grid gap-2">
+                <h2>{t("todayReceipts")}</h2>
+                <ReceiptsTable rows={receipts.items} locale={locale} empty={t("noReceipts")} hide={["by"]} />
+              </section>
+            }
+          />
         </div>
       ) : (
         <Note>{t("cannotCollect")}</Note>

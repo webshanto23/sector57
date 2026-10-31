@@ -22,11 +22,20 @@ export const vehicleSelect = {
   created_at: true,
   units: { select: { locations: { select: placeSelect } } },
   persons: { select: { id: true, full_name: true, full_name_en: true } },
+  organisations: { select: { id: true, name: true } },
   stickers: latestSticker,
 } satisfies Prisma.vehiclesSelect;
 export type VehicleSelected = Prisma.vehiclesGetPayload<{ select: typeof vehicleSelect }>;
 
 type StickerSelected = VehicleSelected['stickers'][number];
+
+/** Who a vehicle belongs to: a person or an organisation, the other null. */
+export type VehicleHolder = { personId: string | null; organisationId: string | null };
+
+export const holderOf = (row: Pick<VehicleSelected, 'persons' | 'organisations'>): VehicleHolder => ({
+  personId: row.persons?.id ?? null,
+  organisationId: row.organisations?.id ?? null,
+});
 
 /** `today` is the Dhaka day (`YYYY-MM-DD`) that decides whether a sticker has expired. */
 export const stickerRefOf = (row: StickerSelected | undefined, today: string): StickerRef | null => {
@@ -44,7 +53,8 @@ export function vehicleRowOf(row: VehicleSelected, place: Place, today: string):
     make: row.make,
     colour: row.colour,
     place,
-    person: { id: row.persons.id, name: row.persons.full_name, nameEn: row.persons.full_name_en },
+    person: row.persons && { id: row.persons.id, name: row.persons.full_name, nameEn: row.persons.full_name_en },
+    organisation: row.organisations && { id: row.organisations.id, name: row.organisations.name },
     sticker: stickerRefOf(row.stickers[0], today),
     removedAt: row.removed_at?.toISOString() ?? null,
     createdAt: row.created_at.toISOString(),
@@ -58,7 +68,7 @@ export const vehicleSnapshot = (row: VehicleSelected) => ({
   make: row.make,
   colour: row.colour,
   unitId: row.units.locations.id,
-  personId: row.persons.id,
+  ...holderOf(row),
   note: row.note,
   removeReason: row.remove_reason,
 });

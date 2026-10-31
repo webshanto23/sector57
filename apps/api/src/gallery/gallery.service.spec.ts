@@ -29,7 +29,7 @@ describe('GalleryService', () => {
   it('lists published albums of the society with count and cover', async () => {
     const { service, findMany } = make(album([{ file_url: 'gallery/cover.jpg' }]), 'https://cdn.example.com');
     const result = await service.listPublic(SOCIETY, { page: 1, pageSize: 12 });
-    expect(findMany.mock.calls[0]![0].where).toEqual({ society_id: SOCIETY, is_published: true });
+    expect(findMany.mock.calls[0]![0].where).toEqual({ society_id: SOCIETY, is_published: true, hide_from_gallery: false });
     expect(result.items[0]).toEqual({
       id: ALBUM,
       titleBn: 'পহেলা বৈশাখ',

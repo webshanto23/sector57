@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { NewAlbum } from "@/components/cms/gallery/new-album";
 import { Pager } from "@/components/cms/pager";
-import { PublishedChip } from "@/components/cms/status-chips";
+import { HiddenFromGalleryChip, PublishedChip } from "@/components/cms/status-chips";
 import { Card, Grid, PageHeader } from "@/components/kit";
 import { FallbackImage } from "@/components/site/fallback-image";
 import { buttonVariants } from "@/components/ui/button";
@@ -71,8 +71,9 @@ export default async function GalleryAdminPage({ params, searchParams }: PagePro
                       {album.eventDate ? `${formatDate(album.eventDate, locale, "short")} · ` : ""}
                       {t("photoCount", { count: localDigits(album.photoCount, locale) })}
                     </p>
-                    <span>
+                    <span className="flex flex-wrap gap-1.5">
                       <PublishedChip published={album.isPublished} />
+                      {album.hideFromGallery ? <HiddenFromGalleryChip /> : null}
                     </span>
                   </div>
                 </Card>

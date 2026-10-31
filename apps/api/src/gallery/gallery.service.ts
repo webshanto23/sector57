@@ -44,9 +44,9 @@ export class GalleryService {
     };
   }
 
-  /** Published albums of the society, newest event first (undated last). */
+  /** Published albums of the society, newest event first (undated last). Hidden ones are left out of the list only: the home slider still reads them by id. */
   async listPublic(societyId: string, { page, pageSize }: Pagination): Promise<AlbumList> {
-    const where = { society_id: societyId, is_published: true };
+    const where = { society_id: societyId, is_published: true, hide_from_gallery: false };
     const [total, rows] = await this.prisma.$transaction([
       this.prisma.gallery_albums.count({ where }),
       this.prisma.gallery_albums.findMany({

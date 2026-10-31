@@ -18,6 +18,9 @@ export const methodBody = (value: MethodValue) => ({
   methodRef: value.method === "cash" ? null : value.methodRef.trim() || null,
 });
 
+/** The `Finance.method` key naming a method's reference. */
+export const refLabelKey = (method: PaymentMethod) => (method === "cheque" ? "refCheque" : method === "mobile" ? "refMobile" : "refBank");
+
 /**
  * The method picker with its reference box (cheque number, or wallet and transaction ID).
  * Under it, which account the money goes to or leaves: cash or the bank.
@@ -25,7 +28,7 @@ export const methodBody = (value: MethodValue) => ({
 export function PaymentMethodField({ id, value, onChange }: { id: string; value: MethodValue; onChange: (next: MethodValue) => void }) {
   const t = useTranslations("Finance.method");
   const tAccount = useTranslations("Finance.funds");
-  const refLabel = value.method === "cheque" ? t("refCheque") : value.method === "mobile" ? t("refMobile") : t("refBank");
+  const refLabel = t(refLabelKey(value.method));
   const missing = !methodReady(value);
 
   return (

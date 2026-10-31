@@ -1,6 +1,7 @@
 import "server-only";
 
 import {
+  type CollectAreas,
   type CollectLookup,
   type CollectLookupQuery,
   type CollectSummary,
@@ -22,6 +23,13 @@ export async function lookupCollect(query: CollectLookupQuery): Promise<CollectL
   const { data, response } = await api.GET("/collect/lookup", { params, headers: await authHeaders(), cache: "no-store" });
   if (!data) throw failed("open bills", response.status);
   return data;
+}
+
+/** The top places of the collect page's area filter (`payments.create`). */
+export async function getCollectAreas(): Promise<CollectAreas["children"]> {
+  const { data, response } = await api.GET("/collect/areas", { headers: await authHeaders(), cache: "no-store" });
+  if (!data) throw failed("the areas", response.status);
+  return data.children;
 }
 
 /** The caller's receipts today, cash in hand and pending handovers (`payments.create`). */

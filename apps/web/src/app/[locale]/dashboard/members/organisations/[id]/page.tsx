@@ -16,6 +16,7 @@ import { RemoveMemberCard } from "@/components/members/remove-member";
 import { VerifyCard } from "@/components/members/verify-card";
 import { OwnershipTable, TenancyTable } from "@/components/members/record-tables";
 import { buttonVariants } from "@/components/ui/button";
+import { VehiclesPanel } from "@/components/vehicles/vehicles-panel";
 import { Link } from "@/i18n/navigation";
 import { getLicencePages, getMemberCard, getOrganisation } from "@/lib/api/members";
 import { requirePermission } from "@/lib/api/session";
@@ -93,6 +94,7 @@ export default async function OrganisationPage({ params }: PageProps<"/[locale]/
         </Card>
         <OwnershipTable rows={organisation.ownerships} locale={locale} open={open} />
         <TenancyTable rows={organisation.tenancies} locale={locale} open={open} />
+        <VehiclesPanel access={me.access} locale={locale} organisationId={organisation.id} />
         <BillsPanel access={me.access} locale={locale} organisationId={organisation.id} />
         <DonationsPanel access={me.access} locale={locale} organisationId={organisation.id} />
       </div>

@@ -38,6 +38,7 @@ const select = {
   size_sqft: true,
   bill_to: true,
   occupancy: true,
+  owner_uses: true,
   merged_on: true,
   merged: { select: { location_id: true, locations: { select: { name: true } } } },
   locations: { select: { name: true, code: true, path: true, parent_id: true, is_active: true } },
@@ -48,6 +49,7 @@ type UnitRow = Prisma.unitsGetPayload<{ select: typeof select }>;
 const unitNotFound = () => new NotFoundException({ code: 'unit_not_found', message: 'Unit not found' });
 /** A unit combined into another is history only. */
 const unitMerged = () => new ConflictException({ code: 'unit_merged', message: 'This unit was combined into another one' });
+const noOwner = () => new ConflictException({ code: 'no_owner', message: 'This unit has no current owner' });
 
 /** What an audit row keeps of a unit. */
 const snapshot = (unit: Omit<UnitSummary, 'id' | 'parentId' | 'address' | 'occupancy'>) => ({
@@ -57,6 +59,7 @@ const snapshot = (unit: Omit<UnitSummary, 'id' | 'parentId' | 'address' | 'occup
   unitType: unit.unitType,
   sizeSqft: unit.sizeSqft,
   billTo: unit.billTo,
+  ownerUses: unit.ownerUses,
 });
 
 /**
@@ -164,10 +167,11 @@ export class UnitsService {
     const row = await this.visibleRow(actor, id);
     const located = { path: row.locations.path };
     const edit = actor.access.can('edit', 'units', located) && row.merged === null;
-    const [names, breadcrumb, covers] = await Promise.all([
+    const [names, breadcrumb, covers, owned] = await Promise.all([
       this.tree.addressNames(actor.societyId, [row.locations.path]),
       this.tree.breadcrumb(actor.access, actor.societyId, row.locations.path, 'locations'),
       this.storeys.covers(actor.societyId, id),
+      this.people.hasOwner(actor.societyId, row.locations.path),
     ]);
     return {
       ...toSummary(row, names),
@@ -178,6 +182,7 @@ export class UnitsService {
         edit,
         delete: actor.access.can('delete', 'units', located) && row.merged === null,
         separate: row.merged !== null && actor.access.can('edit', 'units', located),
+        ownerUse: edit && owned,
       },
     };
   }
@@ -207,7 +212,7 @@ export class UnitsService {
         // An owner of a location above already owns the new unit.
         await this.occupancy.refresh(actor.societyId, locationPath(parent.path, id), tx);
         await this.audit.record(
-          { ...auditOf(actor, 'create', id), after: { parentId: parent.id, ...snapshot({ ...input, isActive: true }) } },
+          { ...auditOf(actor, 'create', id), after: { parentId: parent.id, ...snapshot({ ...input, isActive: true, ownerUses: false }) } },
           tx,
         );
       });
@@ -262,13 +267,15 @@ export class UnitsService {
     if (row.merged) throw unitMerged();
     if (input.code !== undefined && (await this.tree.codeInUse(actor.societyId, input.code, id))) throw codeTaken();
     if (input.unitType !== undefined) await this.unitTypes.assertCodes(actor.societyId, [input.unitType]);
+    if (input.ownerUses && !row.owner_uses && !(await this.people.hasOwner(actor.societyId, row.locations.path))) throw noOwner();
 
     const before = toSummary(row, new Map());
     const after = { ...before, ...definedOnly(input) };
     try {
       await this.prisma.$transaction(async (tx) => {
         await tx.locations.update({ where: { id }, data: { name: after.name, code: after.code, is_active: after.isActive } });
-        await tx.units.update({ where: { location_id: id }, data: unitData(after) });
+        await tx.units.update({ where: { location_id: id }, data: { ...unitData(after), owner_uses: after.ownerUses } });
+        await this.occupancy.refresh(actor.societyId, row.locations.path, tx);
         await this.audit.record({ ...auditOf(actor, 'update', id), before: snapshot(before), after: snapshot(after) }, tx);
       });
     } catch (error) {
@@ -330,6 +337,7 @@ function toSummary(row: UnitRow, names: Map<string, string>): UnitSummary {
     sizeSqft: row.size_sqft?.toString() ?? null,
     billTo: toBillTo(row.bill_to),
     occupancy: toOccupancy(row.occupancy),
+    ownerUses: row.owner_uses,
     isActive: row.locations.is_active,
   };
 }

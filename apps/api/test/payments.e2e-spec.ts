@@ -6,6 +6,7 @@ import {
   billAheadPreviewSchema,
   billAheadResultSchema,
   billingRunPreviewSchema,
+  collectAreasSchema,
   collectLookupSchema,
   collectSummarySchema,
   CSRF_HEADER,
@@ -205,6 +206,27 @@ describe('Cash collection, receipts and handover (e2e)', () => {
       expect(byNumber.accounts.find((a) => a.kind === 'member')?.memberNo).toBe(3);
       await get('/collect/lookup?q=x', users.nobody).expect(403);
       await get('/collect/lookup?q=x', users.treasurer).expect(403);
+    });
+
+    it('narrows to an area without passing the collector’s own', async () => {
+      const lookup = async (query: string) => collectLookupSchema.parse((await get(`/collect/lookup?${query}`).expect(200)).body).accounts;
+      const karim = encodeURIComponent('করিম');
+
+      // A search stays inside the area, and an area leaves members out.
+      expect(await lookup(`q=${karim}&areaId=${ids.blockC}`)).toEqual([]);
+      expect((await lookup(`q=${karim}&areaId=${ids.blockD}`)).map((a) => [a.kind, a.name])).toEqual([['unit', 'ডি-১']]);
+      expect((await lookup(`open=true&areaId=${ids.blockD}`)).map((a) => [a.kind, a.name])).toEqual([['unit', 'ডি-১']]);
+
+      // A place outside the collector's area is not there for them.
+      await get(`/collect/lookup?open=true&areaId=${ids.blockD}`, users.collectorC).expect(404);
+      await get(`/collect/areas?parentId=${ids.blockD}`, users.collectorC).expect(404);
+
+      // The filter lists only what the collector reaches, with no `units` grant.
+      const own = collectAreasSchema.parse((await get('/collect/areas', users.collectorC).expect(200)).body);
+      expect(own.children.map((place) => place.id)).toEqual([ids.blockC]);
+      const all = collectAreasSchema.parse((await get('/collect/areas').expect(200)).body);
+      expect(all.children.map((place) => place.id)).toEqual(expect.arrayContaining([ids.blockC, ids.blockD]));
+      await get('/collect/areas', users.nobody).expect(403);
     });
 
     it('lists accounts with open bills before any search, newest bill first, within the area', async () => {

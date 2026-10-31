@@ -6,7 +6,7 @@ const WORDS = {
   bn: {
     area: 'এলাকা',
     units: 'ইউনিট',
-    ownerOccupied: 'মালিক থাকেন',
+    ownerOccupied: 'মালিকের ব্যবহারে',
     rented: 'ভাড়া',
     vacant: 'খালি',
     occupied: 'বসবাস %',
@@ -31,7 +31,7 @@ const WORDS = {
   en: {
     area: 'Area',
     units: 'Units',
-    ownerOccupied: 'Owner lives there',
+    ownerOccupied: 'Owner occupied',
     rented: 'Rented',
     vacant: 'Vacant',
     occupied: 'Occupied %',

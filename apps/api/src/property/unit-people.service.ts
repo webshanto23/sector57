@@ -50,6 +50,11 @@ const escapeLike = (value: string) => value.replace(/[\\%_]/g, (char) => `\\${ch
 export class UnitPeopleService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Whether the unit at `path` has a current owner, on itself or a place above it. */
+  async hasOwner(societyId: string, path: string): Promise<boolean> {
+    return (await this.prisma.ownerships.count({ where: { society_id: societyId, location_id: { in: pathIds(path) }, end_date: null } })) > 0;
+  }
+
   /** Current owners of each place, largest share first; null where the caller may not view ownerships. */
   async ownersOf(actor: Actor, places: { id: string; path: string }[]): Promise<Map<string, PartyName[] | null>> {
     const owning = places.filter((place) => actor.access.can('view', 'ownerships', { path: place.path }));

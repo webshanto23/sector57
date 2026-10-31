@@ -22,11 +22,12 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { beyondPermissions } from '../property/tree.service.js';
 import { stickerPlace, type StickerSelected } from './sticker-rows.js';
 import { StickersService } from './stickers.service.js';
+import { holderOf } from './vehicle-rows.js';
 import { vehicleRemoved, VehiclesService } from './vehicles.service.js';
 
 type Tx = Prisma.TransactionClient;
 type Mint = { reason: StickerReason; replacesId: string | null; validUntil: string };
-type Owner = { id: string; unitId: string; personId: string; regNo: string; path: string };
+type Owner = { id: string; unitId: string; regNo: string; path: string };
 
 const conflict = (code: string, message: string) => new ConflictException({ code, message });
 const stickerInForce = () => conflict('sticker_in_force', 'This vehicle already has a sticker; renew or replace it');
@@ -43,8 +44,8 @@ const monthEnd = (day: string): string => {
 
 /**
  * Issuing, renewing, replacing and revoking stickers (`vehicles.create`, revoking `vehicles.edit`,
- * where the vehicle's unit is). A sticker goes only to a vehicle on file whose person still owns,
- * rents or lives in the unit. Each new sticker gets the next number under the society's prefix;
+ * where the vehicle's unit is). A sticker goes only to a vehicle on file whose person or
+ * organisation is still at the unit. Each new sticker gets the next number under the society's prefix;
  * when the society charges a fee, the unit is billed in the same transaction.
  */
 @Injectable()
@@ -61,10 +62,10 @@ export class StickerActionsService {
   /** A first sticker, or a new one after the last was revoked. 409 `sticker_in_force`, `vehicle_removed`, `vehicle_person_not_at_unit`. */
   async issue(actor: Actor, input: StickerIssueInput): Promise<StickerRow> {
     const vehicle = await this.vehicles.visible(actor, input.vehicleId);
-    const owner: Owner = { id: vehicle.id, unitId: vehicle.units.locations.id, personId: vehicle.persons.id, regNo: vehicle.reg_no, path: vehicle.units.locations.path };
+    const owner: Owner = { id: vehicle.id, unitId: vehicle.units.locations.id, regNo: vehicle.reg_no, path: vehicle.units.locations.path };
     if (!actor.access.can('create', 'vehicles', { path: owner.path })) throw beyondPermissions();
     if (vehicle.removed_at) throw vehicleRemoved();
-    await this.vehicles.checkPerson(actor.societyId, { id: owner.unitId, path: owner.path }, owner.personId);
+    await this.vehicles.checkHolder(actor.societyId, { id: owner.unitId, path: owner.path }, holderOf(vehicle));
     const id = await this.write(actor, async (tx, settings, fiscalStartMonth) => {
       if (await tx.stickers.findFirst({ where: { vehicle_id: owner.id, status: 'active' }, select: { id: true } })) throw stickerInForce();
       const validUntil = stickerValidUntil(isoDate(todayDate()), settings.validity, fiscalStartMonth, input.nextYear);
@@ -117,14 +118,14 @@ export class StickerActionsService {
     return this.stickers.get(actor, newId);
   }
 
-  /** A sticker the caller may take over (renew or replace): seen, `vehicles.create` there, still active, its vehicle on file and its person still at the unit. */
+  /** A sticker the caller may take over (renew or replace): seen, `vehicles.create` there, still active, its vehicle on file and its person or organisation still at the unit. */
   private async takeable(actor: Actor, id: string): Promise<StickerSelected> {
     const row = await this.stickers.visible(actor, id);
     const unit = stickerPlace(row);
     if (!actor.access.can('create', 'vehicles', { path: unit.path })) throw beyondPermissions();
     if (row.status !== 'active') throw stickerNotActive();
     if (row.vehicles.removed_at) throw vehicleRemoved();
-    await this.vehicles.checkPerson(actor.societyId, { id: unit.id, path: unit.path }, row.vehicles.person_id);
+    await this.vehicles.checkHolder(actor.societyId, { id: unit.id, path: unit.path }, { personId: row.vehicles.person_id, organisationId: row.vehicles.organisation_id });
     return row;
   }
 
@@ -133,7 +134,7 @@ export class StickerActionsService {
     const { count } = await tx.stickers.updateMany({ where: { id: old.id, status: 'active' }, data: { status: 'replaced' } });
     if (count === 0) throw stickerNotActive();
     const unit = stickerPlace(old);
-    const owner: Owner = { id: old.vehicles.id, unitId: unit.id, personId: old.vehicles.person_id, regNo: old.vehicles.reg_no, path: unit.path };
+    const owner: Owner = { id: old.vehicles.id, unitId: unit.id, regNo: old.vehicles.reg_no, path: unit.path };
     return this.mint(tx, actor, owner, settings, mint);
   }
 

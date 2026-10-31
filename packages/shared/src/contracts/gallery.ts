@@ -37,7 +37,7 @@ export const albumSchema = albumSummarySchema.extend({ photos: z.array(photoSche
 export type Album = z.infer<typeof albumSchema>;
 
 /** An album in the dashboard: drafts too. */
-export const albumAdminSummarySchema = albumSummarySchema.extend({ isPublished: z.boolean() });
+export const albumAdminSummarySchema = albumSummarySchema.extend({ isPublished: z.boolean(), hideFromGallery: z.boolean() });
 export type AlbumAdminSummary = z.infer<typeof albumAdminSummarySchema>;
 
 /** `GET /gallery/albums` response. */
@@ -66,6 +66,8 @@ export const albumInputSchema = z.object({
   titleEn: optionalText(200),
   eventDate: z.iso.date().nullish().transform((value) => value ?? null),
   isPublished: z.boolean(),
+  /** Published but left out of the gallery page, e.g. an album made only for the home slider. */
+  hideFromGallery: z.boolean().default(false),
 });
 export type AlbumInput = z.infer<typeof albumInputSchema>;
 

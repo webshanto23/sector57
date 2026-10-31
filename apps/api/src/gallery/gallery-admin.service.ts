@@ -26,6 +26,7 @@ const summarySelect = {
   title_en: true,
   event_date: true,
   is_published: true,
+  hide_from_gallery: true,
   _count: { select: { gallery_photos: true } },
   gallery_photos: { select: { file_url: true }, orderBy: photoOrder, take: 1 },
 } satisfies Prisma.gallery_albumsSelect;
@@ -38,11 +39,12 @@ type PhotoRow = Prisma.gallery_photosGetPayload<{ select: typeof photoSelect }>;
 const albumNotFound = () => new NotFoundException({ code: 'album_not_found', message: 'Album not found' });
 const photoNotFound = () => new NotFoundException({ code: 'photo_not_found', message: 'Photo not found' });
 
-const snapshot = (album: Pick<AlbumInput, 'titleBn' | 'titleEn' | 'eventDate' | 'isPublished'>) => ({
+const snapshot = (album: Pick<AlbumInput, 'titleBn' | 'titleEn' | 'eventDate' | 'isPublished' | 'hideFromGallery'>) => ({
   titleBn: album.titleBn,
   titleEn: album.titleEn,
   eventDate: album.eventDate,
   isPublished: album.isPublished,
+  hideFromGallery: album.hideFromGallery,
 });
 
 /** Gallery albums and photos in the dashboard. Photos belong to the society through their album. */
@@ -62,6 +64,7 @@ export class GalleryAdminService {
       titleEn: row.title_en,
       eventDate: row.event_date ? isoDate(row.event_date) : null,
       isPublished: row.is_published,
+      hideFromGallery: row.hide_from_gallery,
       photoCount: row._count.gallery_photos,
       coverUrl: mediaUrl(thumbKey(row.gallery_photos[0]?.file_url), this.env.MEDIA_BASE_URL),
     };
@@ -247,6 +250,7 @@ function albumData(input: AlbumInput) {
     title_en: input.titleEn,
     event_date: input.eventDate ? new Date(`${input.eventDate}T00:00:00.000Z`) : null,
     is_published: input.isPublished,
+    hide_from_gallery: input.hideFromGallery,
   };
 }
 

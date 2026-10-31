@@ -5,4 +5,5 @@ export * from './schemas.js';
 export * from './money.js';
 export * from './words.js';
 export * from './fiscal.js';
+export * from './location-tabs.js';
 export * from './contracts/index.js';

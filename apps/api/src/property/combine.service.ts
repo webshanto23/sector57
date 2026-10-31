@@ -93,7 +93,7 @@ export class CombineService {
     const today = todayDate();
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.units.updateMany({ where: { society_id: societyId, location_id: { in: mergeIds } }, data: { merged_into: input.keepId, merged_on: today } });
+      await tx.units.updateMany({ where: { society_id: societyId, location_id: { in: mergeIds } }, data: { merged_into: input.keepId, merged_on: today, owner_uses: false } });
       await tx.locations.updateMany({ where: { society_id: societyId, id: { in: mergeIds } }, data: { is_active: false } });
       await tx.ownerships.updateMany({ where: { society_id: societyId, location_id: { in: mergeIds }, end_date: null }, data: { end_date: today } });
       await tx.unit_storeys.deleteMany({ where: { society_id: societyId, unit_id: { in: ids } } });

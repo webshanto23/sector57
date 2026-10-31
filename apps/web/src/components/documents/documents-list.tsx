@@ -5,18 +5,20 @@ import {
   DOCUMENT_TYPES,
   DOCUMENT_UPLOAD,
   formatDate,
+  localDigits,
   type Document,
   type DocumentEntity,
   type DocumentList,
   type DocumentType,
   type Locale,
 } from "@s57/shared";
+import { cn } from "cn";
 import { Archive, ArchiveRestore, FileText, Image as ImageIcon, Pencil, Upload, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { errorMessageKey } from "@/components/admin/errors";
 import { FormStatus, type Status } from "@/components/admin/form-status";
-import { Field, inputClass } from "@/components/kit";
+import { Card, Field, IconBox, inputClass } from "@/components/kit";
 import { useSubmit } from "@/components/property/use-submit";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
@@ -33,13 +35,47 @@ export function DocumentsList({
   entityType,
   entityId,
   archived = false,
+  split = false,
 }: {
   list: DocumentList;
   entityType: DocumentEntity;
   entityId?: string;
   archived?: boolean;
+  /** List on the left, adding on the right, each its own card. */
+  split?: boolean;
 }) {
   const t = useTranslations("Documents");
+  const locale = useLocale() as Locale;
+  if (split) {
+    return (
+      <div className={cn("grid items-start gap-3.5", list.can.create && "min-[861px]:grid-cols-[1.6fr_1fr]")}>
+        <Card className="grid gap-3">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-[15px]">{t("panelTitle")}</h2>
+            <span className="text-[12.5px] text-muted-foreground">{localDigits(t("fileCount", { count: list.total }), locale)}</span>
+          </div>
+          {list.items.length === 0 ? (
+            <div className="grid justify-items-center gap-1 rounded-[10px] border border-dashed border-line px-4 py-8 text-center">
+              <IconBox icon={FileText} />
+              <p className="mt-1.5 font-semibold">{t("none")}</p>
+              <p className="text-[13px] text-muted-foreground">{t("noneHint")}</p>
+            </div>
+          ) : (
+            <ul className="grid gap-2">
+              {list.items.map((doc) => (
+                <DocumentRow key={doc.id} doc={doc} entityType={entityType} canEdit={list.can.edit} />
+              ))}
+            </ul>
+          )}
+        </Card>
+        {list.can.create ? (
+          <Card>
+            <UploadForm entityType={entityType} entityId={entityId} split />
+          </Card>
+        ) : null}
+      </div>
+    );
+  }
   return (
     <div className="grid gap-3">
       {list.items.length === 0 ? (
@@ -143,7 +179,7 @@ function TypeSelect({ id, entityType, value, onChange }: { id: string; entityTyp
   );
 }
 
-function UploadForm({ entityType, entityId }: { entityType: DocumentEntity; entityId?: string }) {
+function UploadForm({ entityType, entityId, split = false }: { entityType: DocumentEntity; entityId?: string; split?: boolean }) {
   const t = useTranslations("Documents");
   const tAll = useTranslations();
   const router = useRouter();
@@ -185,16 +221,16 @@ function UploadForm({ entityType, entityId }: { entityType: DocumentEntity; enti
 
   return (
     <form
-      className="grid gap-2.5 border-t border-line pt-3"
+      className={cn("grid gap-2.5", !split && "border-t border-line pt-3")}
       onSubmit={(e) => {
         e.preventDefault();
         void submit();
       }}
     >
-      <h3 className="text-[14px] font-semibold">{t("add")}</h3>
-      <div className="grid gap-2.5 min-[600px]:grid-cols-[1fr_200px]">
+      {split ? <h2 className="text-[15px]">{t("add")}</h2> : <h3 className="text-[14px] font-semibold">{t("add")}</h3>}
+      <div className={cn("grid gap-2.5", !split && "min-[600px]:grid-cols-[1fr_200px]")}>
         <Field label={t("title")} htmlFor={`${prefix}-title`}>
-          <input id={`${prefix}-title`} className={inputClass} value={title} maxLength={200} required onChange={(e) => setTitle(e.target.value)} />
+          <input id={`${prefix}-title`} className={inputClass} value={title} maxLength={200} required placeholder={split ? t("titleExample") : undefined} onChange={(e) => setTitle(e.target.value)} />
         </Field>
         <TypeSelect id={`${prefix}-type`} entityType={entityType} value={docType} onChange={setDocType} />
       </div>
@@ -207,14 +243,29 @@ function UploadForm({ entityType, entityId }: { entityType: DocumentEntity; enti
           className="sr-only"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
         />
-        <Button type="button" variant="outline" onClick={() => input.current?.click()}>
-          <Upload aria-hidden />
-          {file ? file.name : t("chooseFile")}
-        </Button>
+        {split ? (
+          <label
+            htmlFor={`${prefix}-file`}
+            className="grid w-full cursor-pointer justify-items-center gap-0.5 rounded-[10px] border border-dashed border-primary bg-accent p-4 text-center text-[13.5px] font-medium text-primary"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              setFile(e.dataTransfer.files[0] ?? null);
+            }}
+          >
+            {file ? file.name : t("dropFile")}
+            <span className="text-[12px] font-normal text-muted-foreground">{t("fileHint")}</span>
+          </label>
+        ) : (
+          <Button type="button" variant="outline" onClick={() => input.current?.click()}>
+            <Upload aria-hidden />
+            {file ? file.name : t("chooseFile")}
+          </Button>
+        )}
         <Button type="submit" disabled={busy || !file || title.trim() === ""}>
           {busy ? t("uploading") : t("upload")}
         </Button>
-        <span className="text-[12px] text-muted-foreground">{t("fileHint")}</span>
+        {split ? null : <span className="text-[12px] text-muted-foreground">{t("fileHint")}</span>}
       </div>
       <FormStatus status={status} />
     </form>

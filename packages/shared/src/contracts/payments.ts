@@ -72,8 +72,17 @@ export const collectLookupQuery = z.object({
   unitId: z.uuid().optional(),
   personId: z.uuid().optional(),
   organisationId: z.uuid().optional(),
+  /** Only units at or under this place; leaves members out. */
+  areaId: z.uuid().optional(),
 });
 export type CollectLookupQuery = z.infer<typeof collectLookupQuery>;
+
+export const collectAreasQuery = z.object({ parentId: z.uuid().optional() });
+export type CollectAreasQuery = z.infer<typeof collectAreasQuery>;
+
+/** `GET /collect/areas`: the places (not units) directly under `parentId`, in the caller's collect area. */
+export const collectAreasSchema = z.object({ children: z.array(z.object({ id: z.uuid(), name: z.string() })) });
+export type CollectAreas = z.infer<typeof collectAreasSchema>;
 
 /** Who can be named as the payer: someone a ticked bill was billed to. */
 export const payerOptionSchema = z.object({

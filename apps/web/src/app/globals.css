@@ -178,6 +178,8 @@
   }
   html {
     @apply font-sans;
+    /* Keep the scrollbar's space reserved, so pages don't shift sideways when it appears. */
+    scrollbar-gutter: stable;
   }
   h1,
   h2,

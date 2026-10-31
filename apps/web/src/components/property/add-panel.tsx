@@ -15,7 +15,7 @@ import {
 } from "@s57/shared";
 import { ListPlus, Plus, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import type { FieldError } from "react-hook-form";
 import { FormStatus } from "@/components/admin/form-status";
 import { CheckField, TextField } from "@/components/cms/fields";
@@ -42,6 +42,7 @@ export function AddPanel({
   canCreate,
   canCreateUnit,
   existingNames,
+  heading = null,
 }: {
   /** Null at the top of the map. */
   parentId: string | null;
@@ -52,6 +53,8 @@ export function AddPanel({
   canCreate: boolean;
   canCreateUnit: boolean;
   existingNames: string[];
+  /** Shown beside the buttons, and on its own for those who may not add. */
+  heading?: ReactNode;
 }) {
   const t = useTranslations("Property");
   const locale = useLocale() as Locale;
@@ -80,7 +83,11 @@ export function AddPanel({
   const fresh = generated.filter((n) => !existing.has(n));
   const rangeError = parsedRange.success ? undefined : parsedRange.error.issues[0];
 
-  if (kinds.length === 0) return null;
+  if (kinds.length === 0) return heading;
+
+  // Examples in the hints follow the level being added; level names are society data.
+  const adding = kind === "unit" ? levels.find((level) => level.isUnitLevel) : levelsBelow.find((level) => level.id === levelId);
+  const example = { bn: adding?.nameBn ?? "", en: adding?.nameEn ?? adding?.nameBn ?? "" };
 
   function open(next: Mode) {
     setStatus(null);
@@ -157,15 +164,18 @@ export function AddPanel({
 
   return (
     <div className="grid gap-3">
-      <div className="flex flex-wrap gap-2">
-        <Button type="button" variant={mode === "one" ? "default" : "outline"} onClick={() => open("one")}>
-          <Plus aria-hidden />
-          {t("add")}
-        </Button>
-        <Button type="button" variant={mode === "many" ? "default" : "outline"} onClick={() => open("many")}>
-          <ListPlus aria-hidden />
-          {t("addMany")}
-        </Button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {heading}
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant={mode === "one" ? "default" : "outline"} onClick={() => open("one")}>
+            <Plus aria-hidden />
+            {t("add")}
+          </Button>
+          <Button type="button" variant={mode === "many" ? "default" : "outline"} onClick={() => open("many")}>
+            <ListPlus aria-hidden />
+            {t("addMany")}
+          </Button>
+        </div>
       </div>
 
       {mode ? (
@@ -220,7 +230,7 @@ export function AddPanel({
               }}
             >
               <div className="grid gap-3.5 min-[600px]:grid-cols-2">
-                <TextField id="add-name" label={t("name")} hint={t("nameHint")} value={name} onChange={(e) => setName(e.target.value)} required />
+                <TextField id="add-name" label={t("name")} hint={t("addNameHint", example)} value={name} onChange={(e) => setName(e.target.value)} required />
                 <TextField id="add-code" label={t("code")} hint={t("codeHint")} value={code} onChange={(e) => setCode(e.target.value)} />
               </div>
               {kind === "unit" ? unitFields(true) : null}
@@ -242,7 +252,7 @@ export function AddPanel({
                 <TextField
                   id="add-prefix"
                   label={t("prefix")}
-                  hint={t("prefixHint")}
+                  hint={t("addPrefixHint", example)}
                   value={range.prefix}
                   onChange={(e) => setRange({ ...range, prefix: e.target.value })}
                 />
