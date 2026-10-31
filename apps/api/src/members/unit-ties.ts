@@ -26,3 +26,23 @@ export function unitTies(
       where oc.society_id = ${societyId}::uuid and oc.unit_id = ${unit.id}::uuid and oc.end_date is null
         and (${personId}::uuid is null or oc.person_id = ${personId}::uuid)`;
 }
+
+/**
+ * Organisations that own (the unit or a place above it) or rent a unit now. With
+ * `organisationId`, only that one's ties.
+ */
+export function unitOrganisationTies(
+  prisma: Pick<Prisma.TransactionClient, '$queryRaw'>,
+  societyId: string,
+  unit: TieUnit,
+  organisationId: string | null,
+): Promise<{ organisation_id: string; tie: UnitTie }[]> {
+  return prisma.$queryRaw`
+    select o.organisation_id, 'owner' as tie from ownerships o join locations l on l.id = o.location_id
+      where o.society_id = ${societyId}::uuid and o.end_date is null and o.organisation_id is not null
+        and starts_with(${unit.path}, l.path) and (${organisationId}::uuid is null or o.organisation_id = ${organisationId}::uuid)
+    union
+    select t.organisation_id, 'renter' from tenancies t
+      where t.society_id = ${societyId}::uuid and t.unit_id = ${unit.id}::uuid and t.status <> 'ended'
+        and t.organisation_id is not null and (${organisationId}::uuid is null or t.organisation_id = ${organisationId}::uuid)`;
+}

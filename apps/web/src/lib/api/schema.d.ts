@@ -10199,7 +10199,12 @@ export interface components {
                     id: string;
                     name: string;
                     nameEn: string | null;
-                };
+                } | null;
+                organisation: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                } | null;
                 sticker: {
                     /** Format: uuid */
                     id: string;
@@ -10253,6 +10258,12 @@ export interface components {
                 nameEn: string | null;
                 ties: ("owner" | "renter" | "resident")[];
             }[];
+            organisations: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                ties: ("owner" | "renter" | "resident")[];
+            }[];
         };
         StickerSettingsViewDto_Output: {
             settings: {
@@ -10299,7 +10310,12 @@ export interface components {
                 id: string;
                 name: string;
                 nameEn: string | null;
-            };
+            } | null;
+            organisation: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
             sticker: {
                 /** Format: uuid */
                 id: string;
@@ -10328,7 +10344,9 @@ export interface components {
             /** Format: uuid */
             unitId: string;
             /** Format: uuid */
-            personId: string;
+            personId?: string;
+            /** Format: uuid */
+            organisationId?: string;
             note?: string | null;
         };
         VehicleUpdateDto: {
@@ -10341,6 +10359,8 @@ export interface components {
             unitId?: string;
             /** Format: uuid */
             personId?: string;
+            /** Format: uuid */
+            organisationId?: string;
             note?: string | null;
         };
         VehicleRemoveDto: {
@@ -17996,6 +18016,7 @@ export interface operations {
                 locationId?: string;
                 unitId?: string;
                 personId?: string;
+                organisationId?: string;
             };
             header?: never;
             path?: never;

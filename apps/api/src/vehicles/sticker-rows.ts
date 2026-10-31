@@ -12,7 +12,7 @@ export const stickerSelect = {
   issued_at: true,
   revoked_at: true,
   revoke_reason: true,
-  vehicles: { select: { id: true, reg_no: true, kind: true, removed_at: true, unit_id: true, person_id: true, units: { select: { locations: { select: placeSelect } } } } },
+  vehicles: { select: { id: true, reg_no: true, kind: true, removed_at: true, unit_id: true, person_id: true, organisation_id: true, units: { select: { locations: { select: placeSelect } } } } },
   replaces: { select: { id: true, sticker_no: true } },
   invoices: { select: { id: true, invoice_no: true } },
 } satisfies Prisma.stickersSelect;

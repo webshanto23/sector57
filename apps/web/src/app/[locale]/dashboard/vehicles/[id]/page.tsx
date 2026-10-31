@@ -1,4 +1,4 @@
-import { canAnywhere, formatDate, pick, type Locale, type VehicleDetail } from "@s57/shared";
+import { canAnywhere, formatDate, type Locale, type VehicleDetail } from "@s57/shared";
 import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
@@ -9,6 +9,7 @@ import { Card, PageHeader } from "@/components/kit";
 import { buttonVariants } from "@/components/ui/button";
 import { RemoveVehicleCard, VehicleEditor } from "@/components/vehicles/vehicle-forms";
 import { VehicleStickers } from "@/components/vehicles/vehicle-stickers";
+import { VehicleHolder } from "@/components/vehicles/vehicles-table";
 import { Link } from "@/i18n/navigation";
 import { requirePermission } from "@/lib/api/session";
 import { getStickers, getStickerSettings, getVehicle } from "@/lib/api/vehicles";
@@ -89,13 +90,12 @@ function Summary({
   personLink: boolean;
   t: Awaited<ReturnType<typeof getTranslations<"Vehicles">>>;
 }) {
-  const name = pick(vehicle.person.name, vehicle.person.nameEn, locale);
   const rows: [string, ReactNode][] = [
     [t("kindLabel"), t(`kind.${vehicle.kind}`)],
     [t("make"), vehicle.make ?? "—"],
     [t("colour"), vehicle.colour ?? "—"],
     [t("col.unit"), unit],
-    [t("person"), personLink ? <Link href={`/dashboard/members/${vehicle.person.id}`}>{name}</Link> : name],
+    [t("person"), <VehicleHolder key="holder" vehicle={vehicle} locale={locale} link={personLink} />],
     [t("note"), vehicle.note ?? "—"],
   ];
   return (

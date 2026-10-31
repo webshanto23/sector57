@@ -12,23 +12,24 @@ import { useSubmit } from "@/components/property/use-submit";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
 import { api } from "@/lib/api/client";
-import { HolderFields, vehicleBody, vehicleValues, VehicleFields, type Holder, type VehicleValues } from "./vehicle-fields";
+import { holderBody, HolderFields, noHolder, vehicleBody, vehicleValues, VehicleFields, type Holder, type VehicleValues } from "./vehicle-fields";
 
 /** A unit as the forms name it: its address and name. */
 export type UnitLabel = { id: string; name: string };
 
-/** A new vehicle: its details, then the unit and the person there it belongs to. Opens its page once saved. */
+/** A new vehicle: its details, then the unit and who there it belongs to. Opens its page once saved. */
 export function NewVehicleForm({ unit }: { unit: UnitLabel | null }) {
   const t = useTranslations("Vehicles");
   const router = useRouter();
   const { status, busy, run } = useSubmit();
   const [values, setValues] = useState<VehicleValues>(() => vehicleValues());
-  const [holder, setHolder] = useState<Holder>({ unitId: unit?.id ?? null, personId: null });
-  const ready = values.regNo.trim() !== "" && holder.unitId !== null && holder.personId !== null;
+  const [holder, setHolder] = useState<Holder>(() => noHolder(unit?.id ?? null));
+  const chosen = holderBody(holder);
+  const ready = values.regNo.trim() !== "" && holder.unitId !== null && chosen !== null;
 
   async function save() {
-    if (!holder.unitId || !holder.personId) return;
-    const made = await run(() => api.POST("/vehicles", { body: { ...vehicleBody(values), unitId: holder.unitId!, personId: holder.personId! } }));
+    if (!holder.unitId || !chosen) return;
+    const made = await run(() => api.POST("/vehicles", { body: { ...vehicleBody(values), unitId: holder.unitId!, ...chosen } }));
     if (made) router.push(`/dashboard/vehicles/${made.id}`);
   }
 
@@ -58,16 +59,17 @@ export function NewVehicleForm({ unit }: { unit: UnitLabel | null }) {
   );
 }
 
-/** The details of a vehicle on file, and the unit and person it belongs to. */
+/** The details of a vehicle on file, and the unit and person or organisation it belongs to. */
 export function VehicleEditor({ vehicle, unit }: { vehicle: VehicleDetail; unit: UnitLabel }) {
   const t = useTranslations("Vehicles");
   const details = useSubmit();
   const owner = useSubmit();
   const [values, setValues] = useState<VehicleValues>(() => vehicleValues(vehicle));
   const [moving, setMoving] = useState(false);
-  const [holder, setHolder] = useState<Holder>({ unitId: vehicle.place.id, personId: vehicle.person.id });
+  const [holder, setHolder] = useState<Holder>({ unitId: vehicle.place.id, personId: vehicle.person?.id ?? null, organisationId: vehicle.organisation?.id ?? null });
   const path = { params: { path: { id: vehicle.id } } };
-  const unchanged = holder.unitId === vehicle.place.id && holder.personId === vehicle.person.id;
+  const chosen = holderBody(holder);
+  const unchanged = holder.unitId === vehicle.place.id && holder.personId === (vehicle.person?.id ?? null) && holder.organisationId === (vehicle.organisation?.id ?? null);
 
   return (
     <div className="grid content-start gap-3.5">
@@ -96,8 +98,8 @@ export function VehicleEditor({ vehicle, unit }: { vehicle: VehicleDetail; unit:
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
-            disabled={owner.busy || unchanged || !holder.unitId || !holder.personId}
-            onClick={() => void owner.run(() => api.PATCH("/vehicles/{id}", { ...path, body: { unitId: holder.unitId!, personId: holder.personId! } }))}
+            disabled={owner.busy || unchanged || !holder.unitId || !chosen}
+            onClick={() => void owner.run(() => api.PATCH("/vehicles/{id}", { ...path, body: { unitId: holder.unitId!, ...chosen } }))}
           >
             <Save aria-hidden />
             {t("holderSave")}
@@ -108,7 +110,7 @@ export function VehicleEditor({ vehicle, unit }: { vehicle: VehicleDetail; unit:
               variant="outline"
               onClick={() => {
                 setMoving(true);
-                setHolder({ unitId: null, personId: null });
+                setHolder(noHolder(null));
               }}
             >
               <ArrowRightLeft aria-hidden />

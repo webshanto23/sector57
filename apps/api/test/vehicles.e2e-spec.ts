@@ -1,5 +1,5 @@
 import { INestApplication } from '@nestjs/common';
-import { AUTH_COOKIES, CSRF_HEADER, vehicleDetailSchema, vehicleListSchema, vehicleLookupSchema, vehicleUnitPeopleSchema, type VehicleDetail } from '@s57/shared';
+import { AUTH_COOKIES, CSRF_HEADER, vehicleDetailSchema, vehicleListSchema, vehicleLookupSchema, vehicleUnitHoldersSchema, vehicleUnitPeopleSchema, type VehicleDetail } from '@s57/shared';
 import { randomUUID } from 'node:crypto';
 import request from 'supertest';
 import { App } from 'supertest/types.js';
@@ -28,7 +28,7 @@ describe('Vehicles (e2e)', () => {
   let otherSocietyId: string;
   const server = () => app.getHttpServer();
   const users = {} as Record<'admin' | 'officeC' | 'guardC' | 'nobody', Caller>;
-  const ids = {} as Record<'blockC' | 'c1' | 'c2' | 'd1' | 'rahim' | 'karim' | 'salma' | 'jamal' | 'stranger' | 'otherUnit', string>;
+  const ids = {} as Record<'blockC' | 'c1' | 'c2' | 'c3' | 'd1' | 'rahim' | 'karim' | 'salma' | 'jamal' | 'stranger' | 'otherUnit' | 'shop' | 'otherShop', string>;
   const car = {} as Record<'rahim' | 'karim' | 'jamal', VehicleDetail>;
 
   async function makeUser(permissions: string[], scope: string | null = null): Promise<Caller> {
@@ -86,6 +86,7 @@ describe('Vehicles (e2e)', () => {
     ids.blockC = c.id;
     ids.c1 = await unit(societyId, flat, 'সি-১', b9);
     ids.c2 = await unit(societyId, flat, 'সি-২', b9);
+    ids.c3 = await unit(societyId, flat, 'সি-৩', b9);
     ids.d1 = await unit(societyId, flat, 'ডি-১', bD);
 
     const person = (full_name: string) => prisma.persons.create({ data: { society_id: societyId, full_name, phone: randomPhone() } }).then((r) => r.id);
@@ -101,6 +102,9 @@ describe('Vehicles (e2e)', () => {
       data: { society_id: societyId, unit_id: ids.c2, renter_type: 'family', primary_person_id: ids.karim, start_date: day('2025-01-01'), status: 'active' },
     });
     await prisma.occupants.create({ data: { society_id: societyId, unit_id: ids.c2, person_id: ids.salma, tenancy_id: tenancy.id, relation: 'spouse', start_date: day('2025-01-01') } });
+    ids.shop = (await prisma.organisations.create({ data: { society_id: societyId, name: 'সিপন বাইক' } })).id;
+    ids.otherShop = (await prisma.organisations.create({ data: { society_id: societyId, name: 'অন্য দোকান' } })).id;
+    await prisma.tenancies.create({ data: { society_id: societyId, unit_id: ids.c3, renter_type: 'shop', organisation_id: ids.shop, start_date: day('2025-01-01'), status: 'active' } });
 
     otherSocietyId = (await prisma.societies.create({ data: { name_bn: `অন্য ${MARK}`, slug: `${MARK}-other` } })).id;
     const otherBlock = await level(otherSocietyId, 1, 'ব্লক');
@@ -123,6 +127,7 @@ describe('Vehicles (e2e)', () => {
     await prisma.occupants.deleteMany({ where: { society_id: societies } });
     await prisma.tenancies.deleteMany({ where: { society_id: societies } });
     await prisma.ownerships.deleteMany({ where: { society_id: societies } });
+    await prisma.organisations.deleteMany({ where: { society_id: societies } });
     await prisma.persons.deleteMany({ where: { society_id: societies } });
     await prisma.user_roles.deleteMany({ where: { users_user_roles_user_idTousers: { society_id: societyId } } });
     for (const depth of [3, 2, 1]) await prisma.locations.deleteMany({ where: { society_id: societies, location_levels: { depth } } });
@@ -155,6 +160,36 @@ describe('Vehicles (e2e)', () => {
     await add({ regNo: 'ঢাকা ২-২', kind: 'car', unitId: ids.c2, personId: ids.karim }, users.guardC).expect(403);
     await add({ regNo: 'ঢাকা ২-২', kind: 'car', unitId: ids.otherUnit, personId: ids.karim }, users.admin).expect(404);
     car.jamal = detail(await add({ regNo: 'ঢাকা মেট্রো ঘ ৯৯-৩৪৫৬', kind: 'microbus', unitId: ids.d1, personId: ids.jamal }, users.admin).expect(201));
+  });
+
+  it('adds a vehicle for an organisation that rents the unit, and shows it under the organisation', async () => {
+    const add = (body: object) => send('post', '/vehicles', users.officeC).send(body);
+    const holders = vehicleUnitHoldersSchema.parse((await get(`/vehicles/unit-people?unitId=${ids.c3}`, users.officeC).expect(200)).body);
+    expect(holders.organisations).toEqual([{ id: ids.shop, name: 'সিপন বাইক', ties: ['renter'] }]);
+    expect(holders.items.map((p) => p.name)).toEqual(['রহিম']);
+
+    await add({ regNo: 'ঢাকা ৩-৩', kind: 'car', unitId: ids.c3 }).expect(400);
+    await add({ regNo: 'ঢাকা ৩-৩', kind: 'car', unitId: ids.c3, personId: ids.rahim, organisationId: ids.shop }).expect(400);
+    expect((await add({ regNo: 'ঢাকা ৩-৩', kind: 'car', unitId: ids.c3, organisationId: ids.otherShop }).expect(409)).body.code).toBe('vehicle_person_not_at_unit');
+    expect((await add({ regNo: 'ঢাকা ৩-৩', kind: 'car', unitId: ids.c3, organisationId: randomUUID() }).expect(404)).body.code).toBe('organisation_not_found');
+
+    const van = detail(await add({ regNo: 'ঢাকা ৩-৩', kind: 'microbus', unitId: ids.c3, organisationId: ids.shop }).expect(201));
+    expect(van).toMatchObject({ person: null, organisation: { id: ids.shop, name: 'সিপন বাইক' } });
+    expect((await list(`organisationId=${ids.shop}`)).items.map((v) => v.id)).toEqual([van.id]);
+    expect((await list(`q=${encodeURIComponent('সিপন')}`)).items.map((v) => v.id)).toEqual([van.id]);
+
+    const moved = detail(await send('patch', `/vehicles/${van.id}`, users.officeC).send({ personId: ids.rahim }).expect(200));
+    expect(moved).toMatchObject({ person: { id: ids.rahim }, organisation: null });
+    await send('patch', `/vehicles/${van.id}`, users.officeC).send({ organisationId: ids.otherShop }).expect(409);
+    const back = detail(await send('patch', `/vehicles/${van.id}`, users.officeC).send({ organisationId: ids.shop }).expect(200));
+    expect(back).toMatchObject({ person: null, organisation: { id: ids.shop } });
+
+    const sticker = (await send('post', '/stickers', users.officeC).send({ vehicleId: van.id }).expect(201)).body as { id: string };
+    await prisma.tenancies.updateMany({ where: { unit_id: ids.c3 }, data: { status: 'ended', end_date: day('2026-01-01') } });
+    expect((await send('post', `/stickers/${sticker.id}/replace`, users.officeC).expect(409)).body.code).toBe('vehicle_person_not_at_unit');
+
+    await prisma.stickers.deleteMany({ where: { vehicle_id: van.id } });
+    await prisma.vehicles.delete({ where: { id: van.id } });
   });
 
   it('shows vehicles in the caller area only, and searches by number or name', async () => {

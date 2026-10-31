@@ -9,11 +9,23 @@ import { VehiclesTable } from "./vehicles-table";
 
 const SHOWN = 10;
 
-/** The vehicles on file of a unit or of a person, within the caller's vehicles area. A unit page also offers a new one. */
-export async function VehiclesPanel({ access, locale, unitId, personId }: { access: Access; locale: Locale; unitId?: string; personId?: string }) {
+/** The vehicles on file of a unit, a person or an organisation, within the caller's vehicles area. A unit page also offers a new one. */
+export async function VehiclesPanel({
+  access,
+  locale,
+  unitId,
+  personId,
+  organisationId,
+}: {
+  access: Access;
+  locale: Locale;
+  unitId?: string;
+  personId?: string;
+  organisationId?: string;
+}) {
   if (!canAnywhere(access, "vehicles")) return null;
-  const [t, list] = await Promise.all([getTranslations("Vehicles"), getVehicles({ unitId, personId, pageSize: SHOWN })]);
-  const filter = unitId ? { unitId } : { personId: personId! };
+  const [t, list] = await Promise.all([getTranslations("Vehicles"), getVehicles({ unitId, personId, organisationId, pageSize: SHOWN })]);
+  const filter = unitId ? { unitId } : organisationId ? { organisationId } : { personId: personId! };
 
   return (
     <Card className="grid content-start gap-3">
